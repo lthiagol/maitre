@@ -313,6 +313,10 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 - **A brief is written into `work/briefs/` before it is dispatched**, never into
   `/tmp`. `/tmp` took half the night's record once. The lanes' scrollback is captured
   into `work/transcripts/` at every slice boundary — it is bounded and rotates.
+- **A lane commits per acceptance criterion, as it goes.** A lane's turn can end
+  without reporting — it happened on 2026-10-27, and 38 files sat uncommitted in the
+  tree. The per-criterion commit is what makes that recoverable: without it, the work
+  exists only in a working tree and a pane's scrollback.
 
 ## Reference material
 
