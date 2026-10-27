@@ -1,6 +1,11 @@
 package cli
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	"github.com/lthiagol/maitre/internal/core"
+)
 
 // journalCount is how many events the plan's journal holds.
 func journalCount(t *testing.T, dir string) int {
@@ -120,6 +125,25 @@ func TestTheBacklogKindIsTheShapingStep(t *testing.T) {
 	res = cli(t, dir, "backlog", "update", "BL01", "--kind", "hunch")
 	if res.Code == 0 {
 		t.Fatal("an unknown kind must be refused")
+	}
+}
+
+// TestAnUnknownKindNamesTheKinds covers the closed set.
+//
+// A kind nobody knows is a typo, and a typo that silently disabled a feature is
+// v1's lesson. The refusal names every kind there is, so the caller can see the
+// set without reading the docs.
+func TestAnUnknownKindNamesTheKinds(t *testing.T) {
+	dir := newPlan(t)
+
+	res := cli(t, dir, "backlog", "create", "--title", "A hunch", "--kind", "hunch")
+	if res.Code == 0 {
+		t.Fatal("an unknown kind must be refused")
+	}
+	for _, kind := range core.BacklogKinds {
+		if !strings.Contains(res.Stderr, kind) {
+			t.Errorf("the refusal should name the kind %q: %s", kind, res.Stderr)
+		}
 	}
 }
 
