@@ -13,7 +13,7 @@ file, which becomes the ADR's history.
 |--:|---|---|---|
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
-| **C** | the backlog — one item, `kind: idea \| feature \| bug` | queued · version → 5 | [briefs/slice-c.md](briefs/slice-c.md) |
+| **C** | the backlog — one item, `kind: idea \| feature \| bug` | 🟡 **in review** — the runner landed it (7 commits, AC-01..AC-06); the review is out | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | queued · version → 6 | [briefs/slice-d.md](briefs/slice-d.md) |
 | **E** | the mascot, the glossary, ADR 0009, the sweep, two LOW notes | queued | [briefs/slice-e.md](briefs/slice-e.md) |
 
@@ -46,6 +46,15 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **reviewer** | reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation. **The current lane is `w1Z:p4`.** |
 | **verifier** | the reviewer's own second lane; it dispatched F-49 and F-50 |
 | **orchestrator** | dispatches, verifies, rules on the findings, writes the paper. **This one is `w1Z:p1`.** |
+
+### Slice C's rulings — and one question for the chef
+
+| | |
+|---|---|
+| **An older plan's specials** | the console reads them **read-only**, in a third group under the Backlog tab. The tool reads an old plan; it does not rewrite it. Recorded in the decision of record. |
+| **No migration verb** | nothing moves a legacy special into the backlog — a verb would move the command count this slice pins at **42**. **Open question for the chef:** is read-only the end state for an old plan's specials, or does the tool owe a migration? Not a blocker for the rename. |
+| **The version fence is one-directional** | `internal/core/lock.go` refuses when `plan > DomainVersion`: an **old tool** must not write a plan it does not understand; a **new tool** may write an old plan. The orchestrator's first review brief had this backwards, and the runner's report corrected it — the brief now says judge against the code. |
+| **F-73** | fixed — `kitchen/project.json` says `maitre`. The journal took the migration as event **34**, a `control` event stamped 5 — an append, never a rewrite. |
 
 ### Slice B's findings — and where each one lands
 
