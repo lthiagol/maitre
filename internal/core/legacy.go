@@ -41,6 +41,12 @@ type LegacyItem struct {
 	Scope  []string `json:"scope,omitempty"`
 	Tags   []string `json:"tags,omitempty"`
 	Status string   `json:"status"`
+	// PromotedTo is where the item went, when it was promoted.
+	//
+	// The old format kept the pointer, and the pointer is a promise: it says an
+	// id was taken. A plan that is read but never written still has to honour
+	// the promise — the id must not be handed to a stranger.
+	PromotedTo string `json:"promoted_to,omitempty"`
 	// Rung is where the item came from — a special or a prep note. It is read
 	// from the directory the file lives in, not from the file.
 	Rung string `json:"-"`

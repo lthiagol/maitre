@@ -470,6 +470,10 @@ func (s *Store) NextRecipeID() (string, error) {
 }
 
 // reservedRecipeIDs are the recipe ids a backlog item points at.
+//
+// The old plan's artifacts carry pointers too, and a pointer the reader drops is a
+// promise broken: the id it names would be handed to a stranger, and the trail
+// would resolve to the wrong recipe.
 func (s *Store) reservedRecipeIDs() ([]string, error) {
 	items, err := s.ListBacklogItems()
 	if err != nil {
@@ -477,6 +481,13 @@ func (s *Store) reservedRecipeIDs() ([]string, error) {
 	}
 	promoted := make([]string, 0, len(items))
 	for _, n := range items {
+		promoted = append(promoted, n.PromotedTo)
+	}
+	legacy, err := s.ListLegacyItems()
+	if err != nil {
+		return nil, err
+	}
+	for _, n := range legacy {
 		promoted = append(promoted, n.PromotedTo)
 	}
 	return referencedIDs(promoted, "R"), nil

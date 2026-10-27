@@ -89,6 +89,9 @@ func (m *Model) backlogDetail(width int) []string {
 			out = append(out, "  "+strings.Join(it.Tags, ", "))
 			out = append(out, "")
 		}
+		if it.PromotedTo != "" {
+			out = append(out, m.styAcc.Render("Promoted to "+it.PromotedTo))
+		}
 		return out
 	}
 	return []string{m.styDim.Render("  (nothing selected)")}

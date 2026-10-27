@@ -146,6 +146,58 @@ func TestADanglingPointerResolvesToNothing(t *testing.T) {
 	}
 }
 
+// TestALegacyDanglingPointerResolvesToNothing covers the old plan's pointers.
+//
+// A prep note written before the rename carries the same promise as one written
+// after it: it points at a recipe id, and that id must stay reserved. A reader that
+// drops the pointer hands the id to a stranger, and the trail resolves to the wrong
+// recipe.
+func TestALegacyDanglingPointerResolvesToNothing(t *testing.T) {
+	ops, store := newOps(t)
+
+	// The state a crash leaves, in the plan format before the rename.
+	dir := filepath.Join(store.Root, "prep-notes")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	note := `{"id":"N01","title":"A note","intent":"first","status":"promoted","promoted_to":"recipe RCP10"}`
+	if err := os.WriteFile(filepath.Join(dir, "N01-a-note.json"), []byte(note), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Nine recipes, so the numbering reaches the id the pointer names.
+	for i := 0; i < 9; i++ {
+		if _, err := ops.CreateRecipe(readySpec()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	next, err := store.NextRecipeID()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if next == "RCP10" {
+		t.Fatalf("the next id is %q, but that is the one the old plan points at", next)
+	}
+
+	// And nothing carries it: the pointer resolves to nothing.
+	r, err := ops.CreateRecipe(readySpec())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.ID == "RCP10" {
+		t.Fatalf("the referenced id %q was handed out to a new recipe", r.ID)
+	}
+	recipes, err := store.ListRecipes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, rec := range recipes {
+		if rec.ID == "RCP10" {
+			t.Fatal("the dangling pointer now resolves to a stranger")
+		}
+	}
+}
+
 // TestAPromotionIsRecordedInTheJournal covers the trail.
 //
 // The promotion is an event like any other: the journal is the only event log, and a
