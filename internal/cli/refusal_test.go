@@ -7,7 +7,7 @@ import (
 
 // TestARefusalIsInTheLog covers the refusal the log used to swallow.
 //
-// The journal is the only event log, and `scale log` is how an agent reads it. A
+// The journal is the only event log, and `maitre-cli log` is how an agent reads it. A
 // refusal that is not there is an attempt nobody can see was turned away.
 func TestARefusalIsInTheLog(t *testing.T) {
 	dir := newPlan(t)

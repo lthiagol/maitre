@@ -24,7 +24,7 @@ var staleLockAfter = 30 * time.Second
 // chance of two writers colliding is small but not zero, which is why the lock exists at
 // all.
 //
-// The lock is advisory: it stops two `scale` processes from interleaving. It does not
+// The lock is advisory: it stops two `maitre-cli` processes from interleaving. It does not
 // stop a hand edit — which the plan-zone rule already forbids.
 //
 // Every write takes this lock, so it is also where the version guard lives: a tool

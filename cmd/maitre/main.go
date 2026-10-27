@@ -45,7 +45,7 @@ func run() error {
 	}
 	root, err := core.FindRoot(cwd)
 	if err != nil {
-		return fmt.Errorf("%w — run `scale init` first", err)
+		return fmt.Errorf("%w — run `maitre-cli init` first", err)
 	}
 	store := core.Open(root)
 
@@ -81,7 +81,7 @@ func run() error {
 	}
 
 	if !ui.IsTerminal(os.Stdin) {
-		return fmt.Errorf("the console needs a terminal — use `maitre --render` for a snapshot, or `scale` for scripted access")
+		return fmt.Errorf("the console needs a terminal — use `maitre --render` for a snapshot, or `maitre-cli` for scripted access")
 	}
 
 	// The interactive console watches the disk: the chef sees a change on disk

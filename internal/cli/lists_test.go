@@ -52,16 +52,16 @@ func checkNoNulls(t *testing.T, dir string, args ...string) {
 	t.Helper()
 	res := cli(t, dir, args...)
 	if !res.ok(t) {
-		t.Fatalf("scale %v failed:\n%s", args, res.Stderr)
+		t.Fatalf("maitre-cli %v failed:\n%s", args, res.Stderr)
 	}
 	var doc any
 	if err := json.Unmarshal([]byte(res.Stdout), &doc); err != nil {
-		t.Fatalf("scale %v did not print a document: %v\n%s", args, err, res.Stdout)
+		t.Fatalf("maitre-cli %v did not print a document: %v\n%s", args, err, res.Stdout)
 	}
 	var nulls []string
 	findNulls(doc, "", &nulls)
 	if len(nulls) > 0 {
-		t.Fatalf("scale %v printed nulls: %v", args, nulls)
+		t.Fatalf("maitre-cli %v printed nulls: %v", args, nulls)
 	}
 }
 

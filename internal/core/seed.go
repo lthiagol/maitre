@@ -9,7 +9,7 @@ import (
 // Everything is created through the Operations layer, so the seeded plan cannot drift
 // from the model — and seeding is itself an exercise of the write path.
 //
-// It is used twice: as the console's test fixture, and behind `scale demo` so a human
+// It is used twice: as the console's test fixture, and behind `maitre-cli demo` so a human
 // can see the console without setting up a project.
 //
 // The actors vary by phase, so the journal reads like a real session: the sous chef
@@ -24,7 +24,7 @@ func Seed(store *Store) error {
 // longer than the column, thirty criteria, fifty steps, twelve findings, an empty
 // recipe, and text that is not ASCII. Use it to find out what the console can survive.
 //
-//	go run ./cmd/scale demo --dir /tmp/kb --chaos
+//	go run ./cmd/maitre-cli demo --dir /tmp/kb --chaos
 func SeedStress(store *Store) error {
 	return seed(store, true)
 }

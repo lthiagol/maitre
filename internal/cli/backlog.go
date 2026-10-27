@@ -65,7 +65,7 @@ func (r *Runner) cmdSpecialUpdate(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale special update <id> [--title] [--body] [--tag]")
+		r.fail("usage: maitre-cli special update <id> [--title] [--body] [--tag]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -88,7 +88,7 @@ func (r *Runner) cmdSpecialDismiss(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale special dismiss <id> --reason <text>")
+		r.fail("usage: maitre-cli special dismiss <id> --reason <text>")
 		return ExitError
 	}
 	if strings.TrimSpace(*reason) == "" {
@@ -114,7 +114,7 @@ func (r *Runner) cmdSpecialPromote(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale special promote <id>")
+		r.fail("usage: maitre-cli special promote <id>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -187,7 +187,7 @@ func (r *Runner) cmdPrepNoteUpdate(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale prepnote update <id> [--title] [--intent] [--scope]")
+		r.fail("usage: maitre-cli prepnote update <id> [--title] [--intent] [--scope]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -209,7 +209,7 @@ func (r *Runner) cmdPrepNotePromote(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale prepnote promote <id>")
+		r.fail("usage: maitre-cli prepnote promote <id>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)

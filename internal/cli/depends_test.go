@@ -11,7 +11,7 @@ import (
 // TestADependencyIsReachableFromTheCLI covers the field with no writer.
 //
 // `depends_on` was in the model and in the gate table, but nothing could write it — so
-// a plan built through `scale` could never express a dependency, and the
+// a plan built through `maitre-cli` could never express a dependency, and the
 // `dependencies.satisfied` gate could never be reached from the agent surface.
 func TestADependencyIsReachableFromTheCLI(t *testing.T) {
 	dir := newPlan(t)

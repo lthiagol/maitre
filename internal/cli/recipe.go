@@ -142,7 +142,7 @@ func (r *Runner) cmdRecipeShow(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe show <id>")
+		r.fail("usage: maitre-cli recipe show <id>")
 		return ExitError
 	}
 	store, _, err := r.openStore(fs)
@@ -171,7 +171,7 @@ func (r *Runner) cmdRecipeUpdate(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe update <id> [flags]")
+		r.fail("usage: maitre-cli recipe update <id> [flags]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -224,7 +224,7 @@ func (r *Runner) cmdRecipeAdvance(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale recipe advance <id> <event>")
+		r.fail("usage: maitre-cli recipe advance <id> <event>")
 		return ExitError
 	}
 	ev := core.Event(fs.arg(1))
@@ -264,11 +264,11 @@ func (r *Runner) cmdRecipeAdvance(args []string) int {
 func ownVerb(ev core.Event) string {
 	switch ev {
 	case core.EventApprove:
-		return "scale recipe approve <id> --by <name>"
+		return "maitre-cli recipe approve <id> --by <name>"
 	case core.EventRequestChanges:
-		return "scale recipe request-changes <id> --by <name> --notes <text>"
+		return "maitre-cli recipe request-changes <id> --by <name> --notes <text>"
 	case core.EventStart:
-		return "scale recipe claim <id> --agent <name>"
+		return "maitre-cli recipe claim <id> --agent <name>"
 	}
 	return ""
 }
@@ -282,7 +282,7 @@ func (r *Runner) cmdRecipeApprove(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe approve <id> --by <name>")
+		r.fail("usage: maitre-cli recipe approve <id> --by <name>")
 		return ExitError
 	}
 	if strings.TrimSpace(*by) == "" {
@@ -310,7 +310,7 @@ func (r *Runner) cmdRecipeRequestChanges(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe request-changes <id> --by <name> --notes <text>")
+		r.fail("usage: maitre-cli recipe request-changes <id> --by <name> --notes <text>")
 		return ExitError
 	}
 	if strings.TrimSpace(*notes) == "" {
@@ -337,7 +337,7 @@ func (r *Runner) cmdRecipeClaim(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe claim <id> --agent <name>")
+		r.fail("usage: maitre-cli recipe claim <id> --agent <name>")
 		return ExitError
 	}
 	if strings.TrimSpace(*agent) == "" {
@@ -364,7 +364,7 @@ func (r *Runner) cmdRecipeDocument(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe document <id> --text <text>")
+		r.fail("usage: maitre-cli recipe document <id> --text <text>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -389,7 +389,7 @@ func (r *Runner) cmdRecipeReview(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe review <id> --reviewer <name> --verdict <ok|changes-needed>")
+		r.fail("usage: maitre-cli recipe review <id> --reviewer <name> --verdict <ok|changes-needed>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -414,7 +414,7 @@ func (r *Runner) cmdRecipeComment(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe comment <id> --author <name> --body <text>")
+		r.fail("usage: maitre-cli recipe comment <id> --author <name> --body <text>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -446,7 +446,7 @@ func (r *Runner) cmdRecipeUnblock(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe unblock <id>")
+		r.fail("usage: maitre-cli recipe unblock <id>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -474,7 +474,7 @@ func (r *Runner) cmdRecipeResume(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale recipe resume <id>")
+		r.fail("usage: maitre-cli recipe resume <id>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -505,7 +505,7 @@ func (r *Runner) overlay(args []string, verb string, fn func(*core.Operations, s
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail(fmt.Sprintf("usage: scale recipe %s <id> --reason <text>", verb))
+		r.fail(fmt.Sprintf("usage: maitre-cli recipe %s <id> --reason <text>", verb))
 		return ExitError
 	}
 	if strings.TrimSpace(*reason) == "" {

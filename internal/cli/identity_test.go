@@ -31,7 +31,7 @@ func signedOffRecipe(t *testing.T, dir string) {
 // TestActorFlagsAreGlobal covers the identity flags in the documented position.
 //
 // The three identity flags were declared only by `recipe create`. Every other verb
-// rejected them as unknown flags, and the documented form — `scale --actor x --session
+// rejected them as unknown flags, and the documented form — `maitre-cli --actor x --session
 // y --role z recipe claim RCP01` — was refused by the top-level dispatcher as an
 // unknown command. The L5 session stamp could then only be set through environment
 // variables.

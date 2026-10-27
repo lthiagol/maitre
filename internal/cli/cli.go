@@ -1,4 +1,4 @@
-// Package cli implements the agent-facing command surface: the `scale` binary.
+// Package cli implements the agent-facing command surface: the `maitre-cli` binary.
 //
 // Every command is a thin adapter over an operation in the core package. The CLI owns no
 // domain rules and never touches the plan files directly, so it cannot drift from the
@@ -34,7 +34,7 @@ type Runner struct {
 	Stderr io.Writer
 
 	// The identity given before the command, in the documented global form:
-	// `scale --actor line-cook recipe claim R01`.
+	// `maitre-cli --actor line-cook recipe claim R01`.
 	actor   string
 	session string
 	role    string
@@ -212,7 +212,7 @@ type identity struct {
 
 // splitIdentity pulls the identity flags out of the front of the argument list.
 //
-// The documented form puts them before the command — `scale --actor line-cook recipe
+// The documented form puts them before the command — `maitre-cli --actor line-cook recipe
 // claim R01` — and they may also come after the verb, where the verb's own flag set
 // reads them. The first argument that is not an identity flag ends the scan.
 func splitIdentity(args []string) ([]string, identity, error) {

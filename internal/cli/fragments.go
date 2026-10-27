@@ -19,7 +19,7 @@ func (r *Runner) cmdACAdd(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale ac add <id> --description <text> --verification <command>")
+		r.fail("usage: maitre-cli ac add <id> --description <text> --verification <command>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -45,7 +45,7 @@ func (r *Runner) cmdACVerify(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale ac verify <id> <AC>")
+		r.fail("usage: maitre-cli ac verify <id> <AC>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -73,7 +73,7 @@ func (r *Runner) cmdACSignOff(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale ac signoff <id> <AC> --by <name> --note <text>")
+		r.fail("usage: maitre-cli ac signoff <id> <AC> --by <name> --note <text>")
 		return ExitError
 	}
 	if strings.TrimSpace(*by) == "" {
@@ -101,7 +101,7 @@ func (r *Runner) cmdACDefer(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale ac defer <id> <AC> --reason <text> [--follow-up <id>]")
+		r.fail("usage: maitre-cli ac defer <id> <AC> --reason <text> [--follow-up <id>]")
 		return ExitError
 	}
 	if strings.TrimSpace(*reason) == "" {
@@ -138,7 +138,7 @@ func (r *Runner) cmdWPAdd(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale wp add <id> --name <text> [--goal] [--rollback]")
+		r.fail("usage: maitre-cli wp add <id> --name <text> [--goal] [--rollback]")
 		return ExitError
 	}
 	if strings.TrimSpace(*name) == "" {
@@ -172,7 +172,7 @@ func (r *Runner) cmdStepAdd(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale step add <id> --action <text> --done-when <text> [--covers AC-01]")
+		r.fail("usage: maitre-cli step add <id> --action <text> --done-when <text> [--covers AC-01]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -214,7 +214,7 @@ func (r *Runner) stepStatus(args []string, verb, status string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale step " + verb + " <id> <G1>")
+		r.fail("usage: maitre-cli step " + verb + " <id> <G1>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -237,7 +237,7 @@ func (r *Runner) cmdStepDeviate(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale step deviate <id> <G1> --note <text>")
+		r.fail("usage: maitre-cli step deviate <id> <G1> --note <text>")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -269,7 +269,7 @@ func (r *Runner) cmdFindingAdd(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: scale finding add <id> --description <text> [--severity] [--category] [--phase]")
+		r.fail("usage: maitre-cli finding add <id> --description <text> [--severity] [--category] [--phase]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -301,7 +301,7 @@ func (r *Runner) cmdFindingResolve(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale finding resolve <id> <F-01> [--note <text>]")
+		r.fail("usage: maitre-cli finding resolve <id> <F-01> [--note <text>]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -328,7 +328,7 @@ func (r *Runner) cmdFindingReopen(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale finding reopen <id> <F-01> --reason <text>")
+		r.fail("usage: maitre-cli finding reopen <id> <F-01> --reason <text>")
 		return ExitError
 	}
 	if strings.TrimSpace(*reason) == "" {
@@ -355,7 +355,7 @@ func (r *Runner) cmdFindingDismiss(args []string) int {
 		return ExitError
 	}
 	if fs.nArg() != 2 {
-		r.fail("usage: scale finding dismiss <id> <F-01> --reason <text>")
+		r.fail("usage: maitre-cli finding dismiss <id> <F-01> --reason <text>")
 		return ExitError
 	}
 	if strings.TrimSpace(*reason) == "" {

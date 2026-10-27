@@ -21,7 +21,7 @@ func journalCount(t *testing.T, dir string) int {
 //
 // The CLI wrote the prep note file itself: no lock, no operation, and — worst — no
 // journal entry. The journal is the only event log, so the edit was invisible to
-// `scale log --since`, to the console's Log tab, and to any agent watching for
+// `maitre-cli log --since`, to the console's Log tab, and to any agent watching for
 // changes.
 func TestPrepNoteUpdateGoesThroughAnOperation(t *testing.T) {
 	dir := newPlan(t)
