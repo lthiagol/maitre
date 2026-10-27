@@ -86,7 +86,7 @@ merely that a round exists. (v1-equivalent hole: a reviewer could record
 - v1's `thread`-shaped schema finally gets used.
 
 ### Negative
-- **A recipe can grow long.** Every comment, every finding, every proof is on it. There is
+- **A recipe can grow long.** Every comment, every finding, every evidence is on it. There is
   no summarisation, and a recipe with a hundred findings is a hundred findings of JSON.
   The console has to render it; an agent has to read it.
 - **Polling is the cost of coordination.** Every agent that wants to know something

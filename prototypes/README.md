@@ -58,7 +58,7 @@ Seven recipes spread across every lane, so each tab has something to say:
 | R02 Sign off the menu | ready | awaiting the chef |
 | R03 Wire the review queue | remediation | 1 open tasting note |
 | R04 Add the backlog view | approved | waiting on R02 |
-| R05 Sharpen the proof contract | executing | on the line |
+| R05 Sharpen the evidence contract | executing | on the line |
 | R06 Draft the glossary | closed | served |
 | R07 Record the review protocol | draft | waiting on R05 |
 

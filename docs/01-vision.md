@@ -30,7 +30,7 @@ surface was a viewer and the CLI was the tool. That is the central thing we fix.
 
 | G | Goal | How we know |
 |---|---|---|
-| G1 | An AC cannot be `passed` without a proof a machine produced | Every `passed` AC carries machine-attached evidence; a proof that matched nothing is rejected |
+| G1 | An AC cannot be `passed` without evidence a machine produced | Every `passed` AC carries machine-attached evidence; evidence that matched nothing is rejected |
 | G2 | The lifecycle cannot skip a stage | Transitions are a pure function of (state, event, evidence); guards run inside the transition |
 | G3 | The human interface is the product | A human can create, groom, execute, review and close a recipe without the CLI |
 | G4 | Neither surface outgrows the domain | The CLI's operation set is a subset of the domain's; neither invents an operation |

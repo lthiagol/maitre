@@ -9,7 +9,7 @@ From [ADR-0003](decisions/0003-surface-split.md), the console owns:
 
 | Job | What it is |
 |---|---|
-| **View** | Read the plan well — the recipe as prose, the acceptance criteria with their proofs, the audit trail, findings anchored to code |
+| **View** | Read the plan well — the recipe as prose, the acceptance criteria with their evidence, the audit trail, findings anchored to code |
 | **Decide** | Sign off, triage tasting notes, accept or reject a scope, choose what is next |
 | **Manage the backlog** | Create, edit, shape, promote, dismiss backlog items |
 | **Run** | Start, pause, watch, steer execution |
@@ -191,7 +191,7 @@ milestones forked at their dependency.
 ● RCP02   ready       Sign off the menu                             1/2
  └─ needs RCP02
    └─ RCP04   approved    Add the backlog view                          1/1 ● needs RCP02
-● RCP05   executing   Sharpen the proof contract                    1/2
+● RCP05   executing   Sharpen the evidence contract                1/2
  └─ needs RCP05
    └─ RCP07   draft       Record the review protocol                    0/1 needs RCP05
 ```
@@ -210,7 +210,7 @@ milestones forked at their dependency.
   *waits on* one are told apart — the first cannot be executed at all, the second can
   be, once the cycle is broken.
 - The rows carry what the console already says about a recipe — the lifecycle, the
-  proof count, the open tasting notes — and what it waits on.
+  evidence count, the open tasting notes — and what it waits on.
 
 Nothing is stored: the tree is a derived view (`core.TreeOf`), like every other thing
 the console draws.
@@ -426,7 +426,7 @@ wrapped text is the fallback.
 
 **Observe and steer.** v2 has no orchestration — that is v2.2+. So the console:
 
-- **observes** — what is running, its progress, its proofs, its open notes
+- **observes** — what is running, its progress, its evidence, its open notes
 - **steers** — the chef writes a note or a request onto the recipe, and the agent picks
   it up on its next turn
 

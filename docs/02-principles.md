@@ -9,7 +9,7 @@
 | **P2** | A mechanism, not a reminder | v1 D-40/L7, M203 |
 | **P3** | One verb per intent | v1 47 commands / 265 subcommands |
 | **P4** | The model is the contract | v1 `CREATE_MILESTONE_KEYS`, B-85, B-87 |
-| **P5** | Proof, not assertion | v1 zero-match gate, D-25/R7 |
+| **P5** | Evidence, not assertion | v1 zero-match gate, D-25/R7 |
 | **P6** | One source for docs; lint the copies | v1 `stages.toml` drift 7/12 |
 | **P7** | Closed enums, uniform errors | v1 L63, L26 |
 | **P8** | The plan zone is a boundary | v1 lazybrew I-02, I-10 |
@@ -23,7 +23,7 @@
 
 ## P1 — Derive, never store
 
-**Evidence.** v1 implemented `lifecycle → (spec_status, execution_status)` in **five
+**The failure.** v1 implemented `lifecycle → (spec_status, execution_status)` in **five
 places**; four didn't handle `executed`, so a migrated milestone escaped gates G3, G4 and
 G7. Separately, `plan.json`'s index was a second copy of state that drifted (reproduced
 twice), and `flow_stages` was a *second* 12-stage state machine over the 7-phase
@@ -37,7 +37,7 @@ list *is* the lifecycle.
 
 ## P2 — A mechanism, not a reminder
 
-**Evidence.** The most-repeated failure class in v1. Role separation was enforced by
+**The failure.** The most-repeated failure class in v1. Role separation was enforced by
 prose and failed anyway — the runner called `mp reviews pass` on its own work (M203).
 v1's own conclusion (`decisions.json` D-40/L7): *"Prompt-text enforcement was already
 tried and failed … the runner will complete it by any available means, including
@@ -54,7 +54,7 @@ not only in optional orchestration.
 
 ## P3 — One verb per intent
 
-**Evidence.** v1: 47 top-level commands and 265 subcommands for one linear workflow.
+**The failure.** v1: 47 top-level commands and 265 subcommands for one linear workflow.
 8 ways to read a milestone, 11 to list, 6 to record a problem, 5 to record a note, 4
 archive schemes, 3 status setters, 3 migration paths, 3 activity readers, and a full
 duplicate tree (`milestone ac` vs `milestone criterion`).
@@ -67,7 +67,7 @@ a couple of screens.
 
 ## P4 — The model is the contract; the CLI is generated from it
 
-**Evidence.** `CREATE_MILESTONE_KEYS` omits fields the struct carries — a decomposed
+**The failure.** `CREATE_MILESTONE_KEYS` omits fields the struct carries — a decomposed
 draft can't be authored through the JSON path. `step add` lacks `--depends-on-steps` that
 `step update` has. `bulk` covers priority/spec-status/lifecycle but not effort/risk, so
 *"the only remedy is a forbidden hand-edit."* `list milestones` omits `priority` and
@@ -78,23 +78,23 @@ derivable from the model. A field that can't be set or read is a bug in one of t
 
 **Consequence.** Schema/code generation, or an exhaustive model↔surface coverage test.
 
-## P5 — Proof, not assertion
+## P5 — Evidence, not assertion
 
-**Evidence.** An AC whose `verification` filter matches **zero** tests is marked
+**The failure.** An AC whose `verification` filter matches **zero** tests is marked
 `passed` — *"worse than no gate, because it manufactures confidence."* A
 `/tmp/verify_*.sh` script is unrunnable at close-out (exit 127). A `nextest` regex
 matching 0 tests is a silent pass that masked 14+ failures. A verification that greps
 `--help` output "verified" a flag existed without exercising the parser.
 
-**Principle.** A proof must be attributable: what it ran, what it matched, what the
-result was. A proof that matched nothing is not a proof.
+**Principle.** An evidence must be attributable: what it ran, what it matched, what
+the result was. An evidence that matched nothing is not evidence.
 
-**Consequence.** The verifier reports match counts and rejects zero-match proofs. Proof
-payloads are structured, not free-text prose.
+**Consequence.** The verifier reports match counts and rejects zero-match evidence.
+Evidence payloads are structured, not free-text prose.
 
 ## P6 — One source for docs; lint the copies
 
-**Evidence.** v1's `stages.toml` vs `SKILL.md` role table drifted in **7 of 12** cells
+**The failure.** v1's `stages.toml` vs `SKILL.md` role table drifted in **7 of 12** cells
 *while the lint stayed green* — even though the manifest's header claims the lint fails
 on divergence. The scratch recipe shipped broken in 3 files. `AGENTS.md` linked a
 nonexistent section and a nonexistent file. `ARCHITECTURE.md` still described the
@@ -108,7 +108,7 @@ forward, extended to the command reference and the docs tree.
 
 ## P7 — Closed enums, uniform error semantics
 
-**Evidence.** In v1, an unknown `--fields` path is a hard error, an unknown `--include`
+**The failure.** In v1, an unknown `--fields` path is a hard error, an unknown `--include`
 value is **silently ignored**, and an unknown `--type` returns an empty result with exit
 0. A safe unknown-value fallback silently disabled auto-remediation **with green unit
 tests** (L63). Step status had three sources with three answers; `risk` was `"medium"` in
@@ -119,7 +119,7 @@ unrecognized value is always an error — never a silent empty result.
 
 ## P8 — The plan zone is a boundary, not a convention
 
-**Evidence.** v1's two-zone rule was good but only social. It shipped a `mp config set
+**The failure.** v1's two-zone rule was good but only social. It shipped a `mp config set
 --plan-dir` that *wrote outside the plan directory*, and an `mp init` that emitted empty
 placeholder rows adopters had to hand-edit away (the one defect class an external adopter
 flagged as purely an `mp` bug).
@@ -130,7 +130,7 @@ anything but the tool, that's a bug.
 
 ## P9 — Fail loud, fail early, fail once
 
-**Evidence.** `effective_lifecycle` used `max()` to derive state, masking a wrong input
+**The failure.** `effective_lifecycle` used `max()` to derive state, masking a wrong input
 and reporting a milestone as **terminal `complete`, skipping the entire review phase**
 (L39). A dry-run path skipped the validation it was supposed to preview — *"Dry-run was a
 liar"* (L7). Bulk paths bypassed single-path gates (L6). `len()+1` ID generation
@@ -141,7 +141,7 @@ derive IDs from a scan of what exists — never from a count.
 
 ## P10 — Design for the reader who has no context
 
-**Evidence.** v1's consumer-surface lint exists because skills ship to adopters with no
+**The failure.** v1's consumer-surface lint exists because skills ship to adopters with no
 access to the repo's plan or history. The rules — no internal milestone IDs, no lesson
 codes, no pointers to repo-internal files — are good, and v1 had to *enforce* them with
 a ripgrep guard, which means the failure mode was "someone shipped internal IDs."
@@ -151,7 +151,7 @@ automatically rather than by review.
 
 ## P11 — One domain, two clients
 
-**Evidence.** v1's `raul` shelled out to `mp --format json` — a version-skew failure mode
+**The failure.** v1's `raul` shelled out to `mp --format json` — a version-skew failure mode
 (a stale installed `mp` → *"unexpected argument --all"*) and a release failure mode (two
 brew **formulas**, each needing its own checksum; the dev formula took the tag tarball's
 sha256 on every bump).
@@ -166,7 +166,7 @@ recipe, review queue, finding, evidence). The CLI is derived, not invented.
 
 ## P12 — The domain is UI-free
 
-**Evidence.** Same as P11. v1 had no such separation, so the UI and the CLI could
+**The failure.** Same as P11. v1 had no such separation, so the UI and the CLI could
 disagree about what a plan is.
 
 **Principle.** The domain layer has zero UI imports. Every surface is a client of it.
@@ -177,7 +177,7 @@ web/native" option real rather than theoretical.
 
 ## P13 — Build by using, not by specifying
 
-**Evidence.** v1's difficulties came from breadth: 47 commands for one workflow, eleven
+**The failure.** v1's difficulties came from breadth: 47 commands for one workflow, eleven
 artifact types, a 239 KB index file, and a doc tree that drifted because the same claim
 lived in 2–4 files. CPD itself argues that front-loading *implementation* is
 counterproductive — *"implementation design is discovered by building."*

@@ -93,7 +93,7 @@ discovered by using it.
 The gate table, the transition table and the atomic store.
 
 **Slice 2** — the `maitre` board: lanes, recipe rows, detail pane, `maitre --render` for a
-static snapshot. Derived views (`Lane`, `ReviewState`, `Readiness`, `ProofSummary`) live
+static snapshot. Derived views (`Lane`, `ReviewState`, `Readiness`, `EvidenceSummary`) live
 in `internal/core/views.go` — computed, never stored.
 
 **Slice 3a — the operation layer.** `core.Operations` holds the store *and* the audit
@@ -165,7 +165,7 @@ fixer's move, and the console must not do an agent's job ([ADR-0003](docs/decisi
 second framework. An open note outranks the review: it is the concrete blocker — the
 close gate refuses a recipe with an open note — and a verdict can wait.
 
-**The round trip ran.** RCP01 was authored through `maitre-cli`, executed with real proofs,
+**The round trip ran.** RCP01 was authored through `maitre-cli`, executed with real evidence,
 self-reviewed, and then reviewed independently in `maitre` — the first time the loop
 ran on real content. See `kitchen/` for the artifact and the journal.
 
@@ -232,7 +232,7 @@ weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
 | [0003](docs/decisions/0003-surface-split.md) | Who writes what: artifact vs. management |
 | [0004](docs/decisions/0004-naming.md) | Naming — superseded in part by 0009 |
 | [0005](docs/decisions/0005-vocabulary.md) | Vocabulary: generic methodology, specific product |
-| [0006](docs/decisions/0006-verification.md) | Verification — who runs it, and what a proof is |
+| [0006](docs/decisions/0006-verification.md) | Verification — who runs it, and what an evidence is |
 | [0007](docs/decisions/0007-operation-layer.md) | The operation layer |
 | [0008](docs/decisions/0008-artifact-is-the-channel.md) | The artifact is the channel — no agent-to-agent messaging |
 | **0009** | **Naming: maitre · `maitre-cli` · `maitre` · the ladder** — written in a later slice; until then [docs/07-vocabulary.md](docs/07-vocabulary.md) is the decision of record |

@@ -68,7 +68,7 @@ that grouping is a query, not a word.
 | The CLI | Nothing to write; a filter that reads like `--course` would be a query over `depends_on` and the recipes' titles. |
 
 **What it forecloses.** A course cannot be shared between plans, cannot be signed off as a
-unit, and cannot have its own acceptance criteria. If a course ever needs its own proof
+unit, and cannot have its own acceptance criteria. If a course ever needs its own evidence
 ("this set is served together and all three are green"), it becomes an artifact — and that
 is the moment to build it.
 
@@ -173,7 +173,7 @@ does the recipe's `intent.outcome` mean when the code already exists?
 
 | What | Where |
 |---|---|
-| The verifier's rule: a proof is a command **that matched something**. A proof that matched nothing is rejected — "a green gate that proves nothing" is the project's first v1 lesson. | `internal/core/verifier.go:170`, [../AGENTS.md](../AGENTS.md) |
+| The verifier's rule: an evidence is a command **that matched something**. Evidence that matched nothing is rejected — "a green gate that proves nothing" is the project's first v1 lesson. | `internal/core/verifier.go:170`, [../AGENTS.md](../AGENTS.md) |
 | `ac.falsifiable` accepts only a command the tool can count matches from, or a `manual:` procedure. A brownfield criterion is verifiable in a way a greenfield one is not: **the suite already exists.** | `internal/core/lifecycle.go:397` |
 | The domain's own shape: an intent, a problem, a scope, criteria, and a method. A brownfield job has all of these — the *problem* is "this behaviour is wrong or missing" and the *outcome* is "this behaviour is right". | [docs/03 §2](03-domain-model.md) |
 | A finding already carries an anchor to code: `{file, line, side}`. | `internal/core/model.go` |
@@ -181,10 +181,10 @@ does the recipe's `intent.outcome` mean when the code already exists?
 ### The asymmetry, stated plainly
 
 A greenfield criterion is proved by a **new** test: the test is written, and the test's
-passing is the proof. A brownfield criterion is proved by an **existing** suite that must
-not change its verdict — which is the same proof, run in the opposite direction. The
-domain has one word for both — a **proof** — and the plan's machinery does not care which
-direction it runs. That is the whole proposal: **the plan needs no brownfield concept;
+passing is the evidence. A brownfield criterion is proved by an **existing** suite that
+must not change its verdict — which is the same evidence, run in the opposite direction.
+The domain has one word for both — an **evidence** — and the plan's machinery does not
+care which direction it runs. That is the whole proposal: **the plan needs no brownfield concept;
 the recipe's method needs one extra step.**
 
 ### The options
@@ -203,21 +203,21 @@ other (*"the loader's behaviour is written down"*). Its criteria are **regressio
 criteria**: *"the queue keeps its order"*, *"a recipe with no criteria is refused"*, each
 proved by the command that already exists — `go test ./internal/core -run Board` — which
 the verifier counts exactly as it counts a new test. Nothing about the recipe changes
-shape; what changes is the *direction* the proof runs.
+shape; what changes is the *direction* the evidence runs.
 
 **The one thing that must be said, because it is the trap:** a brownfield criterion is
-proved by a test that **already passes**. So the proof is not the criterion's own
+proved by a test that **already passes**. So the evidence is not the criterion's own
 existence — it is the criterion's **failing on the broken code**. The method therefore
 carries the order: write the test, watch it fail, change the code, watch it pass. A
 brownfield recipe whose criteria were green before the work started has proved nothing —
 which is v1's lesson (*evidence clobbering*) and the audit's (*zero-match verification*)
 in one line.
 
-**What would have to be true to do it differently.** If a brownfield job's proof has to
+**What would have to be true to do it differently.** If a brownfield job's evidence has to
 be *about* the pre-existing code — "this behaviour is preserved" — then a passing test is
 not enough, because the test may not have existed before the change. That needs a
 **baseline**: the suite run before and after, compared. That is a real feature, it is not
-what the domain does today, and it should be built when a brownfield job's proof actually
+what the domain does today, and it should be built when a brownfield job's evidence actually
 needs it — not before.
 
 **What it would change**
