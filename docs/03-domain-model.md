@@ -30,22 +30,17 @@ CPD's five rungs, named for a board ([ADR-0004](decisions/0004-naming.md)).
 
 ```mermaid
 flowchart TB
-    special["special<br/><i>rung 0</i><br/>a hunch, an observation,<br/>an agent discovery"]
-    prepnote["prep note<br/><i>rung 1</i><br/>lightweight intent + scope,<br/>no acceptance criteria yet"]
+    item["backlog item<br/><i>rung 0 and 1</i><br/>a hunch, an observation,<br/>a small task — one artifact,<br/>one kind"]
     recipe["recipe<br/><i>rung 2</i><br/>full anatomy: intent, problem,<br/>scope, ACs, method, evidence"]
     course["course<br/><i>rung 3</i><br/>one intent across<br/>several recipes"]
     menu["menu<br/><i>rung 4</i><br/>coordinated recipes,<br/>ordered, cross-dependent"]
 
-    special -->|"describes a problem worth solving"| prepnote
-    prepnote -->|"success needs verifying"| recipe
+    item -->|"success needs verifying"| recipe
     recipe -->|"a unit grows its own intent"| course
     course -->|"many, with cross-dependencies"| menu
 
-    prepnote -.->|"demote"| special
-    recipe -.->|"demote"| prepnote
-
     question{{"open question<br/><i>Q8 — where does a pending<br/>decision live?</i>"}}
-    question -.->|"possible home"| prepnote
+    question -.->|"possible home"| item
     question -.->|"possible home"| recipe
 
     classDef open fill:#2a1f33,stroke:#8a6fb0,stroke-dasharray: 4 3
@@ -61,7 +56,33 @@ execution order.
 
 The dashed node is [Q8](01-vision.md#q8--does-the-ladder-need-a-decision-shaped-rung):
 our ladder has no rung for *a decision we need before we can write the recipe*. Currently
-that would live as prose inside a prep note. Deferred — build and observe.
+that would live as prose inside a backlog item. Deferred — build and observe.
+
+### 1.1 How a backlog item becomes work
+
+The backlog's two rungs — a *special* (a hunch) and a *prep note* (intent and scope,
+before criteria) — are **one artifact with a kind**. The kind is the only truth; the
+console's groups are derived from it.
+
+```
+idea ──shaped into──▶ a small task   (kind: idea → feature|bug, plus a scope)
+idea ──shaped into──▶ a recipe       (promote)
+small task ──promoted──▶ a recipe
+```
+
+| | |
+|---|---|
+| **Shaping** | An **update**, not a promotion: the kind changes and a scope is added, and the id does not. `BL01` stays `BL01` — the id is kind-neutral, so the trail survives the shaping |
+| **Promotion** | One-way. The item's status becomes `promoted` and it records what it became (`promoted_to`) |
+| **An idea** | Becomes a recipe in `draft` with **no** criterion: the criteria are what the recipe is groomed into |
+| **A small task** | Becomes a recipe in `draft` with **exactly one** criterion: the work is small enough to be one thing, and a recipe with a criterion is falsifiable from the start |
+
+**No gate is weakened.** The promoted recipe is **not** pre-groomed: it carries no
+out-of-scope items, no steps and no work packages, and its criterion's *verification*
+is the recipe's own life — a criterion with no verification cannot pass
+`ac.falsifiable`. So the gates that guard a recipe refuse a promoted one exactly as
+they refuse any other half-written recipe. A promotion needed no new plan-format field
+and no special case in a rule.
 
 ### The CPD ↔ tool mapping — the single source
 
@@ -75,7 +96,7 @@ The rule behind the split: the kitchen names the **artifact** and the **place**;
 
 | Themed | Kept plain |
 |---|---|
-| recipe · special · prep note · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
+| recipe · backlog item · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
 | | `chef` · `sous-chef` · runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
 | `maitre-cli` · `maitre` · the skills | |
 
@@ -85,8 +106,7 @@ The rule behind the split: the kitchen names the **artifact** and the **place**;
 |---|---|---|
 | recipe | `RCP01`, children `RCP01.1` | workspace |
 | course | `C01` | workspace |
-| prep note | `N01` | workspace |
-| special | `S01` | workspace |
+| backlog item | `BL01` | workspace |
 | acceptance criterion | `AC-01` | recipe |
 | guidance step | `G1`, `G1.2` | recipe |
 | work package | `WP1` | recipe |
@@ -103,6 +123,10 @@ named `RCP01-<slug>.json`. The ids changed when the vocabulary was decided; the 
 and journals written before it carry the old forms, and a reader that cannot resolve
 them cannot read the past. One letter would not be enough: `RCP01` reduced by a single
 letter is `CP01`, which matches neither the new id nor the old one.
+
+The backlog's prefix is **two** letters — `BL01` — and the normaliser answers to both
+lengths: `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same item, and a file named
+`B01-<slug>.json` is read as the item `BL01`.
 
 ---
 
@@ -558,7 +582,7 @@ same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog 
 |---|---|
 | `ListRecipes(filter)` | The board |
 | `GetRecipe(id)` | Full artifact |
-| `ListIdeas / ListBriefs / ListEpics` | The backlog |
+| `ListBacklogItems()` | The backlog — every item, with its kind |
 | `GetProject()` | Charter and settings |
 | `Search(query, scope)` | Find anything |
 | `ComputeLane(id)` / `ComputePath(lane)` | Where it sits; what's next |
@@ -585,8 +609,7 @@ same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog 
 |---|---|
 | `ApproveRecipe(id, by)` / `RequestChanges(id, by, notes)` | |
 | `TriageFinding(id, findingID, action)` | Fix, dismiss, or defer |
-| `CreateIdea / UpdateIdea / PromoteIdea / DismissIdea` | |
-| `CreateBrief / UpdateBrief / PromoteBrief` | |
+| `CreateBacklogItem / UpdateBacklogItem / DismissBacklogItem / PromoteBacklogItem` | The backlog — one artifact, with a kind |
 | `CreateEpic / AddRecipeToEpic` | |
 | `BlockRecipe / UnblockRecipe / DeferRecipe / ResumeRecipe / CancelRecipe` | |
 | `RecordDecision(summary, context)` | Project-level ADR |
