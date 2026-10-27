@@ -82,7 +82,7 @@ anatomy, a second gate set and a second close path.
 `dismiss` comes to the small tasks too. Today only specials can be dismissed, and no
 one can say why.
 
-## The plan format changes (domain version 2 → 3)
+## The plan format changes (domain version 2 → 3, then 4)
 
 | Change | From | To |
 |---|---|---|
@@ -92,8 +92,10 @@ one can say why.
 | The recipe-level stamp | `evidence` | `completion` |
 | Journal roles | `line-cook`, `taster`, `expo` | `runner`, `reviewer`, `orchestrator` |
 
-The version guard is what makes this safe: a plan written under version 3 refuses a
-stale tool that speaks version 2.
+The version guard is what makes this safe: a plan written under the newer version
+refuses a stale tool that speaks the older one. The ids are version 3; **version 4**
+came when the fingerprint started covering the format's facts, so a format change
+moves the version on its own instead of by hand.
 
 ## What is strings only
 

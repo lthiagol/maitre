@@ -159,6 +159,12 @@ const MinOutOfScope = 2
 // is newer than the tool, so a plan stamped 1 is still open to a version-1 tool until
 // a newer build writes it.
 //
+// **Version 4: the stamp covers the plan's format.** The fingerprint now hashes the
+// facts of the format — the id prefixes, the directories, the field names on disk —
+// so a format change moves the version on its own. Before this, the format was
+// versioned by hand: a tool could write old-format records into a new-format plan
+// and nothing noticed.
+//
 // **Version 3: the plan format changed.** A recipe's id is `RCP01` and its file is
 // named `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. The
 // rules the gates apply did not change — the *record* they apply to did, and a tool
@@ -170,7 +176,7 @@ const MinOutOfScope = 2
 // is still readable. The version is bumped because the **writer** changed: a version-2
 // tool would write `R01` into a plan the version-3 reader expects to find `RCP01`.
 // See docs/07-vocabulary.md.
-const DomainVersion = 3
+const DomainVersion = 4
 
 // gates is the single gate table. Every gate lives here and nowhere else.
 var gates = []gate{

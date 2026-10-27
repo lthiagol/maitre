@@ -15,19 +15,25 @@ import (
 // last bumped.
 //
 // It changes when a gate is added, renamed or dropped, when a transition changes,
-// when a lifecycle is added, when an event is added, when the chef gains a move and
-// when the rules on a tasting note's outcome change. Any of those means the rules
-// changed, and a plan written under the old rules must not be written under the new
-// ones by a tool that does not know the difference.
-const recordedDomainShape = "0b55ac7113d0d99c"
+// when a lifecycle is added, when an event is added, when the chef gains a move,
+// when the rules on a tasting note's outcome change, and when a fact of the
+// **plan's format** changes — the id prefixes, the directories, the field names
+// on disk. Any of those means the rules changed, and a plan written under the old
+// rules must not be written under the new ones by a tool that does not know the
+// difference.
+const recordedDomainShape = "1b8c98432e7e222a"
 
 // domainShape is a fingerprint of the domain's rules: the gates, the transitions, the
-// lifecycles, the events, the chef's moves and the rules on a tasting note's
-// outcome.
+// lifecycles, the events, the chef's moves, the rules on a tasting note's outcome,
+// and the facts of the plan's format.
 //
 // It is the shape, not the behaviour: what the rules are, not what they do. A rule
 // that is not in here is a rule the version stamp cannot see — so a rule that changes
 // has to be in here, or the plan cannot say which rules it was written under.
+//
+// The format is in it because the format is a rule: a tool that writes the old
+// ids, or a record under a field name the reader does not know, writes a plan the
+// reader cannot read — and the reader cannot tell that the plan is broken.
 func domainShape() string {
 	var b strings.Builder
 	for _, g := range GateNames() {
@@ -57,6 +63,9 @@ func domainShape() string {
 			b.WriteString(" from " + from)
 		}
 		b.WriteString(" to " + o.To + "\n")
+	}
+	for _, f := range planFormatFacts() {
+		b.WriteString("format " + f + "\n")
 	}
 	sum := sha256.Sum256([]byte(b.String()))
 	return hex.EncodeToString(sum[:])[:16]

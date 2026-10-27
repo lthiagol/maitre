@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -14,6 +15,34 @@ import (
 // The doc's § 6 shows the plan root as a tree: `recipes/RCP01-<slug>.json` is a
 // directory and a file in it, `project.json` is a file in the root.
 var planFormatLine = regexp.MustCompile(`^  ([a-z][a-z0-9.-]*)(/([^ \t]+))?([ \t]|$)`)
+
+// planFormatVersion is the version the doc's § 6 states the plan format is.
+var planFormatVersion = regexp.MustCompile(`plan format is version (\d+)`)
+
+// TestTheDocStatesThePlanFormatVersion keeps the doc's version and the code's.
+//
+// The doc states the plan format's version and the code holds it in
+// `core.DomainVersion`. Nothing tied the two, so the doc could say 3 while the tool
+// spoke 4 — and the version guard would fence off the wrong tool.
+//
+// The wire reads the number out of the doc's § 6 and compares it with the code.
+func TestTheDocStatesThePlanFormatVersion(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "docs", "03-domain-model.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	section := sectionOf(string(raw), "## 6. Plan format")
+	if section == "" {
+		t.Fatal("the doc has no § 6. Plan format")
+	}
+	m := planFormatVersion.FindStringSubmatch(section)
+	if m == nil {
+		t.Fatalf("the plan format should state its version:\n%s", section)
+	}
+	if m[1] != strconv.Itoa(DomainVersion) {
+		t.Errorf("the doc says the plan format is version %s, the code says %d", m[1], DomainVersion)
+	}
+}
 
 // TestTheDocNamesThePlanFormatTheCodeHas keeps the plan format honest.
 //

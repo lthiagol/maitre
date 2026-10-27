@@ -418,6 +418,12 @@ it otherwise.
 
 ## 6. Plan format
 
+**The plan format is version 4.** The number is `core.DomainVersion` — the version of
+the rules the plan is written under, which now includes the format itself. A format
+change moves the number: the id prefixes, the directories and the field names on disk
+are hashed into the fingerprint, so a tool that writes the old format is fenced off
+from a plan written under the new one. See [the version guard](#the-version-guard).
+
 ```
 kitchen/
   project.json                 project meta · charter · settings — NO index
@@ -486,23 +492,26 @@ newer tool stamps its own version on the next write. Reading is always allowed. 
 `core.DomainVersion`.
 
 **What the stamp covers is exactly what the fingerprint hashes**: the gates, the
-transitions, the lifecycles, the events, the chef's moves and the rules on a tasting
-note's outcome. A rule outside that list is a rule the stamp cannot see — so a rule
-that changes has to be added to the list, or the plan cannot say which rules it was
-written under. It is the *shape* of the rules, not their behaviour: what a gate
-computes is not in the fingerprint either.
+transitions, the lifecycles, the events, the chef's moves, the rules on a tasting
+note's outcome **and the facts of the plan's format** — the id prefixes, the
+directories, the field names on disk. A rule outside that list is a rule the stamp
+cannot see — so a rule that changes has to be added to the list, or the plan cannot
+say which rules it was written under. It is the *shape* of the rules, not their
+behaviour: what a gate computes is not in the fingerprint either.
 
 **The stamp protects the future, not the corpus.** The guard refuses only when the
 plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until
 a newer build writes it and re-stamps it.
 
-**Version 3 is the plan format, not the rules.** The gates, the transitions and the
-rest did not change; the *record* they apply to did — a recipe's id is `RCP01` and its
-file is `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. A
-version-2 tool would write `R01` into a plan the version-3 reader expects to find
-`RCP01`, so the version moved. The reader is tolerant on purpose: `RCP01`, `RCP1`,
-`R01`, `r1` and `1` all name the same recipe, so a plan written before the change is
-still readable. See [07-vocabulary.md](07-vocabulary.md).
+**Version 4 is the plan format, and the rules about it.** Version 3 changed the
+*record* the gates apply to: a recipe's id is `RCP01` and its file is
+`RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. Version 4
+changed the *rules about the format*: the fingerprint hashes it, so a format change
+moves the version on its own instead of by hand. A version-3 tool would write `R01`
+into a plan the version-4 reader expects to find `RCP01`, so the version moved again.
+The reader is tolerant on purpose: `RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
+same recipe, so a plan written before the change is still readable. See
+[07-vocabulary.md](07-vocabulary.md).
 
 ---
 

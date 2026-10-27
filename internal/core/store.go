@@ -24,6 +24,17 @@ const (
 	FileDecisions = "decisions.json"
 )
 
+// The id prefixes the writer allocates, one per kind.
+//
+// A recipe is `RCP01`, a special `S01`, a prep note `N01`. The prefix is part of
+// the plan's format, so it is named here and hashed into the domain's fingerprint:
+// a format change that moves the prefix moves the version.
+const (
+	recipeIDPrefix   = "RCP"
+	specialIDPrefix  = "S"
+	prepNoteIDPrefix = "N"
+)
+
 // PlanDirName is the plan directory, relative to the project root.
 const PlanDirName = "kitchen"
 
@@ -67,16 +78,28 @@ func (s *Store) Init() error {
 	}
 	project := filepath.Join(s.Root, FileProject)
 	if _, err := os.Stat(project); os.IsNotExist(err) {
-		if err := writeJSONAtomic(project, map[string]any{
-			"name":     filepath.Base(filepath.Dir(s.Root)),
-			"created":  Now(),
-			"charter":  map[string]any{"goals": []string{}, "non_goals": []string{}, "principles": []string{}},
-			"settings": map[string]any{},
+		if err := writeJSONAtomic(project, projectFile{
+			Name:     filepath.Base(filepath.Dir(s.Root)),
+			Created:  Now(),
+			Charter:  map[string]any{"goals": []string{}, "non_goals": []string{}, "principles": []string{}},
+			Settings: map[string]any{},
 		}); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// projectFile is the plan's own metadata, as it is written to project.json.
+//
+// The shape is here, in one struct with one set of tags, so the writer and the
+// fingerprint read the same names: a field renamed in one place is renamed in the
+// other, and the version moves with it.
+type projectFile struct {
+	Name     string         `json:"name"`
+	Created  string         `json:"created"`
+	Charter  map[string]any `json:"charter"`
+	Settings map[string]any `json:"settings"`
 }
 
 // LoadProject reads the plan-level metadata.
@@ -88,10 +111,7 @@ func (s *Store) LoadProject() (Project, error) {
 		}
 		return Project{}, fmt.Errorf("read project: %w", err)
 	}
-	var doc struct {
-		Name    string `json:"name"`
-		Created string `json:"created"`
-	}
+	var doc projectFile
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		return Project{}, fmt.Errorf("parse project: %w", err)
 	}
@@ -442,7 +462,7 @@ func (s *Store) NextRecipeID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return nextIDIn(s.RecipeDir(), "RCP", reserved...)
+	return nextIDIn(s.RecipeDir(), recipeIDPrefix, reserved...)
 }
 
 // reservedRecipeIDs are the recipe ids a prep note points at.

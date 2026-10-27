@@ -185,7 +185,7 @@ func (s *Store) ListPrepNotes() ([]PrepNote, error) {
 //
 // Nothing is promoted *to* a special, so no id is reserved here.
 func (s *Store) NextSpecialID() (string, error) {
-	return nextIDIn(filepathJoin(s.Root, DirSpecials), "S")
+	return nextIDIn(filepathJoin(s.Root, DirSpecials), specialIDPrefix)
 }
 
 // NextPrepNoteID allocates the next prep note id by scanning what exists.
@@ -199,7 +199,7 @@ func (s *Store) NextPrepNoteID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return nextIDIn(filepathJoin(s.Root, DirPrepNotes), "N", reserved...)
+	return nextIDIn(filepathJoin(s.Root, DirPrepNotes), prepNoteIDPrefix, reserved...)
 }
 
 // reservedPrepNoteIDs are the prep note ids a special points at.
