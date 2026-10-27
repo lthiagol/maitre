@@ -12,7 +12,7 @@ file, which becomes the ADR's history.
 | Slice | What | State | Brief |
 |--:|---|---|---|
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
-| **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | 🟡 **in review** — the review filed **F-72** (the spec's rule sentence contradicted its own table); the fix cycle is with the runner | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
+| **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | queued · version → 5 | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | queued · version → 6 | [briefs/slice-d.md](briefs/slice-d.md) |
 | **E** | the mascot, the glossary, ADR 0009, the sweep, two LOW notes | queued | [briefs/slice-e.md](briefs/slice-e.md) |
@@ -51,9 +51,9 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 
 | Finding | What | Where it goes |
 |---|---|---|
-| **F-72** (medium) | `docs/03`'s rule sentence said *the artifact **and the roles** get themed names* while its own table kept the roles plain. The table is right; the sentence was stale. | fix cycle 1 → the runner → cycle 2 → the reviewer closes it |
+| **F-72** (medium) | `docs/03`'s rule sentence said *the artifact **and the roles** get themed names* while its own table kept the roles plain. The table is right; the sentence was stale. | **closed** — the sentence, the table and `docs/07` now say the same thing. `maître d'` went: it was the console's old themed name, never a job. |
 | **F-73** (low) | `kitchen/project.json` says `"name": "new-project"` — the plan's own data, and the console's header renders it. | **slice C** — the slice that migrates the repo's own plan. Not slice B's. |
-| LOW notes | the roles in `docs/04`'s prose and the CLI's documented example have no wire; `GLOSSARY.md` still carries the old names | **slice E** — the sweep owns "every remaining mention of an old name is gone" |
+| LOW notes | the roles in `docs/04`'s prose and the CLI's documented example have no wire; `GLOSSARY.md` still carries the old names; `maître d'` survives in `GLOSSARY.md` and two old ADRs | **slice E** — the sweep owns "every remaining mention of an old name is gone" |
 
 ```bash
 # a fresh lane, on a fresh tab
