@@ -157,7 +157,7 @@ by reading the journal, and that requires every write to carry its session.
 ## The CLI surface
 
 `maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases.
-**46 commands**: 40 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
+**42 commands**: 36 verbs in 6 groups, plus 6 workspace commands. (v1: 47 top-level
 commands, 265 subcommands.)
 
 | Group | Verbs |
@@ -167,9 +167,15 @@ commands, 265 subcommands.)
 | `maitre-cli wp` | add |
 | `maitre-cli step` | add · start · done · skip · fail · deviate |
 | `maitre-cli finding` | add · resolve · dismiss · reopen |
-| `maitre-cli special` | list · create · update · dismiss · promote |
-| `maitre-cli prepnote` | list · create · update · promote |
+| `maitre-cli backlog` | list · create · update · dismiss · promote |
 | workspace | `init` · `demo` · `plan` · `path` · `log` (`--since <seq>`) · `gates` |
+
+The backlog is **one noun**. It was two — `special` and `prepnote` — and two file types
+for one list is two nouns for one thing. `backlog create` takes `--kind
+idea|feature|bug` (default `idea`), and `backlog update --kind` is the **shaping**
+step: an idea becomes a small task by being made a `feature` or a `bug` and gaining a
+`--scope`. The id does not change — `BL01` stays `BL01`. `dismiss` works on every
+kind: an idea, a feature and a bug are all things the chef can decide against.
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
 fails. Exit 0 on success, **2 on a gate refusal** (the command was understood, the
@@ -281,15 +287,15 @@ notices. See [ADR-0008](decisions/0008-artifact-is-the-channel.md).
 | 3 | ✅ `UpdateRecipe` · `AddCriterion` · `AddStep` · `SetStepStatus` · `VerifyCriterion` · `Advance` | `maitre-cli` |
 | 4 | ✅ `ApproveRecipe` · `RequestChanges` · `TriageFinding` · `SignOffCriterion` · block/defer/cancel · `DocumentRecipe` | `maitre` |
 | 5 | ✅ `AddFinding` · `ResolveFinding` | `maitre-cli` |
-| 6 | specials · prep notes · courses · the backlog | `maitre` |
+| 6 | the backlog — one artifact with a kind | `maitre` |
 
 ## Open questions
 
 - **`SignOffCriterion`** — a human signing off an unproven criterion is a *proof without
   a command*. Is it a proof with a different match state, or a separate field on the
   criterion? The criterion status must stay derivable.
-- **The backlog operations** need a decision about whether a special and a prep note
-  share a file format or have their own.
+- **The backlog operations** — answered: the special and the prep note are one
+  artifact with a kind, and one verb group.
 - **Whether `Advance` should be one operation or a set.** Today it is one, taking an
   event. The alternative is one operation per event — more discoverable, more surface.
   The gate table suggests one.

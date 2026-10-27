@@ -76,11 +76,11 @@ func TestARenameDoesNotMultiplyThePlan(t *testing.T) {
 func TestARenameOfABacklogItemDoesNotMultiplyThePlan(t *testing.T) {
 	dir := newPlan(t)
 
-	create := cli(t, dir, "special", "create", "--title", "A hunch", "--body", "b")
+	create := cli(t, dir, "backlog", "create", "--title", "A hunch", "--body", "b")
 	if !create.ok(t) {
 		t.Fatalf("create failed:\n%s", create.Stderr)
 	}
-	update := cli(t, dir, "special", "update", "BL01", "--title", "A better hunch")
+	update := cli(t, dir, "backlog", "update", "BL01", "--title", "A better hunch")
 	if !update.ok(t) {
 		t.Fatalf("update failed:\n%s", update.Stderr)
 	}
@@ -89,7 +89,7 @@ func TestARenameOfABacklogItemDoesNotMultiplyThePlan(t *testing.T) {
 	if len(files) != 1 {
 		t.Fatalf("the backlog directory should hold one file, got %v", files)
 	}
-	list := cli(t, dir, "special", "list")
+	list := cli(t, dir, "backlog", "list")
 	if !list.ok(t) {
 		t.Fatalf("list failed:\n%s", list.Stderr)
 	}

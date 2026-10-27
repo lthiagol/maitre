@@ -22,14 +22,14 @@ Every line is new. v1 contributes lessons and vocabulary, not code.
 
 | | |
 |---|---|
-| `maitre-cli` | the agent CLI — 46 commands: 40 verbs in 7 groups, plus 6 workspace commands |
+| `maitre-cli` | the agent CLI — 42 commands: 36 verbs in 6 groups, plus 6 workspace commands |
 | `maitre` | the human console — 5 tabs, fullscreen, alt screen |
 
-The plan lives in `kitchen/`: `recipes/`, `courses/`, `prep-notes/`, `specials/`, plus
+The plan lives in `kitchen/`: `recipes/`, `courses/`, `backlog/`, plus
 `activity.json` — the only event log — and `project.json`.
 
-The console's tabs: **Recipes** (grouped by what needs the chef) · **Backlog** (specials
-and prep notes) · **Path** (the execution order) · **Board** (the plan as a dependency
+The console's tabs: **Recipes** (grouped by what needs the chef) · **Backlog** (ideas
+and small tasks) · **Path** (the execution order) · **Board** (the plan as a dependency
 tree) · **Log** (the journal) · **Sous-Chef** (the automation's vital signs) ·
 **Settings**.
 
@@ -125,8 +125,8 @@ the current selection. A resize re-lays out. The detail pane appears beside the 
   with a newline, a title longer than the column, thirty criteria, fifty steps, twelve
   findings, an empty recipe, and text that is not ASCII. `maitre-cli demo --chaos` writes it.
 
-**Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 46 commands
-(40 verbs in 7 groups, plus 6 workspace commands), one verb per operation, no aliases. Every write is stamped with an actor, a
+**Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 42 commands
+(36 verbs in 6 groups, plus 6 workspace commands), one verb per operation, no aliases. Every write is stamped with an actor, a
 session and a role — the session comes from the caller (`MAITRE_CLI_SESSION`), because CPD's
 L5 law is about sessions. Every command prints one JSON document; a gate refusal is
 exit 2. The command surface is in

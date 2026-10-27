@@ -64,8 +64,7 @@ func TestAdvanceRefusesTheEventsThatHaveTheirOwnVerb(t *testing.T) {
 func TestEveryKindAcceptsItsShortID(t *testing.T) {
 	dir := newPlan(t)
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
-	cli(t, dir, "special", "create", "--title", "A hunch", "--body", "worth noticing")
-	cli(t, dir, "prepnote", "create", "--title", "A note", "--intent", "first")
+	cli(t, dir, "backlog", "create", "--title", "A hunch", "--body", "worth noticing")
 
 	for _, id := range []string{"R1", "r1", "RCP01"} {
 		res := cli(t, dir, "recipe", "show", id)
@@ -73,16 +72,10 @@ func TestEveryKindAcceptsItsShortID(t *testing.T) {
 			t.Fatalf("recipe %s: %s", id, res.Stderr)
 		}
 	}
-	for _, id := range []string{"S1", "s1", "S01"} {
-		res := cli(t, dir, "special", "update", id, "--body", "sharper")
+	for _, id := range []string{"B1", "b1", "B01", "BL1", "BL01"} {
+		res := cli(t, dir, "backlog", "update", id, "--body", "sharper")
 		if !res.ok(t) {
-			t.Fatalf("special %s: %s", id, res.Stderr)
-		}
-	}
-	for _, id := range []string{"N1", "n1", "N01"} {
-		res := cli(t, dir, "prepnote", "update", id, "--intent", "sharper")
-		if !res.ok(t) {
-			t.Fatalf("prep note %s: %s", id, res.Stderr)
+			t.Fatalf("backlog item %s: %s", id, res.Stderr)
 		}
 	}
 }

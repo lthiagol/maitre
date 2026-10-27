@@ -210,13 +210,13 @@ func TestTheJournalIsStampedWithTheSession(t *testing.T) {
 func TestTheBacklogPromotesUpTheLadder(t *testing.T) {
 	dir := newPlan(t)
 
-	res := cli(t, dir, "special", "create", "--title", "A hunch", "--body", "worth noticing")
+	res := cli(t, dir, "backlog", "create", "--title", "A hunch", "--body", "worth noticing")
 	if !res.ok(t) {
-		t.Fatalf("special create failed:\n%s", res.Stderr)
+		t.Fatalf("backlog create failed:\n%s", res.Stderr)
 	}
-	res = cli(t, dir, "special", "promote", "BL01")
+	res = cli(t, dir, "backlog", "promote", "BL01")
 	if !res.ok(t) {
-		t.Fatalf("special promote failed:\n%s", res.Stderr)
+		t.Fatalf("backlog promote failed:\n%s", res.Stderr)
 	}
 	recipe := res.doc(t)["recipe"].(map[string]any)
 	if recipe["id"] != "RCP01" {

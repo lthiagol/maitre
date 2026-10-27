@@ -139,20 +139,13 @@ func (r *Runner) Run() int {
 			"dismiss": r.cmdFindingDismiss,
 			"reopen":  r.cmdFindingReopen,
 		})
-	case "special":
-		return r.dispatch(args[1:], "special", map[string]func([]string) int{
-			"list":    r.cmdSpecialList,
-			"create":  r.cmdSpecialCreate,
-			"update":  r.cmdSpecialUpdate,
-			"dismiss": r.cmdSpecialDismiss,
-			"promote": r.cmdSpecialPromote,
-		})
-	case "prepnote":
-		return r.dispatch(args[1:], "prepnote", map[string]func([]string) int{
-			"list":    r.cmdPrepNoteList,
-			"create":  r.cmdPrepNoteCreate,
-			"update":  r.cmdPrepNoteUpdate,
-			"promote": r.cmdPrepNotePromote,
+	case "backlog":
+		return r.dispatch(args[1:], "backlog", map[string]func([]string) int{
+			"list":    r.cmdBacklogList,
+			"create":  r.cmdBacklogCreate,
+			"update":  r.cmdBacklogUpdate,
+			"dismiss": r.cmdBacklogDismiss,
+			"promote": r.cmdBacklogPromote,
 		})
 	default:
 		r.fail("unknown command", args[0])
@@ -207,8 +200,7 @@ Usage:
   maitre-cli ac <verb>           acceptance criteria
   maitre-cli step <verb>         guidance steps
   maitre-cli finding <verb>      review findings
-  maitre-cli special <verb>      the ladder's rung 0
-  maitre-cli prepnote <verb>     the ladder's rung 1
+  maitre-cli backlog <verb>      the backlog: ideas and small tasks
 
 Identity (who is acting, and in which session):
   --actor <name>    default: $MAITRE_CLI_ACTOR, else "agent"

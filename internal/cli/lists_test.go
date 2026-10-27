@@ -14,8 +14,7 @@ func listCommands() [][]string {
 		{"log"},
 		{"log", "--since", "0"},
 		{"recipe", "list"},
-		{"special", "list"},
-		{"prepnote", "list"},
+		{"backlog", "list"},
 		{"gates"},
 	}
 }
@@ -39,8 +38,7 @@ func TestNoListIsEverNull(t *testing.T) {
 	cli(t, populated, "ac", "add", "RCP01", "--description", "d", "--verification", "go test ./...")
 	cli(t, populated, "wp", "add", "RCP01", "--name", "core")
 	cli(t, populated, "step", "add", "RCP01", "--action", "do it", "--done-when", "done")
-	cli(t, populated, "special", "create", "--title", "A hunch", "--body", "worth noticing")
-	cli(t, populated, "prepnote", "create", "--title", "A note", "--intent", "first")
+	cli(t, populated, "backlog", "create", "--title", "A hunch", "--body", "worth noticing")
 	for _, args := range listCommands() {
 		checkNoNulls(t, populated, args...)
 	}
