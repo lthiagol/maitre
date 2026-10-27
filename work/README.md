@@ -12,7 +12,7 @@ file, which becomes the ADR's history.
 | Slice | What | State | Brief |
 |--:|---|---|---|
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
-| **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | 🔄 with the line cook | [briefs/slice-b.md](briefs/slice-b.md) |
+| **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | 🟡 **in flight** — the runner's turn ended without reporting; the work is green and uncommitted | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | queued · version → 5 | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | queued · version → 6 | [briefs/slice-d.md](briefs/slice-d.md) |
 | **E** | the mascot, the glossary, ADR 0009, the sweep, two LOW notes | queued | [briefs/slice-e.md](briefs/slice-e.md) |
@@ -41,7 +41,7 @@ The lane names are the **domain roles** they fill — one word, one referent.
 
 | | |
 |---|---|
-| **runner** | pane `w1R:p6` — writes the code, one commit per acceptance criterion |
+| **runner** | pane `w1R:p6` — writes the code, one commit per acceptance criterion. **Its slice-B turn ended without reporting**; the work is green and uncommitted, captured at [state/slice-b-wip.patch](state/slice-b-wip.patch) |
 | **reviewer** | pane `w1R:p7` — reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation |
 | **verifier** | pane `w1R:p8` — the reviewer's own second lane; it dispatched F-49 and F-50 |
 | **orchestrator** | pane `w1R:p1` — this session: dispatches, verifies, rules on the findings, writes the paper |

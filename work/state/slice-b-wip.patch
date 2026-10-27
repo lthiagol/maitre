@@ -1,0 +1,1413 @@
+diff --git a/docs/03-domain-model.md b/docs/03-domain-model.md
+index 9a2fd6e..b01409a 100644
+--- a/docs/03-domain-model.md
++++ b/docs/03-domain-model.md
+@@ -76,7 +76,7 @@ an agent reasons about mechanically stays descriptive. See
+ | Themed | Kept plain |
+ |---|---|
+ | recipe · special · prep note · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
+-| chef · maître d' · sous chef · line cook · taster · expo | lifecycle states · gate names · `status` · `review_state` |
++| chef · maître d' · sous chef | runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
+ | `maitre-cli` · `maitre` · the skills | |
+ 
+ ### IDs
+@@ -308,13 +308,15 @@ written.
+    went `draft → approved` in one call — while decomposition was *blocked* behind
+    approval. That deadlock is gone: the gates run in the natural order.
+ 2. **Approval requires a human.** `approval.by_human` refuses an approval whose actor is
+-   one of the agent roles. The chef is the human; the sous chef, the line cook, the
+-   taster and the expo are agents, and so is the CLI's default actor `agent`. The list
+-   is a **deny**-list, so a human may approve under any name they like. It matches the
+-   actor's **name**, so an agent that calls itself `chef` passes it: the deny-list is a
+-   speed bump against the accident, not a boundary against the lie. CPD principle 7
+-   (*"Would I trust a capable agent with this prompt as it stands?"*) turned into a
+-   machine check instead of a prose reminder (P2).
++   one of the agent roles. The chef is the human; the sous chef, the runner, the
++   reviewer and the orchestrator are agents, and so is the CLI's default actor `agent`.
++   The list is a **deny**-list, so a human may approve under any name they like. It
++   matches the actor's **name**, so an agent that calls itself `chef` passes it: the
++   deny-list is a speed bump against the accident, not a boundary against the lie. CPD
++   principle 7 (*"Would I trust a capable agent with this prompt as it stands?"*) turned
++   into a machine check instead of a prose reminder (P2). The names the rename retired
++   — `line-cook`, `taster`, `expo`, `coordinator` — still name the role they stood for,
++   so a plan written before the rename is refused exactly like one written after it.
+ 
+ ### 3.3 Overlays
+ 
+diff --git a/internal/cli/cli_test.go b/internal/cli/cli_test.go
+index 2de99f1..1d87639 100644
+--- a/internal/cli/cli_test.go
++++ b/internal/cli/cli_test.go
+@@ -96,7 +96,7 @@ func TestTheAgentLoop(t *testing.T) {
+ 		{"groom", []string{"recipe", "advance", "RCP01", "groom"}},
+ 		{"specify", []string{"recipe", "advance", "RCP01", "specify"}},
+ 		{"approve", []string{"--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef"}},
+-		{"claim", []string{"recipe", "claim", "RCP01", "--agent", "line-cook"}},
++		{"claim", []string{"recipe", "claim", "RCP01", "--agent", "runner"}},
+ 		{"step done", []string{"step", "done", "RCP01", "G1"}},
+ 		{"document", []string{"recipe", "document", "RCP01", "--text", "One board, five tabs."}},
+ 	}
+@@ -118,7 +118,7 @@ func TestTheAgentLoop(t *testing.T) {
+ 		args []string
+ 	}{
+ 		{"finish", []string{"recipe", "advance", "RCP01", "finish"}},
+-		{"review", []string{"recipe", "review", "RCP01", "--reviewer", "taster", "--verdict", "ok"}},
++		{"review", []string{"recipe", "review", "RCP01", "--reviewer", "reviewer", "--verdict", "ok"}},
+ 		{"pass review", []string{"recipe", "advance", "RCP01", "pass_review"}},
+ 		{"close", []string{"recipe", "advance", "RCP01", "close"}},
+ 	} {
+@@ -181,7 +181,7 @@ func TestAnUnknownVerbIsAClearError(t *testing.T) {
+ // TestTheJournalIsStampedWithTheSession checks the identity reaches every write.
+ func TestTheJournalIsStampedWithTheSession(t *testing.T) {
+ 	dir := newPlan(t)
+-	t.Setenv(envActor, "line-cook")
++	t.Setenv(envActor, "runner")
+ 	t.Setenv(envSession, "s-42")
+ 	t.Setenv(envRole, "runner")
+ 
+@@ -197,8 +197,8 @@ func TestTheJournalIsStampedWithTheSession(t *testing.T) {
+ 	}
+ 	for _, e := range events {
+ 		ev := e.(map[string]any)
+-		if ev["actor"] != "line-cook" {
+-			t.Fatalf("actor = %v, want line-cook", ev["actor"])
++		if ev["actor"] != "runner" {
++			t.Fatalf("actor = %v, want runner", ev["actor"])
+ 		}
+ 		if ev["session"] != "s-42" {
+ 			t.Fatalf("session = %v, want s-42", ev["session"])
+@@ -303,7 +303,7 @@ func TestTheReviewLoopGoesBackwards(t *testing.T) {
+ 	cli(t, dir, "recipe", "advance", "RCP01", "groom")
+ 	cli(t, dir, "recipe", "advance", "RCP01", "specify")
+ 	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
+-	cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
++	cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
+ 	cli(t, dir, "step", "done", "RCP01", "G1")
+ 	cli(t, dir, "--actor", "chef", "ac", "signoff", "RCP01", "AC-01", "--by", "chef", "--note", "checked")
+ 	cli(t, dir, "recipe", "advance", "RCP01", "finish")
+@@ -314,7 +314,7 @@ func TestTheReviewLoopGoesBackwards(t *testing.T) {
+ 	if !res.ok(t) {
+ 		t.Fatalf("finding add failed:\n%s", res.Stderr)
+ 	}
+-	res = cli(t, dir, "recipe", "review", "RCP01", "--reviewer", "taster", "--verdict", "changes-needed")
++	res = cli(t, dir, "recipe", "review", "RCP01", "--reviewer", "reviewer", "--verdict", "changes-needed")
+ 	if !res.ok(t) {
+ 		t.Fatalf("review failed:\n%s", res.Stderr)
+ 	}
+diff --git a/internal/cli/closedset_test.go b/internal/cli/closedset_test.go
+index 902d864..09f65c7 100644
+--- a/internal/cli/closedset_test.go
++++ b/internal/cli/closedset_test.go
+@@ -51,7 +51,7 @@ func TestAdvanceRefusesTheEventsThatHaveTheirOwnVerb(t *testing.T) {
+ 
+ 	// The verb that owns the event still works — the recipe is signed off by
+ 	// `signedOffRecipe`, and the claim is the only road to the line.
+-	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
++	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
+ 	if !res.ok(t) {
+ 		t.Fatalf("claim failed:\n%s", res.Stderr)
+ 	}
+diff --git a/internal/cli/depends_test.go b/internal/cli/depends_test.go
+index 8f79d02..3388448 100644
+--- a/internal/cli/depends_test.go
++++ b/internal/cli/depends_test.go
+@@ -67,7 +67,7 @@ func TestTheDependencyGateIsReachable(t *testing.T) {
+ 	cli(t, dir, "recipe", "advance", "RCP01", "groom")
+ 	cli(t, dir, "recipe", "advance", "RCP01", "specify")
+ 	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
+-	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
++	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
+ 	if res.Code != ExitGate {
+ 		t.Fatalf("exit = %d, want %d — a recipe with an open dependency must not be claimed",
+ 			res.Code, ExitGate)
+diff --git a/internal/cli/env_test.go b/internal/cli/env_test.go
+index 78fa962..5e73d84 100644
+--- a/internal/cli/env_test.go
++++ b/internal/cli/env_test.go
+@@ -12,7 +12,7 @@ import (
+ func TestTheCurrentEnvNamesCarryTheIdentity(t *testing.T) {
+ 	dir := newPlan(t)
+ 	clearIdentityEnv(t)
+-	t.Setenv(envActor, "line-cook")
++	t.Setenv(envActor, "runner")
+ 	t.Setenv(envSession, "s-42")
+ 	t.Setenv(envRole, "runner")
+ 
+@@ -23,8 +23,8 @@ func TestTheCurrentEnvNamesCarryTheIdentity(t *testing.T) {
+ 		t.Fatalf("log failed:\n%s", res.Stderr)
+ 	}
+ 	e := res.doc(t)["events"].([]any)[0].(map[string]any)
+-	if e["actor"] != "line-cook" {
+-		t.Fatalf("actor = %v, want line-cook", e["actor"])
++	if e["actor"] != "runner" {
++		t.Fatalf("actor = %v, want runner", e["actor"])
+ 	}
+ 	if e["session"] != "s-42" {
+ 		t.Fatalf("session = %v, want s-42", e["session"])
+@@ -42,7 +42,7 @@ func TestTheCurrentEnvNamesCarryTheIdentity(t *testing.T) {
+ func TestTheDeprecatedEnvNamesStillWork(t *testing.T) {
+ 	dir := newPlan(t)
+ 	clearIdentityEnv(t)
+-	t.Setenv(deprecatedEnvActor, "line-cook")
++	t.Setenv(deprecatedEnvActor, "runner")
+ 	t.Setenv(deprecatedEnvSession, "s-42")
+ 	t.Setenv(deprecatedEnvRole, "runner")
+ 
+@@ -53,8 +53,8 @@ func TestTheDeprecatedEnvNamesStillWork(t *testing.T) {
+ 		t.Fatalf("log failed:\n%s", res.Stderr)
+ 	}
+ 	e := res.doc(t)["events"].([]any)[0].(map[string]any)
+-	if e["actor"] != "line-cook" {
+-		t.Fatalf("actor = %v, want line-cook", e["actor"])
++	if e["actor"] != "runner" {
++		t.Fatalf("actor = %v, want runner", e["actor"])
+ 	}
+ 	if e["session"] != "s-42" {
+ 		t.Fatalf("session = %v, want s-42", e["session"])
+@@ -71,7 +71,7 @@ func TestTheDeprecatedEnvNamesStillWork(t *testing.T) {
+ func TestTheDeprecatedEnvNamesWarn(t *testing.T) {
+ 	dir := newPlan(t)
+ 	clearIdentityEnv(t)
+-	t.Setenv(deprecatedEnvActor, "line-cook")
++	t.Setenv(deprecatedEnvActor, "runner")
+ 
+ 	res := cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
+ 	if !res.ok(t) {
+@@ -92,7 +92,7 @@ func TestTheDeprecatedEnvNamesWarn(t *testing.T) {
+ func TestTheCurrentEnvNamesWinOverTheDeprecatedOnes(t *testing.T) {
+ 	dir := newPlan(t)
+ 	clearIdentityEnv(t)
+-	t.Setenv(envActor, "line-cook")
++	t.Setenv(envActor, "runner")
+ 	t.Setenv(deprecatedEnvActor, "chef")
+ 
+ 	res := cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
+@@ -108,8 +108,8 @@ func TestTheCurrentEnvNamesWinOverTheDeprecatedOnes(t *testing.T) {
+ 		t.Fatalf("log failed:\n%s", log.Stderr)
+ 	}
+ 	e := log.doc(t)["events"].([]any)[0].(map[string]any)
+-	if e["actor"] != "line-cook" {
+-		t.Fatalf("actor = %v, want line-cook — the current name wins", e["actor"])
++	if e["actor"] != "runner" {
++		t.Fatalf("actor = %v, want runner — the current name wins", e["actor"])
+ 	}
+ }
+ 
+diff --git a/internal/cli/identity_test.go b/internal/cli/identity_test.go
+index 58d4e9e..ebae667 100644
+--- a/internal/cli/identity_test.go
++++ b/internal/cli/identity_test.go
+@@ -40,8 +40,8 @@ func TestActorFlagsAreGlobal(t *testing.T) {
+ 	clearIdentityEnv(t)
+ 	signedOffRecipe(t, dir)
+ 
+-	res := cli(t, dir, "--actor", "line-cook", "--session", "s-exec", "--role", "runner",
+-		"recipe", "claim", "RCP01", "--agent", "line-cook")
++	res := cli(t, dir, "--actor", "runner", "--session", "s-exec", "--role", "runner",
++		"recipe", "claim", "RCP01", "--agent", "runner")
+ 	if !res.ok(t) {
+ 		t.Fatalf("the documented form was refused:\n%s", res.Stderr)
+ 	}
+@@ -56,8 +56,8 @@ func TestActorFlagsAreGlobal(t *testing.T) {
+ 		t.Fatal("the journal is empty")
+ 	}
+ 	e := events[0].(map[string]any)
+-	if e["actor"] != "line-cook" {
+-		t.Fatalf("actor = %v, want line-cook", e["actor"])
++	if e["actor"] != "runner" {
++		t.Fatalf("actor = %v, want runner", e["actor"])
+ 	}
+ 	if e["session"] != "s-exec" {
+ 		t.Fatalf("session = %v, want s-exec", e["session"])
+@@ -76,8 +76,8 @@ func TestActorFlagsWorkAfterTheVerb(t *testing.T) {
+ 	clearIdentityEnv(t)
+ 	signedOffRecipe(t, dir)
+ 
+-	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook",
+-		"--actor", "line-cook", "--session", "s-exec", "--role", "runner")
++	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner",
++		"--actor", "runner", "--session", "s-exec", "--role", "runner")
+ 	if !res.ok(t) {
+ 		t.Fatalf("the flags were refused:\n%s", res.Stderr)
+ 	}
+@@ -87,7 +87,7 @@ func TestActorFlagsWorkAfterTheVerb(t *testing.T) {
+ 		t.Fatalf("log failed:\n%s", log.Stderr)
+ 	}
+ 	e := log.doc(t)["events"].([]any)[0].(map[string]any)
+-	if e["actor"] != "line-cook" || e["session"] != "s-exec" || e["role"] != "runner" {
++	if e["actor"] != "runner" || e["session"] != "s-exec" || e["role"] != "runner" {
+ 		t.Fatalf("the stamp did not reach the journal: %v", e)
+ 	}
+ }
+diff --git a/internal/core/abort_test.go b/internal/core/abort_test.go
+index ced83f1..6ca8914 100644
+--- a/internal/core/abort_test.go
++++ b/internal/core/abort_test.go
+@@ -23,7 +23,7 @@ func TestAbortClearsTheApproval(t *testing.T) {
+ 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 
+diff --git a/internal/core/approval_test.go b/internal/core/approval_test.go
+index a342404..3d498e5 100644
+--- a/internal/core/approval_test.go
++++ b/internal/core/approval_test.go
+@@ -93,7 +93,7 @@ func TestANormalisedLegacyApprovalIsRestamped(t *testing.T) {
+ 	}
+ 
+ 	// And the gate does not fire on a recipe nobody touched.
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatalf("the claim should not be refused: %v", err)
+ 	}
+ }
+@@ -136,7 +136,7 @@ func TestAFormChangeIsNotATamper(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatalf("the claim should not be refused: %v", err)
+ 	}
+ }
+@@ -151,17 +151,17 @@ func TestAnAgentMayNotSignOff(t *testing.T) {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	line := NewOperations(store, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 	r, err := line.CreateRecipe(readySpec())
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+ 
+-	_, err = line.SignOffCriterion(r.ID, "AC-01", "line-cook", "checked")
++	_, err = line.SignOffCriterion(r.ID, "AC-01", "runner", "checked")
+ 	if err == nil {
+ 		t.Fatal("an agent must not be able to sign off")
+ 	}
+-	if !strings.Contains(err.Error(), "line-cook") {
++	if !strings.Contains(err.Error(), "runner") {
+ 		t.Fatalf("the refusal should name the actor: %v", err)
+ 	}
+ 	if !strings.Contains(err.Error(), "chef") {
+@@ -169,7 +169,7 @@ func TestAnAgentMayNotSignOff(t *testing.T) {
+ 	}
+ 
+ 	// The chef can.
+-	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
++	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
+ 	if _, err := chef.SignOffCriterion(r.ID, "AC-01", "chef", "checked"); err != nil {
+ 		t.Fatalf("the chef should be able to sign off: %v", err)
+ 	}
+@@ -192,7 +192,7 @@ func TestASignedOffCriterionIsPassedButNotProven(t *testing.T) {
+ 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+diff --git a/internal/core/chaos.go b/internal/core/chaos.go
+index 6521d16..e9062dc 100644
+--- a/internal/core/chaos.go
++++ b/internal/core/chaos.go
+@@ -186,7 +186,7 @@ func seedStress(ops *Operations) error {
+ 	if _, err := chef.ApproveRecipe(found.ID, "chef"); err != nil {
+ 		return fmt.Errorf("seed stress findings approve: %w", err)
+ 	}
+-	if _, err := chef.ClaimRecipe(found.ID, "line-cook"); err != nil {
++	if _, err := chef.ClaimRecipe(found.ID, "runner"); err != nil {
+ 		return fmt.Errorf("seed stress findings claim: %w", err)
+ 	}
+ 	if _, err := chef.SetStepStatus(found.ID, "G1", "done"); err != nil {
+diff --git a/internal/core/claim_test.go b/internal/core/claim_test.go
+index 1e03a32..cffe015 100644
+--- a/internal/core/claim_test.go
++++ b/internal/core/claim_test.go
+@@ -29,7 +29,7 @@ func approvedRecipe(t *testing.T, ops *Operations, title string) *Recipe {
+ // closeRecipe walks a recipe all the way to closed.
+ func closeRecipe(t *testing.T, ops *Operations, id string) {
+ 	t.Helper()
+-	if _, err := ops.ClaimRecipe(id, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(id, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(id, "G1", "done"); err != nil {
+@@ -41,7 +41,7 @@ func closeRecipe(t *testing.T, ops *Operations, id string) {
+ 	if _, err := ops.Advance(id, EventFinish); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.RecordReviewRound(id, "taster", "ok", "clean"); err != nil {
++	if _, err := ops.RecordReviewRound(id, "reviewer", "ok", "clean"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.Advance(id, EventPassReview); err != nil {
+@@ -69,7 +69,7 @@ func TestClaimRefusesAnOpenDependency(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 
+-	_, err := ops.ClaimRecipe(r.ID, "line-cook")
++	_, err := ops.ClaimRecipe(r.ID, "runner")
+ 	if err == nil {
+ 		t.Fatal("a recipe whose dependency is open must not be claimed")
+ 	}
+@@ -105,15 +105,15 @@ func TestClaimRunsWhenTheDependencyIsClosed(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 
+-	claimed, err := ops.ClaimRecipe(r.ID, "line-cook")
++	claimed, err := ops.ClaimRecipe(r.ID, "runner")
+ 	if err != nil {
+ 		t.Fatalf("claim: %v", err)
+ 	}
+ 	if claimed.Lifecycle != LifecycleExecuting {
+ 		t.Fatalf("lifecycle = %q, want executing", claimed.Lifecycle)
+ 	}
+-	if claimed.Execution.ClaimedBy != "line-cook" {
+-		t.Fatalf("claimant = %q, want line-cook", claimed.Execution.ClaimedBy)
++	if claimed.Execution.ClaimedBy != "runner" {
++		t.Fatalf("claimant = %q, want runner", claimed.Execution.ClaimedBy)
+ 	}
+ 	if claimed.Execution.ClaimedAt == "" {
+ 		t.Fatal("the claim must record when it happened")
+@@ -138,7 +138,7 @@ func TestClaimRunsWhenTheDependencyIsClosed(t *testing.T) {
+ func TestClaimIsJournalledAsALifecycleEvent(t *testing.T) {
+ 	ops, store := newOps(t)
+ 	r := approvedRecipe(t, ops, "A recipe")
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 
+diff --git a/internal/core/derived_test.go b/internal/core/derived_test.go
+index 4175389..a0e9917 100644
+--- a/internal/core/derived_test.go
++++ b/internal/core/derived_test.go
+@@ -115,7 +115,7 @@ func TestTheTriageComesBeforeTheReview(t *testing.T) {
+ 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+@@ -128,10 +128,10 @@ func TestTheTriageComesBeforeTheReview(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	// The executor tastes its own dish.
+-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	// And the taster files a note on top.
++	// And the reviewer files a note on top.
+ 	if _, err := ops.AddFinding(r.ID, Finding{
+ 		Phase:       FindingPhaseExternal,
+ 		Severity:    SeverityHigh,
+@@ -164,7 +164,7 @@ func reviewedRecipe(t *testing.T, ops *Operations, id string) {
+ 	if _, err := ops.ApproveRecipe(id, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(id, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(id, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(id, "G1", "done"); err != nil {
+@@ -176,7 +176,7 @@ func reviewedRecipe(t *testing.T, ops *Operations, id string) {
+ 	if _, err := ops.Advance(id, EventFinish); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.RecordReviewRound(id, "taster", "ok", "clean"); err != nil {
++	if _, err := ops.RecordReviewRound(id, "reviewer", "ok", "clean"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.Advance(id, EventPassReview); err != nil {
+diff --git a/internal/core/docs_test.go b/internal/core/docs_test.go
+index ef96836..1231bac 100644
+--- a/internal/core/docs_test.go
++++ b/internal/core/docs_test.go
+@@ -967,7 +967,7 @@ func scratchPackage(t *testing.T) string {
+ 	return dir
+ }
+ 
+-// TestAViewNobodyRegisteredFails is the taster's demonstration.
++// TestAViewNobodyRegisteredFails is the reviewer's demonstration.
+ //
+ // A view added to the package and registered nowhere must fail: the hole is not that
+ // the doc was edited, but that a view exists and no list knows it.
+diff --git a/internal/core/gates_test.go b/internal/core/gates_test.go
+index a9cc0e1..dce2cd4 100644
+--- a/internal/core/gates_test.go
++++ b/internal/core/gates_test.go
+@@ -19,7 +19,7 @@ func signedOffRecipe(t *testing.T, ops *Operations, id string) {
+ 	if _, err := ops.ApproveRecipe(id, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(id, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(id, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(id, "G1", "done"); err != nil {
+@@ -91,7 +91,7 @@ func TestOnlyTheChefMayApprove(t *testing.T) {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	line := NewOperations(store, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 	r, err := line.CreateRecipe(readySpec())
+ 	if err != nil {
+ 		t.Fatal(err)
+@@ -107,7 +107,7 @@ func TestOnlyTheChefMayApprove(t *testing.T) {
+ 	if err == nil {
+ 		t.Fatal("an agent must not be able to approve")
+ 	}
+-	if !strings.Contains(err.Error(), "line-cook") {
++	if !strings.Contains(err.Error(), "runner") {
+ 		t.Fatalf("the refusal should name the actor: %v", err)
+ 	}
+ 	if !strings.Contains(err.Error(), "chef") {
+@@ -115,7 +115,7 @@ func TestOnlyTheChefMayApprove(t *testing.T) {
+ 	}
+ 
+ 	// The chef can.
+-	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
++	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
+ 	approved, err := chef.ApproveRecipe(r.ID, "chef")
+ 	if err != nil {
+ 		t.Fatalf("the chef should be able to approve: %v", err)
+@@ -130,7 +130,7 @@ func TestTheDefaultActorIsAnAgentRole(t *testing.T) {
+ 	if !IsAgentRole("agent") {
+ 		t.Error("the default actor is an agent role")
+ 	}
+-	for _, role := range []string{"line-cook", "Line Cook", "sous-chef", "taster", "expo"} {
++	for _, role := range []string{"runner", "Line Cook", "sous-chef", "reviewer", "expo"} {
+ 		if !IsAgentRole(role) {
+ 			t.Errorf("%q should be an agent role", role)
+ 		}
+@@ -324,7 +324,7 @@ func TestALegacyApprovalIsRestampedNotRefused(t *testing.T) {
+ 	}
+ 
+ 	// And the gate does not refuse the recipe nobody touched.
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatalf("the claim should not be refused: %v", err)
+ 	}
+ }
+@@ -359,7 +359,7 @@ func TestTamperedFrozenSectionsAreCaught(t *testing.T) {
+ 	}
+ 
+ 	// The next transition is refused.
+-	_, err = ops.ClaimRecipe(r.ID, "line-cook")
++	_, err = ops.ClaimRecipe(r.ID, "runner")
+ 	if err == nil {
+ 		t.Fatal("a recipe whose frozen sections changed must not be claimed")
+ 	}
+diff --git a/internal/core/id_test.go b/internal/core/id_test.go
+index 7ac3199..3ec5118 100644
+--- a/internal/core/id_test.go
++++ b/internal/core/id_test.go
+@@ -15,7 +15,7 @@ func TestTheWriterEmitsRCPIds(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	got, err := ops.CreateRecipe(RecipeSpec{
+ 		Title:      "A recipe",
+@@ -59,7 +59,7 @@ func TestEveryFormOfTheIdNamesTheSameRecipe(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	got, err := ops.CreateRecipe(RecipeSpec{
+ 		Title:      "A recipe",
+@@ -119,7 +119,7 @@ func TestAFileNamedWithTheOldIdIsStillRead(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	got, err := ops.CreateRecipe(RecipeSpec{
+ 		Title:      "A recipe",
+@@ -165,7 +165,7 @@ func TestTheJournalsOldIdStillResolves(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	got, err := ops.CreateRecipe(RecipeSpec{
+ 		Title:      "A recipe",
+@@ -229,7 +229,7 @@ func TestTheNextIdIsNotAReusedNumber(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	for i := 0; i < 3; i++ {
+ 		if _, err := ops.CreateRecipe(RecipeSpec{
+@@ -264,7 +264,7 @@ func TestTheReposOwnJournalStillResolves(t *testing.T) {
+ 		t.Skipf("the repo has no plan at %s", root)
+ 	}
+ 	s := Open(root)
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-test", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-test", Role: "runner"})
+ 
+ 	j, err := s.LoadJournal()
+ 	if err != nil {
+diff --git a/internal/core/ids_test.go b/internal/core/ids_test.go
+index c476f0c..7d01f49 100644
+--- a/internal/core/ids_test.go
++++ b/internal/core/ids_test.go
+@@ -31,7 +31,7 @@ func TestIdsAreUniqueAfterARemoval(t *testing.T) {
+ 		}); err != nil {
+ 			t.Fatal(err)
+ 		}
+-		if _, err := ops.AddComment(r.ID, "taster", "a note", ""); err != nil {
++		if _, err := ops.AddComment(r.ID, "reviewer", "a note", ""); err != nil {
+ 			t.Fatal(err)
+ 		}
+ 	}
+@@ -65,7 +65,7 @@ func TestIdsAreUniqueAfterARemoval(t *testing.T) {
+ 	}); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.AddComment(r.ID, "taster", "a note", ""); err != nil {
++	if _, err := ops.AddComment(r.ID, "reviewer", "a note", ""); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 
+diff --git a/internal/core/independence_test.go b/internal/core/independence_test.go
+index 889253a..5dfe129 100644
+--- a/internal/core/independence_test.go
++++ b/internal/core/independence_test.go
+@@ -23,7 +23,7 @@ func TestPassReviewNeedsAnIndependentReviewer(t *testing.T) {
+ 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+@@ -37,7 +37,7 @@ func TestPassReviewNeedsAnIndependentReviewer(t *testing.T) {
+ 	}
+ 
+ 	// The executor reviews its own work and says it is fine.
+-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	_, err = ops.Advance(r.ID, EventPassReview)
+@@ -49,7 +49,7 @@ func TestPassReviewNeedsAnIndependentReviewer(t *testing.T) {
+ 	}
+ 
+ 	// Somebody else reviews it.
+-	if _, err := ops.RecordReviewRound(r.ID, "taster", "ok", "clean"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "ok", "clean"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.Advance(r.ID, EventPassReview); err != nil {
+diff --git a/internal/core/invariant_test.go b/internal/core/invariant_test.go
+index f9e6259..6c4f9cc 100644
+--- a/internal/core/invariant_test.go
++++ b/internal/core/invariant_test.go
+@@ -40,7 +40,7 @@ func TestARecipeWithAnOpenNoteHasAMove(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	reviewedRecipe(t, ops, r.ID)
+-	// The taster files a note after the review.
++	// The reviewer files a note after the review.
+ 	if _, err := ops.AddFinding(r.ID, Finding{
+ 		Phase:       FindingPhaseExternal,
+ 		Severity:    SeverityHigh,
+@@ -83,25 +83,25 @@ func everyShape() []shape {
+ 
+ 		// Claimed by an agent, with that agent's own review round.
+ 		self := r
+-		self.Execution = Execution{ClaimedBy: "line-cook"}
+-		self.Review.Rounds = []Round{{N: 1, Reviewer: "line-cook", Verdict: "ok"}}
++		self.Execution = Execution{ClaimedBy: "runner"}
++		self.Review.Rounds = []Round{{N: 1, Reviewer: "runner", Verdict: "ok"}}
+ 		out = append(out, shape{recipe: self})
+ 
+ 		// Reviewed by somebody else.
+ 		other := r
+-		other.Execution = Execution{ClaimedBy: "line-cook"}
+-		other.Review.Rounds = []Round{{N: 1, Reviewer: "taster", Verdict: "ok"}}
++		other.Execution = Execution{ClaimedBy: "runner"}
++		other.Review.Rounds = []Round{{N: 1, Reviewer: "reviewer", Verdict: "ok"}}
+ 		out = append(out, shape{recipe: other})
+ 
+ 		// Changes asked for.
+ 		changes := r
+-		changes.Execution = Execution{ClaimedBy: "line-cook"}
++		changes.Execution = Execution{ClaimedBy: "runner"}
+ 		changes.Review.Rounds = []Round{{N: 1, Reviewer: "chef", Verdict: "changes-needed"}}
+ 		out = append(out, shape{recipe: changes})
+ 
+ 		// An open finding. The console can triage it, so it has a move of its own.
+ 		open := r
+-		open.Execution = Execution{ClaimedBy: "line-cook"}
++		open.Execution = Execution{ClaimedBy: "runner"}
+ 		open.Review.Findings = []Finding{{ID: "F-01", Status: "open", Phase: "external"}}
+ 		out = append(out, shape{recipe: open})
+ 
+diff --git a/internal/core/migration_test.go b/internal/core/migration_test.go
+index 3aae239..e81c03c 100644
+--- a/internal/core/migration_test.go
++++ b/internal/core/migration_test.go
+@@ -18,7 +18,7 @@ func TestRecordingAMigrationAppendsAControlEvent(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
+ 
+ 	if err := ops.RecordMigration("R01", "RCP01"); err != nil {
+ 		t.Fatal(err)
+@@ -60,7 +60,7 @@ func TestTheMigrationStampsThePlan(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
+ 
+ 	j, err := s.LoadJournal()
+ 	if err != nil {
+@@ -93,7 +93,7 @@ func TestTheMigrationDoesNotRewriteTheHistory(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
+ 
+ 	// A plan with a history: a recipe, created and groomed.
+ 	if _, err := ops.CreateRecipe(RecipeSpec{
+@@ -147,7 +147,7 @@ func TestAMigrationNeedsBothIdForms(t *testing.T) {
+ 	if err := s.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
++	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
+ 
+ 	for _, m := range [][2]string{
+ 		{"", "RCP01"},
+diff --git a/internal/core/model.go b/internal/core/model.go
+index 2a0d973..24d5abc 100644
+--- a/internal/core/model.go
++++ b/internal/core/model.go
+@@ -552,23 +552,55 @@ func frozenCriteria(in []Criterion) []Criterion {
+ // AgentRoles are the names that may not sign a recipe off.
+ //
+ // The chef is the human; everyone else in the brigade is an agent — the sous chef,
+-// the line cook, the taster and the expo. `agent` is the CLI's default actor, so it
+-// is on the list too: a caller who does not say who they are is not the chef.
++// the runner, the reviewer and the orchestrator. `agent` is the CLI's default actor,
++// so it is on the list too: a caller who does not say who they are is not the chef.
+ //
+ // The list is a **deny** list, not an allow list. A human may approve under any name
+ // they like; what the list refuses is the identity performing the approval. See
+ // ADR-0006, "the permission deny-list".
+-var AgentRoles = []string{"agent", "sous-chef", "line-cook", "taster", "expo"}
++var AgentRoles = []string{"agent", "sous-chef", "runner", "reviewer", "orchestrator"}
+ 
+-// IsAgentRole reports whether the name is one of the agent roles.
++// retiredAgentRoles maps the agent names the rename retired to the role that
++// replaced them.
++//
++// A plan written before the rename carries the old names, and the rename must not
++// loosen what the domain refuses: an agent that calls itself `line-cook` is the
++// runner, and a caller that still uses the old name is still an agent.
++var retiredAgentRoles = map[string]string{
++	"line-cook":   "runner",
++	"taster":      "reviewer",
++	"expo":        "orchestrator",
++	"coordinator": "sous-chef",
++}
++
++// agentRole resolves a name to the role it stands for, knowing the names the
++// rename retired.
+ //
+ // The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
+-// and "line-cook" are the same name.
+-func IsAgentRole(name string) bool {
++// and "line-cook" are the same name — and "line-cook" is the runner.
++func agentRole(name string) string {
++	n := normalizeAgentName(name)
++	if role, ok := retiredAgentRoles[n]; ok {
++		return role
++	}
++	return n
++}
++
++// normalizeAgentName puts a name in the form the domain compares: lower case,
++// trimmed, and with a space standing for a dash.
++func normalizeAgentName(name string) string {
+ 	n := strings.ToLower(strings.TrimSpace(name))
+-	n = strings.ReplaceAll(n, " ", "-")
+-	for _, role := range AgentRoles {
+-		if n == role {
++	return strings.ReplaceAll(n, " ", "-")
++}
++
++// IsAgentRole reports whether the name is one of the agent roles.
++//
++// A name the rename retired still names the role it stood for, so a plan written
++// before the rename is refused exactly like one written after it.
++func IsAgentRole(name string) bool {
++	role := agentRole(name)
++	for _, agent := range AgentRoles {
++		if role == agent {
+ 			return true
+ 		}
+ 	}
+diff --git a/internal/core/operations_test.go b/internal/core/operations_test.go
+index f7e66da..527f72b 100644
+--- a/internal/core/operations_test.go
++++ b/internal/core/operations_test.go
+@@ -15,7 +15,7 @@ func newOps(t *testing.T) (*Operations, *Store) {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatalf("init: %v", err)
+ 	}
+-	ops := NewOperations(store, AuditContext{Actor: "chef", Session: "s-1", Role: "coordinator"})
++	ops := NewOperations(store, AuditContext{Actor: "chef", Session: "s-1", Role: "chef"})
+ 	return ops, store
+ }
+ 
+@@ -59,7 +59,7 @@ func TestOperationsCreateAndJournal(t *testing.T) {
+ 	if e.Kind != KindCreated || e.Recipe != "RCP01" {
+ 		t.Fatalf("event = %+v", e)
+ 	}
+-	if e.Actor != "chef" || e.Session != "s-1" || e.Role != "coordinator" {
++	if e.Actor != "chef" || e.Session != "s-1" || e.Role != "chef" {
+ 		t.Fatalf("event is not stamped with the audit context: %+v", e)
+ 	}
+ 	if e.Seq != 1 {
+diff --git a/internal/core/refusal_test.go b/internal/core/refusal_test.go
+index 7aada45..94a53be 100644
+--- a/internal/core/refusal_test.go
++++ b/internal/core/refusal_test.go
+@@ -107,7 +107,7 @@ func TestARefusedClaimIsJournalled(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err == nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err == nil {
+ 		t.Fatal("a recipe with an open dependency must not be claimed")
+ 	}
+ 
+diff --git a/internal/core/review_test.go b/internal/core/review_test.go
+index 7debbbf..40048ff 100644
+--- a/internal/core/review_test.go
++++ b/internal/core/review_test.go
+@@ -22,7 +22,7 @@ func TestPassReviewNeedsAnOKVerdict(t *testing.T) {
+ 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+@@ -36,7 +36,7 @@ func TestPassReviewNeedsAnOKVerdict(t *testing.T) {
+ 	}
+ 
+ 	// The reviewer says no — and records no finding.
+-	if _, err := ops.RecordReviewRound(r.ID, "taster", "changes-needed", "not yet"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "changes-needed", "not yet"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.Advance(r.ID, EventPassReview); err == nil {
+@@ -46,7 +46,7 @@ func TestPassReviewNeedsAnOKVerdict(t *testing.T) {
+ 	}
+ 
+ 	// The reviewer says yes.
+-	if _, err := ops.RecordReviewRound(r.ID, "taster", "ok", "clean now"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "ok", "clean now"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.Advance(r.ID, EventPassReview); err != nil {
+diff --git a/internal/core/seed.go b/internal/core/seed.go
+index a199588..a8bf133 100644
+--- a/internal/core/seed.go
++++ b/internal/core/seed.go
+@@ -13,7 +13,7 @@ import (
+ // can see the console without setting up a project.
+ //
+ // The actors vary by phase, so the journal reads like a real session: the sous chef
+-// composes, the chef signs off, the line cook executes, the taster reviews.
++// composes, the chef signs off, the runner executes, the reviewer reviews.
+ func Seed(store *Store) error {
+ 	return seed(store, false)
+ }
+@@ -34,10 +34,10 @@ func seed(store *Store, stress bool) error {
+ 		return err
+ 	}
+ 
+-	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-chef", Role: "coordinator"})
+-	sous := NewOperations(store, AuditContext{Actor: "sous-chef", Session: "s-sous", Role: "coordinator"})
+-	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-line", Role: "runner"})
+-	taster := NewOperations(store, AuditContext{Actor: "taster", Session: "s-taster", Role: "reviewer"})
++	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-chef", Role: "chef"})
++	sous := NewOperations(store, AuditContext{Actor: "sous-chef", Session: "s-sous", Role: "sous-chef"})
++	runner := NewOperations(store, AuditContext{Actor: "runner", Session: "s-runner", Role: "runner"})
++	reviewer := NewOperations(store, AuditContext{Actor: "reviewer", Session: "s-reviewer", Role: "reviewer"})
+ 
+ 	// RCP01 — being shaped. One criterion cannot be proven: the filter matches nothing.
+ 	if _, err := sous.CreateRecipe(RecipeSpec{
+@@ -120,11 +120,11 @@ func seed(store *Store, stress bool) error {
+ 	if _, err := chef.ApproveRecipe(r03.ID, "chef"); err != nil {
+ 		return fmt.Errorf("seed RCP03 approve: %w", err)
+ 	}
+-	if _, err := line.ClaimRecipe(r03.ID, "line-cook"); err != nil {
++	if _, err := runner.ClaimRecipe(r03.ID, "runner"); err != nil {
+ 		return fmt.Errorf("seed RCP03 claim: %w", err)
+ 	}
+ 	for _, g := range []string{"G1", "G2", "G3"} {
+-		if _, err := line.SetStepStatus(r03.ID, g, "done"); err != nil {
++		if _, err := runner.SetStepStatus(r03.ID, g, "done"); err != nil {
+ 			return fmt.Errorf("seed RCP03 step %s: %w", g, err)
+ 		}
+ 	}
+@@ -133,10 +133,10 @@ func seed(store *Store, stress bool) error {
+ 			return fmt.Errorf("seed RCP03 sign off %s: %w", ac, err)
+ 		}
+ 	}
+-	if _, err := line.Advance(r03.ID, EventFinish); err != nil {
++	if _, err := runner.Advance(r03.ID, EventFinish); err != nil {
+ 		return fmt.Errorf("seed RCP03 finish: %w", err)
+ 	}
+-	if _, err := taster.AddFinding(r03.ID, Finding{
++	if _, err := reviewer.AddFinding(r03.ID, Finding{
+ 		Phase:       "external",
+ 		Severity:    "high",
+ 		Category:    "correctness",
+@@ -144,11 +144,11 @@ func seed(store *Store, stress bool) error {
+ 	}); err != nil {
+ 		return fmt.Errorf("seed RCP03 finding: %w", err)
+ 	}
+-	if _, err := line.Advance(r03.ID, EventEnterRemediation); err != nil {
++	if _, err := runner.Advance(r03.ID, EventEnterRemediation); err != nil {
+ 		return fmt.Errorf("seed RCP03 remediation: %w", err)
+ 	}
+ 	// A criterion regressed after the finding — which is why the board shows 1 of 3.
+-	if _, err := line.VerifyCriterion(r03.ID, "AC-03"); err != nil {
++	if _, err := runner.VerifyCriterion(r03.ID, "AC-03"); err != nil {
+ 		return fmt.Errorf("seed RCP03 verify: %w", err)
+ 	}
+ 
+@@ -214,19 +214,19 @@ func seed(store *Store, stress bool) error {
+ 	if _, err := chef.ApproveRecipe(r05.ID, "chef"); err != nil {
+ 		return fmt.Errorf("seed RCP05 approve: %w", err)
+ 	}
+-	if _, err := line.ClaimRecipe(r05.ID, "line-cook"); err != nil {
++	if _, err := runner.ClaimRecipe(r05.ID, "runner"); err != nil {
+ 		return fmt.Errorf("seed RCP05 claim: %w", err)
+ 	}
+-	if _, err := line.SetStepStatus(r05.ID, "G1", "done"); err != nil {
++	if _, err := runner.SetStepStatus(r05.ID, "G1", "done"); err != nil {
+ 		return fmt.Errorf("seed RCP05 step: %w", err)
+ 	}
+-	if _, err := line.SetStepStatus(r05.ID, "G2", "in-progress"); err != nil {
++	if _, err := runner.SetStepStatus(r05.ID, "G2", "in-progress"); err != nil {
+ 		return fmt.Errorf("seed RCP05 step: %w", err)
+ 	}
+ 	if _, err := chef.SignOffCriterion(r05.ID, "AC-01", "chef", "three states exist"); err != nil {
+ 		return fmt.Errorf("seed RCP05 sign off: %w", err)
+ 	}
+-	if _, err := line.VerifyCriterion(r05.ID, "AC-02"); err != nil {
++	if _, err := runner.VerifyCriterion(r05.ID, "AC-02"); err != nil {
+ 		return fmt.Errorf("seed RCP05 verify: %w", err)
+ 	}
+ 
+@@ -256,19 +256,19 @@ func seed(store *Store, stress bool) error {
+ 	if _, err := chef.ApproveRecipe(r06.ID, "chef"); err != nil {
+ 		return fmt.Errorf("seed RCP06 approve: %w", err)
+ 	}
+-	if _, err := line.ClaimRecipe(r06.ID, "line-cook"); err != nil {
++	if _, err := runner.ClaimRecipe(r06.ID, "runner"); err != nil {
+ 		return fmt.Errorf("seed RCP06 claim: %w", err)
+ 	}
+-	if _, err := line.SetStepStatus(r06.ID, "G1", "done"); err != nil {
++	if _, err := runner.SetStepStatus(r06.ID, "G1", "done"); err != nil {
+ 		return fmt.Errorf("seed RCP06 step: %w", err)
+ 	}
+ 	if _, err := chef.SignOffCriterion(r06.ID, "AC-01", "chef", "every term has an avoid list"); err != nil {
+ 		return fmt.Errorf("seed RCP06 sign off: %w", err)
+ 	}
+-	if _, err := line.Advance(r06.ID, EventFinish); err != nil {
++	if _, err := runner.Advance(r06.ID, EventFinish); err != nil {
+ 		return fmt.Errorf("seed RCP06 finish: %w", err)
+ 	}
+-	if _, err := taster.AddFinding(r06.ID, Finding{
++	if _, err := reviewer.AddFinding(r06.ID, Finding{
+ 		Phase:       "external",
+ 		Severity:    "low",
+ 		Category:    "docs",
+@@ -278,7 +278,7 @@ func seed(store *Store, stress bool) error {
+ 	}); err != nil {
+ 		return fmt.Errorf("seed RCP06 finding: %w", err)
+ 	}
+-	if _, err := taster.AddFinding(r06.ID, Finding{
++	if _, err := reviewer.AddFinding(r06.ID, Finding{
+ 		Phase:       "external",
+ 		Severity:    "low",
+ 		Category:    "docs",
+@@ -286,13 +286,13 @@ func seed(store *Store, stress bool) error {
+ 	}); err != nil {
+ 		return fmt.Errorf("seed RCP06 finding: %w", err)
+ 	}
+-	if _, err := line.ResolveFinding(r06.ID, "F-02", "added an example"); err != nil {
++	if _, err := runner.ResolveFinding(r06.ID, "F-02", "added an example"); err != nil {
+ 		return fmt.Errorf("seed RCP06 resolve: %w", err)
+ 	}
+-	if _, err := taster.RecordReviewRound(r06.ID, "taster", "ok", "the glossary is clear"); err != nil {
++	if _, err := reviewer.RecordReviewRound(r06.ID, "reviewer", "ok", "the glossary is clear"); err != nil {
+ 		return fmt.Errorf("seed RCP06 round: %w", err)
+ 	}
+-	if _, err := taster.Advance(r06.ID, EventPassReview); err != nil {
++	if _, err := reviewer.Advance(r06.ID, EventPassReview); err != nil {
+ 		return fmt.Errorf("seed RCP06 pass review: %w", err)
+ 	}
+ 	if _, err := chef.DocumentRecipe(r06.ID, "One vocabulary, defined once, mapped to CPD."); err != nil {
+diff --git a/internal/core/selfreview_test.go b/internal/core/selfreview_test.go
+index d37b1ff..7ef049c 100644
+--- a/internal/core/selfreview_test.go
++++ b/internal/core/selfreview_test.go
+@@ -21,7 +21,7 @@ func selfReviewedRecipe(t *testing.T) (*Operations, *Recipe) {
+ 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+@@ -33,7 +33,7 @@ func selfReviewedRecipe(t *testing.T) (*Operations, *Recipe) {
+ 	if _, err := ops.Advance(r.ID, EventFinish); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	got, err := ops.GetRecipe(r.ID)
+@@ -71,7 +71,7 @@ func TestSelfReviewedIsOneAnswer(t *testing.T) {
+ func TestAnIndependentReviewNeedsNobody(t *testing.T) {
+ 	ops, r := selfReviewedRecipe(t)
+ 
+-	if _, err := ops.RecordReviewRound(r.ID, "taster", "ok", "clean"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "ok", "clean"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	got, err := ops.GetRecipe(r.ID)
+diff --git a/internal/core/verifier_test.go b/internal/core/verifier_test.go
+index 0ee8873..075505c 100644
+--- a/internal/core/verifier_test.go
++++ b/internal/core/verifier_test.go
+@@ -80,7 +80,7 @@ func TestIsGoTestIgnoresEnvPrefixes(t *testing.T) {
+ func TestVerifierRunsTheCommand(t *testing.T) {
+ 	v := &Verifier{Dir: t.TempDir(), Timeout: 30 * time.Second}
+ 
+-	res, err := v.Run(context.Background(), "echo hello", "line-cook")
++	res, err := v.Run(context.Background(), "echo hello", "runner")
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -101,7 +101,7 @@ func TestVerifierRunsTheCommand(t *testing.T) {
+ func TestVerifierRecordsAFailure(t *testing.T) {
+ 	v := &Verifier{Dir: t.TempDir(), Timeout: 30 * time.Second}
+ 
+-	res, err := v.Run(context.Background(), "false", "line-cook")
++	res, err := v.Run(context.Background(), "false", "runner")
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -116,7 +116,7 @@ func TestVerifierRecordsAFailure(t *testing.T) {
+ func TestVerifierTimeoutIsDistinguishable(t *testing.T) {
+ 	v := &Verifier{Dir: t.TempDir(), Timeout: 100 * time.Millisecond}
+ 
+-	res, err := v.Run(context.Background(), "sleep 5", "line-cook")
++	res, err := v.Run(context.Background(), "sleep 5", "runner")
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -131,7 +131,7 @@ func TestVerifierTimeoutIsDistinguishable(t *testing.T) {
+ 
+ func TestVerifierRejectsAnEmptyCommand(t *testing.T) {
+ 	v := &Verifier{Dir: t.TempDir()}
+-	if _, err := v.Run(context.Background(), "   ", "line-cook"); err == nil {
++	if _, err := v.Run(context.Background(), "   ", "runner"); err == nil {
+ 		t.Fatal("expected an empty command to be refused")
+ 	}
+ }
+@@ -148,7 +148,7 @@ func TestATimedOutVerificationLeavesNoChild(t *testing.T) {
+ 
+ 	v := &Verifier{Dir: dir, Timeout: 300 * time.Millisecond}
+ 	start := time.Now()
+-	res, err := v.Run(context.Background(), command, "line-cook")
++	res, err := v.Run(context.Background(), command, "runner")
+ 	elapsed := time.Since(start)
+ 	if err != nil {
+ 		t.Fatal(err)
+diff --git a/internal/core/views.go b/internal/core/views.go
+index f7ccbdc..4f0e5bc 100644
+--- a/internal/core/views.go
++++ b/internal/core/views.go
+@@ -418,6 +418,11 @@ func (s ReviewState) Label() string {
+ // claimant at all: nobody signed for the work, so there is no executor to be separate
+ // from, and an anonymous claim cannot buy independence.
+ //
++// The executor and the reviewer are compared as **agents**, not as strings. The
++// rename retired a name for each role, and an agent that wrote its old name before
++// the rename and its new name after is the same agent: comparing the strings alone
++// would let a recipe close on a review its own executor gave.
++//
+ // One source of truth: the gate that blocks the transition and the triage that tells
+ // the chef what to do both read this. v1's lesson was five implementations of one
+ // projection, and four of them were wrong.
+@@ -430,7 +435,19 @@ func SelfReviewed(r Recipe) bool {
+ 	if claimer == "" {
+ 		return true
+ 	}
+-	return r.Review.Rounds[len(r.Review.Rounds)-1].Reviewer == claimer
++	return sameAgent(claimer, r.Review.Rounds[len(r.Review.Rounds)-1].Reviewer)
++}
++
++// sameAgent reports whether two actor names can name the same agent.
++//
++// The names are compared as written and as roles: `line-cook` and `runner` are one
++// agent under two names, and `taster` and `reviewer` are one agent under two names.
++func sameAgent(a, b string) bool {
++	na, nb := normalizeAgentName(a), normalizeAgentName(b)
++	if na == nb {
++		return true
++	}
++	return agentRole(na) == agentRole(nb)
+ }
+ 
+ // ReviewStateOf derives the review state.
+diff --git a/internal/core/views_test.go b/internal/core/views_test.go
+index 0bd2fa9..c730d8d 100644
+--- a/internal/core/views_test.go
++++ b/internal/core/views_test.go
+@@ -73,8 +73,8 @@ func TestReviewStateDerivation(t *testing.T) {
+ 		t.Fatalf("state = %q, want self-reviewed", got)
+ 	}
+ 	if got := ReviewStateOf(Recipe{
+-		Execution: Execution{ClaimedBy: "line-cook"},
+-		Review:    Review{Rounds: []Round{{Reviewer: "taster", Verdict: "ok"}}},
++		Execution: Execution{ClaimedBy: "runner"},
++		Review:    Review{Rounds: []Round{{Reviewer: "reviewer", Verdict: "ok"}}},
+ 	}); got != ReviewClean {
+ 		t.Fatalf("state = %q, want reviewed-clean", got)
+ 	}
+diff --git a/internal/ui/chop_test.go b/internal/ui/chop_test.go
+index 25485b4..6a27163 100644
+--- a/internal/ui/chop_test.go
++++ b/internal/ui/chop_test.go
+@@ -131,7 +131,7 @@ func cycleModel(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	mk := func(title string, deps []string) string {
+ 		got, err := ops.CreateRecipe(core.RecipeSpec{
+@@ -178,7 +178,7 @@ func treeModel(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	mk := func(title string, deps []string) string {
+ 		got, err := ops.CreateRecipe(core.RecipeSpec{
+diff --git a/internal/ui/comments_test.go b/internal/ui/comments_test.go
+index 0cb38ff..501d170 100644
+--- a/internal/ui/comments_test.go
++++ b/internal/ui/comments_test.go
+@@ -17,7 +17,7 @@ func recipeWithComments(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-1", Role: "reviewer"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-1", Role: "reviewer"})
+ 
+ 	r, err := ops.CreateRecipe(core.RecipeSpec{
+ 		Title:      "Wire the review queue",
+@@ -36,10 +36,10 @@ func recipeWithComments(t *testing.T) *Model {
+ 	}); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.AddComment(r.ID, "taster", "reproduced — refresh() re-reads the queue", "F-01"); err != nil {
++	if _, err := ops.AddComment(r.ID, "reviewer", "reproduced — refresh() re-reads the queue", "F-01"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.AddComment(r.ID, "line-cook", "read the queue once", "F-01"); err != nil {
++	if _, err := ops.AddComment(r.ID, "runner", "read the queue once", "F-01"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.AddComment(r.ID, "chef", "the review as a whole looks fine", ""); err != nil {
+@@ -79,10 +79,10 @@ func TestFindingCommentShowsItsAuthor(t *testing.T) {
+ 	m := recipeWithComments(t)
+ 	out := detail(t, m)
+ 
+-	if !strings.Contains(out, "taster:") {
++	if !strings.Contains(out, "reviewer:") {
+ 		t.Errorf("a comment should show its author:\n%s", out)
+ 	}
+-	if !strings.Contains(out, "line-cook:") {
++	if !strings.Contains(out, "runner:") {
+ 		t.Errorf("each comment should show its own author:\n%s", out)
+ 	}
+ }
+diff --git a/internal/ui/detail_test.go b/internal/ui/detail_test.go
+index 23397e7..3b44edc 100644
+--- a/internal/ui/detail_test.go
++++ b/internal/ui/detail_test.go
+@@ -20,7 +20,7 @@ func TestTheConsoleShowsADeviation(t *testing.T) {
+ 	if err := core.Seed(store); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 	if _, err := ops.RecordDeviation("RCP01", "G1", "read the queue twice"); err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/internal/ui/expo_test.go b/internal/ui/expo_test.go
+index a3f21c6..fc9c045 100644
+--- a/internal/ui/expo_test.go
++++ b/internal/ui/expo_test.go
+@@ -18,7 +18,7 @@ func expoModel(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-1", Role: "coordinator"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-1", Role: "chef"})
+ 	if _, err := ops.CreateSpecial("A hunch", "worth noticing", nil); err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/internal/ui/index_test.go b/internal/ui/index_test.go
+index dcde8a0..ffca62a 100644
+--- a/internal/ui/index_test.go
++++ b/internal/ui/index_test.go
+@@ -19,7 +19,7 @@ func TestTheBoardDrawsARenamedRecipeOnce(t *testing.T) {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 
+ 	r, err := ops.CreateRecipe(core.RecipeSpec{
+ 		Title:      "Dep",
+diff --git a/internal/ui/live_test.go b/internal/ui/live_test.go
+index 3fa8029..43b28ea 100644
+--- a/internal/ui/live_test.go
++++ b/internal/ui/live_test.go
+@@ -24,10 +24,10 @@ func liveModel(t *testing.T) (*Model, *core.Store) {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
+-	taster := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-3", Role: "reviewer"})
+-	addExecutedRecipe(t, ops, chef, taster, "The chef watches the plan", 2)
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
++	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
++	reviewer := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-3", Role: "reviewer"})
++	addExecutedRecipe(t, ops, chef, reviewer, "The chef watches the plan", 2)
+ 
+ 	m := NewLive(store)
+ 	m.pollInterval = time.Millisecond
+@@ -66,7 +66,7 @@ func TestAChangeOnDiskAppears(t *testing.T) {
+ 	m, store := liveModel(t)
+ 
+ 	// An agent renames the recipe on disk.
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
+ 	title := "Renamed by an agent"
+ 	if _, err := ops.UpdateRecipe("RCP01", core.Fragment{Title: &title}); err != nil {
+ 		t.Fatal(err)
+@@ -117,7 +117,7 @@ func TestTheChefsPlaceSurvivesAReload(t *testing.T) {
+ 	m.theme = newTheme(catppuccinMocha())
+ 
+ 	// Something changes on disk.
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
+ 	if _, err := ops.DocumentRecipe("RCP01", "the plan moved on"); err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/internal/ui/model.go b/internal/ui/model.go
+index 6795985..f9f3e29 100644
+--- a/internal/ui/model.go
++++ b/internal/ui/model.go
+@@ -181,7 +181,7 @@ func NewScripted(store *core.Store) *Model {
+ func newConsole(store *core.Store, session string) *Model {
+ 	return &Model{
+ 		store:      store,
+-		ops:        core.NewOperations(store, core.AuditContext{Actor: "chef", Session: session, Role: "coordinator"}),
++		ops:        core.NewOperations(store, core.AuditContext{Actor: "chef", Session: session, Role: "chef"}),
+ 		showServed: true,
+ 		// Kitchen is the default: a console nobody told otherwise looks exactly
+ 		// as it did before the theme was the chef's to choose.
+diff --git a/internal/ui/note_cursor_test.go b/internal/ui/note_cursor_test.go
+index bff3c82..55f54fc 100644
+--- a/internal/ui/note_cursor_test.go
++++ b/internal/ui/note_cursor_test.go
+@@ -21,12 +21,12 @@ func twoNoteModel(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
+-	taster := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-3", Role: "reviewer"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
++	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
++	reviewer := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-3", Role: "reviewer"})
+ 
+-	addExecutedRecipe(t, ops, chef, taster, "The first recipe", 3)
+-	addExecutedRecipe(t, ops, chef, taster, "The second recipe", 1)
++	addExecutedRecipe(t, ops, chef, reviewer, "The first recipe", 3)
++	addExecutedRecipe(t, ops, chef, reviewer, "The second recipe", 1)
+ 
+ 	m := loadModel(t, store)
+ 	m.height = 30
+@@ -122,7 +122,7 @@ func TestTheTriageCannotOverwriteANoteTheAgentClosed(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	// The agent resolves the note while the prompt is open.
+-	agent := core.NewOperations(m.store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
++	agent := core.NewOperations(m.store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
+ 	if _, err := agent.ResolveFinding("RCP01", "F-01", "fixed it properly"); err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/internal/ui/note_test.go b/internal/ui/note_test.go
+index 9b97238..dc299dc 100644
+--- a/internal/ui/note_test.go
++++ b/internal/ui/note_test.go
+@@ -10,7 +10,7 @@ import (
+ 
+ // noteModel builds a console over a recipe with two open tasting notes.
+ //
+-// The recipe is executed and the taster has filed two notes. The close gate refuses
++// The recipe is executed and the reviewer has filed two notes. The close gate refuses
+ // it while a note is open, and the chef has two notes to triage.
+ func noteModel(t *testing.T) *Model {
+ 	t.Helper()
+@@ -19,11 +19,11 @@ func noteModel(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
+-	taster := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-3", Role: "reviewer"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
++	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
++	reviewer := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-3", Role: "reviewer"})
+ 
+-	addExecutedRecipe(t, ops, chef, taster, "The chef can triage a tasting note", 2)
++	addExecutedRecipe(t, ops, chef, reviewer, "The chef can triage a tasting note", 2)
+ 
+ 	m := loadModel(t, store)
+ 	m.height = 30
+@@ -32,9 +32,9 @@ func noteModel(t *testing.T) *Model {
+ 
+ // addExecutedRecipe files a recipe, executes it, and gives it open tasting notes.
+ //
+-// The taster files the notes: they are somebody else's complaint, and the chef is
++// The reviewer files the notes: they are somebody else's complaint, and the chef is
+ // the one who answers them.
+-func addExecutedRecipe(t *testing.T, ops, chef, taster *core.Operations, title string, notes int) string {
++func addExecutedRecipe(t *testing.T, ops, chef, reviewer *core.Operations, title string, notes int) string {
+ 	t.Helper()
+ 	r, err := ops.CreateRecipe(core.RecipeSpec{
+ 		Title:      title,
+@@ -58,7 +58,7 @@ func addExecutedRecipe(t *testing.T, ops, chef, taster *core.Operations, title s
+ 	if _, err := chef.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+@@ -75,7 +75,7 @@ func addExecutedRecipe(t *testing.T, ops, chef, taster *core.Operations, title s
+ 		"the thread is cut off at the bottom",
+ 	}
+ 	for i := 0; i < notes; i++ {
+-		if _, err := taster.AddFinding(r.ID, core.Finding{
++		if _, err := reviewer.AddFinding(r.ID, core.Finding{
+ 			Phase:       core.FindingPhaseExternal,
+ 			Severity:    core.SeverityHigh,
+ 			Category:    "correctness",
+@@ -200,7 +200,7 @@ func TestTheChefCanDismissANote(t *testing.T) {
+ // TestTheChefCanCommentOnANote covers the other chef's move.
+ //
+ // The comment belongs to the note, not to the recipe: the thread is the channel
+-// between the taster and the fixer.
++// between the reviewer and the fixer.
+ func TestTheChefCanCommentOnANote(t *testing.T) {
+ 	m := noteModel(t)
+ 	notes := m.openNotes()
+diff --git a/internal/ui/screen_test.go b/internal/ui/screen_test.go
+index 735075d..1f1b70e 100644
+--- a/internal/ui/screen_test.go
++++ b/internal/ui/screen_test.go
+@@ -87,7 +87,7 @@ func TestTheConsoleDoesNotImpersonateAnAgent(t *testing.T) {
+ 			if r.Lifecycle == core.LifecycleExecuting {
+ 				t.Fatal("the console must not claim a recipe — that is an agent's move")
+ 			}
+-			if r.Execution.ClaimedBy == "line-cook" {
++			if r.Execution.ClaimedBy == "runner" {
+ 				t.Fatal("the console must not record itself as an agent")
+ 			}
+ 		}
+diff --git a/internal/ui/triage_test.go b/internal/ui/triage_test.go
+index ebf98de..80678b6 100644
+--- a/internal/ui/triage_test.go
++++ b/internal/ui/triage_test.go
+@@ -19,9 +19,9 @@ func selfReviewedModel(t *testing.T) *Model {
+ 	if err := store.Init(); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
++	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+ 	// The chef is the human: only the chef may sign a recipe off.
+-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
++	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
+ 
+ 	r, err := ops.CreateRecipe(core.RecipeSpec{
+ 		Title:      "The console shows a finding's conversation",
+@@ -45,7 +45,7 @@ func selfReviewedModel(t *testing.T) *Model {
+ 	if _, err := chef.ApproveRecipe(r.ID, "chef"); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
++	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
+@@ -57,7 +57,7 @@ func selfReviewedModel(t *testing.T) *Model {
+ 	if _, err := ops.Advance(r.ID, core.EventFinish); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
++	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
+ 		t.Fatal(err)
+ 	}
+ 	if _, err := ops.DocumentRecipe(r.ID, "The console groups a finding's thread under it."); err != nil {
