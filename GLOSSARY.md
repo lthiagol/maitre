@@ -77,10 +77,15 @@ The external review of a finished recipe. Clean tasting advances the recipe; ope
 tasting notes send it back for remediation.
 _Avoid_: Review, code review
 
-**Proof**:
+**Evidence**:
 A verification result a machine produced — the command, its exit code, what it matched,
-and when. A proof that matched nothing is not a proof.
-_Avoid_: Evidence, test result, verification
+and when. An evidence that matched nothing is not evidence.
+_Avoid_: Proof, test result, verification
+
+**Completion**:
+The recipe-level stamp: the moment the recipe was done. One field, written on the
+`finish` transition.
+_Avoid_: Evidence, closed, done
 
 **Lane**:
 Where a recipe sits in the chef's workflow: grooming, sign-off, on the line, tasting, on
@@ -101,7 +106,8 @@ _Avoid_: Blocker, issue, todo
 ## Two vocabularies
 
 CPD — the methodology — keeps a generic vocabulary. maitre — the tool — uses
-the language above. Every term above names its CPD counterpart so the two never drift.
+the language above. Every term above names its CPD counterpart — or says that it has
+none — so the two never drift.
 
 The mapping lives here and nowhere else. It is the single source for the CLI reference,
 the skills and the docs.
@@ -118,8 +124,13 @@ the skills and the docs.
 | orchestrator | **expo** |
 | the human validator | **chef** |
 | the human-facing console | **maître d'** |
-| evidence | **proof** |
+| evidence | **evidence** |
+| — | **completion** |
 | steps / guidance | **method** |
+
+**The dash is a term CPD does not have.** CPD's *evidence* is the record a criterion
+carries; maitre's **completion** is the recipe-level stamp that says the recipe was
+done.
 
 Everything else stays generic in both: acceptance criteria, scope, findings, work
 packages, lifecycle states, lanes' underlying states.
