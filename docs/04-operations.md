@@ -191,6 +191,7 @@ the agent surface cannot reach, and a gate over it can never be tripped from `ma
 |---|---|
 | `title` · `intent` · `scope` | `maitre-cli recipe update --title --outcome --problem --in-scope --out-of-scope` |
 | `depends_on` | `maitre-cli recipe update --depends-on <id>` — repeatable, and it replaces the whole list |
+| the backlog item's `title` · `body` · `scope` · `kind` · `tags` | `maitre-cli backlog update --title --body --scope --kind --tag` |
 
 A list flag replaces the list it names; a flag that is not given leaves its field
 alone.
