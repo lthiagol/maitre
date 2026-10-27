@@ -12,20 +12,31 @@ The plan format is version **6** after slice D.
 machine's records and the agents' jobs. `docs/07-vocabulary.md` is the decision of
 record, and it wins over any other doc.
 
-## Your slice — E of 5, the last — the mascot, the glossary, the ADR and the sweep
+## Your slice — E of 5, the last — the glossary, the ADR and the sweep
 
-**Scope discipline — do only this.** The names are already in the code (slices A–D). This slice is the paper and the mascot.
+**Scope discipline — do only this.** The names are already in the code (slices A–D). This slice is the paper.
 
-### AC-01 — the mascot
+### AC-01 — the mascot — **NOT YOURS. Another session is drawing it.**
 
-A **funny agentic maitre**: a chef with a tall toque and a small moustache, holding a clipboard, drawn in ASCII. Funny, not corporate.
+The mascot is being made **in parallel, in another session**, on 2026-10-27. Do not
+draw it, do not ship it, and do not touch the files it lives in:
 
-- **Two forms**, because the console's header is one line and a multi-line drawing would break the layout:
-  - a **full** form — 4 to 6 lines, about 24 columns wide — for the **CLI's help header**, the **README**, and the **Sous-Chef tab** (the tab that says the automation is not built yet gets a face; a waiting tab should not look like a failing one);
-  - a **compact** form — **one line**, at most 24 columns — for the **console's header**, before the product name.
-- The drawing lives in **one place** in the code, and the two forms are rendered from it or from one constant beside it. Do not paste the same art twice.
-- **Propose your drawing in the commit message**, so it can be judged as art and not only as code. If the first one you draw is not funny, draw another and pick the better one. Three candidates, one shipped.
-- The mascot must not break the layout: the console's header stays one line, the Sous-Chef tab's content still says the automation is not built, and the goldens are regenerated.
+| | |
+|---|---|
+| **The art** | the drawing, its full and compact forms, wherever they are placed |
+| **The console's header** | the compact form, before the product name |
+| **The CLI's help header** · **the README** · **the Sous-Chef tab** | the full form |
+| **The goldens** | the mascot will move them — **regenerate, do not hand-edit** |
+
+**Do not delete or replace anything the other session lands.** If you find yourself
+needing a change in one of those places — a layout that the mascot breaks, a header
+that no longer fits — **stop and report it to the orchestrator** instead of editing
+around it. Two sessions in one tree is a collision, and a collision in the mascot's
+files is a merge nobody wins.
+
+**What is still yours in AC-01:** nothing. The acceptance criterion moves to the
+session that owns the drawing. Your report must say whether the mascot landed, so
+the orchestrator can close the slice.
 
 ### AC-02 — the glossary is rewritten
 
@@ -58,6 +69,11 @@ Every remaining mention of an old name is gone from the docs and the code: `Kitc
 
 ### AC-05 — the whole tree, verified
 
+**Another session may land the mascot while you work.** Before you sweep, and before
+you regenerate the goldens, **re-read the files you are about to touch** — the
+mascot's files may have changed under you. The sweep is about **old names**; the
+mascot is about **new art**, and the two should not meet in the same diff.
+
 ```bash
 make lint && gofmt -l . && make test && make regen-goldens && git status --short
 ```
@@ -78,10 +94,10 @@ make lint && gofmt -l . && make test && make regen-goldens && git status --short
 ```bash
 mkdir -p work/inbox
 cat > work/inbox/runner-slice-e.md <<EOF
-Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>.
+Runner: slice E done. Commits: <n>. Per-AC evidence: AC-02..AC-05 stamped. Pre-notify gate: pass. Mascot: <did it land? yes/no>. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox && git commit -q -m "inbox: runner reports slice-e"
-herdr agent prompt "w1Z:p1" "Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>."
+herdr agent prompt "w1Z:p1" "Runner: slice E done. Commits: <n>. Per-AC evidence: AC-02..AC-05 stamped. Pre-notify gate: pass. Mascot: <did it land? yes/no>. Notes: <anything the reviewer should know>."
 ```
 
 ### Two LOW notes from slice A's review — fix them here

@@ -13,9 +13,16 @@ file, which becomes the ADR's history.
 |--:|---|---|---|
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
-| **C** | the backlog — one item, `kind: idea \| feature \| bug` | 🟡 **in review** — the runner landed it (7 commits, AC-01..AC-06); the review is out | [briefs/slice-c.md](briefs/slice-c.md) |
+| **C** | the backlog — one item, `kind: idea \| feature \| bug` | 🟡 **in review** — the runner landed it (7 commits, AC-01..AC-06); cycle 2 is out | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | queued · version → 6 | [briefs/slice-d.md](briefs/slice-d.md) |
-| **E** | the mascot, the glossary, ADR 0009, the sweep, two LOW notes | queued | [briefs/slice-e.md](briefs/slice-e.md) |
+| **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | queued | [briefs/slice-e.md](briefs/slice-e.md) |
+
+> **The mascot (slice E's AC-01) is being made in another session**, on 2026-10-27.
+> This tree is shared, so slice E's brief says plainly: do not draw it, do not touch
+> the console header, the CLI's help header, the README's art or the Sous-Chef tab's
+> drawing, and **do not delete or replace** what lands. Two sessions in one tree is a
+> collision, and a collision in the mascot's files is a merge nobody wins. The runner
+> reports whether the mascot landed; the orchestrator closes the slice.
 
 The plan's format version is **4** (`core.DomainVersion`). It moves with the format:
 each slice that changes the format bumps it, and `docs/03` § 6 says the same number.
