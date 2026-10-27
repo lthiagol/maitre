@@ -234,5 +234,21 @@ func seedStress(ops *Operations) error {
 		return fmt.Errorf("seed stress deviation note: %w", err)
 	}
 
+	// The backlog's rows break the same ways: a title with a newline, a title
+	// longer than the column, and a body that is not ASCII.
+	for _, it := range []struct {
+		title string
+		body  string
+		kind  string
+	}{
+		{"STRESS: a backlog title with\na newline and\ta tab", "the row does not break", KindIdea},
+		{"STRESS: …much longer than any column the console has, and it keeps going", "the title is cut", KindFeature},
+		{"STRESS: 日本語のタイトル 🎉", "not ascii", KindBug},
+	} {
+		if _, err := chef.CreateBacklogItem(it.title, it.body, nil, it.kind, nil); err != nil {
+			return fmt.Errorf("seed stress backlog item %q: %w", it.title, err)
+		}
+	}
+
 	return nil
 }

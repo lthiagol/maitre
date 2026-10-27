@@ -9,7 +9,7 @@ agents working it.
 ### The plan
 
 **Kitchen**:
-The directory holding the plan — recipes, courses, prep notes, specials, and the event
+The directory holding the plan — recipes, courses, backlog items, and the event
 journal. The one place the plan lives.
 _Avoid_: Workspace, plan dir, `.mp`
 
@@ -19,15 +19,12 @@ scope, acceptance criteria, and the audit trail from its execution. CPD calls th
 *crafted prompt*.
 _Avoid_: Milestone, task, ticket, prompt
 
-**Special**:
-A hunch, an observation, or an agent discovery. The rung below a prep note: something
-worth noticing, not yet a problem worth solving.
-_Avoid_: Idea, note, ticket
-
-**Prep note**:
-A lightweight intent and scope, before acceptance criteria exist. Promoted to a recipe
-when success needs to be verifiable.
-_Avoid_: Brief, sketch, draft
+**Backlog item**:
+The plan's loose end — one artifact with a **kind**: an `idea` (a hunch, an
+observation, an agent discovery), a `feature` or a `bug` (a small task, ready to work).
+It becomes a recipe when it is promoted, and shaping an idea into a small task is an
+update, not a promotion: the id does not change.
+_Avoid_: Special, prep note, note, brief, ticket
 
 **Course**:
 One intent across several recipes — a themed set of dishes served together.
@@ -112,8 +109,7 @@ the skills and the docs.
 | CPD | maitre |
 |---|---|
 | crafted prompt | **recipe** |
-| idea / note | **special** |
-| brief | **prep note** |
+| idea / note / brief | **backlog item** |
 | decomposed prompt | **course** |
 | prompt family | **menu** |
 | coordinator | **sous chef** |

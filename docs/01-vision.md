@@ -127,7 +127,7 @@ Candidates in
 
 ### Q6 — Naming
 
-**Answered** → [ADR-0004](decisions/0004-naming.md): special → prep note → recipe → course →
+**Answered** → [ADR-0004](decisions/0004-naming.md): backlog item → recipe → course →
 menu. Project **maitre**; binaries `maitre-cli` (agent CLI) and `maitre` (human TUI). CPD's vocabulary updates to match.
 
 ### Q7 — Distribution
@@ -141,12 +141,12 @@ One brew formula. Possibly two binaries. Possibly a local web UI later.
 The observation that raised it: wayfinder's top rung is a map of open *questions*, each
 resolved into a recorded decision. CPD's milestone is implementation-shaped — intent,
 scope, ACs, steps. So "a decision we need before we can write the recipe" has no home in
-our ladder; right now it would live as prose inside a prep note.
+our ladder; right now it would live as prose inside a backlog item.
 
 v1 had the same gap and bolted `decision add` on as a separate plan-level list —
 disconnected from the ladder, which is exactly how a thing outside the ladder always
-looks. If the gap bites, the fix is a rung (a question-shaped artifact between prep note
-and recipe), not another side-list.
+looks. If the gap bites, the fix is a rung (a question-shaped artifact between the
+backlog item and the recipe), not another side-list.
 
 Two things worth keeping regardless of the answer:
 

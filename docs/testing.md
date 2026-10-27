@@ -13,8 +13,8 @@ cd /tmp/kb
 maitre                        # the real thing, in your terminal
 ```
 
-`maitre-cli demo` writes seven recipes, four specials and two prep notes, and a journal of
-~58 events — enough to exercise every tab and every section.
+`maitre-cli demo` writes seven recipes, six backlog items — four ideas and two small
+tasks — and a journal of ~58 events — enough to exercise every tab and every section.
 
 ## 2. From a script
 
