@@ -7,7 +7,7 @@ The line cook renamed the project and the recipe ids. You did not write any of i
 **The diff to review:** everything after the vocabulary commit —
 
 ```bash
-cd /Users/thiago/Code/Pessoal/new-project
+cd /Users/thiago/Code/Pessoal/maitre
 git log --oneline
 git diff 3236502..HEAD --stat
 ```

@@ -33,7 +33,7 @@ The briefs are written: `work/briefs/slice-{b,c,d,e}.md`, and
 ## Your first four commands
 
 ```bash
-cd /Users/thiago/Code/Pessoal/new-project
+cd /Users/thiago/Code/Pessoal/maitre
 echo "orchestrator pane: ${HERDR_PANE_ID:-none}"     # your pane id, if you have one
 git log --oneline -5 && git status --short           # where the work stopped
 go test ./...                                         # the WIP is green — start from here

@@ -5,7 +5,7 @@ You are the **reviewer** — the independent reviewer lane. The orchestrator's p
 The line cook has fixed your six findings. **Cycle 2 is blockers only**: file only **HIGH or MEDIUM** blockers. No nits, no cosmetics, no style. **Do not re-file F-66 to F-71** — they are yours to close, not to reopen.
 
 ```bash
-cd /Users/thiago/Code/Pessoal/new-project
+cd /Users/thiago/Code/Pessoal/maitre
 git log --oneline bf48acf..HEAD
 git diff bf48acf..HEAD --stat
 ```

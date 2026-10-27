@@ -108,7 +108,7 @@ freshness. And within a slice, the same lane continues: the slice is the unit of
 ## How to resume
 
 ```bash
-cd /Users/thiago/Code/Pessoal/new-project
+cd /Users/thiago/Code/Pessoal/maitre
 git log --oneline -12          # where the work stopped
 make lint && make test         # the tree must be green
 sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # what is open

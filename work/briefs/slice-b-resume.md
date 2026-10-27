@@ -4,6 +4,15 @@
 alone, with a clean context. The original brief is [slice-b.md](slice-b.md); this one
 supersedes it for the work that is left.
 
+## Two notes from the orchestrator
+
+- The repository moved: it is now `/Users/thiago/Code/Pessoal/maitre` (it was
+  `new-project`). Every path in this brief is relative to the repo root, so nothing
+  else changes — but your `cd` is the new one.
+- `kitchen/project.json` still carries `"name": "new-project"`. That is the **plan's**
+  data, not the code's, and it is outside this slice. **Do not change it** — note it in
+  your report and let the reviewer judge it.
+
 ## The situation
 
 Slice B was dispatched to the lane then called `line-cook` (now **`runner`**, pane
