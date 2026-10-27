@@ -100,8 +100,15 @@ The derived-views table, the gate table, the plan-format fields and the command 
    promotion needs. A promoted recipe must be guarded exactly like any other.
 3. **The version moved with the format.** `core.DomainVersion` goes **4 → 5**,
    `docs/03` § 6's version paragraph says 5, and the recorded fingerprint is updated.
-   **Prove the fence still stands**: a plan stamped **4** must be refused by the new
-   tool, and a plan stamped **5** must be accepted.
+   **Prove the fence still stands, in its designed direction**: the guard refuses a
+   write to a plan written under **newer** rules than the tool speaks —
+   `internal/core/lock.go` refuses when `plan > DomainVersion`. So a plan stamped
+   **6** must be refused by this version-5 tool, and a plan stamped **4** or **5**
+   must be accepted. (The fence is one-directional on purpose: an old tool must not
+   write a plan it does not understand, but a new tool may write an old plan.)
+   > The orchestrator's first brief said "a plan stamped 4 must be refused" — that was
+   > wrong, and the runner's report corrected it. Judge against the code, not against
+   > the brief.
 4. **The id is kind-neutral.** `BL01` stays `BL01` when an idea is shaped into a
    feature. Check that nothing in the model or the store rewrites the id when the kind
    changes.
