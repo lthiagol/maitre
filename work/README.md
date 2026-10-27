@@ -37,16 +37,18 @@ each slice that changes the format bumps it, and `docs/03` § 6 says the same nu
 
 ## The lanes
 
+The lane names are the **domain roles** they fill — one word, one referent.
+
 | | |
 |---|---|
-| **line cook** | pane `w1R:p6` — writes the code, one commit per acceptance criterion |
-| **taster** | pane `w1R:p7` — reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation |
-| **verifier** | pane `w1R:p8` — the taster's own second lane; it dispatched F-49 and F-50 |
-| **orchestrator** | pane `w1R:p1` — dispatches, verifies, rules on the findings |
+| **runner** | pane `w1R:p6` — writes the code, one commit per acceptance criterion |
+| **reviewer** | pane `w1R:p7` — reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation |
+| **verifier** | pane `w1R:p8` — the reviewer's own second lane; it dispatched F-49 and F-50 |
+| **orchestrator** | pane `w1R:p1` — this session: dispatches, verifies, rules on the findings, writes the paper |
 
 ```bash
 # dispatch a brief (write it into briefs/ FIRST — never into /tmp)
-herdr agent prompt line-cook "$(cat work/briefs/slice-b.md)"
+herdr agent prompt runner "$(cat work/briefs/slice-b.md)"
 
 # one bounded read to confirm delivery — the only sanctioned read
 sleep 8 && herdr pane read w1R:p6 --source recent-unwrapped --lines 40
@@ -56,6 +58,30 @@ sleep 8 && herdr pane read w1R:p6 --source recent-unwrapped --lines 40
 re-dispatch into a busy lane looks exactly like a stall. `agent_status`, `revision`
 and the cumulative `Loading Nm` spinner are **non-signalling** — they prove nothing.
 Only activity lines do.
+
+### A fresh lane per slice
+
+From slice C on, each slice gets a **fresh agent on a fresh tab**, closed when the
+slice is reviewed:
+
+```bash
+RAW=$(herdr tab create --label "rename: slice C" --cwd "$PWD" --no-focus)
+PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['root_pane']['pane_id'])")
+herdr agent start runner --kind opencode --pane "$PANE"
+```
+
+Freshness buys the **reviewer's** independence: a reviewer that has spent the night
+inside the code has formed a model of it, and the first blocker of the night came from
+checking the reviewer's own example. A fresh reviewer re-derives the facts from the
+code instead of from memory of the round before.
+
+The cost is that a fresh agent knows nothing, so the brief must carry what it would
+otherwise remember: the invariants, the rulings below, and the ledger's closed rows.
+
+**Two carve-outs.** A *fix cycle* stays with the lane that wrote the code — it holds
+the context of what it wrote, and handing a fix to a stranger is re-derivation, not
+freshness. And within a slice, the same lane continues: the slice is the unit of work.
+
 
 ## How to resume
 
@@ -88,3 +114,9 @@ record, with the night's work intact behind it.
    names as they were when each finding was filed: the ledger is not swept.
 4. **The findings of the night are not re-litigated by the rename.** F-56, F-59, F-60,
    F-61 and P-8 are the chef's decisions and stay open.
+5. **A fresh lane per slice, on a fresh tab** — and the transcript captured before the
+   tab is closed. The fix cycle stays with the lane that wrote the code.
+6. **The orchestrator does not write the implementation.** It writes the paper: the
+   briefs, the rulings, the decision of record. The runner writes the code and the
+   reviewer judges it — and if the orchestrator starts writing code, the review's
+   independence becomes theatre.
