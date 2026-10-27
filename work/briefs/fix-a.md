@@ -66,5 +66,10 @@ Per-AC evidence:
 - Before notifying: `make lint` clean, `gofmt -l .` empty, `make test` green, `git status` clean, and the goldens regenerated if the console's output changed.
 - Notify the orchestrator with a **shell command**:
 ```bash
-herdr agent prompt w1R:p1 "Line cook: slice A fix cycle 1 done. Commits: <n>. Fixed: F-66..F-71. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+mkdir -p work/inbox
+cat > work/inbox/runner-slice-a-fix.md <<EOF
+Runner: slice A fix cycle 1 done. Commits: <n>. Fixed: F-66..F-71. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports slice-a-fix"
+herdr agent prompt "$ORCH_PANE" "Runner: slice A fix cycle 1 done. Commits: <n>. Fixed: F-66..F-71. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```

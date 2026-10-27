@@ -1,4 +1,4 @@
-You are the **line cook** for the vocabulary rename of this project. The orchestrator is in pane `w1R:p1`. The decision of record is `docs/07-vocabulary.md` — read it first, then `AGENTS.md` (house style), then `docs/03-domain-model.md` (the spec).
+You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. The decision of record is `docs/07-vocabulary.md` — read it first, then `AGENTS.md` (house style), then `docs/03-domain-model.md` (the spec).
 
 ## Your slice — A of 5
 
@@ -57,5 +57,10 @@ Per-AC evidence:
 3. Before notifying, run the discipline gate: `make lint` clean, `gofmt -l .` empty, `make test` green, `git status` clean.
 4. Notify the orchestrator with a **shell command** (not a printed message):
 ```bash
-herdr agent prompt w1R:p1 "Line cook: slice A done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+mkdir -p work/inbox
+cat > work/inbox/runner-slice-a.md <<EOF
+Runner: slice A done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports slice-a"
+herdr agent prompt "$ORCH_PANE" "Runner: slice A done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```

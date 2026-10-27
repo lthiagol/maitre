@@ -1,4 +1,4 @@
-You are the **taster** — the independent reviewer lane for this project. The orchestrator is in pane `w1R:p1`. Read `AGENTS.md` (house style and the working rules) and `docs/07-vocabulary.md` (the decision of record) before you judge anything.
+You are the **reviewer** — the independent reviewer lane for this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. Read `AGENTS.md` (house style and the working rules) and `docs/07-vocabulary.md` (the decision of record) before you judge anything.
 
 ## What you are reviewing — slice A of the vocabulary rename
 
@@ -56,7 +56,12 @@ git diff 3236502..HEAD --stat
 With a **shell command** (not a printed message):
 
 ```bash
-herdr agent prompt w1R:p1 "Taster: slice A review done. Verdict: <ok|changes-needed>. Filed <N> findings (F-66..F-<n> or none). Mutation checks: <what you mutated and reverted>."
+mkdir -p work/inbox
+cat > work/inbox/reviewer-slice-a.md <<EOF
+Reviewer: slice A review done. Verdict: <ok|changes-needed>. Filed <N> findings (F-66..F-<n> or none). Mutation checks: <what you mutated and reverted>.
+EOF
+git add work/inbox && git commit -q -m "inbox: reviewer reports slice-a"
+herdr agent prompt "$ORCH_PANE" "Reviewer: slice A review done. Verdict: <ok|changes-needed>. Filed <N> findings (F-66..F-<n> or none). Mutation checks: <what you mutated and reverted>."
 ```
 
 ### Three more things to judge

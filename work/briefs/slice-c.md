@@ -1,4 +1,4 @@
-You are the **line cook** for the vocabulary rename of this project. The orchestrator is in pane `w1R:p1`. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `docs/03-domain-model.md` (the spec) before you touch anything.
+You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `docs/03-domain-model.md` (the spec) before you touch anything.
 
 ## Your slice — C of 5 — the backlog becomes one artifact
 
@@ -94,7 +94,12 @@ Per-AC evidence:
 2. Before notifying, run the discipline gate: `make lint` clean, `gofmt -l .` empty, `make test` green, `git status` clean, `make regen-goldens` if the console's output changed.
 3. Notify the orchestrator with a **shell command**:
 ```bash
-herdr agent prompt w1R:p1 "Line cook: slice C done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+mkdir -p work/inbox
+cat > work/inbox/runner-slice-c.md <<EOF
+Runner: slice C done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports slice-c"
+herdr agent prompt "$ORCH_PANE" "Runner: slice C done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```
 
 ### The version moves with the format

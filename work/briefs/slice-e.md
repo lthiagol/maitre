@@ -1,4 +1,4 @@
-You are the **line cook** for the vocabulary rename of this project. The orchestrator is in pane `w1R:p1`. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `GLOSSARY.md` before you touch anything.
+You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `GLOSSARY.md` before you touch anything.
 
 ## Your slice — E of 5, the last — the mascot, the glossary, the ADR and the sweep
 
@@ -64,7 +64,12 @@ make lint && gofmt -l . && make test && make regen-goldens && git status --short
 2. Before notifying: the AC-05 commands, all green, `git status` clean.
 3. Notify the orchestrator with a **shell command**:
 ```bash
-herdr agent prompt w1R:p1 "Line cook: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>."
+mkdir -p work/inbox
+cat > work/inbox/runner-slice-e.md <<EOF
+Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports slice-e"
+herdr agent prompt "$ORCH_PANE" "Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>."
 ```
 
 ### Two LOW notes from slice A's review — fix them here

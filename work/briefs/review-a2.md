@@ -1,4 +1,4 @@
-You are the **taster** — the independent reviewer lane. The orchestrator is in pane `w1R:p1`.
+You are the **reviewer** — the independent reviewer lane. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching.
 
 ## Cycle 2 — the fixes to slice A
 
@@ -49,5 +49,10 @@ Close F-66 to F-71 in `docs/audit.md` — the row moves from open to closed, wit
 ### Notify the orchestrator
 
 ```bash
-herdr agent prompt w1R:p1 "Taster: cycle 2 done. Verdict: <ok|changes-needed>. F-66..F-71 closed. Filed <N> new blockers (F-72.. or none). Mutation checks: <what you mutated and reverted>. LOW notes: <any>."
+mkdir -p work/inbox
+cat > work/inbox/reviewer-slice-a-cycle-2.md <<EOF
+Taster: cycle 2 done. Verdict: <ok|changes-needed>. F-66..F-71 closed. Filed <N> new blockers (F-72.. or none). Mutation checks: <what you mutated and reverted>. LOW notes: <any>.
+EOF
+git add work/inbox && git commit -q -m "inbox: reviewer reports slice-a-cycle-2"
+herdr agent prompt "$ORCH_PANE" "Reviewer: cycle 2 done. Verdict: <ok|changes-needed>. F-66..F-71 closed. Filed <N> new blockers (F-72.. or none). Mutation checks: <what you mutated and reverted>. LOW notes: <any>."
 ```

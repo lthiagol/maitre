@@ -124,7 +124,12 @@ Per-AC evidence:
 Report to the orchestrator with a **shell command**, not a printed message:
 
 ```bash
-herdr agent prompt w1R:p1 "Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+mkdir -p work/inbox
+cat > work/inbox/runner-slice-b.md <<EOF
+Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports slice-b"
+herdr agent prompt "$ORCH_PANE" "Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```
 
 ## Three ways to continue — the orchestrator's recommendation

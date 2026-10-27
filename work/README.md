@@ -37,22 +37,44 @@ each slice that changes the format bumps it, and `docs/03` § 6 says the same nu
 
 ## The lanes
 
-The lane names are the **domain roles** they fill — one word, one referent.
+The lane names are the **domain roles** they fill — one word, one referent. The lanes
+are **created fresh, per slice**, and their pane ids are recorded here.
 
 | | |
 |---|---|
-| **runner** | pane `w1R:p6` — writes the code, one commit per acceptance criterion. **Its slice-B turn ended without reporting**; the work is green and uncommitted, captured at [state/slice-b-wip.patch](state/slice-b-wip.patch) |
-| **reviewer** | pane `w1R:p7` — reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation |
-| **verifier** | pane `w1R:p8` — the reviewer's own second lane; it dispatched F-49 and F-50 |
-| **orchestrator** | pane `w1R:p1` — this session: dispatches, verifies, rules on the findings, writes the paper |
+| **runner** | writes the code, one commit per acceptance criterion. The previous runner's slice-B turn ended without reporting; its work is green and uncommitted, captured at [state/slice-b-wip.patch](state/slice-b-wip.patch) |
+| **reviewer** | reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation |
+| **verifier** | the reviewer's own second lane; it dispatched F-49 and F-50 |
+| **orchestrator** | dispatches, verifies, rules on the findings, writes the paper |
 
 ```bash
-# dispatch a brief (write it into briefs/ FIRST — never into /tmp)
-herdr agent prompt runner "$(cat work/briefs/slice-b.md)"
-
-# one bounded read to confirm delivery — the only sanctioned read
-sleep 8 && herdr pane read w1R:p6 --source recent-unwrapped --lines 40
+# a fresh lane, on a fresh tab
+RAW=$(herdr tab create --label "rename: slice B" --cwd "$PWD" --no-focus)
+PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['root_pane']['pane_id'])")
+herdr agent start runner --kind opencode --pane "$PANE"
 ```
+
+### The report protocol — a lane reports **twice**
+
+The last runner's turn ended and **nobody heard about it**: its work was only in a
+working tree and a pane's scrollback. So a lane's report now has two halves, and the
+**file comes first**:
+
+```bash
+# 1. the receipt — in the repo, where it cannot be lost
+mkdir -p work/inbox
+cat > work/inbox/runner-slice-b.md <<EOF
+Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports slice-b"
+
+# 2. the fast path — a nudge, if the orchestrator is in a pane
+herdr agent prompt "$ORCH_PANE" "Runner: slice B done. Commits: <n>. …"
+```
+
+`$ORCH_PANE` is the orchestrator's pane id, substituted before the brief is
+dispatched. **The orchestrator checks `work/inbox/` when a lane goes quiet** — that is
+the receipt, and it does not depend on a pane existing at all.
 
 **A prompt sent while a lane is working queues behind the running turn.** A
 re-dispatch into a busy lane looks exactly like a stall. `agent_status`, `revision`
