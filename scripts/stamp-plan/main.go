@@ -1,13 +1,16 @@
-// Command stamp-plan records a plan's id migration in its journal.
+// Command stamp-plan records a plan's migration in its journal.
 //
-// A plan whose ids were renamed cannot have its journal rewritten — the journal is
-// append-only — so the migration is *added* to it, as a control event carrying the
-// version the plan now lives under.
+// A plan whose ids — or whose records — were renamed cannot have its journal
+// rewritten — the journal is append-only — so the migration is *added* to it, as a
+// control event carrying the version the plan now lives under.
 //
 // The event is written through the domain's operation, not by editing the file: the
 // plan's stamp moves because the tool wrote it, not because a hand touched the JSON.
 //
-//	go run ./scripts/stamp-plan <plan-dir> <old-id-form> <new-id-form>
+//	go run ./scripts/stamp-plan <plan-dir> <old-form> <new-form>
+//
+// The forms are the id forms (`R01` → `RCP01`) or the shapes the plan's records
+// had (`specials+prep-notes` → `backlog`).
 //
 // For this repository's own plan:
 //
@@ -23,7 +26,7 @@ import (
 
 func main() {
 	if len(os.Args) != 4 {
-		fmt.Fprintln(os.Stderr, "usage: stamp-plan <plan-dir> <old-id-form> <new-id-form>")
+		fmt.Fprintln(os.Stderr, "usage: stamp-plan <plan-dir> <old-form> <new-form>")
 		os.Exit(2)
 	}
 	dir, from, to := os.Args[1], os.Args[2], os.Args[3]

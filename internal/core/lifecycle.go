@@ -159,6 +159,20 @@ const MinOutOfScope = 2
 // is newer than the tool, so a plan stamped 1 is still open to a version-1 tool until
 // a newer build writes it.
 //
+// **Version 6: the plan format's records were renamed.** The recipe's completion
+// stamp was `evidence`; it is `completion` now. The stamp says when the recipe was
+// done — the per-criterion records say what was verified, and they live on the
+// criterion.
+//
+// The rules the gates apply did not change — no gate was weakened and no gate rule
+// moved — but the **record** did: a version-5 tool would write `evidence` where the
+// version-6 reader looks for `completion`, and the stamp it wrote would be a stamp
+// the reader does not see.
+//
+// The reader is tolerant on purpose: a plan written before the rename keeps the old
+// field names, and the reader reads them. The version is bumped because the
+// **writer** changed.
+//
 // **Version 5: the plan format changed again — the backlog is one artifact.** The
 // backlog's two file types (`kitchen/specials/` and `kitchen/prep-notes/`) are one
 // (`kitchen/backlog/`), the item carries a `kind`, and its id is `BL01`. The rules
@@ -187,7 +201,7 @@ const MinOutOfScope = 2
 // is still readable. The version is bumped because the **writer** changed: a version-2
 // tool would write `R01` into a plan the version-3 reader expects to find `RCP01`.
 // See docs/07-vocabulary.md.
-const DomainVersion = 5
+const DomainVersion = 6
 
 // gates is the single gate table. Every gate lives here and nowhere else.
 var gates = []gate{
@@ -605,9 +619,9 @@ func Transition(r *Recipe, ev Event, ctx TransitionContext) error {
 		}
 		r.Approval = &Approval{By: ctx.Approver, At: stamp, Fingerprint: fp}
 	case EventFinish:
-		// The recipe-level completion stamp. The per-criterion proofs are the
+		// The recipe-level completion stamp. The per-criterion records are the
 		// evidence; this is the moment the recipe was done.
-		r.Evidence.CompletedAt = stamp
+		r.Completion.CompletedAt = stamp
 	case EventAbortToDraft:
 		// The sign-off and the claim are void: the premise was wrong, so the recipe
 		// goes back to shaping. Leaving them would freeze the sections the approval

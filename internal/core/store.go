@@ -409,6 +409,7 @@ func (s *Store) LoadRecipe(id string) (*Recipe, error) {
 	if err := json.Unmarshal(raw, &r); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
+	readLegacyFields(raw, &r)
 	// Before the normalisation, so the legacy digest can still be read.
 	r.restampLegacyApproval()
 	r.normaliseLists()
@@ -440,6 +441,7 @@ func (s *Store) ListRecipes() ([]Recipe, error) {
 		if err := json.Unmarshal(raw, &r); err != nil {
 			return nil, fmt.Errorf("parse %s: %w", e.Name(), err)
 		}
+		readLegacyFields(raw, &r)
 		r.restampLegacyApproval()
 		r.normaliseLists()
 		out = append(out, r)

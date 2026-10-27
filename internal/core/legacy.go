@@ -1,10 +1,22 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
 )
+
+// The plan format before the records were renamed.
+//
+// The recipe's completion stamp was `evidence`; it is `completion` now. The stamp
+// says when the recipe was done, and the per-criterion records say what was
+// verified — those live on the criterion.
+//
+// The reader **tolerates** the old names, because a plan written before the rename
+// keeps what it had, and a reader that drops a record is a reader that lies about
+// the plan it is showing. The writer is the one that changed: a plan the tool
+// writes again carries the new names.
 
 // The plan format before the backlog became one artifact.
 //
@@ -116,4 +128,31 @@ func (s *Store) readLegacyDir(name, rung string) ([]LegacyItem, error) {
 	}
 	sortByID(out, func(i int) string { return out[i].ID })
 	return out, nil
+}
+
+// readLegacyFields fills the fields a recipe wrote under the old names.
+//
+// The recipe's completion stamp was `evidence`; it is `completion` now. A plan
+// written before the rename carries the old name, and a reader that ignores it
+// loses the moment the recipe was done.
+//
+// The new name wins when a file carries both: the reader does not merge two
+// answers to one question, and the new one is the one the tool writes.
+func readLegacyFields(raw []byte, r *Recipe) {
+	var doc map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		return
+	}
+	if _, ok := doc["completion"]; ok {
+		return
+	}
+	old, ok := doc["evidence"]
+	if !ok {
+		return
+	}
+	var c Completion
+	if err := json.Unmarshal(old, &c); err != nil {
+		return
+	}
+	r.Completion = c
 }

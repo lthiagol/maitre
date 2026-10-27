@@ -31,7 +31,7 @@ type Recipe struct {
 	Questions    []Question    `json:"questions"`
 	DependsOn    []string      `json:"depends_on,omitempty"`
 	Execution    Execution     `json:"execution"`
-	Evidence     Evidence      `json:"evidence"`
+	Completion   Completion    `json:"completion"`
 	Review       Review        `json:"review"`
 	Audit        Audit         `json:"audit"`
 	Approval     *Approval     `json:"approval,omitempty"`
@@ -131,9 +131,11 @@ type Execution struct {
 	ClaimedAt string `json:"claimed_at,omitempty"`
 }
 
-// Evidence is the recipe-level completion stamp. Per-criterion proofs live on the
-// criterion.
-type Evidence struct {
+// Completion is the recipe-level completion stamp: the moment the recipe was done.
+//
+// It is written once, on the `finish` transition. The per-criterion records live on
+// the criterion — a criterion's evidence — and this says nothing about them.
+type Completion struct {
 	CompletedAt string `json:"completed_at,omitempty"`
 }
 

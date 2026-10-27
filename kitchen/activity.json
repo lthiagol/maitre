@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "seq": 34,
+  "seq": 35,
   "events": [
     {
       "seq": 1,
@@ -371,6 +371,20 @@
         "to": "backlog"
       },
       "domain_version": 5
+    },
+    {
+      "seq": 35,
+      "at": "2026-10-27T21:53:21Z",
+      "kind": "control",
+      "actor": "runner",
+      "session": "s-migrate",
+      "role": "runner",
+      "data": {
+        "from": "evidence",
+        "kind": "migration",
+        "to": "completion"
+      },
+      "domain_version": 6
     }
   ]
 }

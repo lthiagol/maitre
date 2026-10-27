@@ -98,7 +98,7 @@ The rule behind the split: the kitchen names the **artifact** and the **place**;
 
 | Themed | Kept plain |
 |---|---|
-| recipe · backlog item · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
+| recipe · backlog item · course · menu | `acceptance_criteria` · `scope` · `proofs` · `findings` · `work_packages` |
 | | `chef` · `sous-chef` · runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
 | `maitre-cli` · `maitre` · the skills | |
 
@@ -145,7 +145,7 @@ Recipe
 ├── acceptance   [AcceptanceCriterion]
 ├── guidance     [WorkPackage] · [Step]
 ├── execution    claimed_by · claimed_at
-├── evidence     completed_at
+├── completion   completed_at
 ├── review       findings[] · comments[] · rounds[]
 ├── audit        deviations[] · decisions[]
 ├── approval     by · at · fingerprint
@@ -162,8 +162,9 @@ Recipe
 |---|---|---|
 | `intent`, `problem`, `scope` | **Frozen at approval.** Change ⇒ abort to draft, or a follow-up recipe | sous-chef, pre-approval |
 | `acceptance` | **Frozen at approval.** A new AC ⇒ follow-up recipe | sous-chef, pre-approval |
+| `acceptance[].proofs` | Append-only | runner / verifier |
 | `guidance` | Mutable, always. A deviation is recorded, not hidden | runner |
-| `evidence` | Append-only | runner / verifier |
+| `completion` | Written once, on `finish` | the domain layer |
 | `review` | Append-only (findings, comments) + mutable status | runner (self) / reviewer (external) / human (triage) |
 | `audit` | Append-only | the domain layer |
 | `approval` | Written once. `fingerprint` never changes | human |
@@ -446,7 +447,7 @@ it otherwise.
 
 ## 6. Plan format
 
-**The plan format is version 5.** The number is `core.DomainVersion` — the version of
+**The plan format is version 6.** The number is `core.DomainVersion` — the version of
 the rules the plan is written under, which now includes the format itself. A format
 change moves the number: the id prefixes, the directories and the field names on disk
 are hashed into the fingerprint, so a tool that writes the old format is fenced off
@@ -556,7 +557,7 @@ behaviour: what a gate computes is not in the fingerprint either.
 plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until
 a newer build writes it and re-stamps it.
 
-**Version 5 is the plan format, and the rules about it.** Version 3 changed the
+**Version 6 is the plan format, and the rules about it.** Version 3 changed the
 *record* the gates apply to: a recipe's id is `RCP01` and its file is
 `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. Version 4
 changed the *rules about the format*: the fingerprint hashes it, so a format change
@@ -567,10 +568,18 @@ moved — the *record* changed, so the writer changed, and the version moved wit
 A version-4 tool would write a special into `kitchen/specials/`, and the version-5
 reader does not look there.
 
+**Version 6 renamed the records.** The recipe's completion stamp was `evidence`; it
+is `completion` now — the stamp says when the recipe was done, and the per-criterion
+records say what was verified. No gate was weakened: the **record** changed, so the
+writer changed, and the version moved with it. A version-5 tool would write
+`evidence` where the version-6 reader looks for `completion`, and the stamp it wrote
+would be a stamp the reader does not see.
+
 The reader is tolerant on purpose: `RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
 same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog item
-— so a plan written before the change is still readable. See
-[07-vocabulary.md](07-vocabulary.md).
+— so a plan written before the change is still readable. The same is true of the
+renamed field: a plan written before the rename keeps `evidence` for the stamp, and
+the reader reads it. See [07-vocabulary.md](07-vocabulary.md).
 
 ---
 

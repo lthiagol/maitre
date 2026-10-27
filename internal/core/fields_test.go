@@ -19,7 +19,7 @@ func TestEveryFieldHasAWriterOrIsGone(t *testing.T) {
 	want := map[string][]string{
 		"Recipe": {"ID", "Title", "Slug", "Created", "Updated", "Lifecycle", "Intent",
 			"Scope", "Acceptance", "Guidance", "WorkPackages", "Questions", "DependsOn",
-			"Execution", "Evidence", "Review", "Audit", "Approval", "Overlays"},
+			"Execution", "Completion", "Review", "Audit", "Approval", "Overlays"},
 		"Intent":    {"Outcome", "Problem"},
 		"Scope":     {"InScope", "OutOfScope"},
 		"Criterion": {"ID", "Description", "Verification", "Proofs", "Deferral"},
@@ -27,7 +27,7 @@ func TestEveryFieldHasAWriterOrIsGone(t *testing.T) {
 			"DoneWhen", "Status", "Deviation"},
 		"WorkPackage": {"ID", "Name", "Goal", "Rollback"},
 		"Execution":   {"ClaimedBy", "ClaimedAt"},
-		"Evidence":    {"CompletedAt"},
+		"Completion":  {"CompletedAt"},
 		"Review":      {"Findings", "Comments", "Rounds"},
 		"Finding": {"ID", "Phase", "Severity", "Category", "Description", "Anchor",
 			"Status", "Created", "Resolved", "Resolution"},
