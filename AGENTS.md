@@ -125,7 +125,7 @@ the current selection. A resize re-lays out. The detail pane appears beside the 
 
 **Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 46 commands
 (40 verbs in 7 groups, plus 6 workspace commands), one verb per operation, no aliases. Every write is stamped with an actor, a
-session and a role — the session comes from the caller (`SCALE_SESSION`), because CPD's
+session and a role — the session comes from the caller (`MAITRE_CLI_SESSION`), because CPD's
 L5 law is about sessions. Every command prints one JSON document; a gate refusal is
 exit 2. The command surface is in
 [`docs/04-operations.md`](docs/04-operations.md#the-cli-surface).

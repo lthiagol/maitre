@@ -37,9 +37,7 @@ func signedOffRecipe(t *testing.T, dir string) {
 // variables.
 func TestActorFlagsAreGlobal(t *testing.T) {
 	dir := newPlan(t)
-	t.Setenv("SCALE_ACTOR", "")
-	t.Setenv("SCALE_SESSION", "")
-	t.Setenv("SCALE_ROLE", "")
+	clearIdentityEnv(t)
 	signedOffRecipe(t, dir)
 
 	res := cli(t, dir, "--actor", "line-cook", "--session", "s-exec", "--role", "runner",
@@ -75,9 +73,7 @@ func TestActorFlagsAreGlobal(t *testing.T) {
 // verb.
 func TestActorFlagsWorkAfterTheVerb(t *testing.T) {
 	dir := newPlan(t)
-	t.Setenv("SCALE_ACTOR", "")
-	t.Setenv("SCALE_SESSION", "")
-	t.Setenv("SCALE_ROLE", "")
+	clearIdentityEnv(t)
 	signedOffRecipe(t, dir)
 
 	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook",

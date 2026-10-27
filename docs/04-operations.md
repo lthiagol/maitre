@@ -208,14 +208,19 @@ Every write is stamped with an actor, a session and a role:
 maitre-cli --actor line-cook --session s-exec --role runner recipe claim RCP01
 ```
 
-or through the environment — `SCALE_ACTOR`, `SCALE_SESSION`, `SCALE_ROLE` — so a whole
+or through the environment — `MAITRE_CLI_ACTOR`, `MAITRE_CLI_SESSION`, `MAITRE_CLI_ROLE` — so a whole
 task can set it once. The three flags work in either position: before the command, as
 above, or after the verb — `maitre-cli recipe claim RCP01 --actor line-cook`. Every verb
 accepts them.
 
+**The old names are a fallback.** `SCALE_ACTOR`, `SCALE_SESSION` and `SCALE_ROLE`
+still work, for a deprecation window, and the fallback warns on stderr so the caller
+learns the new name from the tool itself. The current name wins when both are set: a
+caller that has migrated must not be told it is using a deprecated name.
+
 **The session must come from the caller.** CPD's L5 law is about *sessions*, and a
 session that spans several commands is what makes the check meaningful. An agent that
-runs ten commands in one task should set `SCALE_SESSION` once; ten generated ids would
+runs ten commands in one task should set `MAITRE_CLI_SESSION` once; ten generated ids would
 make the audit vacuous.
 
 **Only the chef may approve, or sign off.** The chef is the human; the sous chef, the

@@ -181,9 +181,9 @@ func TestAnUnknownVerbIsAClearError(t *testing.T) {
 // TestTheJournalIsStampedWithTheSession checks the identity reaches every write.
 func TestTheJournalIsStampedWithTheSession(t *testing.T) {
 	dir := newPlan(t)
-	t.Setenv("SCALE_ACTOR", "line-cook")
-	t.Setenv("SCALE_SESSION", "s-42")
-	t.Setenv("SCALE_ROLE", "runner")
+	t.Setenv(envActor, "line-cook")
+	t.Setenv(envSession, "s-42")
+	t.Setenv(envRole, "runner")
 
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
 

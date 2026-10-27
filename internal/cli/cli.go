@@ -34,10 +34,31 @@ type Runner struct {
 	Stderr io.Writer
 
 	// The identity given before the command, in the documented global form:
-	// `maitre-cli --actor line-cook recipe claim R01`.
+	// `maitre-cli --actor line-cook recipe claim RCP01`.
 	actor   string
 	session string
 	role    string
+
+	// warnings are the diagnostics the run collected.
+	//
+	// The CLI prints one JSON document — on stdout when the command succeeds, on
+	// stderr when it fails — so a warning cannot be a second thing on stderr while
+	// the failure document is there. The warnings are collected and flushed at the
+	// end: on success as plain lines on stderr, and on failure inside the document.
+	warnings []string
+}
+
+// warn records a diagnostic the run collected.
+//
+// A warning is told once: the identity is read twice on some verbs, and a
+// deprecation notice repeated on every read is noise.
+func (r *Runner) warn(msg string) {
+	for _, w := range r.warnings {
+		if w == msg {
+			return
+		}
+	}
+	r.warnings = append(r.warnings, msg)
 }
 
 // Run dispatches a command and returns the process exit code.
@@ -190,9 +211,11 @@ Usage:
   maitre-cli prepnote <verb>     the ladder's rung 1
 
 Identity (who is acting, and in which session):
-  --actor <name>    default: $SCALE_ACTOR, else "agent"
-  --session <id>    default: $SCALE_SESSION, else a fresh id
-  --role <name>     default: $SCALE_ROLE
+  --actor <name>    default: $MAITRE_CLI_ACTOR, else "agent"
+  --session <id>    default: $MAITRE_CLI_SESSION, else a fresh id
+  --role <name>     default: $MAITRE_CLI_ROLE
+
+  The old $SCALE_* names still work, with a warning on stderr.
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
 fails. This help is the one exception — it prints text.
@@ -254,6 +277,26 @@ func splitIdentity(args []string) ([]string, identity, error) {
 	return args[i:], id, nil
 }
 
+// The environment variables that carry the identity.
+//
+// The names carry the binary's name. The old ones — `SCALE_ACTOR`,
+// `SCALE_SESSION`, `SCALE_ROLE` — carry the name of the binary the rename removed.
+//
+// The old names are still read, for a deprecation window: a caller that has not
+// migrated keeps working. The fallback **warns on stderr**, so the chef learns the
+// new name from the tool itself rather than from a release note. The new name wins
+// when both are set — a caller that has migrated must not be told it is using a
+// deprecated name.
+const (
+	envActor   = "MAITRE_CLI_ACTOR"
+	envSession = "MAITRE_CLI_SESSION"
+	envRole    = "MAITRE_CLI_ROLE"
+
+	deprecatedEnvActor   = "SCALE_ACTOR"
+	deprecatedEnvSession = "SCALE_SESSION"
+	deprecatedEnvRole    = "SCALE_ROLE"
+)
+
 // resolveIdentity reads the actor, session and role from the flags or the environment.
 //
 // The flags come first: the verb's own flag set, then the global form, then the
@@ -261,14 +304,46 @@ func splitIdentity(args []string) ([]string, identity, error) {
 //
 // The session must come from the caller: CPD's L5 law is about *sessions*, and a
 // session that spans several commands is what makes the check meaningful. An agent that
-// runs ten commands in one task should set SCALE_SESSION once.
-func resolveIdentity(fs *flagSet, global identity) identity {
+// runs ten commands in one task should set MAITRE_CLI_SESSION once.
+//
+// The deprecated environment names are read as a fallback, and the fallback warns.
+// The warning goes to stderr because stderr is where the CLI's diagnostics go — but
+// the CLI also prints its **failure document** there, and a document that is not the
+// only thing on the stream breaks a parser. So the warning is collected and flushed
+// after the command: on success stderr carries the warning alone, and on failure the
+// warning rides in the document.
+func (r *Runner) resolveIdentity(fs *flagSet, global identity) identity {
 	id := identity{
-		Actor:   firstNonEmpty(fs.StringValue("actor"), global.Actor, os.Getenv("SCALE_ACTOR"), "agent"),
-		Session: firstNonEmpty(fs.StringValue("session"), global.Session, os.Getenv("SCALE_SESSION"), newSessionID()),
-		Role:    firstNonEmpty(fs.StringValue("role"), global.Role, os.Getenv("SCALE_ROLE")),
+		Actor:   firstNonEmpty(fs.StringValue("actor"), global.Actor),
+		Session: firstNonEmpty(fs.StringValue("session"), global.Session),
+		Role:    firstNonEmpty(fs.StringValue("role"), global.Role),
+	}
+	if id.Actor == "" {
+		id.Actor = firstNonEmpty(r.envValue(envActor, deprecatedEnvActor), "agent")
+	}
+	if id.Session == "" {
+		id.Session = firstNonEmpty(r.envValue(envSession, deprecatedEnvSession), newSessionID())
+	}
+	if id.Role == "" {
+		id.Role = r.envValue(envRole, deprecatedEnvRole)
 	}
 	return id
+}
+
+// envValue reads an identity variable from the environment.
+//
+// The current name wins. The deprecated name is a fallback for a deprecation window,
+// and it warns: a caller that has not migrated should learn the new name.
+func (r *Runner) envValue(current, deprecated string) string {
+	if v := os.Getenv(current); v != "" {
+		return v
+	}
+	v := os.Getenv(deprecated)
+	if v == "" {
+		return ""
+	}
+	r.warn(fmt.Sprintf("$%s is deprecated and will be removed; use $%s instead", deprecated, current))
+	return v
 }
 
 // newSessionID makes a session id for a caller who did not supply one.
@@ -297,7 +372,22 @@ func (r *Runner) emit(v any) int {
 		return ExitError
 	}
 	fmt.Fprintln(r.Stdout, string(raw))
+	// The command succeeded, so stdout holds the document and stderr is free for
+	// the diagnostics.
+	r.flushWarnings()
 	return ExitOK
+}
+
+// flushWarnings writes the collected diagnostics to stderr.
+//
+// They go on stderr because stdout carries the document and stderr carries what
+// the human needs to read: the CLI's contract is one JSON document per stream, and
+// stderr is empty on success until now.
+func (r *Runner) flushWarnings() {
+	for _, w := range r.warnings {
+		fmt.Fprintf(r.Stderr, "warning: %s\n", w)
+	}
+	r.warnings = nil
 }
 
 // fail prints an error document.
@@ -306,12 +396,25 @@ func (r *Runner) fail(msg string, details ...string) {
 	if len(details) > 0 {
 		payload["details"] = details
 	}
+	r.withWarnings(payload)
 	raw, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
 		fmt.Fprintf(r.Stderr, "%s\n", msg)
 		return
 	}
 	fmt.Fprintln(r.Stderr, string(raw))
+}
+
+// withWarnings adds the collected diagnostics to a document.
+//
+// The failure document is the only thing on stderr, so a warning cannot be a second
+// thing there: it rides in the document instead.
+func (r *Runner) withWarnings(payload map[string]any) {
+	if len(r.warnings) == 0 {
+		return
+	}
+	payload["warnings"] = r.warnings
+	r.warnings = nil
 }
 
 // failOp prints the error from an operation, and the exit code it deserves.
@@ -325,12 +428,14 @@ func (r *Runner) failOp(err error) int {
 		for _, g := range ge.Gates {
 			gates = append(gates, g)
 		}
-		raw, _ := json.MarshalIndent(map[string]any{
+		payload := map[string]any{
 			"ok":    false,
 			"error": err.Error(),
 			"event": string(ge.Event),
 			"gates": gates,
-		}, "", "  ")
+		}
+		r.withWarnings(payload)
+		raw, _ := json.MarshalIndent(payload, "", "  ")
 		fmt.Fprintln(r.Stderr, string(raw))
 		return ExitGate
 	}
@@ -353,7 +458,7 @@ func (r *Runner) openStore(fs *flagSet) (*core.Store, *core.Operations, error) {
 		return nil, nil, fmt.Errorf("%w — run `maitre-cli init` first", err)
 	}
 	store := core.Open(root)
-	id := resolveIdentity(fs, identity{Actor: r.actor, Session: r.session, Role: r.role})
+	id := r.resolveIdentity(fs, identity{Actor: r.actor, Session: r.session, Role: r.role})
 	return store, core.NewOperations(store, core.AuditContext{
 		Actor: id.Actor, Session: id.Session, Role: id.Role,
 	}), nil

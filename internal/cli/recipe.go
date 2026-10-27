@@ -425,7 +425,7 @@ func (r *Runner) cmdRecipeComment(args []string) int {
 	// A comment belongs to somebody: the actor, unless the caller says otherwise.
 	// The journal records the actor, so a comment that said nobody would leave the
 	// artifact disagreeing with the log.
-	id := resolveIdentity(fs, identity{Actor: r.actor, Session: r.session, Role: r.role})
+	id := r.resolveIdentity(fs, identity{Actor: r.actor, Session: r.session, Role: r.role})
 	rec, err := ops.AddComment(fs.arg(0), firstNonEmpty(*author, id.Actor), *body, *finding)
 	if err != nil {
 		return r.failOp(err)
