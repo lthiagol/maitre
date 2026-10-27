@@ -75,14 +75,16 @@ small task ──promoted──▶ a recipe
 | **Shaping** | An **update**, not a promotion: the kind changes and a scope is added, and the id does not. `BL01` stays `BL01` — the id is kind-neutral, so the trail survives the shaping |
 | **Promotion** | One-way. The item's status becomes `promoted` and it records what it became (`promoted_to`) |
 | **An idea** | Becomes a recipe in `draft` with **no** criterion: the criteria are what the recipe is groomed into |
-| **A small task** | Becomes a recipe in `draft` with **exactly one** criterion: the work is small enough to be one thing, and a recipe with a criterion is falsifiable from the start |
+| **A small task** | Becomes a recipe in `draft` with **exactly one** criterion: the work is small enough to be one thing. The criterion makes the work **checkable** — it says what has to be true — and it becomes **falsifiable** when the recipe's own life writes its verification |
 
 **No gate is weakened.** The promoted recipe is **not** pre-groomed: it carries no
 out-of-scope items, no steps and no work packages, and its criterion's *verification*
 is the recipe's own life — a criterion with no verification cannot pass
-`ac.falsifiable`. So the gates that guard a recipe refuse a promoted one exactly as
-they refuse any other half-written recipe. A promotion needed no new plan-format field
-and no special case in a rule.
+`ac.falsifiable`. So a promoted recipe is **checkable, not yet falsifiable**: the
+criterion says what has to be true, and the recipe becomes falsifiable when its
+verification is written. The gates that guard a recipe refuse a promoted one exactly
+as they refuse any other half-written recipe. A promotion needed no new plan-format
+field and no special case in a rule.
 
 ### The CPD ↔ tool mapping — the single source
 
