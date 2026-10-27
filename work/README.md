@@ -182,6 +182,23 @@ last commit's body for the evidence it stamped, and do not re-run what landed.
 **To abandon the rename:** `git reset --hard 3236502` returns to the decision of
 record, with the night's work intact behind it.
 
+## How a lane's turn dies, and how to keep the work
+
+It happened twice on 2026-10-27: slice B's runner and slice D's runner both ended a
+turn **without reporting**, mid-work, with changes uncommitted.
+
+| | |
+|---|---|
+| **What it looks like** | the lane goes **idle** — not blocked, not waiting for a keypress — with no error and no report |
+| **Why it happens** | every edit to a large file re-renders that file's **whole diff** into the terminal. A dozen small edits is a dozen full-file diffs, and the turn runs out in the rendering, not in the thinking. |
+| **The rule** | **one write per file** — a scripted pass that applies a file's changes at once — and **commit as soon as the file is coherent**. A commit is a landing place. |
+| **The net** | `work/state/slice-b-wip.patch` and `work/state/slice-d-wip.patch` exist because of this. `git apply <patch>` restores the work in flight. |
+
+**The receipt protocol is the other half.** A turn that ends leaves a working tree and
+a pane's scrollback; the receipt in `work/inbox/` is what the orchestrator can always
+read. A lane that stops mid-work should still write its receipt, saying where it
+stopped.
+
 ## The rules that keep this durable
 
 1. **A brief is written into `work/briefs/` before it is dispatched.** Not into `/tmp` —

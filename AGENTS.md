@@ -326,6 +326,12 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
   the report. End the turn and let the nudge arrive; read `work/inbox/` on the way
   back in. Never re-dispatch into a busy lane to check on it: a queued prompt looks
   exactly like a stall.
+- **One write per file, and commit as soon as it is coherent.** Every edit to a large
+  file re-renders that file's whole diff into the terminal, and a turn that renders
+  dozens of diffs runs out before the work is done. Apply a file's changes in **one**
+  scripted pass, then commit it. A commit is a landing place: a turn that ends leaves
+  only what was committed. (Slice D's runner lost a turn this way on 2026-10-27, with
+  two documents edited and neither committed.)
 
 ## Reference material
 
