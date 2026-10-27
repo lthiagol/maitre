@@ -496,6 +496,14 @@ computes is not in the fingerprint either.
 plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until
 a newer build writes it and re-stamps it.
 
+**Version 3 is the plan format, not the rules.** The gates, the transitions and the
+rest did not change; the *record* they apply to did — a recipe's id is `RCP01` and its
+file is `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. A
+version-2 tool would write `R01` into a plan the version-3 reader expects to find
+`RCP01`, so the version moved. The reader is tolerant on purpose: `RCP01`, `RCP1`,
+`R01`, `r1` and `1` all name the same recipe, so a plan written before the change is
+still readable. See [07-vocabulary.md](07-vocabulary.md).
+
 ---
 
 ## 7. The operation set

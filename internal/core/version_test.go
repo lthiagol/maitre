@@ -180,3 +180,31 @@ func stampPlanVersion(t *testing.T, store *Store, version int) {
 		t.Fatal(err)
 	}
 }
+
+// TestTheReposOwnPlanStaysWritable covers the repo's own plan.
+//
+// The version guard refuses a write when the plan is newer than the tool. The repo's
+// own plan was written under an older version, so this tool — a newer one — must be
+// able to write to it. The guard's direction is the whole point: a newer tool
+// proceeds and stamps its own version on its next write.
+func TestTheRepoPlanStaysWritableUnderANewerVersion(t *testing.T) {
+	root := filepath.Join("..", "..", PlanDirName)
+	if _, err := os.Stat(root); err != nil {
+		t.Skipf("the repo has no plan at %s", root)
+	}
+	s := Open(root)
+	j, err := s.LoadJournal()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(j.Events) == 0 {
+		t.Fatal("the repo's own journal is empty")
+	}
+	plan := PlanDomainVersion(j)
+	if plan > DomainVersion {
+		t.Fatalf("the repo's own plan is stamped %d and this tool speaks %d: the plan is newer than the tool", plan, DomainVersion)
+	}
+	if err := s.checkDomainVersion(); err != nil {
+		t.Fatalf("the repo's own plan must stay writable: %v", err)
+	}
+}

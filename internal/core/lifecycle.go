@@ -158,7 +158,19 @@ const MinOutOfScope = 2
 // The bump protects the future, not the corpus: the guard refuses only when the plan
 // is newer than the tool, so a plan stamped 1 is still open to a version-1 tool until
 // a newer build writes it.
-const DomainVersion = 2
+//
+// **Version 3: the plan format changed.** A recipe's id is `RCP01` and its file is
+// named `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. The
+// rules the gates apply did not change — the *record* they apply to did, and a tool
+// that reads a version-3 plan with the version-2 id machinery would not find the
+// recipes in it.
+//
+// The reader is tolerant on purpose (`RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
+// same recipe), so the older ids still resolve and a plan written before the change
+// is still readable. The version is bumped because the **writer** changed: a version-2
+// tool would write `R01` into a plan the version-3 reader expects to find `RCP01`.
+// See docs/07-vocabulary.md.
+const DomainVersion = 3
 
 // gates is the single gate table. Every gate lives here and nowhere else.
 var gates = []gate{
