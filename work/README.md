@@ -63,6 +63,15 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **Clearing a list** | `docs/04-operations.md` says *"a list flag replaces the list it names"*, but the parser refuses a list flag with no value (`--tag needs a value`). So a list can be **replaced** but never **emptied** — and `--tag` with no values, by the doc's own rule, should clear the tags. Changing the parser's rule would touch every list flag (`--in-scope`, `--ac`, …), so the fix cycle leaves it alone. **The chef's call.** |
 | **The glossary's CPD rows** | slice C's minimal glossary work collapsed two CPD terms (*idea / note* and *brief*) into one row, leaving the split in the `_Avoid_` line. `GLOSSARY.md` is the **single source** for the mapping, and one row per CPD term is its rule. **Slice E rewrites the file** — the rule goes into slice E's brief. |
 
+### Carried notes — small, real, and not this cycle's business
+
+| | |
+|---|---|
+| **A refusal that does not carry the reason** | `backlog update` on a dismissed item says *"backlog item BL01 is dismissed"* — it does not say **why** it was dismissed, and the item knows. A LOW from slice C's review; the ledger's next round. |
+| **`LegacyItem.Text`** | a prep note's *intent* is shown under the item's `body` field. The two old artifacts kept their prose in different fields and the console shows one thing — a translation, like *tasting note* → `Finding`. Noted, not a defect. |
+| **A duplicated doc comment** | `internal/ui/console_test.go`'s `loadModel` carries two doc comments after the F-74 fix — the old one and the new one. Cosmetic; the next lane that touches the file tidies it. |
+| **The brief's ambiguous phrase** | slice C's brief said *"the second out-of-scope item"*, which reads two ways. The runner read it the way the code and `docs/03` read it; the brief is now unambiguous. |
+
 ### Slice C's findings
 
 | Finding | What | Where it goes |
