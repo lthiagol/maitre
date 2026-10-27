@@ -1,0 +1,29 @@
+ Kitchen Brigade · demo
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  Recipes    Backlog    Path    Log  ▸ Settings
+ the plan
+
+ PLAN
+  root        /private/var/folders/5l/jx0d52nd65v87ltmtrwwtf5h0000gn/T/opencode/demo/kitchen
+  recipes     7
+  specials    4
+  prep notes  2
+  events      59
+
+ VIEW
+  order       triage
+  show served true
+
+ KEYS
+  ↑ ↓ / j k         move
+  pgup / pgdn       page
+  g / G             first / last
+  tab / shift+tab   switch tab
+  enter             open the recipe full screen
+  esc               back
+  space             the primary action
+  1 2 3             order: triage, lane, plain
+  c                 show or hide served recipes
+  r                 reload
+  q                 quit
+ ↑↓ move · tab switch · enter detail · r reload · q quit

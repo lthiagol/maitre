@@ -1,0 +1,12 @@
+ Grooming     │ Sign-off    │ On the line │ Tasting     │ On hold │ Served
+──────────────┼─────────────┼─────────────┼────────────┼─────────┼────────
+ R01          │ R02         │ R04         │ R03        │         │ R06
+ Sharpen the  │ Sign off    │ Add the     │ Wire the   │         │ Draft
+ AC gate      │ the menu    │ backlog view│ review q.  │         │ the gloss
+              │             │             │            │         │
+ R07          │             │ R05         │            │         │
+ Record the   │             │ Sharpen the │            │         │
+ review proto │             │ proof contr │            │         │
+
+────────────────────────────────────────────────────────────────────────
+ ↑↓ move · tab lane · enter detail · space act · r reload · q quit

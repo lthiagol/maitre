@@ -1,0 +1,181 @@
+{
+  "id": "R01",
+  "title": "The console shows a finding's conversation",
+  "slug": "the-console-shows-a-finding-s-conversation",
+  "created": "2026-10-25T23:31:59Z",
+  "updated": "2026-10-26T02:21:56Z",
+  "lifecycle": "closed",
+  "intent": {
+    "outcome": "A finding's comments are readable under it, so a reviewer and a fixer can follow the thread without leaving the console",
+    "problem": "ADR-0008 made the recipe the channel between agents, but the console lists findings without their comments, so the conversation is unreadable"
+  },
+  "scope": {
+    "in_scope": [],
+    "out_of_scope": [
+      "web shell",
+      "orchestration"
+    ]
+  },
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "description": "a finding's comments are listed under it in the detail pane",
+      "verification": "go test ./internal/ui -run TestFindingCommentsAreListed",
+      "proofs": [
+        {
+          "command": "go test ./internal/ui -run TestFindingCommentsAreListed",
+          "exit_code": 0,
+          "output_digest": "23c5d2c9ae9a080c",
+          "matched": 1,
+          "match_unit": "package",
+          "match": "proven",
+          "at": "2026-10-26T00:40:14Z",
+          "by": "line-cook"
+        }
+      ]
+    },
+    {
+      "id": "AC-02",
+      "description": "each comment shows its author",
+      "verification": "go test ./internal/ui -run TestFindingCommentShowsItsAuthor",
+      "proofs": [
+        {
+          "command": "go test ./internal/ui -run TestFindingCommentShowsItsAuthor",
+          "exit_code": 0,
+          "output_digest": "23c5d2c9ae9a080c",
+          "matched": 1,
+          "match_unit": "package",
+          "match": "proven",
+          "at": "2026-10-26T00:40:14Z",
+          "by": "line-cook"
+        }
+      ]
+    },
+    {
+      "id": "AC-03",
+      "description": "a comment that belongs to no finding is still visible",
+      "verification": "go test ./internal/ui -run TestGeneralCommentsAreVisible",
+      "proofs": [
+        {
+          "command": "go test ./internal/ui -run TestGeneralCommentsAreVisible",
+          "exit_code": 0,
+          "output_digest": "89842d0adcd4181a",
+          "matched": 1,
+          "match_unit": "package",
+          "match": "proven",
+          "at": "2026-10-26T00:40:15Z",
+          "by": "line-cook"
+        }
+      ]
+    }
+  ],
+  "guidance": [
+    {
+      "id": "G1",
+      "work_package": "WP1",
+      "order": 1,
+      "action": "render a finding's comments under it, with their authors",
+      "covers": [
+        "AC-01",
+        "AC-02"
+      ],
+      "done_when": "the thread is readable in the pane",
+      "status": "done"
+    },
+    {
+      "id": "G2",
+      "work_package": "WP1",
+      "order": 2,
+      "action": "render the comments that belong to no finding",
+      "covers": [
+        "AC-03"
+      ],
+      "done_when": "they are not lost",
+      "status": "done"
+    },
+    {
+      "id": "G3",
+      "work_package": "WP1",
+      "order": 3,
+      "action": "add the tests the verifications name",
+      "covers": [
+        "AC-01",
+        "AC-02",
+        "AC-03"
+      ],
+      "done_when": "the verifications pass",
+      "status": "done"
+    }
+  ],
+  "work_packages": [
+    {
+      "id": "WP1",
+      "name": "ui",
+      "goal": "the detail pane reads the thread",
+      "rollback": "revert the pane rendering"
+    }
+  ],
+  "questions": null,
+  "execution": {
+    "claimed_by": "line-cook",
+    "claimed_at": "2026-10-26T00:38:17Z"
+  },
+  "evidence": {},
+  "review": {
+    "findings": [
+      {
+        "id": "F-01",
+        "phase": "self",
+        "severity": "high",
+        "category": "correctness",
+        "description": "the round-2 gate checked the verdict but not who recorded it, so the executor could sign off its own work",
+        "status": "fixed",
+        "created": "2026-10-26T00:43:10Z",
+        "resolved": "2026-10-26T00:43:10Z",
+        "resolution": "added the review.reviewer_independent gate and a test"
+      }
+    ],
+    "comments": [
+      {
+        "id": "C-01",
+        "author": "line-cook",
+        "body": "found while running the self-review: review.verdict_ok accepted any round. Added review.reviewer_independent, which compares the round's reviewer against execution.claimed_by.",
+        "at": "2026-10-26T00:43:10Z",
+        "finding": "F-01"
+      }
+    ],
+    "rounds": [
+      {
+        "n": 1,
+        "reviewer": "line-cook",
+        "verdict": "ok",
+        "at": "2026-10-26T00:43:10Z",
+        "notes": "the three criteria are proven; the gate hole is fixed"
+      },
+      {
+        "n": 2,
+        "reviewer": "chef",
+        "verdict": "ok",
+        "at": "2026-10-26T00:54:13Z",
+        "notes": "cleanwork"
+      }
+    ]
+  },
+  "audit": {
+    "deviations": [
+      {
+        "at": "2026-10-25T23:46:46Z",
+        "note": "aborted to draft: the chef's second space press claimed the recipe; the console should never have offered to claim",
+        "by": "sous-chef"
+      }
+    ],
+    "decisions": null,
+    "documentation": "The console now shows a finding's thread, so the recipe works as the channel between the reviewer and the fixer."
+  },
+  "approval": {
+    "by": "chef",
+    "at": "2026-10-26T00:35:22Z",
+    "fingerprint": "8813a266eaac833a280c99016d53bbceb85b95cf1e3b0121354f330de4072edc"
+  },
+  "overlays": {}
+}

@@ -1,0 +1,15 @@
+ Kitchen Brigade · kitchen-brigade
+────────────────────────────────────────────────────────────────────────
+ 7 recipes · sort: updated
+
+ TITLE                          ID    LANE         STATE      PROOF   UPDATED
+ Sharpen the AC gate           R01   Grooming     draft      0/2     2h ago
+ Sign off the menu             R02   Sign-off     ready      1/2     2h ago
+ Wire the review queue         R03   Tasting      executed   1/3     2h ago
+ Add the backlog view          R04   On the line  approved   1/1     2h ago
+ Sharpen the proof contract    R05   On the line  executing  1/2     2h ago
+ Draft the glossary            R06   Served       closed     1/1     2h ago
+ Record the review protocol    R07   Grooming     draft      0/1     2h ago
+
+────────────────────────────────────────────────────────────────────────
+ ↑↓ move · tab next · enter detail · space act · 1 2 3 order · r reload · q quit

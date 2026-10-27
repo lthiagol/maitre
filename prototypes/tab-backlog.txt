@@ -1,0 +1,15 @@
+ Kitchen Brigade · demo
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  Recipes  ▸ Backlog    Path    Log    Settings
+ 4 specials · 2 prep notes
+ SPECIALS                                                                                        4
+──────────────────────────────────────────────────────────────────────────────────────────────────
+  I01   The board needs a way to show proofs         open
+  I02   A recipe with no ACs is probably a special   open
+  I03   The chef wants a weekly digest               open
+  I04   Trying the board on a real project           open
+ PREP NOTES                                                                                       2
+──────────────────────────────────────────────────────────────────────────────────────────────────
+  N01   Wire the review queue                        open
+  N02   Sharpen the proof contract                   open
+ ↑↓ move · tab switch · enter detail · space promote to prep note · r reload · q quit

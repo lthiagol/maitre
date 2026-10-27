@@ -1,0 +1,44 @@
+ Kitchen Brigade · demo
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  Recipes    Backlog    Path  ▸ Log    Settings
+ recent activity · 59 events
+  21:47:26  control    R04  chef
+  21:27:47  created    ·    chef
+  21:27:47  created    ·    chef
+  21:27:47  created    ·    chef
+  21:27:47  created    ·    chef
+  21:27:47  created    ·    chef
+  21:27:47  created    ·    chef
+  21:27:47  created    R07  sous-chef
+  21:27:47  created    R07  sous-chef
+  21:27:47  lifecycle  R06  chef
+  21:27:47  decision   R06  chef
+  21:27:47  lifecycle  R06  taster
+  21:27:47  comment    R06  taster
+  21:27:47  finding    R06  line-cook
+  21:27:47  finding    R06  taster
+  21:27:47  finding    R06  taster
+  21:27:47  lifecycle  R06  line-cook
+  21:27:47  evidence   R06  chef
+  21:27:47  step       R06  line-cook
+  21:27:47  control    R06  line-cook
+  21:27:47  lifecycle  R06  chef
+  21:27:47  lifecycle  R06  sous-chef
+  21:27:47  lifecycle  R06  sous-chef
+  21:27:47  created    R06  sous-chef
+  21:27:47  evidence   R05  line-cook
+  21:27:47  evidence   R05  chef
+  21:27:47  step       R05  line-cook
+  21:27:47  step       R05  line-cook
+  21:27:47  control    R05  line-cook
+  21:27:47  lifecycle  R05  chef
+  21:27:47  lifecycle  R05  sous-chef
+  21:27:47  lifecycle  R05  sous-chef
+  21:27:47  created    R05  sous-chef
+  21:27:47  created    R04  sous-chef
+  21:27:47  evidence   R04  chef
+  21:27:47  lifecycle  R04  chef
+  21:27:47  lifecycle  R04  sous-chef
+  21:27:47  lifecycle  R04  sous-chef
+  21:27:47  created    R04  sous-chef
+ ↑↓ move · tab switch · enter detail · r reload · q quit

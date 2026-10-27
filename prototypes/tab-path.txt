@@ -1,0 +1,15 @@
+ Kitchen Brigade · demo
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  Recipes    Backlog  ▸ Path    Log    Settings
+ the path · 4 ready · 2 waiting
+ READY                                                                                          4
+──────────────────────────────────────────────────────────────────────────────────────────────────
+  R01   Sharpen the AC gate                          later
+  R02   Sign off the menu                            needs you
+  R03   Wire the review queue                        later
+  R05   Sharpen the proof contract                   running
+ WAITING                                                                                          2
+──────────────────────────────────────────────────────────────────────────────────────────────────
+  R04   Add the backlog view                         needs R02
+  R07   Record the review protocol                   needs R05
+ ↑↓ move · tab switch · enter detail · r reload · q quit

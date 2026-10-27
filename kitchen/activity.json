@@ -1,0 +1,348 @@
+{
+  "schema": 1,
+  "seq": 32,
+  "events": [
+    {
+      "seq": 1,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "created",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator",
+      "data": {
+        "title": "The console shows a finding's conversation"
+      }
+    },
+    {
+      "seq": 2,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "criterion",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 3,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "criterion",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 4,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "criterion",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 5,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "created",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 6,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "step",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 7,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "step",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 8,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "step",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator"
+    },
+    {
+      "seq": 9,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator",
+      "data": {
+        "approver": "sous-chef",
+        "from": "draft",
+        "to": "groomed"
+      }
+    },
+    {
+      "seq": 10,
+      "at": "2026-10-25T23:31:59Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator",
+      "data": {
+        "approver": "sous-chef",
+        "from": "groomed",
+        "to": "ready"
+      }
+    },
+    {
+      "seq": 11,
+      "at": "2026-10-25T23:39:36Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "chef",
+      "session": "console",
+      "role": "coordinator",
+      "data": {
+        "approver": "chef",
+        "from": "ready",
+        "to": "approved"
+      }
+    },
+    {
+      "seq": 12,
+      "at": "2026-10-25T23:39:37Z",
+      "kind": "control",
+      "recipe": "R01",
+      "actor": "chef",
+      "session": "console",
+      "role": "coordinator"
+    },
+    {
+      "seq": 13,
+      "at": "2026-10-25T23:46:46Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator",
+      "data": {
+        "approver": "sous-chef",
+        "from": "executing",
+        "reason": "the chef's second space press claimed the recipe; the console should never have offered to claim",
+        "to": "draft"
+      }
+    },
+    {
+      "seq": 14,
+      "at": "2026-10-25T23:46:46Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator",
+      "data": {
+        "approver": "sous-chef",
+        "from": "draft",
+        "to": "groomed"
+      }
+    },
+    {
+      "seq": 15,
+      "at": "2026-10-25T23:46:46Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "sous-chef",
+      "session": "s-groom-1",
+      "role": "coordinator",
+      "data": {
+        "approver": "sous-chef",
+        "from": "groomed",
+        "to": "ready"
+      }
+    },
+    {
+      "seq": 16,
+      "at": "2026-10-26T00:35:22Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "chef",
+      "session": "console",
+      "role": "coordinator",
+      "data": {
+        "approver": "chef",
+        "from": "ready",
+        "to": "approved"
+      }
+    },
+    {
+      "seq": 17,
+      "at": "2026-10-26T00:38:17Z",
+      "kind": "control",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 18,
+      "at": "2026-10-26T00:40:14Z",
+      "kind": "evidence",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 19,
+      "at": "2026-10-26T00:40:14Z",
+      "kind": "evidence",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 20,
+      "at": "2026-10-26T00:40:15Z",
+      "kind": "evidence",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 21,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "step",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 22,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "step",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 23,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "step",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 24,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner",
+      "data": {
+        "approver": "line-cook",
+        "from": "executing",
+        "to": "executed"
+      }
+    },
+    {
+      "seq": 25,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "finding",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 26,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "comment",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 27,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "finding",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 28,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "comment",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 29,
+      "at": "2026-10-26T00:43:10Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner",
+      "data": {
+        "approver": "line-cook",
+        "from": "executed",
+        "to": "reviewed"
+      }
+    },
+    {
+      "seq": 30,
+      "at": "2026-10-26T00:44:52Z",
+      "kind": "decision",
+      "recipe": "R01",
+      "actor": "line-cook",
+      "session": "s-exec-1",
+      "role": "runner"
+    },
+    {
+      "seq": 31,
+      "at": "2026-10-26T00:54:13Z",
+      "kind": "comment",
+      "recipe": "R01",
+      "actor": "chef",
+      "session": "console",
+      "role": "coordinator"
+    },
+    {
+      "seq": 32,
+      "at": "2026-10-26T02:21:56Z",
+      "kind": "lifecycle",
+      "recipe": "R01",
+      "actor": "chef",
+      "session": "console",
+      "role": "coordinator",
+      "data": {
+        "approver": "chef",
+        "from": "reviewed",
+        "to": "closed"
+      }
+    }
+  ]
+}

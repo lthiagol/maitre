@@ -1,0 +1,37 @@
+┌ Kitchen Brigade ───────────────────────────────────────────────────────┐
+│ R03 · Wire the review queue                                           │
+│ executed · Tasting · 1/3 proven · 1 note open · updated 2h ago        │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│  Outcome                                                              │
+│    Findings reach the chef without leaving the board.                 │
+│                                                                       │
+│  Problem                                                              │
+│    v1 had no review queue — findings lived in the milestone JSON and   │
+│    the TUI never showed them.                                         │
+│                                                                       │
+│  Scope                                                                │
+│    in    the queue lane                                               │
+│    out   web shell, orchestration                                     │
+│                                                                       │
+│  Acceptance criteria                                                  │
+│    AC-01  passed    the board renders 100 recipes                     │
+│    AC-02  rejected  the filter matched nothing                       │
+│    AC-03  pending   findings close without a restart                 │
+│            verify: go test ./internal/ui -run Filter                  │
+│            go test ./internal/ui -run Filter → exit 0, matched 0       │
+│                                                                       │
+│  Method                                                               │
+│    G1  done      add the queue                                        │
+│                  done when: the queue lists findings                  │
+│                  covers: AC-01                                        │
+│                                                                       │
+│  Tasting notes                                                        │
+│    F-02  high      correctness  open                                 │
+│          the queue drops findings on refresh                         │
+│    F-01  low       docs        fixed                                 │
+│          the empty state is unclear                                  │
+│                                                                       │
+├───────────────────────────────────────────────────────────────────────┤
+│ ↑↓ move · tab next · enter verify · space sign off · esc back · q quit│
+└───────────────────────────────────────────────────────────────────────┘

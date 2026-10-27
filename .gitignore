@@ -1,0 +1,8 @@
+target/
+node_modules/
+bin/
+.DS_Store
+*.swp
+.env
+.env.local
+dist/
