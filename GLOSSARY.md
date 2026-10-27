@@ -1,4 +1,4 @@
-# Kitchen Brigade
+# maitre
 
 The plan a team cooks from: a set of recipes, each one a durable brief an agent
 consumes and executes. The kitchen is the shared artifact; the brigade is the people and
@@ -103,13 +103,13 @@ _Avoid_: Blocker, issue, todo
 
 ## Two vocabularies
 
-CPD — the methodology — keeps a generic vocabulary. Kitchen Brigade — the tool — uses
+CPD — the methodology — keeps a generic vocabulary. maitre — the tool — uses
 the language above. Every term above names its CPD counterpart so the two never drift.
 
 The mapping lives here and nowhere else. It is the single source for the CLI reference,
 the skills and the docs.
 
-| CPD | Kitchen Brigade |
+| CPD | maitre |
 |---|---|
 | crafted prompt | **recipe** |
 | idea / note | **special** |

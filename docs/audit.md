@@ -42,7 +42,7 @@ can substantiate with a command.
 |---|---|
 | Cold build | `make clean && make build`, then `make test`, `make lint`, `gofmt -l .` |
 | Concurrency | `go test -race` on every package, and `go test -count=2 ./...` |
-| The canaries | `scale demo --dir /tmp/kb && cd /tmp/kb && maitre --render --plain`, and `scale demo --chaos` the same way |
+| The canaries | `maitre-cli demo --dir /tmp/kb && cd /tmp/kb && maitre --render --plain`, and `maitre-cli demo --chaos` the same way |
 | The real plan | The repository's own `kitchen/` must still parse, render, and its stored approval digest must still match the canonical recomputation |
 | The goldens | Byte-identical — except where a feature says otherwise. The Chopboard added a tab, so the tab bar moved and nothing else did. |
 
@@ -79,7 +79,7 @@ fail.
 
 | # | Severity | Closed in | Held by |
 |---|---|---|---|
-| F-14 | medium | `internal/cli/recipe.go` — `scale recipe update --depends-on` | `internal/cli/depends_test.go` |
+| F-14 | medium | `internal/cli/recipe.go` — `maitre-cli recipe update --depends-on` | `internal/cli/depends_test.go` |
 | F-19 | medium | `internal/core/operations.go` — a refusal is journalled | `internal/core/refusal_test.go`, `internal/cli/refusal_test.go` |
 | F-45 | medium | `docs/03-domain-model.md` — the diagram's `close` edge lists every gate | `internal/core/docs_test.go` — the diagram check |
 | F-46 | medium | `docs/03-domain-model.md` — the `request_changes` edge | `internal/core/docs_test.go` — the diagram check |

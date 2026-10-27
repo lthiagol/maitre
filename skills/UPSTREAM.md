@@ -22,7 +22,7 @@ different harness.
 
 1. **Pinned to a commit.** Never `main`. v1 vendored at `main` and both copies drifted.
 2. **Byte-identical to upstream.** No edits in place. A skill that needs changing for
-   Kitchen Brigade becomes ours, under `templates/skills/`.
+   maitre becomes ours, under `templates/skills/`.
 3. **Re-sync by script.** `skills/sync.sh` prints a diff before overwriting.
 4. **Record the commit.** This file is the provenance; the commit hash is the pin.
 

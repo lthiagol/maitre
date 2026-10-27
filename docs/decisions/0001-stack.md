@@ -131,7 +131,7 @@ the cost of a server and a browser. Revisit once the TUI proves the model.
 - **Dependency budget.** Core and CLI: **0 external deps, stdlib only**. UI: **≤ 30**
   external (currently 22). A dependency needs a written reason; the core may never gain
   one for convenience.
-- **Single binary or two?** **Two binaries, one brew formula.** `scale` for agents,
+- **Single binary or two?** **Two binaries, one brew formula.** `maitre-cli` for agents,
   `maitre` for humans. An agent cannot launch the TUI by accident — `maitre` refuses
   without a terminal, which is the structural guard. Two *formulas* was v1's bug; two
   *binaries* in one formula is fine.

@@ -11,11 +11,11 @@ The project has two layers that both talk about the same objects:
 | Layer | Audience | Purpose |
 |---|---|---|
 | **CPD** — the methodology | the agentic-coding community, publicly | principles, stages, roles, vocabulary |
-| **The tool** — Kitchen Brigade | people using it | the same ideas, implemented |
+| **The tool** — maitre | people using it | the same ideas, implemented |
 
 CPD is currently generic and descriptive: *crafted prompt*, *acceptance criteria*,
 *scope*, *evidence*, *findings*. The tool wants specific names: *recipe*, *chef*,
-*scale*, *maitre*.
+*maitre-cli*, *maitre*.
 
 v1 tried to have both without deciding, and produced the drift that is now the project's
 worst reference case: the CLI said `spec`, the model kept `spec_status`, the TUI said
@@ -44,7 +44,7 @@ invite confusion at the exact point where precision matters.
 |---|---|
 | Artifact: recipe · ladder: special → prep note → recipe → course → menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
 | Roles: chef · maître d' · sous chef · line cook · taster · expo | lifecycle states · lanes · gate names · `status` · `review_state` |
-| Binaries: `scale` · `maitre` · skills: service · sous-chef · line-cook · taster · expo | |
+| Binaries: `maitre-cli` · `maitre` · skills: service · sous-chef · line-cook · taster · expo | |
 
 ### 4. The mapping lives in exactly one place
 

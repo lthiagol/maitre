@@ -1,4 +1,4 @@
-// Command maitre is the Kitchen Brigade human console.
+// Command maitre is the maitre human console.
 //
 // It refuses to start the interactive view without a terminal, so an agent can never
 // launch it by accident. `--render` prints a static snapshot instead, which needs no

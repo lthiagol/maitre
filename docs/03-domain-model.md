@@ -77,7 +77,7 @@ an agent reasons about mechanically stays descriptive. See
 |---|---|
 | recipe · special · prep note · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
 | chef · maître d' · sous chef · line cook · taster · expo | lifecycle states · gate names · `status` · `review_state` |
-| `scale` · `maitre` · the skills | |
+| `maitre-cli` · `maitre` · the skills | |
 
 ### IDs
 
@@ -350,7 +350,7 @@ and had two that didn't exist (`B2`, `B3` documented but never implemented).
 | `abort.recorded` | an abort reason exists | `abort_to_draft` |
 | `immutability.respected` | the approval fingerprint still matches the frozen sections | `start`, `finish`, `enter_remediation`, `exit_remediation`, `pass_review`, `close` |
 
-The table is the code's: `scale gates` prints it, and `TestTheDocListsTheGatesTheCodeHas`
+The table is the code's: `maitre-cli gates` prints it, and `TestTheDocListsTheGatesTheCodeHas`
 compares the two, so the doc cannot drift from the gate table again.
 
 The cancel reason is not a gate: `cancel` is an overlay, not a transition, and its reason

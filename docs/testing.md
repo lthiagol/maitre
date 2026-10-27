@@ -8,12 +8,12 @@ script, and automatically.
 ## 1. By a person
 
 ```bash
-scale demo --dir /tmp/kb     # seed a realistic plan
+maitre-cli demo --dir /tmp/kb     # seed a realistic plan
 cd /tmp/kb
 maitre                        # the real thing, in your terminal
 ```
 
-`scale demo` writes seven recipes, four specials and two prep notes, and a journal of
+`maitre-cli demo` writes seven recipes, four specials and two prep notes, and a journal of
 ~58 events — enough to exercise every tab and every section.
 
 ## 2. From a script
@@ -46,7 +46,7 @@ into a chat message.
 ### The stress plan
 
 ```bash
-scale demo --chaos --dir /tmp/kb
+maitre-cli demo --chaos --dir /tmp/kb
 cd /tmp/kb && maitre
 ```
 

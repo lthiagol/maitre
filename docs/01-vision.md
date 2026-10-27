@@ -128,7 +128,7 @@ Candidates in
 ### Q6 — Naming
 
 **Answered** → [ADR-0004](decisions/0004-naming.md): special → prep note → recipe → course →
-menu. Project **Kitchen Brigade**; binaries `scale` (agent CLI) and `maitre` (human TUI). CPD's vocabulary updates to match.
+menu. Project **maitre**; binaries `maitre-cli` (agent CLI) and `maitre` (human TUI). CPD's vocabulary updates to match.
 
 ### Q7 — Distribution
 

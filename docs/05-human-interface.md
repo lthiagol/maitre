@@ -15,7 +15,7 @@ From [ADR-0003](decisions/0003-surface-split.md), the console owns:
 | **Run** | Start, pause, watch, steer execution |
 
 It does **not** author the recipe. An agent does that, in a conversation with the chef,
-through `scale`.
+through `maitre-cli`.
 
 ## Tabs
 
@@ -210,7 +210,7 @@ The console **owns the terminal**: the alt screen, its own background, and the w
 title. Quitting restores the terminal exactly, and the shell's scrollback stays clean.
 
 ```
-row 0        Kitchen Brigade - <project>
+row 0        maitre - <project>
 row 1        --------------------------------------------
 row 2        > Recipes   Backlog   Path   Chopboard   Log   Expo   Settings
 row 3        7 recipes - 3 need you        refused - ac.covered
@@ -434,7 +434,7 @@ the journal is the only event log.
 ```mermaid
 flowchart LR
     subgraph adapters["adapters"]
-        cmd_scale["cmd/scale"]
+        cmd_scale["cmd/maitre-cli"]
         cmd_maitre["cmd/maitre"]
     end
     subgraph surfaces["surfaces"]

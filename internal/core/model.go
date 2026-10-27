@@ -1,4 +1,4 @@
-// Package core is the domain layer of Kitchen Brigade.
+// Package core is the domain layer of maitre.
 //
 // It holds the plan's data model, its lifecycle and gates, and the store that reads and
 // writes the plan directory. It has no UI imports and no CLI imports — every surface is

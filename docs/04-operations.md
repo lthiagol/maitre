@@ -18,7 +18,7 @@ variations of a handful of real operations: an alias, a bulk variant, a `--json`
 
 ```mermaid
 flowchart TB
-    subgraph agent["scale — the agent CLI"]
+    subgraph agent["maitre-cli — the agent CLI"]
         A["compose<br/><i>recipe update · add-ac · step add</i>"]
         B["shape<br/><i>advance groom · advance specify</i>"]
         C["execute<br/><i>step done</i>"]
@@ -121,7 +121,7 @@ picking up a stale `mp` and failing with *"unexpected argument --all"*.
 ```mermaid
 flowchart LR
     subgraph adapters["adapters"]
-        cmd_scale["cmd/scale"]
+        cmd_scale["cmd/maitre-cli"]
         cmd_maitre["cmd/maitre"]
     end
     subgraph surfaces["surfaces"]
@@ -156,19 +156,19 @@ by reading the journal, and that requires every write to carry its session.
 
 ## The CLI surface
 
-`scale` is a thin adapter over these operations — one verb per operation, no aliases.
+`maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases.
 **46 commands**: 40 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
 commands, 265 subcommands.)
 
 | Group | Verbs |
 |---|---|
-| `scale recipe` | create · list · show · update · advance · approve · request-changes · claim · document · review · comment · block · unblock · defer · resume · cancel |
-| `scale ac` | add · verify · signoff · defer |
-| `scale wp` | add |
-| `scale step` | add · start · done · skip · fail · deviate |
-| `scale finding` | add · resolve · dismiss · reopen |
-| `scale special` | list · create · update · dismiss · promote |
-| `scale prepnote` | list · create · update · promote |
+| `maitre-cli recipe` | create · list · show · update · advance · approve · request-changes · claim · document · review · comment · block · unblock · defer · resume · cancel |
+| `maitre-cli ac` | add · verify · signoff · defer |
+| `maitre-cli wp` | add |
+| `maitre-cli step` | add · start · done · skip · fail · deviate |
+| `maitre-cli finding` | add · resolve · dismiss · reopen |
+| `maitre-cli special` | list · create · update · dismiss · promote |
+| `maitre-cli prepnote` | list · create · update · promote |
 | workspace | `init` · `demo` · `plan` · `path` · `log` (`--since <seq>`) · `gates` |
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
@@ -179,12 +179,12 @@ A list is always a list: an empty one is `[]`, never `null`. The standard reader
 `jq`, a JSON parser in any language — break on `null`, and the plan is read by agents.
 
 **Every field of the model has a writer.** A field the surface cannot write is a field
-the agent surface cannot reach, and a gate over it can never be tripped from `scale`:
+the agent surface cannot reach, and a gate over it can never be tripped from `maitre-cli`:
 
 | Field | Written by |
 |---|---|
-| `title` · `intent` · `scope` | `scale recipe update --title --outcome --problem --in-scope --out-of-scope` |
-| `depends_on` | `scale recipe update --depends-on <id>` — repeatable, and it replaces the whole list |
+| `title` · `intent` · `scope` | `maitre-cli recipe update --title --outcome --problem --in-scope --out-of-scope` |
+| `depends_on` | `maitre-cli recipe update --depends-on <id>` — repeatable, and it replaces the whole list |
 
 A list flag replaces the list it names; a flag that is not given leaves its field
 alone.
@@ -205,12 +205,12 @@ sign off with the actor as the approver.
 Every write is stamped with an actor, a session and a role:
 
 ```bash
-scale --actor line-cook --session s-exec --role runner recipe claim R01
+maitre-cli --actor line-cook --session s-exec --role runner recipe claim R01
 ```
 
 or through the environment — `SCALE_ACTOR`, `SCALE_SESSION`, `SCALE_ROLE` — so a whole
 task can set it once. The three flags work in either position: before the command, as
-above, or after the verb — `scale recipe claim R01 --actor line-cook`. Every verb
+above, or after the verb — `maitre-cli recipe claim R01 --actor line-cook`. Every verb
 accepts them.
 
 **The session must come from the caller.** CPD's L5 law is about *sessions*, and a
@@ -221,58 +221,58 @@ make the audit vacuous.
 **Only the chef may approve, or sign off.** The chef is the human; the sous chef, the
 line cook, the taster and the expo are agents, and so is the default actor `agent`. The
 approval gate refuses an approval whose actor is one of them, so the human says who
-they are: `scale --actor chef recipe approve R01 --by chef`. A **sign-off** — the one
+they are: `maitre-cli --actor chef recipe approve R01 --by chef`. A **sign-off** — the one
 exception to the zero-match rule — is a human act too, and takes the same deny-list:
-`scale --actor chef ac signoff R01 AC-01 --by chef`. The list is a deny-list — a human
+`maitre-cli --actor chef ac signoff R01 AC-01 --by chef`. The list is a deny-list — a human
 may approve under any name — but an agent cannot sign a recipe or a criterion off.
 
 ### The agent's loop
 
 ```bash
-scale recipe create --title "…" --outcome "…" --problem "…" --out-of-scope a --out-of-scope b
-scale ac add    R01 --description "…" --verification "go test ./…"
-scale wp add    R01 --name core
-scale step add  R01 --action "…" --done-when "…" --covers AC-01
-scale recipe advance R01 groom
-scale recipe advance R01 specify
-scale --actor chef recipe approve R01 --by chef   # only the chef may sign off
-scale recipe claim   R01 --agent line-cook
-scale step done R01 G1
-scale ac verify R01 AC-01          # the tool runs the command
-scale recipe advance R01 finish
-scale recipe review  R01 --reviewer taster --verdict ok
-scale recipe advance R01 pass_review
-scale recipe document R01 --text "…"
-scale recipe advance R01 close
+maitre-cli recipe create --title "…" --outcome "…" --problem "…" --out-of-scope a --out-of-scope b
+maitre-cli ac add    R01 --description "…" --verification "go test ./…"
+maitre-cli wp add    R01 --name core
+maitre-cli step add  R01 --action "…" --done-when "…" --covers AC-01
+maitre-cli recipe advance R01 groom
+maitre-cli recipe advance R01 specify
+maitre-cli --actor chef recipe approve R01 --by chef   # only the chef may sign off
+maitre-cli recipe claim   R01 --agent line-cook
+maitre-cli step done R01 G1
+maitre-cli ac verify R01 AC-01          # the tool runs the command
+maitre-cli recipe advance R01 finish
+maitre-cli recipe review  R01 --reviewer taster --verdict ok
+maitre-cli recipe advance R01 pass_review
+maitre-cli recipe document R01 --text "…"
+maitre-cli recipe advance R01 close
 ```
 
 ### The review loop
 
 ```bash
-scale finding add R03 --description "the queue drops findings on refresh" \
+maitre-cli finding add R03 --description "the queue drops findings on refresh" \
   --file internal/ui/board.go --line 88 --severity high --category correctness
-scale recipe comment R03 --finding F-02 --body "reproduced - refresh() re-reads the queue"
-scale recipe review R03 --reviewer taster --verdict changes-needed
+maitre-cli recipe comment R03 --finding F-02 --body "reproduced - refresh() re-reads the queue"
+maitre-cli recipe review R03 --reviewer taster --verdict changes-needed
 
 # the fixer
-scale recipe comment R03 --finding F-02 --body "I tried reading the queue once; it worked"
-scale finding resolve R03 F-02 --note "read the queue once"
+maitre-cli recipe comment R03 --finding F-02 --body "I tried reading the queue once; it worked"
+maitre-cli finding resolve R03 F-02 --note "read the queue once"
 
 # the reviewer, if the fix does not hold
-scale finding reopen R03 F-02 --reason "the empty case is still missed"
+maitre-cli finding reopen R03 F-02 --reason "the empty case is still missed"
 ```
 
 The recipe is the channel: agents do not message each other, they read and write the
-artifact. The journal is the notification — `scale log --since <seq>` is how an agent
+artifact. The journal is the notification — `maitre-cli log --since <seq>` is how an agent
 notices. See [ADR-0008](decisions/0008-artifact-is-the-channel.md).
 
 ## Slices
 
 | Slice | Operations | Surfaces |
 |--:|---|---|
-| 3 | ✅ `UpdateRecipe` · `AddCriterion` · `AddStep` · `SetStepStatus` · `VerifyCriterion` · `Advance` | `scale` |
+| 3 | ✅ `UpdateRecipe` · `AddCriterion` · `AddStep` · `SetStepStatus` · `VerifyCriterion` · `Advance` | `maitre-cli` |
 | 4 | ✅ `ApproveRecipe` · `RequestChanges` · `TriageFinding` · `SignOffCriterion` · block/defer/cancel · `DocumentRecipe` | `maitre` |
-| 5 | ✅ `AddFinding` · `ResolveFinding` | `scale` |
+| 5 | ✅ `AddFinding` · `ResolveFinding` | `maitre-cli` |
 | 6 | specials · prep notes · courses · the backlog | `maitre` |
 
 ## Open questions

@@ -49,7 +49,7 @@ concern, and a flat list also supports a comment about the review as a whole.
 
 ### 3. The review loop goes backwards
 
-`scale finding reopen` sends a finding back into the queue when a fix does not hold. The
+`maitre-cli finding reopen` sends a finding back into the queue when a fix does not hold. The
 outcome is cleared — the substance of the previous attempt lives in the comments, which
 are append-only — and the objection is appended as a comment, so the next attempt reads
 why it was sent back.
@@ -59,7 +59,7 @@ Without this the loop only went forward, and "the review happened" was not the s
 
 ### 4. The journal is the notification
 
-An agent is not told that something changed; it looks. `scale log --since <seq>` returns
+An agent is not told that something changed; it looks. `maitre-cli log --since <seq>` returns
 what is newer than the last sequence number it saw.
 
 `activity.json` is the **only** event log. A recipe's own audit holds what the recipe
@@ -69,7 +69,7 @@ authored — deviations, decisions, documentation — never a copy of its events
 
 Because the artifact is the channel, noticing that it changed is a polling or watching
 problem. The console's mtime scan is therefore not a convenience — **it is the
-coordination mechanism**. The same holds for an agent, which polls `scale log --since`.
+coordination mechanism**. The same holds for an agent, which polls `maitre-cli log --since`.
 
 ### 6. The reviewer cannot advance a recipe that says no
 

@@ -4,7 +4,7 @@
 
 ## What this project is
 
-**Kitchen Brigade** — a ground-up rewrite of
+**maitre** — a ground-up rewrite of
 [`master-plan`](https://github.com/lthiagol/master-plan) v1 (v1.0.0-rc6), built on
 [CPD](https://github.com/lthiagol/crafted-prompt-development) as its foundation.
 
@@ -12,17 +12,17 @@ Every line is new. v1 contributes lessons and vocabulary, not code.
 
 | | |
 |---|---|
-| Agent CLI | `scale` |
+| Agent CLI | `maitre-cli` |
 | Human console | `maitre` |
 | Plan directory | `kitchen/` |
-| Module | `github.com/lthiagol/kitchen-brigade` |
+| Module | `github.com/lthiagol/maitre` |
 | The artifact | a **recipe** (CPD: a crafted prompt) |
 
 ## The tool today
 
 | | |
 |---|---|
-| `scale` | the agent CLI — 46 commands: 40 verbs in 7 groups, plus 6 workspace commands |
+| `maitre-cli` | the agent CLI — 46 commands: 40 verbs in 7 groups, plus 6 workspace commands |
 | `maitre` | the human console — 5 tabs, fullscreen, alt screen |
 
 The plan lives in `kitchen/`: `recipes/`, `courses/`, `prep-notes/`, `specials/`, plus
@@ -32,8 +32,8 @@ The console's tabs: **Recipes** (grouped by what needs the chef) · **Backlog** 
 and prep notes) · **Path** (the execution order) · **Log** (the journal) · **Settings**.
 
 ```bash
-scale demo --dir /tmp/kb && cd /tmp/kb && maitre           # see it
-scale demo --chaos --dir /tmp/kb                           # the pathological plan
+maitre-cli demo --dir /tmp/kb && cd /tmp/kb && maitre           # see it
+maitre-cli demo --chaos --dir /tmp/kb                           # the pathological plan
 scripts/console-shot.py --bin ./bin/maitre --cwd /tmp/kb   # capture the screen
 ```
 
@@ -84,10 +84,10 @@ discovered by using it.
 | — | `internal/core` — model, lifecycle, gates, store, views, verifier | ✅ |
 | — | `internal/core/operations.go` — the public verbs | ✅ slice 3a |
 | — | `internal/core/seed.go` — the seeder | ✅ slice 3b |
-| — | `internal/cli` — the `scale` command surface | ✅ slice 1 |
+| — | `internal/cli` — the `maitre-cli` command surface | ✅ slice 1 |
 | — | `internal/ui` — the `maitre` console | ✅ slice 4 |
 
-**Slice 1** — `scale init`, `scale recipe create|list|show|advance`, `scale gates`.
+**Slice 1** — `maitre-cli init`, `maitre-cli recipe create|list|show|advance`, `maitre-cli gates`.
 The gate table, the transition table and the atomic store.
 
 **Slice 2** — the `maitre` board: lanes, recipe rows, detail pane, `maitre --render` for a
@@ -100,7 +100,7 @@ journal (`activity.json`) is the only event log; a recipe's audit holds only its
 deviations and decisions. See [ADR-0007](docs/decisions/0007-operation-layer.md).
 
 **Slice 3b — the seeder.** `core.Seed` builds a realistic plan *through* the operations,
-so the fixture cannot drift from the model. `scale demo` seeds one; the console's tests
+so the fixture cannot drift from the model. `maitre-cli demo` seeds one; the console's tests
 use the same code.
 
 **Slice 4 — the console.** Five tabs (Recipes · Backlog · Path · Log · Settings), the
@@ -121,9 +121,9 @@ the current selection. A resize re-lays out. The detail pane appears beside the 
   the way in (`internal/ui/sanitize.go`). A newline in a title would corrupt the screen.
 - **Adversarial fixtures.** `core.SeedStress` adds the cases that break layouts: a title
   with a newline, a title longer than the column, thirty criteria, fifty steps, twelve
-  findings, an empty recipe, and text that is not ASCII. `scale demo --chaos` writes it.
+  findings, an empty recipe, and text that is not ASCII. `maitre-cli demo --chaos` writes it.
 
-**Slice 6b — the CLI.** `scale` is now a thin adapter over the operations: 46 commands
+**Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 46 commands
 (40 verbs in 7 groups, plus 6 workspace commands), one verb per operation, no aliases. Every write is stamped with an actor, a
 session and a role — the session comes from the caller (`SCALE_SESSION`), because CPD's
 L5 law is about sessions. Every command prints one JSON document; a gate refusal is
@@ -163,7 +163,7 @@ fixer's move, and the console must not do an agent's job ([ADR-0003](docs/decisi
 second framework. An open note outranks the review: it is the concrete blocker — the
 close gate refuses a recipe with an open note — and a verdict can wait.
 
-**The round trip ran.** R01 was authored through `scale`, executed with real proofs,
+**The round trip ran.** R01 was authored through `maitre-cli`, executed with real proofs,
 self-reviewed, and then reviewed independently in `maitre` — the first time the loop
 ran on real content. See `kitchen/` for the artifact and the journal.
 
@@ -217,7 +217,7 @@ does not compute. Three things now hold it:
 
 **The version guard is built.** The plan records the version of the rules it was last
 written under, in its journal, and any tool whose rules are older refuses to write —
-the console included. A stale `scale` on the `PATH` can read the plan but cannot apply
+the console included. A stale `maitre-cli` on the `PATH` can read the plan but cannot apply
 weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
 `TestDomainShapeIsVersioned` fails when the rules change without a bump.
 
@@ -228,7 +228,7 @@ weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
 | [0001](docs/decisions/0001-stack.md) | Stack: **Go + Charm** (bubbletea v2, lipgloss v2, bubbles v2, glamour v2) |
 | [0002](docs/decisions/0002-human-interface-first.md) | Build order: human interface first, CLI derived from it |
 | [0003](docs/decisions/0003-surface-split.md) | Who writes what: artifact vs. management |
-| [0004](docs/decisions/0004-naming.md) | Naming: Kitchen Brigade · `scale` · `maitre` · the ladder |
+| [0004](docs/decisions/0004-naming.md) | Naming: maitre · `maitre-cli` · `maitre` · the ladder |
 | [0005](docs/decisions/0005-vocabulary.md) | Vocabulary: generic methodology, specific product |
 | [0006](docs/decisions/0006-verification.md) | Verification — who runs it, and what a proof is |
 | [0007](docs/decisions/0007-operation-layer.md) | The operation layer |
@@ -237,10 +237,10 @@ weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
 ## Layout
 
 ```
-cmd/scale/      the agent CLI
+cmd/maitre-cli/  the agent CLI
 cmd/maitre/     the human console
 internal/core/  domain model · lifecycle · gates · store · views · verifier   ← stdlib only
-internal/cli/   the scale command surface                                   ← stdlib only
+internal/cli/   the maitre-cli command surface                                   ← stdlib only
 internal/ui/    the maitre console (bubbletea v2)
 skills/         vendored third-party skills, pinned to an upstream commit
 templates/      our own skills (to come)
@@ -257,14 +257,14 @@ research/       reference material on CPD and v1
 make build         # both binaries into ./bin
 make test          # go test ./...
 make lint          # gofmt check + go vet
-make run           # go run ./cmd/scale
+make run           # go run ./cmd/maitre-cli
 make regen-goldens # update the console's golden snapshot
 ```
 
 **Try the console:**
 ```bash
-scale demo --dir /tmp/kb && cd /tmp/kb && maitre
-scale demo --chaos --dir /tmp/kb     # the pathological plan, to break the console on
+maitre-cli demo --dir /tmp/kb && cd /tmp/kb && maitre
+maitre-cli demo --chaos --dir /tmp/kb     # the pathological plan, to break the console on
 maitre --render --plain              # a static snapshot
 maitre --keys "down,space" --plain  # drive it from a script
 ```
@@ -289,7 +289,7 @@ Count them yourself, the way the table counts them — the external modules a pa
 pulls in:
 
 ```bash
-go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | sort -u | grep -v kitchen-brigade | wc -l
+go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | sort -u | grep -v lthiagol/maitre | wc -l
 ```
 
 ## Working rules

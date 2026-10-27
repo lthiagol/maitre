@@ -1,4 +1,4 @@
-# Kitchen Brigade
+# maitre
 
 > A ground-up rewrite of [`master-plan`](https://github.com/lthiagol/master-plan) v1
 > (v1.0.0-rc6), built on
@@ -7,7 +7,7 @@
 
 | | |
 |---|---|
-| Agent CLI | `scale` |
+| Agent CLI | `maitre-cli` |
 | Human console | `maitre` |
 | Plan directory | `kitchen/` |
 
@@ -19,7 +19,7 @@ discovered by using it.
 | | Status |
 |---|---|
 | `internal/core` — model, lifecycle, gates, store, derived views, verifier | ✅ |
-| `internal/cli` — the `scale` surface | ✅ slice 1 |
+| `internal/cli` — the `maitre-cli` surface | ✅ slice 1 |
 | `internal/ui` — the `maitre` board and detail pane | ✅ slice 2 |
 | `docs/03-domain-model.md` · `04-operations.md` · `05-human-interface.md` | 🔄 drafts |
 
@@ -30,7 +30,7 @@ make build && make test
 ## The board
 
 ```
- Kitchen Brigade · my-project
+ maitre · my-project
 ──────────────────────────
 12 recipes · /path/to/kitchen
 
@@ -55,7 +55,7 @@ works in CI, in a PR, or in a chat message.
 | [0001](docs/decisions/0001-stack.md) | Stack: Go + Charm |
 | [0002](docs/decisions/0002-human-interface-first.md) | Build order: human interface first |
 | [0003](docs/decisions/0003-surface-split.md) | Who writes what: artifact vs. management |
-| [0004](docs/decisions/0004-naming.md) | Naming: Kitchen Brigade · `scale` · `maitre` · the ladder |
+| [0004](docs/decisions/0004-naming.md) | Naming: maitre · `maitre-cli` · `maitre` · the ladder |
 | [0005](docs/decisions/0005-vocabulary.md) | Vocabulary: generic methodology, specific product |
 
 ## Reference
@@ -77,10 +77,10 @@ works in CI, in a PR, or in a chat message.
 ## Layout
 
 ```
-cmd/scale/      the agent CLI
+cmd/maitre-cli/  the agent CLI
 cmd/maitre/     the human console
 internal/core/  domain model · lifecycle · gates · store · views · verifier   ← stdlib only
-internal/cli/   the scale command surface                                   ← stdlib only
+internal/cli/   the maitre-cli command surface                                   ← stdlib only
 internal/ui/    the maitre console (bubbletea v2)
 skills/         vendored third-party skills, pinned to an upstream commit
 templates/      our own skills (to come)

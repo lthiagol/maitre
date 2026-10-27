@@ -258,7 +258,7 @@ func TestNoCommandIsHelpfullyRefused(t *testing.T) {
 	if res.Code != ExitError {
 		t.Fatalf("exit = %d, want %d", res.Code, ExitError)
 	}
-	if !strings.Contains(res.Stdout, "scale") {
+	if !strings.Contains(res.Stdout, "maitre-cli") {
 		t.Fatalf("the usage should mention the binary: %s", res.Stdout)
 	}
 }

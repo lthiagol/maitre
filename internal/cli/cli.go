@@ -173,21 +173,21 @@ func sortStrings(s []string) {
 }
 
 func (r *Runner) usage() {
-	fmt.Fprint(r.Stdout, `scale — the Kitchen Brigade agent CLI
+	fmt.Fprint(r.Stdout, `maitre-cli — the maitre agent CLI
 
 Usage:
-  scale init                     create the plan directory
-  scale demo [--chaos]           seed a plan to look at
-  scale plan                     the whole plan, one document
-  scale path                     the execution order
-  scale log [--limit N]          the journal
-  scale gates                    the gate table
-  scale recipe <verb>            the recipe's own state
-  scale ac <verb>                acceptance criteria
-  scale step <verb>               guidance steps
-  scale finding <verb>            review findings
-  scale special <verb>            the ladder's rung 0
-  scale prepnote <verb>           the ladder's rung 1
+  maitre-cli init                create the plan directory
+  maitre-cli demo [--chaos]      seed a plan to look at
+  maitre-cli plan                the whole plan, one document
+  maitre-cli path                the execution order
+  maitre-cli log [--limit N]     the journal
+  maitre-cli gates               the gate table
+  maitre-cli recipe <verb>       the recipe's own state
+  maitre-cli ac <verb>           acceptance criteria
+  maitre-cli step <verb>         guidance steps
+  maitre-cli finding <verb>      review findings
+  maitre-cli special <verb>      the ladder's rung 0
+  maitre-cli prepnote <verb>     the ladder's rung 1
 
 Identity (who is acting, and in which session):
   --actor <name>    default: $SCALE_ACTOR, else "agent"
@@ -350,7 +350,7 @@ func (r *Runner) openStore(fs *flagSet) (*core.Store, *core.Operations, error) {
 	}
 	root, err := core.FindRoot(cwd)
 	if err != nil {
-		return nil, nil, fmt.Errorf("%w — run `scale init` first", err)
+		return nil, nil, fmt.Errorf("%w — run `maitre-cli init` first", err)
 	}
 	store := core.Open(root)
 	id := resolveIdentity(fs, identity{Actor: r.actor, Session: r.session, Role: r.role})

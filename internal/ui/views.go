@@ -49,7 +49,7 @@ func (m *Model) View() tea.View {
 	v := tea.NewView(m.renderLayout())
 	v.AltScreen = true
 	v.BackgroundColor = lipgloss.Color(m.colBg)
-	v.WindowTitle = "Kitchen Brigade"
+	v.WindowTitle = "maitre"
 	return v
 }
 
@@ -206,7 +206,7 @@ func (m *Model) header() string {
 	if p, err := m.ops.GetProject(); err == nil && p.Name != "" {
 		name = p.Name
 	}
-	return m.styTitle.Render(" Kitchen Brigade") + m.styFaint.Render(" · "+name)
+	return m.styTitle.Render(" maitre") + m.styFaint.Render(" · "+name)
 }
 
 // ruleLine is the rule under the header.

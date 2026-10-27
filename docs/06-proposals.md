@@ -120,7 +120,7 @@ decision live?"* but also *"what is `Audit.Decisions` for, and who writes it?"*
 
 **Option C — the plan already has this, and it does not need another file.** A design
 decision is a choice about *how to build*, and the place a builder looks for it is the
-thread of the recipe it is about: `scale recipe comment R01 --body "…"`. The journal
+thread of the recipe it is about: `maitre-cli recipe comment R01 --body "…"`. The journal
 records it, the detail pane shows it, and the audit trail is complete. The alternatives
 each add a place where a decision can be written down and not found — which is the
 "field with no writer" shape v1 died of ✓.
@@ -151,7 +151,7 @@ the only event log. Do not put them in a file no journal event mirrors.
 | The plan format | **Nothing today.** If a project-level decision arrives, `decisions.json` stops being a name in a format and becomes a file with a writer — and every entry is mirrored as a journal event. |
 | The lifecycle | **Nothing** — a decision is not a state and is not promoted. |
 | The console | **Nothing** — a design decision in the thread already shows under its recipe. A project-level decision would show on the Settings tab, beside the charter. |
-| The CLI | `scale recipe comment` — **it already exists**. |
+| The CLI | `maitre-cli recipe comment` — **it already exists**. |
 
 **What it forecloses.** A design decision cannot be found without knowing which recipe it
 belongs to, and it cannot be listed across the plan. For a plan of one recipe that costs
@@ -227,11 +227,11 @@ needs it — not before.
 | The plan format | **Nothing** — a brownfield recipe is a recipe. |
 | The lifecycle | **Nothing** — the steps are steps; the criteria are criteria. |
 | The console | **Nothing** — the detail pane already shows the method and the criteria. |
-| The CLI | **Nothing** — `scale step add … --done-when "…"` already carries the reading. |
+| The CLI | **Nothing** — `maitre-cli step add … --done-when "…"` already carries the reading. |
 
 **What it forecloses.** The plan cannot tell a brownfield recipe from a greenfield one by
 reading it. A reader has to infer the direction from the criteria's wording. If that
-matters, the honest place is **a note in the recipe's own thread** — `scale recipe comment` — a record that already has
+matters, the honest place is **a note in the recipe's own thread** — `maitre-cli recipe comment` — a record that already has
 a writer ✓ — and not a new field. (The recipe's `Questions` field looks like the
 natural home and is not: it has **no writer** and no CLI path ✓ — the shape the
 field-fates round closed elsewhere ✓ — so it is not a home for anything until something

@@ -1,6 +1,7 @@
 # 0004. Naming
 
-- **Status:** ✅ accepted
+- **Status:** ✅ accepted — superseded in part on 2026-10-27; see
+  [docs/07-vocabulary.md](../07-vocabulary.md), the decision of record
 - **Date:** 2026-10-25
 - **Deciders:** TBD
 

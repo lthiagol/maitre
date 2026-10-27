@@ -24,7 +24,7 @@ an agent authored.
 
 ### 1. The tool runs the verification
 
-`scale verify <recipe> <AC>` executes the recipe's declared command, captures the exit
+`maitre-cli verify <recipe> <AC>` executes the recipe's declared command, captures the exit
 code and an output digest, derives a match count where it can, and records the proof.
 
 The trust boundary is the **sign-off gate**: the human approves the recipe — *which
