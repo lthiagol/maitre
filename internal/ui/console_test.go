@@ -23,6 +23,11 @@ func newModel(t *testing.T) *Model {
 }
 
 // loadModel reads a plan into a console model.
+// loadModel builds a console over a plan, through the live path.
+//
+// The message comes from the reload and goes through the model's own Update — the
+// same path the running console takes. A helper that copies the fields by hand
+// tests the copy, and the copy is where the bug was.
 func loadModel(t *testing.T, store *core.Store) *Model {
 	t.Helper()
 	m := New(store)
@@ -34,12 +39,7 @@ func loadModel(t *testing.T, store *core.Store) *Model {
 	if loaded.err != nil {
 		t.Fatalf("reload: %v", loaded.err)
 	}
-	m.recipes = loaded.recipes
-	m.items = loaded.items
-	m.legacy = loaded.legacy
-	m.journal = loaded.journal
-	m.sections = m.orderedSections()
-	m.clampSelections()
+	m.Update(loaded)
 	m.width = 100
 	m.height = 40
 	m.ready = true
@@ -288,6 +288,47 @@ func TestAnOldPlanStillRenders(t *testing.T) {
 	m.selBacklog = m.backlogCount() - 1
 	if label := m.primaryActionLabel(); label != "" {
 		t.Fatalf("the console offers %q on an old artifact — it must not write the old format", label)
+	}
+}
+
+// TestTheLiveConsoleCarriesTheLegacyGroup covers the live path.
+//
+// The console reloads the plan on its own — the chef presses nothing — and the old
+// plan's artifacts must come with it. The reload message carries them, and the
+// model must take them: the live path and the render path are one path, and a
+// console that shows the chef a plan it is not looking at is worse than a console
+// that crashes.
+func TestTheLiveConsoleCarriesTheLegacyGroup(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
+	store := core.Open(root)
+	if err := store.Init(); err != nil {
+		t.Fatal(err)
+	}
+	writeLegacy(t, root, "specials", "S01-a-hunch.json",
+		`{"id":"S01","title":"A hunch","body":"worth noticing","status":"open"}`)
+
+	m := New(store)
+	msg := m.reload()()
+	loaded, ok := msg.(reloadMsg)
+	if !ok {
+		t.Fatal("unexpected reload result")
+	}
+	if loaded.err != nil {
+		t.Fatal(loaded.err)
+	}
+	if len(loaded.legacy) != 1 {
+		t.Fatalf("the reload message carries %d legacy artifacts, want 1", len(loaded.legacy))
+	}
+
+	// The live path: the message goes through the model's own Update.
+	m.Update(loaded)
+	if len(m.legacy) != 1 {
+		t.Fatalf("the console holds %d legacy artifacts, want 1 — the live path dropped them", len(m.legacy))
+	}
+	m.width, m.height, m.ready = 100, 40, true
+	m.tab = TabBacklog
+	if out := plain(m); !strings.Contains(out, "FROM THE OLD PLAN") {
+		t.Fatalf("the backlog tab does not show the old plan's artifacts\n%s", out)
 	}
 }
 

@@ -272,12 +272,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// next poll tries again.
 			return m, m.poll()
 		}
-		m.recipes = msg.recipes
-		m.items = msg.items
-		m.journal = msg.journal
+		m.applyReload(msg)
 		m.err = nil
-		m.sections = m.orderedSections()
-		m.clampSelections()
 		m.disk = msg.disk
 		return m, m.poll()
 
@@ -288,6 +284,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKey(msg)
 	}
 	return m, nil
+}
+
+// applyReload puts a reloaded plan into the model.
+//
+// **One place knows the model's shape.** The live console and the static render both
+// go through here, so a field the render carries and the live path forgets cannot
+// happen — a console that shows the chef a plan it is not looking at is worse than a
+// console that crashes.
+func (m *Model) applyReload(msg reloadMsg) {
+	m.recipes = msg.recipes
+	m.items = msg.items
+	m.legacy = msg.legacy
+	m.journal = msg.journal
+	m.sections = m.orderedSections()
+	m.clampSelections()
 }
 
 // orderedSections applies the current ordering.

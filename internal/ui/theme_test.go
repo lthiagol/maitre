@@ -186,8 +186,8 @@ func TestTheThemeSurvivesAReload(t *testing.T) {
 	if loaded.err != nil {
 		t.Fatal(loaded.err)
 	}
-	m.recipes = loaded.recipes
-	m.journal = loaded.journal
+	// The live path: the message goes through the model's own Update.
+	m.Update(loaded)
 
 	if m.theme.name != "Catppuccin Mocha" {
 		t.Fatalf("the theme is %q after a reload, want Catppuccin Mocha", m.theme.name)
