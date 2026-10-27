@@ -83,7 +83,7 @@ anatomy, a second gate set and a second close path.
 `dismiss` comes to the small tasks too. Before, only specials could be dismissed, and no
 one could say why.
 
-## The plan format changes (domain version 2 → 3, then 4, then 5)
+## The plan format changes (domain version 2 → 3, then 4, then 5, then 6)
 
 | Change | From | To |
 |---|---|---|
@@ -97,7 +97,9 @@ The version guard is what makes this safe: a plan written under the newer versio
 refuses a stale tool that speaks the older one. The ids are version 3; **version 4**
 came when the fingerprint started covering the format's facts, so a format change
 moves the version on its own instead of by hand; **version 5** came with the backlog's
-collapse into one artifact.
+collapse into one artifact; **version 6** came with the crossing of the two words —
+the per-criterion record became **evidence** and the recipe-level stamp became
+**completion**.
 
 ## What is strings only
 
