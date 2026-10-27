@@ -36,6 +36,7 @@ can substantiate with a command.
 | Cycle 15 | The closing review of the night: no read-side family, and a symmetric judgement | One note closed, and the shape judged |
 | Slice A | The vocabulary rename: the module, the binaries, the recipe ids, the version | The ids and the guard hold; two mediums and four lows filed |
 | Cycle 2 | The fixes to slice A: the usage lines, the two-way wire, the plan's stamp, the format facts | Six notes closed, and the fence checked by mutation |
+| Slice B | The vocabulary rename: the roles and the tabs | The roles resolve as written *and* as a role, so a plan written before the rename still cannot close on its own executor's review; the tabs are Board and Sous-Chef, and the honesty of the waiting tab held; one medium filed in the spec |
 | The rounds inside a cycle | Fix → verify → back to the executor → repeat, until the verifier is satisfied | Three rounds in cycle 8: the first fix introduced three new mediums, the second closed them |
 
 ### The discipline every round runs
@@ -68,6 +69,7 @@ fail.
 | The interface | The footer paragraph names the triage |
 | The plan format | Every directory and file the code creates is named in `docs/03` § 6, and every directory and file § 6 names is the code's — both ways — and the section's version is the code's |
 | The usage lines | Every usage line the CLI prints names a binary that exists, and the console's errors name it too |
+| The deny-list | The spec names every role the code refuses, and every name the rename retired — a plan written before the rename still meets those |
 
 ## Open findings
 
@@ -76,7 +78,9 @@ fail.
 | **F-59** | medium | **`core.Audit.Decisions` has a shape and no writer** — it is where a decision *about the plan* would live, and nothing writes it. `kitchen/decisions.json` is named by the plan format and opened by nothing. The remedy is on the table in [06-proposals.md](06-proposals.md) § 2. | `internal/core/model.go:270`; `internal/core/store.go:24` |
 | **F-60** | medium | **`core.Questions` has a writer-less shape, so the `questions.resolved` gate can never fire** — nothing ever sets a question, so the list is always empty and the gate always passes. A gate nobody can fail is not a guard. | `internal/core/model.go:31`; `internal/core/lifecycle.go:197` |
 | **F-61** | medium | **The `courses/` directory is named by the plan format, created by `Init`, and never written** — a directory no writer touches. Per [06-proposals.md](06-proposals.md) § 1 the honest answer is to stop naming it: a course is the relation, not a file. | `internal/core/store.go:18,63`; [docs/03 §6](03-domain-model.md) |
+| **F-72** | medium | **The spec's vocabulary rule contradicts its own table after the role rename** — `docs/03-domain-model.md` § "The CPD ↔ tool mapping" says *"the **artifact and the roles** get themed names"*, but the table now keeps `runner · reviewer · orchestrator` in the **Kept plain** column. The table is the right half: the decision of record ([docs/07-vocabulary.md](07-vocabulary.md) § "The rule") puts the agents' jobs in the plain vocabulary, and the code says the same. The sentence was not touched when the roles moved, so the section states the opposite of what it implements, seven lines apart. Nothing catches it: the deny-list tripwire only asks whether the doc *names* a role, not which column it sits in. The rule sentence and the table must say the same thing. | `docs/03-domain-model.md:72`; the table at `docs/03-domain-model.md:79` |
 | F-56 | low | **The poll's fingerprint is blind to a write that keeps the mtime and the size.** It is path + mtime + size per file, so two different contents can share one fingerprint. The tool's own writes always change the mtime, so in practice only a hand edit that restores the mtime is missed — and the chef's `r` reloads it. | `internal/core/store.go` — `DiskFingerprint`. |
+| F-73 | low | **`kitchen/project.json` still carries `"name": "new-project"`** — the decision of record names the project **maitre**, and the console's header renders the plan's name, so the repo's own console reads `maitre · new-project`. It is the *plan's* data, not the code's: slice A renamed the module and the binaries and left this file, and slice C is the slice that migrates the repo's own plan. | `kitchen/project.json:8` |
 | P-8 | — | `--depends-on=` writes `depends_on: [""]` — inert, the same as `--in-scope=`. | Recorded so nobody calls it a regression later. Not a defect. |
 
 ## Closed findings
