@@ -69,9 +69,9 @@ that would live as prose inside a prep note. Deferred — build and observe.
 counterpart, so the two vocabularies never drift. This doc links to it rather than
 repeating it.
 
-The rule behind the split: the **artifact and the roles** get themed names; everything
-an agent reasons about mechanically stays descriptive. See
-[ADR-0005](decisions/0005-vocabulary.md).
+The rule behind the split: the kitchen names the **artifact** and the **place**; the
+**agents' jobs** and everything an agent reasons about mechanically stay plain. See
+[docs/07-vocabulary.md § The rule](../07-vocabulary.md#the-rule).
 
 | Themed | Kept plain |
 |---|---|
