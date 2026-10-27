@@ -76,7 +76,7 @@ The rule behind the split: the kitchen names the **artifact** and the **place**;
 | Themed | Kept plain |
 |---|---|
 | recipe · special · prep note · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
-| chef · maître d' · sous chef | runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
+| | `chef` · `sous-chef` · runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
 | `maitre-cli` · `maitre` · the skills | |
 
 ### IDs
