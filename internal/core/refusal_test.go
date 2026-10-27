@@ -154,16 +154,16 @@ func TestABadRequestIsNotJournalled(t *testing.T) {
 // TestARefusedOverlayIsJournalled covers the refusals the state of the artifact
 // produces.
 //
-// A special that is already promoted cannot be promoted again. The console says
+// A backlog item that is already promoted cannot be promoted again. The console says
 // "refused", so the journal has to say it too: the banner and the log must not use
 // the word for two different sets.
 func TestARefusedOverlayIsJournalled(t *testing.T) {
 	ops, store := newOps(t)
-	sp, err := ops.CreateSpecial("A hunch", "worth noticing", nil)
+	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.PromoteSpecial(sp.ID); err != nil {
+	if _, err := ops.PromoteBacklogItem(item.ID); err != nil {
 		t.Fatal(err)
 	}
 	before, err := store.LoadJournal()
@@ -171,8 +171,8 @@ func TestARefusedOverlayIsJournalled(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := ops.PromoteSpecial(sp.ID); err == nil {
-		t.Fatal("promoting a promoted special should be refused")
+	if _, err := ops.PromoteBacklogItem(item.ID); err == nil {
+		t.Fatal("promoting a promoted item should be refused")
 	}
 	after, err := store.LoadJournal()
 	if err != nil {

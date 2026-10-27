@@ -334,31 +334,24 @@ func seed(store *Store, stress bool) error {
 		}
 	}
 
-	// The lower rungs — the backlog the chef works through.
-	for _, sp := range []struct {
+	// The backlog the chef works through: two ideas that still need shaping, and two
+	// small tasks that are ready to run.
+	for _, it := range []struct {
 		title string
 		body  string
+		kind  string
 		tags  []string
+		scope []string
 	}{
-		{"The board needs a way to show proofs", "A proof the chef cannot read is a claim, not a proof.", []string{"board"}},
-		{"A recipe with no ACs is probably a special", "If nothing can falsify it, it is a hunch wearing a costume.", []string{"model"}},
-		{"The chef wants a weekly digest", "What changed, what is blocked, what needs a decision.", []string{"reporting"}},
-		{"Trying the board on a real project", "Run the console against a plan that is not ours.", []string{"trials"}},
+		{"The board needs a way to show proofs", "A proof the chef cannot read is a claim, not a proof.", KindIdea, []string{"board"}, nil},
+		{"A recipe with no ACs is probably an idea", "If nothing can falsify it, it is a hunch wearing a costume.", KindIdea, []string{"model"}, nil},
+		{"The chef wants a weekly digest", "What changed, what is blocked, what needs a decision.", KindIdea, []string{"reporting"}, nil},
+		{"Trying the board on a real project", "Run the console against a plan that is not ours.", KindIdea, []string{"trials"}, nil},
+		{"Wire the review queue", "Findings reach the chef without leaving the board.", KindFeature, []string{"queue"}, []string{"the queue lane"}},
+		{"Sharpen the proof contract", "A proof carries a command, an exit code and a match count.", KindBug, []string{"verifier"}, []string{"the verifier"}},
 	} {
-		if _, err := chef.CreateSpecial(sp.title, sp.body, sp.tags); err != nil {
-			return fmt.Errorf("seed special %q: %w", sp.title, err)
-		}
-	}
-	for _, pn := range []struct {
-		title  string
-		intent string
-		scope  []string
-	}{
-		{"Wire the review queue", "Findings reach the chef without leaving the board.", []string{"the queue lane"}},
-		{"Sharpen the proof contract", "A proof carries a command, an exit code and a match count.", []string{"the verifier"}},
-	} {
-		if _, err := chef.CreatePrepNote(pn.title, pn.intent, pn.scope); err != nil {
-			return fmt.Errorf("seed prep note %q: %w", pn.title, err)
+		if _, err := chef.CreateBacklogItem(it.title, it.body, it.scope, it.kind, it.tags); err != nil {
+			return fmt.Errorf("seed backlog item %q: %w", it.title, err)
 		}
 	}
 

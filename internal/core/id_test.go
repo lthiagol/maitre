@@ -88,6 +88,10 @@ func TestEveryFormOfTheIdNamesTheSameRecipe(t *testing.T) {
 // The old normaliser removed one letter. `RCP01` would have become `CP01`, which
 // matches neither `RCP01` nor `R01` — so a recipe written after the rename could not
 // be read at all.
+//
+// The backlog's prefix is **two** letters and the recipe's is **three**, and the
+// normaliser has to answer to both: a stripper that removed a fixed number of letters
+// would leave `L01` or `CP01`.
 func TestTheNormaliserStripsEveryLeadingLetter(t *testing.T) {
 	cases := map[string]string{
 		"RCP01": "1",
@@ -97,6 +101,12 @@ func TestTheNormaliserStripsEveryLeadingLetter(t *testing.T) {
 		"1":     "1",
 		"10":    "10",
 		"RCP10": "10",
+		"BL01":  "1",
+		"bl01":  "1",
+		"BL1":   "1",
+		"B01":   "1",
+		"b01":   "1",
+		"BL10":  "10",
 		"N01":   "1",
 		"S01":   "1",
 		"":      "0",

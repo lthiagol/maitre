@@ -72,10 +72,9 @@ func TestTheDocNamesThePlanFormatTheCodeHas(t *testing.T) {
 	docDirs, docFiles := docPlanFormat(t, section)
 
 	codeDirs := map[string]bool{
-		DirRecipes:   true,
-		DirCourses:   true,
-		DirPrepNotes: true,
-		DirSpecials:  true,
+		DirRecipes: true,
+		DirCourses: true,
+		DirBacklog: true,
 	}
 	codeFiles := map[string]bool{
 		FileProject:   true,

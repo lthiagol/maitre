@@ -67,65 +67,34 @@ func TestARenameLeavesOneFile(t *testing.T) {
 	}
 }
 
-// TestARenameOfASpecialLeavesOneFile is the same, one rung down.
-func TestARenameOfASpecialLeavesOneFile(t *testing.T) {
+// TestARenameOfABacklogItemLeavesOneFile is the same, one rung down.
+func TestARenameOfABacklogItemLeavesOneFile(t *testing.T) {
 	ops, store := newOps(t)
-	sp, err := ops.CreateSpecial("A hunch", "a body", nil)
+	item, err := ops.CreateBacklogItem("A hunch", "a body", nil, KindIdea, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.UpdateSpecial(sp.ID, "A better hunch", "a body", nil); err != nil {
+	if _, err := ops.UpdateBacklogItem(item.ID, "A better hunch", "a body", nil, "", nil); err != nil {
 		t.Fatal(err)
 	}
 
-	files := filesIn(t, filepath.Join(store.Root, DirSpecials))
+	files := filesIn(t, filepath.Join(store.Root, DirBacklog))
 	if len(files) != 1 {
 		t.Fatalf("the directory should hold one file, got %v", files)
 	}
-	got, err := store.LoadSpecial(sp.ID)
+	got, err := store.LoadBacklogItem(item.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got.Title != "A better hunch" {
-		t.Fatalf("the special's title = %q, want %q", got.Title, "A better hunch")
+		t.Fatalf("the item's title = %q, want %q", got.Title, "A better hunch")
 	}
-	list, err := store.ListSpecials()
+	list, err := store.ListBacklogItems()
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(list) != 1 {
-		t.Fatalf("the plan should hold one special, got %d", len(list))
-	}
-}
-
-// TestARenameOfAPrepNoteLeavesOneFile is the same, one rung down again.
-func TestARenameOfAPrepNoteLeavesOneFile(t *testing.T) {
-	ops, store := newOps(t)
-	note, err := ops.CreatePrepNote("A plan", "an intent", []string{"ui"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := ops.UpdatePrepNote(note.ID, "A better plan", "an intent", []string{"ui"}); err != nil {
-		t.Fatal(err)
-	}
-
-	files := filesIn(t, filepath.Join(store.Root, DirPrepNotes))
-	if len(files) != 1 {
-		t.Fatalf("the directory should hold one file, got %v", files)
-	}
-	got, err := store.LoadPrepNote(note.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got.Title != "A better plan" {
-		t.Fatalf("the prep note's title = %q, want %q", got.Title, "A better plan")
-	}
-	list, err := store.ListPrepNotes()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(list) != 1 {
-		t.Fatalf("the plan should hold one prep note, got %d", len(list))
+		t.Fatalf("the plan should hold one item, got %d", len(list))
 	}
 }
 

@@ -19,7 +19,7 @@ func sousChefModel(t *testing.T) *Model {
 		t.Fatal(err)
 	}
 	ops := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-1", Role: "chef"})
-	if _, err := ops.CreateSpecial("A hunch", "worth noticing", nil); err != nil {
+	if _, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, core.KindIdea, nil); err != nil {
 		t.Fatal(err)
 	}
 

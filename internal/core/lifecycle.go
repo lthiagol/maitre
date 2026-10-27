@@ -159,6 +159,17 @@ const MinOutOfScope = 2
 // is newer than the tool, so a plan stamped 1 is still open to a version-1 tool until
 // a newer build writes it.
 //
+// **Version 5: the plan format changed again — the backlog is one artifact.** The
+// backlog's two file types (`kitchen/specials/` and `kitchen/prep-notes/`) are one
+// (`kitchen/backlog/`), the item carries a `kind`, and its id is `BL01`. The rules
+// the gates apply did not change — no gate was weakened and no gate rule moved — but
+// the **record** did: a version-4 tool would write a special or a prep note into a
+// plan the version-5 reader does not look in, and it would find no backlog there.
+//
+// The reader is tolerant on purpose: `BL01`, `bl01`, `BL1`, `B01` and `1` all name
+// the same item, and a file named `B01-<slug>.json` is read as the item `BL01`. The
+// version is bumped because the **writer** changed.
+//
 // **Version 4: the stamp covers the plan's format.** The fingerprint now hashes the
 // facts of the format — the id prefixes, the directories, the field names on disk —
 // so a format change moves the version on its own. Before this, the format was
@@ -176,7 +187,7 @@ const MinOutOfScope = 2
 // is still readable. The version is bumped because the **writer** changed: a version-2
 // tool would write `R01` into a plan the version-3 reader expects to find `RCP01`.
 // See docs/07-vocabulary.md.
-const DomainVersion = 4
+const DomainVersion = 5
 
 // gates is the single gate table. Every gate lives here and nowhere else.
 var gates = []gate{

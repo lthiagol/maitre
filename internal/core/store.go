@@ -14,10 +14,9 @@ import (
 
 // Directory names inside the plan root.
 const (
-	DirRecipes   = "recipes"
-	DirCourses   = "courses"
-	DirPrepNotes = "prep-notes"
-	DirSpecials  = "specials"
+	DirRecipes = "recipes"
+	DirCourses = "courses"
+	DirBacklog = "backlog"
 
 	FileProject   = "project.json"
 	FileActivity  = "activity.json"
@@ -26,13 +25,16 @@ const (
 
 // The id prefixes the writer allocates, one per kind.
 //
-// A recipe is `RCP01`, a special `S01`, a prep note `N01`. The prefix is part of
-// the plan's format, so it is named here and hashed into the domain's fingerprint:
-// a format change that moves the prefix moves the version.
+// A recipe is `RCP01`, a backlog item `BL01`. The prefix is part of the plan's
+// format, so it is named here and hashed into the domain's fingerprint: a format
+// change that moves the prefix moves the version.
+//
+// The backlog's prefix is **two** letters, and the recipe's is **three**: the id
+// normaliser has to answer to both, and a stripper that removed a fixed number of
+// letters would leave `L01` or `CP01` — matching neither.
 const (
-	recipeIDPrefix   = "RCP"
-	specialIDPrefix  = "S"
-	prepNoteIDPrefix = "N"
+	recipeIDPrefix  = "RCP"
+	backlogIDPrefix = "BL"
 )
 
 // PlanDirName is the plan directory, relative to the project root.
@@ -71,7 +73,7 @@ func FindRoot(start string) (string, error) {
 
 // Init creates the plan directory and its subdirectories.
 func (s *Store) Init() error {
-	for _, d := range []string{"", DirRecipes, DirCourses, DirPrepNotes, DirSpecials} {
+	for _, d := range []string{"", DirRecipes, DirCourses, DirBacklog} {
 		if err := os.MkdirAll(filepath.Join(s.Root, d), 0o755); err != nil {
 			return fmt.Errorf("create %s: %w", d, err)
 		}
@@ -146,6 +148,9 @@ func sortByID[T any](items []T, id func(int) string) {
 
 // RecipeDir is the directory holding recipes.
 func (s *Store) RecipeDir() string { return filepath.Join(s.Root, DirRecipes) }
+
+// BacklogDir is the directory holding the backlog's items.
+func (s *Store) BacklogDir() string { return filepath.Join(s.Root, DirBacklog) }
 
 // ProjectRoot is the directory that contains the plan directory.
 //
@@ -352,8 +357,7 @@ func (s *Store) DiskFingerprint() (string, error) {
 	dirs := []string{
 		s.Root,
 		filepath.Join(s.Root, DirRecipes),
-		filepath.Join(s.Root, DirPrepNotes),
-		filepath.Join(s.Root, DirSpecials),
+		filepath.Join(s.Root, DirBacklog),
 		filepath.Join(s.Root, DirCourses),
 	}
 	for _, dir := range dirs {
@@ -453,7 +457,7 @@ func (s *Store) ListRecipes() ([]Recipe, error) {
 // NextRecipeID allocates the next recipe id by scanning what exists, never by counting
 // (constraint P9).
 //
-// It also scans what is *referenced*: an id a prep note points at is taken, even
+// It also scans what is *referenced*: an id a backlog item points at is taken, even
 // though no recipe carries it. A promotion records where it went before the target is
 // written, so a crash can leave a pointer to an id that does not exist — and that
 // pointer must resolve to nothing, never to a stranger.
@@ -465,17 +469,89 @@ func (s *Store) NextRecipeID() (string, error) {
 	return nextIDIn(s.RecipeDir(), recipeIDPrefix, reserved...)
 }
 
-// reservedRecipeIDs are the recipe ids a prep note points at.
+// reservedRecipeIDs are the recipe ids a backlog item points at.
 func (s *Store) reservedRecipeIDs() ([]string, error) {
-	notes, err := s.ListPrepNotes()
+	items, err := s.ListBacklogItems()
 	if err != nil {
 		return nil, err
 	}
-	promoted := make([]string, 0, len(notes))
-	for _, n := range notes {
+	promoted := make([]string, 0, len(items))
+	for _, n := range items {
 		promoted = append(promoted, n.PromotedTo)
 	}
 	return referencedIDs(promoted, "R"), nil
+}
+
+// readArtifact finds the current file in dir for the given id.
+//
+// A plan can hold two files for one id — a copy left behind by a rename. The current
+// copy wins, so the reader never picks one arbitrarily.
+func (s *Store) readArtifact(dir, id string) ([]byte, string, error) {
+	paths, err := copiesWithID(dir, id)
+	if err != nil {
+		return nil, "", err
+	}
+	if len(paths) == 0 {
+		return nil, "", fmt.Errorf("%s: %w", id, ErrNotFound)
+	}
+	path := currentCopy(paths)
+	raw, err := readFile(path)
+	return raw, path, err
+}
+
+// nextIDIn scans a directory for the highest numeric id with the given prefix, and
+// the ids that are reserved by a pointer.
+//
+// A reserved id is one an artifact points at but does not carry: the pointer is
+// dangling, and handing the id to a new artifact would make the trail resolve to a
+// stranger.
+func nextIDIn(dir, prefix string, reserved ...string) (string, error) {
+	entries, err := readDirSafe(dir)
+	if err != nil {
+		return "", err
+	}
+	max := 0
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		base := strings.SplitN(e.Name(), "-", 2)[0]
+		// Every file in the directory is of this kind, and the kind's letters have
+		// changed: a recipe is RCP01 now and was R01 before. The number is what
+		// must not be handed out twice, so it is what is counted.
+		n, ok := parseNumericID(base)
+		if !ok {
+			continue
+		}
+		if n > max {
+			max = n
+		}
+	}
+	for _, id := range reserved {
+		n, ok := parseNumericID(id)
+		if ok && n > max {
+			max = n
+		}
+	}
+	return fmt.Sprintf("%s%02d", prefix, max+1), nil
+}
+
+// referencedIDs collects the ids a list of `promoted_to` values names.
+//
+// The value reads "<kind> <id>" — "recipe RCP01". Only the ids with the given prefix
+// are collected: a pointer to something else does not reserve an id of this kind.
+func referencedIDs(promotedTo []string, prefix string) []string {
+	var out []string
+	for _, p := range promotedTo {
+		fields := strings.Fields(p)
+		if len(fields) != 2 {
+			continue
+		}
+		if strings.HasPrefix(fields[1], prefix) {
+			out = append(out, fields[1])
+		}
+	}
+	return out
 }
 
 // parseNumericID extracts the number from an id like "RCP07" or "07".
@@ -540,9 +616,10 @@ func stripKindPrefix(id string) string {
 // normaliseID strips the kind prefix and the zero padding so "rcp1", "RCP01",
 // "R01", "r1" and "1" match.
 //
-// The letters are stripped whatever they are — "RCP", "R", "N", "S" — so every
-// artifact kind answers to the same forms. The ids are unambiguous by directory, so
-// the kind letters carry no information once the number is known.
+// The letters are stripped whatever they are — "RCP", "R", "BL", "B" — so every
+// artifact kind answers to the same forms, and a **two-letter** prefix is as good
+// as a three-letter one. The ids are unambiguous by directory, so the kind letters
+// carry no information once the number is known.
 func normaliseID(id string) string {
 	s := strings.TrimLeft(stripKindPrefix(id), "0")
 	if s == "" {

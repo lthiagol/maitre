@@ -538,18 +538,16 @@ func (r *Runner) cmdPlan(args []string) int {
 		r.fail("list recipes", err.Error())
 		return ExitError
 	}
-	specials, _ := store.ListSpecials()
-	notes, _ := store.ListPrepNotes()
+	items, _ := store.ListBacklogItems()
 	project, _ := store.LoadProject()
 	journal, _ := store.LoadJournal()
 
 	return r.emit(map[string]any{
-		"ok":        true,
-		"project":   project,
-		"recipes":   recipes,
-		"specials":  specials,
-		"prepNotes": notes,
-		"events":    len(journal.Events),
+		"ok":      true,
+		"project": project,
+		"recipes": recipes,
+		"items":   items,
+		"events":  len(journal.Events),
 	})
 }
 

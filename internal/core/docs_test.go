@@ -1266,9 +1266,9 @@ func TestTheTripwiresFailOnRealDrift(t *testing.T) {
 		{"a gate invented", strings.Replace(gates, "| `intent.present` |", "| `intent.invented` |", 1), checkGateTable},
 		{"a journal kind removed", strings.Replace(gates, " · `step`", "", 1), checkJournalKinds},
 		{"a journal kind invented", strings.Replace(gates, " · `step`", " · `step` · `invented`", 1), checkJournalKinds},
-		{"an operation mark flipped", strings.Replace(ops, "✅ `CreateSpecial`", "⏳ `CreateSpecial`", 1), checkOperationMarks},
+		{"an operation mark flipped", strings.Replace(ops, "✅ `CreateBacklogItem`", "⏳ `CreateBacklogItem`", 1), checkOperationMarks},
 		{"an operation marked built that does not exist",
-			strings.Replace(ops, "✅ `CreateSpecial`", "✅ `CreateSpecial` · `Invented`", 1), checkOperationMarks},
+			strings.Replace(ops, "✅ `CreateBacklogItem`", "✅ `CreateBacklogItem` · `Invented`", 1), checkOperationMarks},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

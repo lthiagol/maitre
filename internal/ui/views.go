@@ -351,9 +351,8 @@ func (m *Model) summaryText() string {
 		}
 		return text
 	case TabBacklog:
-		return fmt.Sprintf("%d %s · %d %s",
-			len(m.specials), plural(len(m.specials), "special", "specials"),
-			len(m.notes), plural(len(m.notes), "prep note", "prep notes"))
+		return fmt.Sprintf("%d %s",
+			len(m.items), plural(len(m.items), "item", "items"))
 	case TabPath:
 		ready, waiting := core.Path(m.recipes)
 		return fmt.Sprintf("the path · %d ready · %d waiting", len(ready), len(waiting))
@@ -460,10 +459,7 @@ func (m *Model) primaryActionLabel() string {
 		}
 		return core.ChefMoveOf(*rec).Label()
 	case TabBacklog:
-		if m.selBacklog < len(m.specials) {
-			return "promote to prep note"
-		}
-		if m.selBacklog-len(m.specials) < len(m.notes) {
+		if m.selBacklog < len(m.items) {
 			return "promote to recipe"
 		}
 	}
@@ -605,20 +601,13 @@ func (m *Model) sectionHeader(name string, count, width int) string {
 // backlogLines renders the Backlog tab.
 func (m *Model) backlogLines() []listLine {
 	var out []listLine
-	if len(m.specials) > 0 {
-		out = append(out, listLine{text: " " + m.stySec.Render("SPECIALS") + strings.Repeat(" ", max(1, m.listColumn()-10)) + m.styDim.Render(fmt.Sprint(len(m.specials))), itemIdx: -1})
-		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
-		for i, sp := range m.specials {
-			out = append(out, listLine{text: m.backlogRow(i, sp.ID, sp.Title, sp.Status, m.selBacklog == i), itemIdx: i})
-		}
+	if len(m.items) == 0 {
+		return out
 	}
-	if len(m.notes) > 0 {
-		out = append(out, listLine{text: " " + m.stySec.Render("PREP NOTES") + strings.Repeat(" ", max(1, m.listColumn()-11)) + m.styDim.Render(fmt.Sprint(len(m.notes))), itemIdx: -1})
-		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
-		for i, n := range m.notes {
-			idx := len(m.specials) + i
-			out = append(out, listLine{text: m.backlogRow(idx, n.ID, n.Title, n.Status, m.selBacklog == idx), itemIdx: idx})
-		}
+	out = append(out, listLine{text: " " + m.stySec.Render("BACKLOG") + strings.Repeat(" ", max(1, m.listColumn()-9)) + m.styDim.Render(fmt.Sprint(len(m.items))), itemIdx: -1})
+	out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
+	for i, it := range m.items {
+		out = append(out, listLine{text: m.backlogRow(i, it.ID, it.Title, it.Status, m.selBacklog == i), itemIdx: i})
 	}
 	return out
 }
@@ -932,8 +921,7 @@ func (m *Model) settingsLines() []listLine {
 	add(" " + m.stySec.Render("PLAN"))
 	add("  " + m.styDim.Render("root        ") + m.store.Root)
 	add("  " + m.styDim.Render("recipes     ") + fmt.Sprint(len(m.recipes)))
-	add("  " + m.styDim.Render("specials    ") + fmt.Sprint(len(m.specials)))
-	add("  " + m.styDim.Render("prep notes  ") + fmt.Sprint(len(m.notes)))
+	add("  " + m.styDim.Render("backlog     ") + fmt.Sprint(len(m.items)))
 	add("  " + m.styDim.Render("events      ") + fmt.Sprint(len(m.journal.Events)))
 	add("")
 	add(" " + m.stySec.Render("VIEW"))

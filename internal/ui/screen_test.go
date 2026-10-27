@@ -207,7 +207,7 @@ func TestEachTabHasASummary(t *testing.T) {
 	m.height = 30
 	want := map[Tab]string{
 		TabRecipes:  "recipes",
-		TabBacklog:  "specials",
+		TabBacklog:  "item",
 		TabPath:     "the path",
 		TabLog:      "recent activity",
 		TabSettings: "the plan",

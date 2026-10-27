@@ -57,7 +57,7 @@ is never the session that tastes.
 |---|---|---|
 | ✅ `GetRecipe(id)` | one recipe | both |
 | ✅ `ListRecipes()` | the board | both |
-| ✅ `ListSpecials()` · `ListPrepNotes()` | the backlog | human |
+| ✅ `ListBacklogItems()` | the backlog | human |
 | ⏳ `ListCourses()` | the backlog | human |
 | ✅ `GetProject()` | charter, settings | both |
 | ⏳ `Search(query, scope)` | anything | both |
@@ -92,8 +92,7 @@ is never the session that tastes.
 | ✅ `DismissFinding(id, findingID, reason)` | a dismissed tasting note | the chef triages |
 | ⏳ `TriageFinding(id, findingID, action)` | a finding's fate | the chef triages |
 | ✅ `SignOffCriterion(id, acID, by, note)` | a human proof for an unproven AC | the chef |
-| ✅ `CreateSpecial` · `UpdateSpecial` · `DismissSpecial` · `PromoteSpecial` | the backlog | the chef |
-| ✅ `CreatePrepNote` · `UpdatePrepNote` · `PromotePrepNote` | the backlog | the chef |
+| ✅ `CreateBacklogItem` · `UpdateBacklogItem` · `DismissBacklogItem` · `PromoteBacklogItem` | the backlog | the chef |
 | ✅ `BlockRecipe` · `UnblockRecipe` · `DeferRecipe` · `ResumeRecipe` | overlays | the chef |
 | ✅ `CancelRecipe(id, reason)` | terminal states | the chef |
 | ✅ `DocumentRecipe(id, text)` | the audit trail | both |

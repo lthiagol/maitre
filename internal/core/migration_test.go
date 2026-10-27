@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -173,6 +174,9 @@ func TestAMigrationNeedsBothIdForms(t *testing.T) {
 // The plan in this repository was migrated by hand: its recipe file was renamed and
 // the id inside it changed. The journal was not rewritten — it is append-only — so
 // the migration was *added* to it, and the plan now carries a version.
+//
+// The backlog's collapse was migrated the same way: the plan's shape went from two
+// directories to one, and the journal says so.
 func TestTheRepoPlanCarriesItsMigration(t *testing.T) {
 	root := filepath.Join("..", "..", PlanDirName)
 	if _, err := os.Stat(root); err != nil {
@@ -195,15 +199,47 @@ func TestTheRepoPlanCarriesItsMigration(t *testing.T) {
 	if last.DomainVersion != DomainVersion {
 		t.Errorf("the newest event carries version %d, want %d", last.DomainVersion, DomainVersion)
 	}
-	var data map[string]any
-	if err := json.Unmarshal(last.Data, &data); err != nil {
-		t.Fatalf("the newest event's data is not a document: %v\n%s", err, last.Data)
+
+	// The migrations the plan went through, in the order they happened.
+	var migrations []string
+	for _, e := range j.Events {
+		if e.Kind != KindControl {
+			continue
+		}
+		var data map[string]any
+		if len(e.Data) == 0 {
+			continue
+		}
+		if err := json.Unmarshal(e.Data, &data); err != nil {
+			t.Fatalf("a control event's data is not a document: %v\n%s", err, e.Data)
+		}
+		if data["kind"] != "migration" {
+			continue
+		}
+		migrations = append(migrations, fmt.Sprintf("%v -> %v", data["from"], data["to"]))
 	}
-	if data["from"] != "R01" || data["to"] != "RCP01" {
-		t.Errorf("the newest event records %v, want the old and the new id form", data)
+	for _, want := range []string{"R01 -> RCP01", "specials+prep-notes -> backlog"} {
+		found := false
+		for _, m := range migrations {
+			if m == want {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("the journal should carry the migration %q: %v", want, migrations)
+		}
 	}
-	// The history is untouched: the events before it still say the old id.
-	for _, e := range j.Events[:len(j.Events)-1] {
+
+	// The history is untouched: the events before the first migration carry no
+	// version — they were written before the version guard existed.
+	first := len(j.Events)
+	for i, e := range j.Events {
+		if e.Kind == KindControl {
+			first = i
+			break
+		}
+	}
+	for _, e := range j.Events[:first] {
 		if e.DomainVersion != 0 {
 			t.Errorf("a historical event carries version %d — the history is not rewritten", e.DomainVersion)
 		}

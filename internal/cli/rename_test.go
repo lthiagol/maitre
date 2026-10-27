@@ -72,54 +72,28 @@ func TestARenameDoesNotMultiplyThePlan(t *testing.T) {
 	}
 }
 
-// TestARenameOfASpecialDoesNotMultiplyThePlan is the same, one rung down.
-func TestARenameOfASpecialDoesNotMultiplyThePlan(t *testing.T) {
+// TestARenameOfABacklogItemDoesNotMultiplyThePlan is the same, one rung down.
+func TestARenameOfABacklogItemDoesNotMultiplyThePlan(t *testing.T) {
 	dir := newPlan(t)
 
 	create := cli(t, dir, "special", "create", "--title", "A hunch", "--body", "b")
 	if !create.ok(t) {
 		t.Fatalf("create failed:\n%s", create.Stderr)
 	}
-	update := cli(t, dir, "special", "update", "S01", "--title", "A better hunch")
+	update := cli(t, dir, "special", "update", "BL01", "--title", "A better hunch")
 	if !update.ok(t) {
 		t.Fatalf("update failed:\n%s", update.Stderr)
 	}
 
-	files := planFiles(t, filepath.Join(dir, "kitchen", "specials"))
+	files := planFiles(t, filepath.Join(dir, "kitchen", "backlog"))
 	if len(files) != 1 {
-		t.Fatalf("the specials directory should hold one file, got %v", files)
+		t.Fatalf("the backlog directory should hold one file, got %v", files)
 	}
 	list := cli(t, dir, "special", "list")
 	if !list.ok(t) {
 		t.Fatalf("list failed:\n%s", list.Stderr)
 	}
 	if n := list.doc(t)["count"]; n != float64(1) {
-		t.Fatalf("the list holds %v specials, want 1", n)
-	}
-}
-
-// TestARenameOfAPrepNoteDoesNotMultiplyThePlan is the same, one rung down again.
-func TestARenameOfAPrepNoteDoesNotMultiplyThePlan(t *testing.T) {
-	dir := newPlan(t)
-
-	create := cli(t, dir, "prepnote", "create", "--title", "A plan", "--intent", "i")
-	if !create.ok(t) {
-		t.Fatalf("create failed:\n%s", create.Stderr)
-	}
-	update := cli(t, dir, "prepnote", "update", "N01", "--title", "A better plan")
-	if !update.ok(t) {
-		t.Fatalf("update failed:\n%s", update.Stderr)
-	}
-
-	files := planFiles(t, filepath.Join(dir, "kitchen", "prep-notes"))
-	if len(files) != 1 {
-		t.Fatalf("the prep-notes directory should hold one file, got %v", files)
-	}
-	list := cli(t, dir, "prepnote", "list")
-	if !list.ok(t) {
-		t.Fatalf("list failed:\n%s", list.Stderr)
-	}
-	if n := list.doc(t)["count"]; n != float64(1) {
-		t.Fatalf("the list holds %v prep notes, want 1", n)
+		t.Fatalf("the list holds %v items, want 1", n)
 	}
 }

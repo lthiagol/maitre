@@ -32,7 +32,7 @@ func TestPrepNoteUpdateGoesThroughAnOperation(t *testing.T) {
 	}
 	before := journalCount(t, dir)
 
-	res = cli(t, dir, "prepnote", "update", "N01", "--intent", "second")
+	res = cli(t, dir, "prepnote", "update", "BL01", "--intent", "second")
 	if !res.ok(t) {
 		t.Fatalf("prepnote update failed:\n%s", res.Stderr)
 	}
@@ -42,13 +42,13 @@ func TestPrepNoteUpdateGoesThroughAnOperation(t *testing.T) {
 	if !notes.ok(t) {
 		t.Fatalf("prepnote list failed:\n%s", notes.Stderr)
 	}
-	list := notes.doc(t)["prepNotes"].([]any)
+	list := notes.doc(t)["items"].([]any)
 	if len(list) != 1 {
-		t.Fatalf("got %d prep notes, want 1", len(list))
+		t.Fatalf("got %d items, want 1", len(list))
 	}
 	note := list[0].(map[string]any)
-	if note["intent"] != "second" {
-		t.Fatalf("intent = %v, want second", note["intent"])
+	if note["body"] != "second" {
+		t.Fatalf("body = %v, want second", note["body"])
 	}
 
 	// And the journal knows about it.
@@ -69,12 +69,12 @@ func TestPrepNoteUpdateRefusesAPromotedNote(t *testing.T) {
 	if !res.ok(t) {
 		t.Fatalf("prepnote create failed:\n%s", res.Stderr)
 	}
-	res = cli(t, dir, "prepnote", "promote", "N01")
+	res = cli(t, dir, "prepnote", "promote", "BL01")
 	if !res.ok(t) {
 		t.Fatalf("prepnote promote failed:\n%s", res.Stderr)
 	}
 
-	res = cli(t, dir, "prepnote", "update", "N01", "--intent", "second")
+	res = cli(t, dir, "prepnote", "update", "BL01", "--intent", "second")
 	if res.Code == 0 {
 		t.Fatal("a promoted note must not be edited")
 	}

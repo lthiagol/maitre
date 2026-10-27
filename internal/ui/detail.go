@@ -31,52 +31,36 @@ func (m *Model) detailLines(width int) []string {
 	return []string{m.styDim.Render("  (nothing to show here)")}
 }
 
-// backlogDetail renders the selected special or prep note.
+// backlogDetail renders the selected backlog item.
 func (m *Model) backlogDetail(width int) []string {
-	if m.selBacklog < len(m.specials) {
-		sp := m.specials[m.selBacklog]
-		out := []string{" " + m.styTitle.Render(sp.ID+" · "+sp.Title)}
-		out = append(out, " "+m.styDim.Render(sp.Status))
-		out = append(out, "")
-		if sp.Body != "" {
-			out = append(out, m.stySec.Render("Note"))
-			out = append(out, indent(renderMarkdown(sp.Body, width-4), "  "))
-			out = append(out, "")
-		}
-		if len(sp.Tags) > 0 {
-			out = append(out, m.stySec.Render("Tags"))
-			out = append(out, "  "+strings.Join(sp.Tags, ", "))
-			out = append(out, "")
-		}
-		if sp.PromotedTo != "" {
-			out = append(out, m.styAcc.Render("Promoted to "+sp.PromotedTo))
-		}
-		return out
+	if m.selBacklog < 0 || m.selBacklog >= len(m.items) {
+		return []string{m.styDim.Render("  (nothing selected)")}
 	}
-	idx := m.selBacklog - len(m.specials)
-	if idx >= 0 && idx < len(m.notes) {
-		n := m.notes[idx]
-		out := []string{" " + m.styTitle.Render(n.ID+" · "+n.Title)}
-		out = append(out, " "+m.styDim.Render(n.Status))
+	it := m.items[m.selBacklog]
+	out := []string{" " + m.styTitle.Render(it.ID+" · "+it.Title)}
+	out = append(out, " "+m.styDim.Render(it.Status))
+	out = append(out, "")
+	if it.Body != "" {
+		out = append(out, m.stySec.Render("Why"))
+		out = append(out, indent(renderMarkdown(it.Body, width-4), "  "))
 		out = append(out, "")
-		if n.Intent != "" {
-			out = append(out, m.stySec.Render("Intent"))
-			out = append(out, indent(renderMarkdown(n.Intent, width-4), "  "))
-			out = append(out, "")
-		}
-		if len(n.Scope) > 0 {
-			out = append(out, m.stySec.Render("Scope"))
-			for _, s := range n.Scope {
-				out = append(out, "  "+m.styGood.Render("in   ")+s)
-			}
-			out = append(out, "")
-		}
-		if n.PromotedTo != "" {
-			out = append(out, m.styAcc.Render("Promoted to "+n.PromotedTo))
-		}
-		return out
 	}
-	return []string{m.styDim.Render("  (nothing selected)")}
+	if len(it.Scope) > 0 {
+		out = append(out, m.stySec.Render("Scope"))
+		for _, s := range it.Scope {
+			out = append(out, "  "+m.styGood.Render("in   ")+s)
+		}
+		out = append(out, "")
+	}
+	if len(it.Tags) > 0 {
+		out = append(out, m.stySec.Render("Tags"))
+		out = append(out, "  "+strings.Join(it.Tags, ", "))
+		out = append(out, "")
+	}
+	if it.PromotedTo != "" {
+		out = append(out, m.styAcc.Render("Promoted to "+it.PromotedTo))
+	}
+	return out
 }
 
 // logDetail renders the selected journal entry.

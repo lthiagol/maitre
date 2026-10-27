@@ -21,7 +21,7 @@ func newStore(t *testing.T) *Store {
 
 func TestInitCreatesTheLayout(t *testing.T) {
 	s := newStore(t)
-	for _, d := range []string{DirRecipes, DirCourses, DirPrepNotes, DirSpecials} {
+	for _, d := range []string{DirRecipes, DirCourses, DirBacklog} {
 		info, err := os.Stat(filepath.Join(s.Root, d))
 		if err != nil {
 			t.Fatalf("stat %s: %v", d, err)

@@ -2,13 +2,16 @@ package cli
 
 import (
 	"strings"
+
+	"github.com/lthiagol/maitre/internal/core"
 )
 
-// The lower rungs of the ladder. Promotion is one-way: a special becomes a prep note,
-// a prep note becomes a recipe, and the artifact records where it went.
+// The backlog. One artifact, with a kind.
+//
+// The CLI's verbs are thin adapters over the operations: the domain owns the rules.
 
 // ---------------------------------------------------------------------------
-// Specials — rung 0
+// The backlog
 // ---------------------------------------------------------------------------
 
 func (r *Runner) cmdSpecialList(args []string) int {
@@ -22,18 +25,18 @@ func (r *Runner) cmdSpecialList(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	specials, err := store.ListSpecials()
+	items, err := store.ListBacklogItems()
 	if err != nil {
-		r.fail("list specials", err.Error())
+		r.fail("list the backlog", err.Error())
 		return ExitError
 	}
-	return r.emit(map[string]any{"ok": true, "count": len(specials), "specials": specials})
+	return r.emit(map[string]any{"ok": true, "count": len(items), "items": items})
 }
 
 func (r *Runner) cmdSpecialCreate(args []string) int {
 	fs := newFlagSet("special create")
 	title := fs.String("title", "", "what it is")
-	body := fs.String("body", "", "what is worth noticing")
+	body := fs.String("body", "", "why it is worth doing")
 	tags := fs.StringList("tag")
 	if err := fs.parse(args); err != nil {
 		r.fail("bad flags", err.Error())
@@ -48,11 +51,11 @@ func (r *Runner) cmdSpecialCreate(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	special, err := ops.CreateSpecial(*title, *body, *tags)
+	item, err := ops.CreateBacklogItem(*title, *body, nil, core.KindIdea, *tags)
 	if err != nil {
 		return r.failOp(err)
 	}
-	return r.emit(map[string]any{"ok": true, "special": special})
+	return r.emit(map[string]any{"ok": true, "item": item})
 }
 
 func (r *Runner) cmdSpecialUpdate(args []string) int {
@@ -73,11 +76,11 @@ func (r *Runner) cmdSpecialUpdate(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	special, err := ops.UpdateSpecial(fs.arg(0), *title, *body, *tags)
+	item, err := ops.UpdateBacklogItem(fs.arg(0), *title, *body, nil, "", *tags)
 	if err != nil {
 		return r.failOp(err)
 	}
-	return r.emit(map[string]any{"ok": true, "special": special})
+	return r.emit(map[string]any{"ok": true, "item": item})
 }
 
 func (r *Runner) cmdSpecialDismiss(args []string) int {
@@ -100,11 +103,11 @@ func (r *Runner) cmdSpecialDismiss(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	special, err := ops.DismissSpecial(fs.arg(0), *reason)
+	item, err := ops.DismissBacklogItem(fs.arg(0), *reason)
 	if err != nil {
 		return r.failOp(err)
 	}
-	return r.emit(map[string]any{"ok": true, "special": special})
+	return r.emit(map[string]any{"ok": true, "item": item})
 }
 
 func (r *Runner) cmdSpecialPromote(args []string) int {
@@ -122,15 +125,15 @@ func (r *Runner) cmdSpecialPromote(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	note, err := ops.PromoteSpecial(fs.arg(0))
+	recipe, err := ops.PromoteBacklogItem(fs.arg(0))
 	if err != nil {
 		return r.failOp(err)
 	}
-	return r.emit(map[string]any{"ok": true, "prepNote": note})
+	return r.emit(map[string]any{"ok": true, "recipe": recipeSummary(recipe)})
 }
 
 // ---------------------------------------------------------------------------
-// Prep notes — rung 1
+// The prep notes
 // ---------------------------------------------------------------------------
 
 func (r *Runner) cmdPrepNoteList(args []string) int {
@@ -144,18 +147,18 @@ func (r *Runner) cmdPrepNoteList(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	notes, err := store.ListPrepNotes()
+	items, err := store.ListBacklogItems()
 	if err != nil {
-		r.fail("list prep notes", err.Error())
+		r.fail("list the backlog", err.Error())
 		return ExitError
 	}
-	return r.emit(map[string]any{"ok": true, "count": len(notes), "prepNotes": notes})
+	return r.emit(map[string]any{"ok": true, "count": len(items), "items": items})
 }
 
 func (r *Runner) cmdPrepNoteCreate(args []string) int {
 	fs := newFlagSet("prepnote create")
 	title := fs.String("title", "", "what it is")
-	intent := fs.String("intent", "", "what it should achieve")
+	intent := fs.String("intent", "", "why it is worth doing")
 	scope := fs.StringList("scope")
 	if err := fs.parse(args); err != nil {
 		r.fail("bad flags", err.Error())
@@ -170,24 +173,23 @@ func (r *Runner) cmdPrepNoteCreate(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	note, err := ops.CreatePrepNote(*title, *intent, *scope)
+	item, err := ops.CreateBacklogItem(*title, *intent, *scope, core.KindFeature, nil)
 	if err != nil {
 		return r.failOp(err)
 	}
-	return r.emit(map[string]any{"ok": true, "prepNote": note})
+	return r.emit(map[string]any{"ok": true, "item": item})
 }
 
 func (r *Runner) cmdPrepNoteUpdate(args []string) int {
 	fs := newFlagSet("prepnote update")
-	title := fs.String("title", "", "new title")
-	intent := fs.String("intent", "", "new intent")
+	intent := fs.String("intent", "", "new body")
 	scope := fs.StringList("scope")
 	if err := fs.parse(args); err != nil {
 		r.fail("bad flags", err.Error())
 		return ExitError
 	}
 	if fs.nArg() != 1 {
-		r.fail("usage: maitre-cli prepnote update <id> [--title] [--intent] [--scope]")
+		r.fail("usage: maitre-cli prepnote update <id> [--intent] [--scope]")
 		return ExitError
 	}
 	_, ops, err := r.openStore(fs)
@@ -195,11 +197,11 @@ func (r *Runner) cmdPrepNoteUpdate(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	note, err := ops.UpdatePrepNote(fs.arg(0), *title, *intent, *scope)
+	item, err := ops.UpdateBacklogItem(fs.arg(0), "", *intent, *scope, "", nil)
 	if err != nil {
 		return r.failOp(err)
 	}
-	return r.emit(map[string]any{"ok": true, "prepNote": note})
+	return r.emit(map[string]any{"ok": true, "item": item})
 }
 
 func (r *Runner) cmdPrepNotePromote(args []string) int {
@@ -217,7 +219,7 @@ func (r *Runner) cmdPrepNotePromote(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	recipe, err := ops.PromotePrepNote(fs.arg(0))
+	recipe, err := ops.PromoteBacklogItem(fs.arg(0))
 	if err != nil {
 		return r.failOp(err)
 	}

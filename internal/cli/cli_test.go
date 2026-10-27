@@ -214,18 +214,9 @@ func TestTheBacklogPromotesUpTheLadder(t *testing.T) {
 	if !res.ok(t) {
 		t.Fatalf("special create failed:\n%s", res.Stderr)
 	}
-	res = cli(t, dir, "special", "promote", "S01")
+	res = cli(t, dir, "special", "promote", "BL01")
 	if !res.ok(t) {
 		t.Fatalf("special promote failed:\n%s", res.Stderr)
-	}
-	note := res.doc(t)["prepNote"].(map[string]any)
-	if note["id"] != "N01" {
-		t.Fatalf("prep note id = %v, want N01", note["id"])
-	}
-
-	res = cli(t, dir, "prepnote", "promote", "N01")
-	if !res.ok(t) {
-		t.Fatalf("prepnote promote failed:\n%s", res.Stderr)
 	}
 	recipe := res.doc(t)["recipe"].(map[string]any)
 	if recipe["id"] != "RCP01" {

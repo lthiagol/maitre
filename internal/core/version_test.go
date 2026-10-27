@@ -21,7 +21,7 @@ import (
 // on disk. Any of those means the rules changed, and a plan written under the old
 // rules must not be written under the new ones by a tool that does not know the
 // difference.
-const recordedDomainShape = "1b8c98432e7e222a"
+const recordedDomainShape = "b335bc7627e73ea4"
 
 // domainShape is a fingerprint of the domain's rules: the gates, the transitions, the
 // lifecycles, the events, the chef's moves, the rules on a tasting note's outcome,
@@ -94,7 +94,7 @@ func TestDomainVersionRefusesANewerPlan(t *testing.T) {
 	newer := DomainVersion + 1
 	stampPlanVersion(t, store, newer)
 
-	_, err := ops.CreateSpecial("A hunch", "worth noticing", nil)
+	_, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
 	if err == nil {
 		t.Fatal("a tool older than the plan must not write to it")
 	}
@@ -109,12 +109,12 @@ func TestDomainVersionRefusesANewerPlan(t *testing.T) {
 	}
 
 	// The plan is untouched.
-	specials, err := store.ListSpecials()
+	items, err := store.ListBacklogItems()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(specials) != 0 {
-		t.Fatalf("the refused write landed anyway: %+v", specials)
+	if len(items) != 0 {
+		t.Fatalf("the refused write landed anyway: %+v", items)
 	}
 }
 
@@ -128,7 +128,7 @@ func TestDomainVersionStampsAnOlderPlan(t *testing.T) {
 	}
 	stampPlanVersion(t, store, DomainVersion-1)
 
-	if _, err := ops.CreateSpecial("A hunch", "worth noticing", nil); err != nil {
+	if _, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil); err != nil {
 		t.Fatalf("a newer tool should write to an older plan: %v", err)
 	}
 	j, err := store.LoadJournal()

@@ -33,8 +33,7 @@ func snapshot(store *core.Store, width int, m *Model) (*Model, error) {
 		return nil, loaded.err
 	}
 	m.recipes = loaded.recipes
-	m.specials = loaded.specials
-	m.notes = loaded.notes
+	m.items = loaded.items
 	m.journal = loaded.journal
 	m.sections = m.orderedSections()
 	m.clampSelections()

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "seq": 33,
+  "seq": 34,
   "events": [
     {
       "seq": 1,
@@ -357,6 +357,20 @@
         "to": "RCP01"
       },
       "domain_version": 4
+    },
+    {
+      "seq": 34,
+      "at": "2026-10-27T19:58:32Z",
+      "kind": "control",
+      "actor": "runner",
+      "session": "s-migrate",
+      "role": "runner",
+      "data": {
+        "from": "specials+prep-notes",
+        "kind": "migration",
+        "to": "backlog"
+      },
+      "domain_version": 5
     }
   ]
 }

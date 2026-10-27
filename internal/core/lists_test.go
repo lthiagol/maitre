@@ -22,19 +22,12 @@ func TestTheListFunctionsReturnAList(t *testing.T) {
 	if recipes == nil {
 		t.Fatal("ListRecipes returned nil")
 	}
-	specials, err := store.ListSpecials()
+	items, err := store.ListBacklogItems()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if specials == nil {
-		t.Fatal("ListSpecials returned nil")
-	}
-	notes, err := store.ListPrepNotes()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if notes == nil {
-		t.Fatal("ListPrepNotes returned nil")
+	if items == nil {
+		t.Fatal("ListBacklogItems returned nil")
 	}
 	ready, waiting := Path(nil)
 	if ready == nil || waiting == nil {
@@ -55,10 +48,7 @@ func TestTheListFunctionsReturnAList(t *testing.T) {
 	if _, err := ops.CreateRecipe(readySpec()); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.CreateSpecial("A hunch", "worth noticing", nil); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := ops.CreatePrepNote("A note", "first", nil); err != nil {
+	if _, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil); err != nil {
 		t.Fatal(err)
 	}
 	recipes, err = store.ListRecipes()
@@ -68,19 +58,12 @@ func TestTheListFunctionsReturnAList(t *testing.T) {
 	if recipes == nil {
 		t.Fatal("ListRecipes returned nil")
 	}
-	specials, err = store.ListSpecials()
+	items, err = store.ListBacklogItems()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if specials == nil {
-		t.Fatal("ListSpecials returned nil")
-	}
-	notes, err = store.ListPrepNotes()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if notes == nil {
-		t.Fatal("ListPrepNotes returned nil")
+	if items == nil {
+		t.Fatal("ListBacklogItems returned nil")
 	}
 	j, err = store.LoadJournal()
 	if err != nil {

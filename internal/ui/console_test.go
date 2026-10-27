@@ -34,8 +34,7 @@ func loadModel(t *testing.T, store *core.Store) *Model {
 		t.Fatalf("reload: %v", loaded.err)
 	}
 	m.recipes = loaded.recipes
-	m.specials = loaded.specials
-	m.notes = loaded.notes
+	m.items = loaded.items
 	m.journal = loaded.journal
 	m.sections = m.orderedSections()
 	m.clampSelections()
@@ -203,18 +202,18 @@ func TestEnterOpensTheDetailFullScreen(t *testing.T) {
 	}
 }
 
-func TestBacklogTabListsSpecialsAndPrepNotes(t *testing.T) {
+func TestBacklogTabListsTheItems(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
 	out := plain(m)
-	for _, want := range []string{"SPECIALS", "PREP NOTES", "The board needs a way to show proofs", "Wire the review queue"} {
+	for _, want := range []string{"BACKLOG", "The board needs a way to show proofs", "Wire the review queue"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the backlog is missing %q\n%s", want, out)
 		}
 	}
 }
 
-func TestPromotingASpecialFromTheBacklog(t *testing.T) {
+func TestPromotingAnItemFromTheBacklog(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
 	m.selBacklog = 0
@@ -222,12 +221,12 @@ func TestPromotingASpecialFromTheBacklog(t *testing.T) {
 	if m.refusal != "" {
 		t.Fatalf("the promotion was refused: %s", m.refusal)
 	}
-	notes, err := m.ops.ListPrepNotes()
+	items, err := m.ops.ListBacklogItems()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(notes) != 3 {
-		t.Fatalf("got %d prep notes, want 3", len(notes))
+	if len(items) != 6 {
+		t.Fatalf("got %d items, want 6", len(items))
 	}
 }
 

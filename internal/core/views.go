@@ -265,6 +265,7 @@ var DerivedViews = []DerivedView{
 	{Name: "path", Function: Path},
 	{Name: "triage", Function: TriageOf, Values: triageSectionValues()},
 	{Name: "tree", Function: TreeOf},
+	{Name: "backlog_groups", Function: BacklogGroups, Values: []string{"ideas", "tasks"}},
 }
 
 // NonViews are the exported functions of this package that are not derived views.
@@ -298,6 +299,7 @@ var NonViews = []string{
 	"Board.Count",
 	"Board.Total",
 	"Board.Summaries",
+	"BacklogItem.Slug",
 	"Recipe.Terminal",
 	"Recipe.Fingerprint",
 	"Journal.Since",
@@ -305,7 +307,6 @@ var NonViews = []string{
 	"Lifecycle.Valid",
 	"Lifecycle.Terminal",
 	"NoteOutcome.AppliesTo",
-	"Special.Slug",
 	"Verifier.Run",
 	// The top-level functions that are not views.
 	"Block",

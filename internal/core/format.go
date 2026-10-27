@@ -20,10 +20,9 @@ import (
 func planFormatFacts() []string {
 	out := []string{
 		"id prefix recipe " + recipeIDPrefix,
-		"id prefix special " + specialIDPrefix,
-		"id prefix prep note " + prepNoteIDPrefix,
+		"id prefix backlog " + backlogIDPrefix,
 	}
-	for _, dir := range []string{DirRecipes, DirCourses, DirPrepNotes, DirSpecials} {
+	for _, dir := range []string{DirRecipes, DirCourses, DirBacklog} {
 		out = append(out, "directory "+dir)
 	}
 	for _, field := range planRecordFields() {
@@ -38,12 +37,12 @@ func planFormatFacts() []string {
 // written: a field renamed on disk is a field renamed here.
 //
 // The walk follows the records the plan holds — a recipe and everything inside it,
-// a special, a prep note, a journal entry — because a rename anywhere in them
-// changes what a file on disk says.
+// a backlog item, a journal entry — because a rename anywhere in them changes what a
+// file on disk says.
 func planRecordFields() []string {
 	var out []string
 	seen := map[reflect.Type]bool{}
-	for _, record := range []any{Recipe{}, Special{}, PrepNote{}, JournalEntry{}, projectFile{}} {
+	for _, record := range []any{Recipe{}, BacklogItem{}, JournalEntry{}, projectFile{}} {
 		out = append(out, jsonFieldNames(reflect.TypeOf(record), seen)...)
 	}
 	sort.Strings(out)

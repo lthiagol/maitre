@@ -420,7 +420,7 @@ it otherwise.
 
 ## 6. Plan format
 
-**The plan format is version 4.** The number is `core.DomainVersion` — the version of
+**The plan format is version 5.** The number is `core.DomainVersion` — the version of
 the rules the plan is written under, which now includes the format itself. A format
 change moves the number: the id prefixes, the directories and the field names on disk
 are hashed into the fingerprint, so a tool that writes the old format is fenced off
@@ -431,16 +431,37 @@ kitchen/
   project.json                 project meta · charter · settings — NO index
   recipes/RCP01-<slug>.json    self-contained: spec + guidance + evidence + review + audit
   courses/C01-<slug>.json
-  prep-notes/N01-<slug>.json
-  specials/S01-<slug>.json
+  backlog/BL01-<slug>.json     the backlog: one item, with a kind
   activity.json                append-only event journal, sequence-numbered
   decisions.json               project-level decisions (ADRs)
 ```
 
-One root, subdirectories per kind. The "stock vs. the line" distinction — specials and
-prep notes are stock, recipes and courses are the line — is a **view in the UI**, not a
-directory boundary. Two roots would cost a workspace spanning both and buy nothing, since
+One root, subdirectories per kind. The "stock vs. the line" distinction — the backlog
+is stock, recipes and courses are the line — is a **view in the UI**, not a directory
+boundary. Two roots would cost a workspace spanning both and buy nothing, since
 per-type subdirectories already allow selective commits (`git add kitchen/recipes`).
+
+The backlog is **one artifact with a kind**. It was two — a *special* (a hunch) in
+`kitchen/specials/` and a *prep note* (intent and scope, before criteria) in
+`kitchen/prep-notes/` — and two file types for one list is two nouns for one thing.
+The item's id is `BL01`, and it is **kind-neutral**: an idea that is shaped into a
+small task keeps its id, so the trail survives the shaping.
+
+| Field | |
+|---|---|
+| `id` | `BL01` — kind-neutral |
+| `title` | what it is |
+| `body` | why it is worth doing |
+| `scope` | the work, if it is known |
+| `kind` | `idea` · `feature` · `bug` |
+| `tags` | |
+| `status` | `open` · `dismissed` · `promoted` |
+| `created`, `updated` | |
+| `promoted_to` | the recipe it became |
+
+The kind is the **only** truth about an item's shape. The console's two groups —
+*Ideas* and *Small tasks* — are derived from it (`core.BacklogGroups`) and never
+stored.
 
 **The name follows the title, and a rename does not leave a second file.** The file is
 `<id>-<slug>.json`, so a new title is a new name — and the write removes the copy the
@@ -509,14 +530,20 @@ behaviour: what a gate computes is not in the fingerprint either.
 plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until
 a newer build writes it and re-stamps it.
 
-**Version 4 is the plan format, and the rules about it.** Version 3 changed the
+**Version 5 is the plan format, and the rules about it.** Version 3 changed the
 *record* the gates apply to: a recipe's id is `RCP01` and its file is
 `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. Version 4
 changed the *rules about the format*: the fingerprint hashes it, so a format change
-moves the version on its own instead of by hand. A version-3 tool would write `R01`
-into a plan the version-4 reader expects to find `RCP01`, so the version moved again.
+moves the version on its own instead of by hand. **Version 5 changed the format
+again**: the backlog's two file types became one (`kitchen/backlog/`), the item
+carries a `kind`, and its id is `BL01`. No gate was weakened and no gate rule
+moved — the *record* changed, so the writer changed, and the version moved with it.
+A version-4 tool would write a special into `kitchen/specials/`, and the version-5
+reader does not look there.
+
 The reader is tolerant on purpose: `RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
-same recipe, so a plan written before the change is still readable. See
+same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog item
+— so a plan written before the change is still readable. See
 [07-vocabulary.md](07-vocabulary.md).
 
 ---
@@ -593,6 +620,7 @@ variations of a handful of these. **One operation, one name.**
 | `path` | `Path` | The execution order: what can go now, and what waits |
 | `triage` | `TriageOf` | `Needs you` · `On the line` · `Being shaped` · `On hold` · `Served` — the board's other axis: what the chef should do next |
 | `tree` | `TreeOf` | The plan as a dependency tree |
+| `backlog_groups` | `BacklogGroups` | `ideas` · `tasks` — the backlog's two groups, derived from the item's kind |
 
 Two of these are **planned**: the domain does not compute them yet, and the table says
 so. A view the domain does not compute is not a view — it is a promise, and a promise

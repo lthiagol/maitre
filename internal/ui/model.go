@@ -59,10 +59,9 @@ const (
 
 // reloadMsg carries a reloaded plan.
 type reloadMsg struct {
-	recipes  []core.Recipe
-	specials []core.Special
-	notes    []core.PrepNote
-	journal  core.Journal
+	recipes []core.Recipe
+	items   []core.BacklogItem
+	journal core.Journal
 	// disk is the fingerprint of the plan as it was before it was read.
 	disk string
 	err  error
@@ -105,8 +104,7 @@ type Model struct {
 	recipes  []core.Recipe
 	sections []core.TriageSection
 
-	specials []core.Special
-	notes    []core.PrepNote
+	items []core.BacklogItem
 
 	journal core.Journal
 
@@ -233,11 +231,7 @@ func (m *Model) reload() tea.Cmd {
 		if err != nil {
 			return reloadMsg{err: err}
 		}
-		specials, err := m.store.ListSpecials()
-		if err != nil {
-			return reloadMsg{err: err}
-		}
-		notes, err := m.store.ListPrepNotes()
+		items, err := m.store.ListBacklogItems()
 		if err != nil {
 			return reloadMsg{err: err}
 		}
@@ -247,8 +241,8 @@ func (m *Model) reload() tea.Cmd {
 		}
 		// Everything here was written by an agent. Sanitise before it reaches the
 		// screen, so a newline in a title cannot corrupt the layout.
-		sanitizePlan(recipes, specials, notes, journal)
-		return reloadMsg{recipes: recipes, specials: specials, notes: notes, journal: journal, disk: disk}
+		sanitizePlan(recipes, items, journal)
+		return reloadMsg{recipes: recipes, items: items, journal: journal, disk: disk}
 	}
 }
 
@@ -268,8 +262,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.poll()
 		}
 		m.recipes = msg.recipes
-		m.specials = msg.specials
-		m.notes = msg.notes
+		m.items = msg.items
 		m.journal = msg.journal
 		m.err = nil
 		m.sections = m.orderedSections()
@@ -473,7 +466,7 @@ func (m *Model) clampSelections() {
 		}
 	}
 	clamp(&m.selRecipes, len(m.visibleRows()))
-	clamp(&m.selBacklog, len(m.specials)+len(m.notes))
+	clamp(&m.selBacklog, len(m.items))
 	clamp(&m.selPath, len(m.pathEntries()))
 	clamp(&m.selBoard, len(m.boardTree().recipe))
 	clamp(&m.selLog, len(m.logWindow()))
@@ -694,7 +687,7 @@ func (m *Model) listCount() int {
 	case TabRecipes:
 		return len(m.visibleRows())
 	case TabBacklog:
-		return len(m.specials) + len(m.notes)
+		return len(m.items)
 	case TabPath:
 		return len(m.pathEntries())
 	case TabBoard:
@@ -762,29 +755,17 @@ func (m *Model) actOnRecipe() (tea.Model, tea.Cmd) {
 	return m, m.reload()
 }
 
-// promoteSelected promotes the selected special or prep note up the ladder.
+// promoteSelected promotes the selected backlog item into a recipe.
 func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
-	if m.selBacklog < len(m.specials) {
-		sp := m.specials[m.selBacklog]
-		note, err := m.ops.PromoteSpecial(sp.ID)
+	if m.selBacklog < len(m.items) {
+		item := m.items[m.selBacklog]
+		recipe, err := m.ops.PromoteBacklogItem(item.ID)
 		if err != nil {
 			m.refusal = refusalText(err)
 			return m, nil
 		}
 		m.refusal = ""
-		m.status = fmt.Sprintf("promoted %s to prep note %s", sp.ID, note.ID)
-		return m, m.reload()
-	}
-	idx := m.selBacklog - len(m.specials)
-	if idx < len(m.notes) {
-		note := m.notes[idx]
-		recipe, err := m.ops.PromotePrepNote(note.ID)
-		if err != nil {
-			m.refusal = refusalText(err)
-			return m, nil
-		}
-		m.refusal = ""
-		m.status = fmt.Sprintf("promoted %s to recipe %s", note.ID, recipe.ID)
+		m.status = fmt.Sprintf("promoted %s to recipe %s", item.ID, recipe.ID)
 		return m, m.reload()
 	}
 	return m, nil
