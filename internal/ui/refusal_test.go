@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // TestALongRefusalIsVisible covers the refusal the console used to swallow.

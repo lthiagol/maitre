@@ -1,4 +1,4 @@
-module github.com/lthiagol/kitchen-brigade
+module github.com/lthiagol/maitre
 
 go 1.26.0
 

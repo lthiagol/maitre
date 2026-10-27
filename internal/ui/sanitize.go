@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // Everything the console renders came from somewhere an agent could write: a title, a

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // errorsAs is errors.As, named short because it is used a lot.

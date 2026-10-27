@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // Snapshot loads the plan into a model without a terminal.

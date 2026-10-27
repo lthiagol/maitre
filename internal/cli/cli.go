@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // Exit codes.

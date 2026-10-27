@@ -9,7 +9,7 @@ import (
 
 	"charm.land/bubbletea/v2"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // liveModel builds a console that watches the disk, over a plan with a recipe that

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // noteModel builds a console over a recipe with two open tasting notes.

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // recipeWithComments builds a recipe with a finding that has a thread, and a comment

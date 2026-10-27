@@ -5,7 +5,7 @@ import (
 
 	"charm.land/bubbletea/v2"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // triageChoices are the actions the chef may take on a tasting note.

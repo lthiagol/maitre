@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // typed expands a word into the key presses that type it.

@@ -6,7 +6,7 @@ import (
 
 	"charm.land/bubbletea/v2"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // The console owns the terminal.

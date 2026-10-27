@@ -7,7 +7,7 @@ import (
 
 	"charm.land/bubbletea/v2"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // TestTheConsoleShowsADeviation covers the promise the console makes.

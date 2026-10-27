@@ -16,8 +16,8 @@ import (
 
 	"charm.land/bubbletea/v2"
 
-	"github.com/lthiagol/kitchen-brigade/internal/core"
-	"github.com/lthiagol/kitchen-brigade/internal/ui"
+	"github.com/lthiagol/maitre/internal/core"
+	"github.com/lthiagol/maitre/internal/ui"
 )
 
 func main() {

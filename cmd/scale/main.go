@@ -7,7 +7,7 @@ package main
 import (
 	"os"
 
-	"github.com/lthiagol/kitchen-brigade/internal/cli"
+	"github.com/lthiagol/maitre/internal/cli"
 )
 
 func main() {
