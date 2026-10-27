@@ -160,13 +160,14 @@ const MinOutOfScope = 2
 // a newer build writes it.
 //
 // **Version 6: the plan format's records were renamed.** The recipe's completion
-// stamp was `evidence`; it is `completion` now. The stamp says when the recipe was
-// done — the per-criterion records say what was verified, and they live on the
-// criterion.
+// stamp was `evidence`; it is `completion` now. A criterion's record was `proofs`;
+// it is `evidence` now — the name the journal's event kind already carried, so the
+// code ends up agreeing with its own journal. The stamp says when the recipe was
+// done; the records say what was verified, and they live on the criterion.
 //
 // The rules the gates apply did not change — no gate was weakened and no gate rule
-// moved — but the **record** did: a version-5 tool would write `evidence` where the
-// version-6 reader looks for `completion`, and the stamp it wrote would be a stamp
+// moved — but the **record** did: a version-5 tool would write `proofs` where the
+// version-6 reader looks for `evidence`, and the records it wrote would be records
 // the reader does not see.
 //
 // The reader is tolerant on purpose: a plan written before the rename keeps the old
@@ -319,7 +320,7 @@ var gates = []gate{
 		for _, c := range r.Acceptance {
 			switch st := c.Status(); st {
 			case CriterionPassed:
-				// A proof that matched something, or a human sign-off.
+				// An evidence that matched something, or a human sign-off.
 			case CriterionDeferred:
 				// A deferred criterion is re-filed as a follow-up. It does not
 				// keep the recipe open: CPD's rule is that a recipe is done when
@@ -434,9 +435,9 @@ var placeholders = map[string]bool{
 //
 // A verification is **resolvable** when the tool can determine a match count from it:
 // a `go test` command, whose output the tool counts (ADR-0006 §3), or a `manual:`
-// procedure a human signs off. Anything else would be *unproven* — and an unproven
-// proof never satisfies a gate, so the criterion could never be finished. Saying so at
-// grooming time, when the human reads it, beats saying so at finish time.
+// procedure a human signs off. Anything else would be *unproven* — and unproven
+// evidence never satisfies a gate, so the criterion could never be finished. Saying
+// so at grooming time, when the human reads it, beats saying so at finish time.
 func checkFalsifiable(c Criterion) error {
 	v := strings.TrimSpace(c.Verification)
 	if v == "" {

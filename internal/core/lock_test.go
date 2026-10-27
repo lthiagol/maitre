@@ -17,7 +17,7 @@ import (
 // change: the write was silently lost and the journal and the artifact disagreed.
 //
 // The fix: no command runs while the plan lock is held. The lock is taken only to
-// append the proof, against the recipe as it is at that moment.
+// append the evidence, against the recipe as it is at that moment.
 //
 // The stale threshold is lowered rather than waited out: what matters is the
 // relationship between the threshold and the hold. The hold must never reach the
@@ -73,8 +73,8 @@ func TestVerificationDoesNotHoldThePlanLock(t *testing.T) {
 	if got.Overlays.Blocked == nil {
 		t.Fatal("the concurrent write was clobbered by the verification's save")
 	}
-	if len(got.Acceptance[0].Proofs) != 1 {
-		t.Fatalf("the proof was not recorded: %+v", got.Acceptance[0].Proofs)
+	if len(got.Acceptance[0].Evidence) != 1 {
+		t.Fatalf("the evidence was not recorded: %+v", got.Acceptance[0].Evidence)
 	}
 }
 

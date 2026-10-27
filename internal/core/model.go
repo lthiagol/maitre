@@ -52,37 +52,38 @@ type Scope struct {
 
 // Criterion is one falsifiable acceptance criterion.
 type Criterion struct {
-	ID           string    `json:"id"`
-	Description  string    `json:"description"`
-	Verification string    `json:"verification"`
-	Proofs       []Proof   `json:"proofs"`
-	Deferral     *Deferral `json:"deferral,omitempty"`
+	ID           string     `json:"id"`
+	Description  string     `json:"description"`
+	Verification string     `json:"verification"`
+	Evidence     []Evidence `json:"evidence"`
+	Deferral     *Deferral  `json:"deferral,omitempty"`
 }
 
-// Status derives the criterion's state from its latest proof.
+// Status derives the criterion's state from its latest evidence.
 //
 // The exit code dominates: a command that failed is a failure, whatever the count. A
 // command that succeeded but matched nothing is *rejected* — a spec defect, not a test
 // failure. A command whose match count the tool could not determine is *unproven*.
 // Neither satisfies a gate.
 //
-// A deferral only shows on a criterion with no proof of its own: a criterion that
-// already passed stays passed. A deferral re-files the work; it does not undo a proof.
+// A deferral only shows on a criterion with no evidence of its own: a criterion that
+// already passed stays passed. A deferral re-files the work; it does not undo the
+// evidence.
 //
 // view
 func (c Criterion) Status() CriterionStatus {
-	if len(c.Proofs) == 0 {
+	if len(c.Evidence) == 0 {
 		if c.Deferral != nil {
 			return CriterionDeferred
 		}
 		return CriterionPending
 	}
-	last := c.Proofs[len(c.Proofs)-1]
+	last := c.Evidence[len(c.Evidence)-1]
 	switch {
 	case last.ExitCode != 0:
 		return CriterionFailed
 	case last.Match == MatchProven, last.Match == MatchSignedOff:
-		// A machine proof that matched something, or a human who vouched for a
+		// A machine evidence that matched something, or a human who vouched for a
 		// procedure the tool could not check.
 		return CriterionPassed
 	case last.Match == MatchRejected:
@@ -401,8 +402,8 @@ func (r *Recipe) normaliseLists() {
 		r.Audit.Decisions = []Decision{}
 	}
 	for i := range r.Acceptance {
-		if r.Acceptance[i].Proofs == nil {
-			r.Acceptance[i].Proofs = []Proof{}
+		if r.Acceptance[i].Evidence == nil {
+			r.Acceptance[i].Evidence = []Evidence{}
 		}
 	}
 	for i := range r.Guidance {
@@ -446,8 +447,8 @@ func (r Recipe) fingerprint() (string, error) {
 		Scope:      r.Scope,
 		Acceptance: r.Acceptance,
 	}
-	// Only the frozen fields participate. Proofs are excluded because they grow after
-	// approval; only the criterion's declared shape is frozen.
+	// Only the frozen fields participate. The evidence is excluded because it grows
+	// after approval; only the criterion's declared shape is frozen.
 	payload.Acceptance = frozenCriteria(r.Acceptance)
 
 	raw, err := json.Marshal(payload)

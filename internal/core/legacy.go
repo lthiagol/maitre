@@ -9,9 +9,9 @@ import (
 
 // The plan format before the records were renamed.
 //
-// The recipe's completion stamp was `evidence`; it is `completion` now. The stamp
-// says when the recipe was done, and the per-criterion records say what was
-// verified — those live on the criterion.
+// The recipe's completion stamp was `evidence`; it is `completion` now. A
+// criterion's record was `proofs`; it is `evidence` now — the name the journal's
+// event kind already carried, so the code ends up agreeing with its own journal.
 //
 // The reader **tolerates** the old names, because a plan written before the rename
 // keeps what it had, and a reader that drops a record is a reader that lies about
@@ -132,9 +132,11 @@ func (s *Store) readLegacyDir(name, rung string) ([]LegacyItem, error) {
 
 // readLegacyFields fills the fields a recipe wrote under the old names.
 //
-// The recipe's completion stamp was `evidence`; it is `completion` now. A plan
-// written before the rename carries the old name, and a reader that ignores it
-// loses the moment the recipe was done.
+// The recipe's completion stamp was `evidence`; it is `completion` now. A
+// criterion's record was `proofs`; it is `evidence` now.
+//
+// A plan written before the rename carries the old names, and a reader that ignores
+// them loses the moment the recipe was done and the record of what was verified.
 //
 // The new name wins when a file carries both: the reader does not merge two
 // answers to one question, and the new one is the one the tool writes.
@@ -143,16 +145,46 @@ func readLegacyFields(raw []byte, r *Recipe) {
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		return
 	}
-	if _, ok := doc["completion"]; ok {
+	if _, ok := doc["completion"]; !ok {
+		if old, ok := doc["evidence"]; ok {
+			var c Completion
+			if err := json.Unmarshal(old, &c); err == nil {
+				r.Completion = c
+			}
+		}
+	}
+	readLegacyEvidence(raw, r)
+}
+
+// readLegacyEvidence reads a criterion's record a plan wrote under the old name.
+//
+// The old name was `proofs`; it is `evidence` now. The records are append-only and
+// they are the recipe's history: a reader that drops them is a reader that cannot
+// say whether the work was verified.
+func readLegacyEvidence(raw []byte, r *Recipe) {
+	var doc struct {
+		Acceptance []map[string]json.RawMessage `json:"acceptance"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil {
 		return
 	}
-	old, ok := doc["evidence"]
-	if !ok {
-		return
+	for i := range r.Acceptance {
+		if i >= len(doc.Acceptance) {
+			return
+		}
+		criterion := doc.Acceptance[i]
+		if _, ok := criterion["evidence"]; ok {
+			// The new name wins.
+			continue
+		}
+		old, ok := criterion["proofs"]
+		if !ok {
+			continue
+		}
+		var evidence []Evidence
+		if err := json.Unmarshal(old, &evidence); err != nil {
+			continue
+		}
+		r.Acceptance[i].Evidence = evidence
 	}
-	var c Completion
-	if err := json.Unmarshal(old, &c); err != nil {
-		return
-	}
-	r.Completion = c
 }

@@ -158,7 +158,7 @@ func (m *Model) recipeDetail(r *core.Recipe, width int) []string {
 	// the recipe is. A blocked recipe says so on its own line, below, with the
 	// reason; nothing here needs the kitchen word for it.
 	meta := []string{string(r.Lifecycle)}
-	s := core.ProofSummaryOf(*r)
+	s := core.EvidenceSummaryOf(*r)
 	if s.Criteria > 0 {
 		meta = append(meta, fmt.Sprintf("%d/%d proven", s.Proven, s.Criteria))
 	}
@@ -203,14 +203,14 @@ func (m *Model) recipeDetail(r *core.Recipe, width int) []string {
 			if c.Verification != "" {
 				out = append(out, "          "+m.styFaint.Render("verify: "+c.Verification))
 			}
-			for _, p := range c.Proofs {
+			for _, e := range c.Evidence {
 				mark := ""
-				if p.SignedOff {
+				if e.SignedOff {
 					mark = "  (signed off)"
-				} else if p.TimedOut {
+				} else if e.TimedOut {
 					mark = "  (timed out)"
 				}
-				out = append(out, "          "+m.styFaint.Render(fmt.Sprintf("%s → exit %d, matched %d%s", p.Command, p.ExitCode, p.Matched, mark)))
+				out = append(out, "          "+m.styFaint.Render(fmt.Sprintf("%s → exit %d, matched %d%s", e.Command, e.ExitCode, e.Matched, mark)))
 			}
 		}
 		out = append(out, "")

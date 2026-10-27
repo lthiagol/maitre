@@ -21,7 +21,7 @@
       "id": "AC-01",
       "description": "a finding's comments are listed under it in the detail pane",
       "verification": "go test ./internal/ui -run TestFindingCommentsAreListed",
-      "proofs": [
+      "evidence": [
         {
           "command": "go test ./internal/ui -run TestFindingCommentsAreListed",
           "exit_code": 0,
@@ -38,7 +38,7 @@
       "id": "AC-02",
       "description": "each comment shows its author",
       "verification": "go test ./internal/ui -run TestFindingCommentShowsItsAuthor",
-      "proofs": [
+      "evidence": [
         {
           "command": "go test ./internal/ui -run TestFindingCommentShowsItsAuthor",
           "exit_code": 0,
@@ -55,7 +55,7 @@
       "id": "AC-03",
       "description": "a comment that belongs to no finding is still visible",
       "verification": "go test ./internal/ui -run TestGeneralCommentsAreVisible",
-      "proofs": [
+      "evidence": [
         {
           "command": "go test ./internal/ui -run TestGeneralCommentsAreVisible",
           "exit_code": 0,

@@ -628,7 +628,7 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 // scrollDetail moves the detail pane's window.
 //
-// A recipe is longer than the pane — an intent, a proof per criterion, a review
+// A recipe is longer than the pane — an intent, an evidence per criterion, a review
 // thread — so without this the bottom of a recipe is unreachable.
 func (m *Model) scrollDetail(delta int) {
 	m.detailScroll += delta

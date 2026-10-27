@@ -210,15 +210,15 @@ func TestASignedOffCriterionIsPassedButNotProven(t *testing.T) {
 	if st := c.Status(); st != CriterionPassed {
 		t.Fatalf("status = %q, want %q", st, CriterionPassed)
 	}
-	proof := c.Proofs[0]
-	if proof.Match != MatchSignedOff {
-		t.Fatalf("match = %q, want %q — a sign-off is not a machine proof", proof.Match, MatchSignedOff)
+	evidence := c.Evidence[0]
+	if evidence.Match != MatchSignedOff {
+		t.Fatalf("match = %q, want %q — a sign-off is not a machine evidence", evidence.Match, MatchSignedOff)
 	}
-	if proof.Match == MatchProven {
-		t.Fatal("a sign-off must never claim a machine proof")
+	if evidence.Match == MatchProven {
+		t.Fatal("a sign-off must never claim a machine evidence")
 	}
-	if proof.Matched != 0 {
-		t.Fatalf("matched = %d, want 0", proof.Matched)
+	if evidence.Matched != 0 {
+		t.Fatalf("matched = %d, want 0", evidence.Matched)
 	}
 
 	// And the recipe finishes: the sign-off is the one exception to the zero-match

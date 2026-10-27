@@ -21,7 +21,7 @@ import (
 // on disk. Any of those means the rules changed, and a plan written under the old
 // rules must not be written under the new ones by a tool that does not know the
 // difference.
-const recordedDomainShape = "f1049803a1dee4c8"
+const recordedDomainShape = "cff4269d589690ce"
 
 // domainShape is a fingerprint of the domain's rules: the gates, the transitions, the
 // lifecycles, the events, the chef's moves, the rules on a tasting note's outcome,

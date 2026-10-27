@@ -107,7 +107,7 @@ func TestTheAgentLoop(t *testing.T) {
 		}
 	}
 
-	// The proof is what the gates want, so sign one off.
+	// The evidence is what the gates want, so sign one off.
 	res := cli(t, dir, "--actor", "chef", "ac", "signoff", "RCP01", "AC-01", "--by", "chef", "--note", "checked by hand")
 	if !res.ok(t) {
 		t.Fatalf("signoff failed:\n%s", res.Stderr)

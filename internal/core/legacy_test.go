@@ -68,6 +68,87 @@ func TestTheNewCompletionStampWins(t *testing.T) {
 	}
 }
 
+// TestTheReaderReadsTheOldEvidence covers the rename of a criterion's record.
+//
+// The record was `proofs`; it is `evidence` now. The records are append-only and they
+// are the recipe's history: a reader that drops them cannot say whether the work was
+// verified.
+func TestTheReaderReadsTheOldEvidence(t *testing.T) {
+	s := newStore(t)
+	writeRawRecipe(t, s, "RCP01-old.json", `{
+  "id": "RCP01",
+  "title": "written before the rename",
+  "slug": "written-before-the-rename",
+  "lifecycle": "executed",
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "description": "the board renders",
+      "verification": "go test ./internal/core -run Board",
+      "proofs": [
+        {"command": "go test ./internal/core -run Board", "exit_code": 0, "matched": 1, "match": "proven"}
+      ]
+    }
+  ]
+}`)
+
+	r, err := s.LoadRecipe("RCP01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(r.Acceptance) != 1 {
+		t.Fatalf("criteria = %d, want 1", len(r.Acceptance))
+	}
+	if len(r.Acceptance[0].Evidence) != 1 {
+		t.Fatalf("evidence = %d, want 1 — the old field name carried the record", len(r.Acceptance[0].Evidence))
+	}
+	if r.Acceptance[0].Evidence[0].Match != MatchProven {
+		t.Fatalf("match = %q, want %q", r.Acceptance[0].Evidence[0].Match, MatchProven)
+	}
+	if st := r.Acceptance[0].Status(); st != CriterionPassed {
+		t.Fatalf("status = %q, want %q — the record the old field name carried still counts", st, CriterionPassed)
+	}
+}
+
+// TestTheNewEvidenceWins covers the other half.
+//
+// A file that carries both names is a broken plan, and the reader does not merge two
+// answers to one question: the new name is the one the tool writes, so it is the one
+// that counts.
+func TestTheNewEvidenceWins(t *testing.T) {
+	s := newStore(t)
+	writeRawRecipe(t, s, "RCP01-both.json", `{
+  "id": "RCP01",
+  "title": "carrying both names",
+  "slug": "carrying-both-names",
+  "lifecycle": "executed",
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "description": "the board renders",
+      "verification": "go test ./internal/core -run Board",
+      "proofs": [
+        {"command": "go test ./internal/core -run Board", "exit_code": 0, "matched": 1, "match": "proven"}
+      ],
+      "evidence": [
+        {"command": "go test ./internal/core -run Board", "exit_code": 1, "matched": 0, "match": "rejected"}
+      ]
+    }
+  ]
+}`)
+
+	r, err := s.LoadRecipe("RCP01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(r.Acceptance[0].Evidence) != 1 {
+		t.Fatalf("evidence = %d, want 1", len(r.Acceptance[0].Evidence))
+	}
+	if r.Acceptance[0].Evidence[0].Match != MatchRejected {
+		t.Fatalf("match = %q, want %q — the new field name wins", r.Acceptance[0].Evidence[0].Match, MatchRejected)
+	}
+}
+
 // TestThePlanKeepsTheStampWhenItIsWrittenAgain covers the write.
 //
 // The reader tolerates the old name; the writer does not. A plan the tool writes

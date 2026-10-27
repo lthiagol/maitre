@@ -540,7 +540,7 @@ const idColumn = 6
 // A row wider than its column overflows into the pane beside it, so the title is
 // truncated to whatever is left over.
 func (m *Model) recipeRow(s core.Summary, selected bool, width int) string {
-	marks := proofMarks(s)
+	marks := evidenceMarks(s)
 	title := padCol(s.Title, titleColumn(width, lipgloss.Width(marks)))
 
 	if selected {
@@ -759,7 +759,7 @@ func (b *boardBuilder) stuck(node core.TreeNode) {
 func (m *Model) boardOrphanRow(node core.TreeNode, selected bool) string {
 	width := m.listColumn()
 	note := boardNote(node)
-	marks := proofMarks(node.Summary)
+	marks := evidenceMarks(node.Summary)
 	tail := marks
 	if note != "" {
 		tail += " " + note
@@ -780,7 +780,7 @@ func (m *Model) boardOrphanRow(node core.TreeNode, selected bool) string {
 func (m *Model) boardStuckRow(node core.TreeNode, selected bool) string {
 	width := m.listColumn()
 	note := boardNote(node)
-	marks := proofMarks(node.Summary)
+	marks := evidenceMarks(node.Summary)
 	tail := marks
 	if note != "" {
 		tail += " " + note
@@ -848,11 +848,11 @@ func boardNote(node core.TreeNode) string {
 // boardRow renders one recipe in the tree.
 //
 // The row says what the console already says about a recipe — its lifecycle, its
-// proof count, its open tasting notes — and what it waits on.
+// evidence count, its open tasting notes — and what it waits on.
 func (m *Model) boardRow(node core.TreeNode, prefix string, selected bool) string {
 	width := m.listColumn()
 	note := boardNote(node)
-	marks := proofMarks(node.Summary)
+	marks := evidenceMarks(node.Summary)
 	tail := marks
 	if note != "" {
 		tail += " " + note
@@ -1022,16 +1022,16 @@ func (m *Model) settingsLines() []listLine {
 	return out
 }
 
-// proofMarks is the trailing marker column of a recipe row.
-func proofMarks(s core.Summary) string {
+// evidenceMarks is the trailing marker column of a recipe row.
+func evidenceMarks(s core.Summary) string {
 	marks := ""
-	if s.Proofs.Criteria > 0 {
-		marks = fmt.Sprintf(" %d/%d", s.Proofs.Proven, s.Proofs.Criteria)
+	if s.Evidence.Criteria > 0 {
+		marks = fmt.Sprintf(" %d/%d", s.Evidence.Proven, s.Evidence.Criteria)
 	}
-	if s.Proofs.Rejected > 0 {
+	if s.Evidence.Rejected > 0 {
 		marks += " ✗"
 	}
-	if s.Proofs.Unproven > 0 {
+	if s.Evidence.Unproven > 0 {
 		marks += " ?"
 	}
 	if s.OpenFindings > 0 {

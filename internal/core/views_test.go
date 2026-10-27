@@ -92,14 +92,14 @@ func TestReadinessDerivation(t *testing.T) {
 	}
 }
 
-func TestProofSummarySeparatesRejectedFromUnproven(t *testing.T) {
+func TestEvidenceSummarySeparatesRejectedFromUnproven(t *testing.T) {
 	r := Recipe{Acceptance: []Criterion{
-		{ID: "AC-01", Proofs: []Proof{{ExitCode: 0, Matched: 3, Match: MatchProven}}},
-		{ID: "AC-02", Proofs: []Proof{{ExitCode: 0, Matched: 0, Match: MatchRejected}}},
-		{ID: "AC-03", Proofs: []Proof{{ExitCode: 0, Match: MatchUnknown}}},
+		{ID: "AC-01", Evidence: []Evidence{{ExitCode: 0, Matched: 3, Match: MatchProven}}},
+		{ID: "AC-02", Evidence: []Evidence{{ExitCode: 0, Matched: 0, Match: MatchRejected}}},
+		{ID: "AC-03", Evidence: []Evidence{{ExitCode: 0, Match: MatchUnknown}}},
 		{ID: "AC-04"},
 	}}
-	s := ProofSummaryOf(r)
+	s := EvidenceSummaryOf(r)
 	if s.Criteria != 4 {
 		t.Fatalf("criteria = %d, want 4", s.Criteria)
 	}

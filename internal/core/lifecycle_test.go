@@ -32,7 +32,7 @@ func groomable() *Recipe {
 func readySpec() RecipeSpec {
 	return RecipeSpec{
 		Title:      "Sharpen the AC gate",
-		Outcome:    "a zero-match proof never satisfies a gate",
+		Outcome:    "a zero-match evidence never satisfies a gate",
 		Problem:    "v1 manufactured confidence",
 		OutOfScope: []string{"web shell", "orchestration"},
 		Criteria: []CriterionSpec{
@@ -40,7 +40,7 @@ func readySpec() RecipeSpec {
 		},
 		WorkPackages: []string{"core"},
 		Steps: []StepSpec{{
-			Action: "add the gate", DoneWhen: "a rejected proof blocks", Covers: []string{"AC-01"},
+			Action: "add the gate", DoneWhen: "a rejected evidence blocks", Covers: []string{"AC-01"},
 		}},
 	}
 }
@@ -180,25 +180,25 @@ func TestFinishRequiresProvenCriteria(t *testing.T) {
 	r.Lifecycle = LifecycleExecuting
 	r.Guidance[0].Status = "done"
 
-	// No proof yet: the criterion is pending, so finish must be blocked.
+	// No evidence yet: the criterion is pending, so finish must be blocked.
 	if err := Transition(r, EventFinish, TransitionContext{}); err == nil {
-		t.Fatal("expected finish without a proof to be rejected")
+		t.Fatal("expected finish without an evidence to be rejected")
 	}
 
-	// A proof that matched nothing is not a proof.
-	r.Acceptance[0].Proofs = []Proof{{Command: "go test", ExitCode: 0, Matched: 0, Match: MatchRejected}}
+	// An evidence that matched nothing is not evidence.
+	r.Acceptance[0].Evidence = []Evidence{{Command: "go test", ExitCode: 0, Matched: 0, Match: MatchRejected}}
 	if err := Transition(r, EventFinish, TransitionContext{}); err == nil {
-		t.Fatal("expected finish with a zero-match proof to be rejected")
+		t.Fatal("expected finish with a zero-match evidence to be rejected")
 	}
 
-	// A proof the tool could not attribute is not a proof either.
-	r.Acceptance[0].Proofs = []Proof{{Command: "make check", ExitCode: 0, Match: MatchUnknown}}
+	// An evidence the tool could not attribute is not evidence either.
+	r.Acceptance[0].Evidence = []Evidence{{Command: "make check", ExitCode: 0, Match: MatchUnknown}}
 	if err := Transition(r, EventFinish, TransitionContext{}); err == nil {
 		t.Fatal("expected finish with an unproven criterion to be rejected")
 	}
 
-	// A proof that matched something passes.
-	r.Acceptance[0].Proofs = []Proof{{Command: "go test", ExitCode: 0, Matched: 3, Match: MatchProven}}
+	// An evidence that matched something passes.
+	r.Acceptance[0].Evidence = []Evidence{{Command: "go test", ExitCode: 0, Matched: 3, Match: MatchProven}}
 	if err := Transition(r, EventFinish, TransitionContext{}); err != nil {
 		t.Fatalf("expected finish to succeed: %v", err)
 	}
@@ -207,21 +207,21 @@ func TestFinishRequiresProvenCriteria(t *testing.T) {
 	}
 }
 
-func TestProofsAreAppendOnlyAndStatusIsDerived(t *testing.T) {
+func TestEvidenceIsAppendOnlyAndStatusIsDerived(t *testing.T) {
 	c := Criterion{ID: "AC-01"}
 	if c.Status() != CriterionPending {
 		t.Fatalf("status = %q, want pending", c.Status())
 	}
-	c.Proofs = append(c.Proofs, Proof{ExitCode: 1, Match: MatchUnknown})
+	c.Evidence = append(c.Evidence, Evidence{ExitCode: 1, Match: MatchUnknown})
 	if c.Status() != CriterionFailed {
 		t.Fatalf("status = %q, want failed", c.Status())
 	}
-	c.Proofs = append(c.Proofs, Proof{ExitCode: 0, Matched: 2, Match: MatchProven})
+	c.Evidence = append(c.Evidence, Evidence{ExitCode: 0, Matched: 2, Match: MatchProven})
 	if c.Status() != CriterionPassed {
 		t.Fatalf("status = %q, want passed", c.Status())
 	}
-	if len(c.Proofs) != 2 {
-		t.Fatalf("proofs = %d, want 2 — earlier proofs must be kept", len(c.Proofs))
+	if len(c.Evidence) != 2 {
+		t.Fatalf("evidence = %d, want 2 — the earlier evidence must be kept", len(c.Evidence))
 	}
 }
 

@@ -58,7 +58,7 @@ func TestADeferredCriterionDoesNotWedgeTheRecipe(t *testing.T) {
 
 // TestADeferralDoesNotUndoAPass covers the other half.
 //
-// The deferral re-files the work; it must not silently undo a proof.
+// The deferral re-files the work; it must not silently undo the evidence.
 func TestADeferralDoesNotUndoAPass(t *testing.T) {
 	ops, _ := newOps(t)
 	r, err := ops.CreateRecipe(readySpec())
@@ -142,11 +142,11 @@ func TestTheDefaultActorIsAnAgentRole(t *testing.T) {
 	}
 }
 
-// TestASignOffIsNotAMachineProof covers the sign-off's own state.
+// TestASignOffIsNotAMachineEvidence covers the sign-off's own state.
 //
 // The zero-match rule is the project's answer to v1's worst bug. A sign-off is a human
-// judgement, not a machine proof, and it claims no match.
-func TestASignOffIsNotAMachineProof(t *testing.T) {
+// judgement, not a machine evidence, and it claims no match.
+func TestASignOffIsNotAMachineEvidence(t *testing.T) {
 	ops, _ := newOps(t)
 	r, err := ops.CreateRecipe(readySpec())
 	if err != nil {
@@ -165,18 +165,18 @@ func TestASignOffIsNotAMachineProof(t *testing.T) {
 	if st := c.Status(); st != CriterionPassed {
 		t.Fatalf("status = %q, want %q", st, CriterionPassed)
 	}
-	if len(c.Proofs) != 1 {
-		t.Fatalf("got %d proofs, want 1", len(c.Proofs))
+	if len(c.Evidence) != 1 {
+		t.Fatalf("got %d records of evidence, want 1", len(c.Evidence))
 	}
-	proof := c.Proofs[0]
-	if proof.Match != MatchSignedOff {
-		t.Fatalf("match = %q, want %q — a sign-off claims no match", proof.Match, MatchSignedOff)
+	evidence := c.Evidence[0]
+	if evidence.Match != MatchSignedOff {
+		t.Fatalf("match = %q, want %q — a sign-off claims no match", evidence.Match, MatchSignedOff)
 	}
-	if proof.Matched != 0 {
-		t.Fatalf("matched = %d, want 0", proof.Matched)
+	if evidence.Matched != 0 {
+		t.Fatalf("matched = %d, want 0", evidence.Matched)
 	}
-	if !proof.SignedOff {
-		t.Fatal("the proof should be marked as a sign-off")
+	if !evidence.SignedOff {
+		t.Fatal("the evidence should be marked as a sign-off")
 	}
 
 	// And the gate accepts it.
@@ -188,7 +188,7 @@ func TestASignOffIsNotAMachineProof(t *testing.T) {
 // TestAFalsifiableVerificationIsOneTheToolCanCount covers the narrowed gate.
 //
 // A verification the tool cannot attribute a count from would produce an unproven
-// proof, and an unproven proof never satisfies a gate — so the criterion could never
+// evidence, and unproven evidence never satisfies a gate — so the criterion could never
 // be finished. The gate says so at grooming time.
 func TestAFalsifiableVerificationIsOneTheToolCanCount(t *testing.T) {
 	// The shape the tool can count from.

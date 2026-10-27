@@ -292,15 +292,15 @@ func (o *Operations) SetStepStatus(id, stepID, status string) (*Recipe, error) {
 	})
 }
 
-// VerifyCriterion runs the criterion's verification and records the proof.
+// VerifyCriterion runs the criterion's verification and records the evidence.
 //
-// The tool runs the command. The proof is append-only. A proof that matched nothing is
-// rejected; a proof the tool could not attribute is unproven. See ADR-0006.
+// The tool runs the command. The evidence is append-only. An evidence that matched
+// nothing is rejected; one the tool could not attribute is unproven. See ADR-0006.
 //
 // The command runs **outside** the plan lock: a verification can run for minutes, and
 // the lock goes stale long before that. Holding it let a second writer break the lock
 // of a live process, and this save then clobbered the other writer's change. The lock
-// is taken only to append the proof, against the recipe as it is *now*.
+// is taken only to append the evidence, against the recipe as it is *now*.
 func (o *Operations) VerifyCriterion(id, acID string) (*Criterion, error) {
 	verification, err := o.verificationFor(id, acID)
 	if err != nil {
@@ -316,7 +316,7 @@ func (o *Operations) VerifyCriterion(id, acID string) (*Criterion, error) {
 			if r.Acceptance[i].ID != acID {
 				continue
 			}
-			r.Acceptance[i].Proofs = append(r.Acceptance[i].Proofs, result.Proof)
+			r.Acceptance[i].Evidence = append(r.Acceptance[i].Evidence, result.Evidence)
 			out = r.Acceptance[i]
 			return nil
 		}
@@ -344,10 +344,10 @@ func (o *Operations) verificationFor(id, acID string) (string, error) {
 
 // SignOffCriterion records a human sign-off for an unproven criterion.
 //
-// The sign-off is a proof without a command: the human vouches for a procedure the tool
-// could not check. It is marked as a sign-off so the console can say who vouched — and
-// it claims no match. The zero-match rule stands for machine proofs; a sign-off is
-// the one explicit exception, and it has its own state.
+// The sign-off is an evidence without a command: the human vouches for a procedure
+// the tool could not check. It is marked as a sign-off so the console can say who
+// vouched — and it claims no match. The zero-match rule stands for machine evidence;
+// a sign-off is the one explicit exception, and it has its own state.
 //
 // A sign-off is a human act, so it takes the same deny-list the approval takes: the
 // chef signs a criterion off, not an agent. Otherwise the exception to the zero-match
@@ -366,7 +366,7 @@ func (o *Operations) SignOffCriterion(id, acID, by, note string) (*Recipe, error
 			if c.ID != acID {
 				continue
 			}
-			c.Proofs = append(c.Proofs, Proof{
+			c.Evidence = append(c.Evidence, Evidence{
 				Command:   "manual: " + note,
 				Match:     MatchSignedOff,
 				SignedOff: true,

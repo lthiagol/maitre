@@ -11,11 +11,12 @@ import (
 	"time"
 )
 
-// MatchState says whether a proof matched anything, and whether the tool could tell.
+// MatchState says whether an evidence matched anything, and whether the tool could
+// tell.
 //
 //	proven   — the count is known and greater than zero
 //	rejected — the count is known and zero: the filter matched nothing
-//	unproven — the count could not be determined; not a machine proof
+//	unproven — the count could not be determined; not a machine evidence
 //
 // Only proven satisfies a gate. See docs/decisions/0006-verification.md.
 type MatchState string
@@ -25,13 +26,13 @@ const (
 	MatchRejected MatchState = "rejected"
 	MatchUnknown  MatchState = "unknown"
 	// MatchSignedOff is a human vouching for a procedure the tool could not
-	// check. It is not a machine proof and it claims no match — the one
+	// check. It is not a machine evidence and it claims no match — the one
 	// exception to the zero-match rule, and it is explicit.
 	MatchSignedOff MatchState = "signed-off"
 )
 
-// Proof is a verification result a machine produced. Append-only.
-type Proof struct {
+// Evidence is a verification result a machine produced. Append-only.
+type Evidence struct {
 	Command      string     `json:"command"`
 	ExitCode     int        `json:"exit_code"`
 	TimedOut     bool       `json:"timed_out,omitempty"`
@@ -45,7 +46,7 @@ type Proof struct {
 	By        string `json:"by"`
 }
 
-// CriterionStatus is a criterion's state, derived from its latest proof.
+// CriterionStatus is a criterion's state, derived from its latest evidence.
 type CriterionStatus string
 
 const (
@@ -74,11 +75,11 @@ type Verifier struct {
 
 // VerifyResult is a run's outcome plus the captured output.
 type VerifyResult struct {
-	Proof  Proof
-	Output string
+	Evidence Evidence
+	Output   string
 }
 
-// Run executes the command and returns the proof.
+// Run executes the command and returns the evidence.
 //
 // The command runs through a shell, so a verification may be a pipeline. The sign-off
 // gate is the trust boundary: the human approves the recipe — and its commands — before
@@ -113,7 +114,7 @@ func (v *Verifier) Run(ctx context.Context, command, by string) (VerifyResult, e
 	sum := sha256.Sum256(output)
 	digest := hex.EncodeToString(sum[:])[:16]
 
-	proof := Proof{
+	evidence := Evidence{
 		Command:      command,
 		OutputDigest: digest,
 		At:           Now(),
@@ -122,36 +123,36 @@ func (v *Verifier) Run(ctx context.Context, command, by string) (VerifyResult, e
 
 	// A timeout is its own outcome, not a failure with a confusing message.
 	if errors.Is(runCtx.Err(), context.DeadlineExceeded) {
-		proof.TimedOut = true
-		proof.ExitCode = -1
-		proof.Match = MatchUnknown
-		return VerifyResult{Proof: proof, Output: string(output)}, nil
+		evidence.TimedOut = true
+		evidence.ExitCode = -1
+		evidence.Match = MatchUnknown
+		return VerifyResult{Evidence: evidence, Output: string(output)}, nil
 	}
 
 	if runErr != nil {
 		var exitErr *exec.ExitError
 		if errors.As(runErr, &exitErr) {
-			proof.ExitCode = exitErr.ExitCode()
+			evidence.ExitCode = exitErr.ExitCode()
 		} else {
-			proof.ExitCode = -1
+			evidence.ExitCode = -1
 		}
 	} else {
-		proof.ExitCode = 0
+		evidence.ExitCode = 0
 	}
 
 	count, unit, known := deriveMatch(command, string(output))
-	proof.Matched = count
-	proof.MatchUnit = unit
+	evidence.Matched = count
+	evidence.MatchUnit = unit
 	switch {
 	case !known:
-		proof.Match = MatchUnknown
+		evidence.Match = MatchUnknown
 	case count == 0:
-		proof.Match = MatchRejected
+		evidence.Match = MatchRejected
 	default:
-		proof.Match = MatchProven
+		evidence.Match = MatchProven
 	}
 
-	return VerifyResult{Proof: proof, Output: string(output)}, nil
+	return VerifyResult{Evidence: evidence, Output: string(output)}, nil
 }
 
 // shellCommand wraps a command line for the platform shell.
@@ -165,8 +166,8 @@ func shellCommand(ctx context.Context, command string) *exec.Cmd {
 // deriveMatch counts what the command matched, if it knows how.
 //
 // The count is derived from the output the tool captured. When the command shape is not
-// one we can interpret, the count is unknown and the proof is unproven — honest, rather
-// than silently passed.
+// one we can interpret, the count is unknown and the evidence is unproven — honest,
+// rather than silently passed.
 func deriveMatch(command, output string) (count int, unit string, known bool) {
 	if !isGoTest(command) {
 		return 0, "", false

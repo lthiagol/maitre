@@ -9,7 +9,7 @@ import (
 //
 // The model carried fields nothing could write: a branch the plan has no repository
 // for, a completion stamp nobody stamped, a step's evidence that duplicated the
-// criterion's proofs, a finding's "fixed in" that only ever got cleared. A field with
+// criterion's evidence, a finding's "fixed in" that only ever got cleared. A field with
 // no writer is a promise the code does not keep — v1's `needs_regrooming` had a field,
 // an event and a renderer, and no way to set it.
 //
@@ -22,7 +22,7 @@ func TestEveryFieldHasAWriterOrIsGone(t *testing.T) {
 			"Execution", "Completion", "Review", "Audit", "Approval", "Overlays"},
 		"Intent":    {"Outcome", "Problem"},
 		"Scope":     {"InScope", "OutOfScope"},
-		"Criterion": {"ID", "Description", "Verification", "Proofs", "Deferral"},
+		"Criterion": {"ID", "Description", "Verification", "Evidence", "Deferral"},
 		"Step": {"ID", "WorkPackage", "Order", "Action", "Files", "DependsOn", "Covers",
 			"DoneWhen", "Status", "Deviation"},
 		"WorkPackage": {"ID", "Name", "Goal", "Rollback"},
@@ -41,7 +41,7 @@ func TestEveryFieldHasAWriterOrIsGone(t *testing.T) {
 		"Approval":  {"By", "At", "Fingerprint"},
 		"Overlays":  {"Blocked", "Deferred", "Cancelled"},
 		"Overlay":   {"Reason", "By", "At"},
-		"Proof": {"Command", "ExitCode", "TimedOut", "OutputDigest", "Matched",
+		"Evidence": {"Command", "ExitCode", "TimedOut", "OutputDigest", "Matched",
 			"MatchUnit", "Match", "SignedOff", "At", "By"},
 		"Deferral": {"Reason", "FollowUp"},
 	}

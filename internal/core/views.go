@@ -258,7 +258,7 @@ var DerivedViews = []DerivedView{
 	{Name: "lane", Function: LaneOf, Values: laneValues()},
 	{Name: "readiness", Function: ReadinessOf},
 	{Name: "coverage", Planned: true},
-	{Name: "proof_summary", Function: ProofSummaryOf},
+	{Name: "evidence_summary", Function: EvidenceSummaryOf},
 	{Name: "staleness", Planned: true},
 	{Name: "chef_move", Function: ChefMoveOf, Values: chefMoveValues()},
 	{Name: "self_reviewed", Function: SelfReviewed},
@@ -520,11 +520,12 @@ func ReadinessOf(r Recipe) Readiness {
 	}
 }
 
-// ProofSummary counts the evidence attached to a recipe.
+// EvidenceSummary counts the evidence attached to a recipe.
 //
-// Rejected and unproven are separate: a rejected proof matched nothing (a spec defect),
-// an unproven one could not be attributed (not a machine proof). Different remedies.
-type ProofSummary struct {
+// Rejected and unproven are separate: a rejected evidence matched nothing (a spec
+// defect), an unproven one could not be attributed (not a machine evidence).
+// Different remedies.
+type EvidenceSummary struct {
 	Criteria int
 	Proven   int
 	Failed   int
@@ -533,10 +534,10 @@ type ProofSummary struct {
 	Pending  int
 }
 
-// ProofSummaryOf summarises the proofs on a recipe's criteria.
+// EvidenceSummaryOf summarises the evidence on a recipe's criteria.
 // view
-func ProofSummaryOf(r Recipe) ProofSummary {
-	s := ProofSummary{Criteria: len(r.Acceptance)}
+func EvidenceSummaryOf(r Recipe) EvidenceSummary {
+	s := EvidenceSummary{Criteria: len(r.Acceptance)}
 	for _, c := range r.Acceptance {
 		switch c.Status() {
 		case CriterionPassed:
@@ -606,7 +607,7 @@ type Summary struct {
 	Lane         Lane
 	Review       ReviewState
 	Readiness    Readiness
-	Proofs       ProofSummary
+	Evidence     EvidenceSummary
 	OpenFindings int
 	Updated      string
 }
@@ -620,7 +621,7 @@ func SummaryOf(r Recipe) Summary {
 		Lane:         LaneOf(r),
 		Review:       ReviewStateOf(r),
 		Readiness:    ReadinessOf(r),
-		Proofs:       ProofSummaryOf(r),
+		Evidence:     EvidenceSummaryOf(r),
 		OpenFindings: OpenFindings(&r),
 		Updated:      r.Updated,
 	}

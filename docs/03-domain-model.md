@@ -98,7 +98,7 @@ The rule behind the split: the kitchen names the **artifact** and the **place**;
 
 | Themed | Kept plain |
 |---|---|
-| recipe · backlog item · course · menu | `acceptance_criteria` · `scope` · `proofs` · `findings` · `work_packages` |
+| recipe · backlog item · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
 | | `chef` · `sous-chef` · runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
 | `maitre-cli` · `maitre` · the skills | |
 
@@ -162,7 +162,7 @@ Recipe
 |---|---|---|
 | `intent`, `problem`, `scope` | **Frozen at approval.** Change ⇒ abort to draft, or a follow-up recipe | sous-chef, pre-approval |
 | `acceptance` | **Frozen at approval.** A new AC ⇒ follow-up recipe | sous-chef, pre-approval |
-| `acceptance[].proofs` | Append-only | runner / verifier |
+| `acceptance[].evidence` | Append-only | runner / verifier |
 | `guidance` | Mutable, always. A deviation is recorded, not hidden | runner |
 | `completion` | Written once, on `finish` | the domain layer |
 | `review` | Append-only (findings, comments) + mutable status | runner (self) / reviewer (external) / human (triage) |
@@ -192,7 +192,7 @@ reading it as tampering.
 | `description` | What must be true |
 | `verification` | A command, or `manual:` + a reproducible procedure. **Not prose.** |
 | `status` | `pending` · `passed` · `failed` · `deferred` — **derived** from the proofs (C1) |
-| `proofs[]` | Append-only: `{command, exit_code, output_digest, matched, at, by}` |
+| `evidence[]` | Append-only: `{command, exit_code, output_digest, matched, at, by}` |
 | `deferral` | Required when `status = deferred`: reason + follow-up reference |
 
 `status` is **derived** — never assigned. That removes a whole class of drift.
@@ -569,17 +569,19 @@ A version-4 tool would write a special into `kitchen/specials/`, and the version
 reader does not look there.
 
 **Version 6 renamed the records.** The recipe's completion stamp was `evidence`; it
-is `completion` now — the stamp says when the recipe was done, and the per-criterion
-records say what was verified. No gate was weakened: the **record** changed, so the
-writer changed, and the version moved with it. A version-5 tool would write
-`evidence` where the version-6 reader looks for `completion`, and the stamp it wrote
-would be a stamp the reader does not see.
+is `completion` now. A criterion's record was `proofs`; it is `evidence` now — the
+name the journal's event kind already carried, so the code ends up agreeing with its
+own journal. The stamp says when the recipe was done; the records say what was
+verified, and they live on the criterion. No gate was weakened: the **record**
+changed, so the writer changed, and the version moved with it. A version-5 tool
+would write `proofs` where the version-6 reader looks for `evidence`, and the records
+it wrote would be records the reader does not see.
 
 The reader is tolerant on purpose: `RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
 same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog item
 — so a plan written before the change is still readable. The same is true of the
-renamed field: a plan written before the rename keeps `evidence` for the stamp, and
-the reader reads it. See [07-vocabulary.md](07-vocabulary.md).
+renamed fields: a plan written before the rename keeps `proofs` and `evidence`, and
+the reader reads them. See [07-vocabulary.md](07-vocabulary.md).
 
 ---
 
@@ -609,7 +611,7 @@ the reader reads it. See [07-vocabulary.md](07-vocabulary.md).
 | `CreateRecipe(spec)` | |
 | `UpdateRecipe(id, fragment)` | **Fragment-first**: one section at a time. Never a whole-document replace |
 | `TransitionRecipe(id, event)` | **The only** state mutator. Runs the gates internally (C4) |
-| `RecordProof(id, acID, proof)` | Append-only |
+| `RecordEvidence(id, acID, evidence)` | Append-only |
 | `RecordFinding(id, finding)` / `ResolveFinding(id, findingID, resolution)` | |
 | `RecordDeviation(id, stepID, note)` | Guidance changed — say so |
 | `SetStepStatus(id, stepID, status)` | |
@@ -630,7 +632,7 @@ the reader reads it. See [07-vocabulary.md](07-vocabulary.md).
 |---|---|
 | `RecordMigration(from, to)` | The id form the plan was migrated to |
 | `SetExecutionStrategy` / `SetFocus` | |
-| `GetProofSummary(id)` | Proofs attached, zero-match proofs, forced bypasses |
+| `GetEvidenceSummary(id)` | Evidence attached, zero-match evidence, forced bypasses |
 
 **Bloat guard (P11).** Every operation must be justified by a real workflow — human or
 agent — and be reachable from the domain. v1's 47 commands were mostly *syntax*
@@ -647,7 +649,7 @@ variations of a handful of these. **One operation, one name.**
 | `lane` | `LaneOf` | `grooming` · `approval` · `execution` · `review` · `blocked` · `done` — the UI's primary axis |
 | `readiness` | `ReadinessOf` | Can it be claimed? Why not, if not |
 | `coverage` | planned | **Planned.** The AC ↔ step matrix |
-| `proof_summary` | `ProofSummaryOf` | Proofs attached, zero-match proofs, forced bypasses |
+| `evidence_summary` | `EvidenceSummaryOf` | Evidence attached, zero-match evidence, forced bypasses |
 | `staleness` | planned | **Planned.** Age since last activity; age since last human decision |
 | `chef_move` | `ChefMoveOf` | The move the chef can make now: `sign off` · `review` · `serve` · `triage` · `none` |
 | `self_reviewed` | `SelfReviewed` | The latest review round cannot count as an independent tasting: the agent that did the work signed it, or nobody signed for the work at all |

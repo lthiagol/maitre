@@ -84,13 +84,13 @@ func TestVerifierRunsTheCommand(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Proof.ExitCode != 0 {
-		t.Fatalf("exit code = %d, want 0", res.Proof.ExitCode)
+	if res.Evidence.ExitCode != 0 {
+		t.Fatalf("exit code = %d, want 0", res.Evidence.ExitCode)
 	}
-	if res.Proof.Match != MatchUnknown {
-		t.Fatalf("match = %q, want unknown — a plain command tells us nothing", res.Proof.Match)
+	if res.Evidence.Match != MatchUnknown {
+		t.Fatalf("match = %q, want unknown — a plain command tells us nothing", res.Evidence.Match)
 	}
-	if res.Proof.OutputDigest == "" {
+	if res.Evidence.OutputDigest == "" {
 		t.Fatal("no output digest recorded")
 	}
 	if !strings.Contains(res.Output, "hello") {
@@ -105,11 +105,11 @@ func TestVerifierRecordsAFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Proof.ExitCode == 0 {
+	if res.Evidence.ExitCode == 0 {
 		t.Fatal("exit code should be non-zero")
 	}
-	if res.Proof.Match != MatchUnknown {
-		t.Fatalf("match = %q, want unknown", res.Proof.Match)
+	if res.Evidence.Match != MatchUnknown {
+		t.Fatalf("match = %q, want unknown", res.Evidence.Match)
 	}
 }
 
@@ -120,12 +120,12 @@ func TestVerifierTimeoutIsDistinguishable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !res.Proof.TimedOut {
-		t.Fatal("the proof should record that it timed out")
+	if !res.Evidence.TimedOut {
+		t.Fatal("the evidence should record that it timed out")
 	}
 	// A timeout must not look like an ordinary failure.
-	if res.Proof.Match != MatchUnknown {
-		t.Fatalf("match = %q, want unknown", res.Proof.Match)
+	if res.Evidence.Match != MatchUnknown {
+		t.Fatalf("match = %q, want unknown", res.Evidence.Match)
 	}
 }
 
@@ -153,8 +153,8 @@ func TestATimedOutVerificationLeavesNoChild(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !res.Proof.TimedOut {
-		t.Fatalf("the proof should record that it timed out: %+v", res.Proof)
+	if !res.Evidence.TimedOut {
+		t.Fatalf("the evidence should record that it timed out: %+v", res.Evidence)
 	}
 	// The run must end when the timeout fires. If it waited for the child, the
 	// child would be gone by accident — the shell's children would outlive it.
