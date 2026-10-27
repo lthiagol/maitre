@@ -1,4 +1,16 @@
-You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `GLOSSARY.md` before you touch anything.
+You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `w1Z:p1` — it is already substituted in this file; wherever this brief says `$ORCH_PANE`, it means `w1Z:p1`. Use it verbatim in the notify command below. The repository is `/Users/thiago/Code/Pessoal/maitre`. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `GLOSSARY.md` before you touch anything.
+
+## What slices A–D already did — the names you must not undo
+
+The project is `maitre`, the binaries are `maitre` and `maitre-cli`, the ids are `RCP01`
+and `BL01`, the roles are `runner`, `reviewer`, `orchestrator`, `sous-chef`, the tabs are
+**Board** and **Sous-Chef**, the backlog is one artifact with a `kind`, and the
+per-criterion record is **evidence** while the recipe-level stamp is **completion**.
+The plan format is version **6** after slice D.
+
+**The rule:** the kitchen names the artifact and the place; plain words name the
+machine's records and the agents' jobs. `docs/07-vocabulary.md` is the decision of
+record, and it wins over any other doc.
 
 ## Your slice — E of 5, the last — the mascot, the glossary, the ADR and the sweep
 
@@ -69,7 +81,7 @@ cat > work/inbox/runner-slice-e.md <<EOF
 Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox && git commit -q -m "inbox: runner reports slice-e"
-herdr agent prompt "$ORCH_PANE" "Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>."
+herdr agent prompt "w1Z:p1" "Runner: slice E done. Commits: <n>. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. Mascot: <paste the shipped drawing>. Notes: <anything the reviewer should know>."
 ```
 
 ### Two LOW notes from slice A's review — fix them here

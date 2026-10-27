@@ -1,10 +1,29 @@
-You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `docs/03-domain-model.md` (the spec) before you touch anything.
+You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `w1Z:p1` — it is already substituted in this file; wherever this brief says `$ORCH_PANE`, it means `w1Z:p1`. Use it verbatim in the notify command below. The repository is `/Users/thiago/Code/Pessoal/maitre`. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `docs/03-domain-model.md` (the spec) before you touch anything.
+
+## What slices A and B already did — the names you must not undo
+
+| | |
+|---|---|
+| **A** | the project is `maitre`, the binaries are `maitre` and `maitre-cli`, the ids are `RCP01` and `BL01`, the plan format is version **4**. |
+| **B** | the roles are `runner`, `reviewer`, `orchestrator`, `sous-chef` (the retired names `line-cook`, `taster`, `expo`, `coordinator` still resolve, so a plan written before the rename keeps working). The tabs are **Board** and **Sous-Chef**. |
+| **The rule** | the kitchen names the artifact and the place; plain words name the machine's records and the agents' jobs. `docs/07-vocabulary.md` is the decision of record, and it wins over any other doc. |
+
+**The binary is `maitre-cli`, not `scale`** — `scale` is the retired name, and this
+brief still uses it where it quotes the old command surface. Read every `scale` in
+this brief as `maitre-cli`.
 
 ## Your slice — C of 5 — the backlog becomes one artifact
 
 Today the backlog has **two file types**: a *special* (a hunch) in `kitchen/specials/`, and a *prep note* (intent and scope, before criteria) in `kitchen/prep-notes/`. Two CLI verb groups. They become **one artifact with a kind**.
 
-**Scope discipline — do only this.** Do NOT touch the roles, the tabs, the ids, the module path, the binaries, or Proof→Evidence. Slice A and B are already done; leave their files alone unless the backlog's shape forces a change (say so in your report if it does).
+**Scope discipline — do only this.** Do NOT touch the roles, the tabs, the ids, the module path, the binaries, or Proof→Evidence. Slices A and B are already done; leave their files alone unless the backlog's shape forces a change (say so in your report if it does).
+
+**One thing belongs to this slice: the repo's own plan.** The plan in `kitchen/` is
+migrated by AC-05, and the reviewer's finding **F-73** lands with it —
+`kitchen/project.json` still carries `"name": "new-project"`, and the console renders
+the plan's name in its header, so the repo's own console reads `maitre · new-project`.
+The decision of record names the project **maitre**. Correct it as part of the plan
+migration, and say in your report what you changed.
 
 ### The artifact
 
@@ -37,7 +56,7 @@ The kind must be **kind-neutral in the id**: `BL01` stays `BL01` when an idea is
 `scale special list · create · update · dismiss · promote` and `scale prepnote list · create · update · promote` become:
 
 ```
-scale backlog list · create · update · dismiss · promote
+maitre-cli backlog list · create · update · dismiss · promote
 ```
 
 - `create` takes `--kind idea|feature|bug` (default: `idea`).
@@ -68,7 +87,7 @@ small task ──promoted──▶ a recipe
 
 ### AC-05 — the seed, the demo and the docs
 
-- `core.Seed` and the chaos seed create backlog items, not specials and prep notes. `scale demo` still produces a plan the console can render.
+- `core.Seed` and the chaos seed create backlog items, not specials and prep notes. `maitre-cli demo` still produces a plan the console can render.
 - `docs/03-domain-model.md` § 6 (the plan format) shows `kitchen/backlog/` and the item's shape, and drops the two old directories.
 - `GLOSSARY.md`: replace the **Special** and **Prep note** entries with one **Backlog item** entry (and the CPD mapping row). This is the *minimum* glossary work for this slice; slice E rewrites the rest of the file.
 - The repo's own `kitchen/` plan: migrate it. It has a promoted item and a served recipe — the item's file moves to `kitchen/backlog/` with the new id and kind. **The journal `kitchen/activity.json` is append-only history: do not rewrite it.** A test proves the journal's old ids still resolve.
@@ -99,7 +118,7 @@ cat > work/inbox/runner-slice-c.md <<EOF
 Runner: slice C done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox && git commit -q -m "inbox: runner reports slice-c"
-herdr agent prompt "$ORCH_PANE" "Runner: slice C done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+herdr agent prompt "w1Z:p1" "Runner: slice C done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```
 
 ### The version moves with the format

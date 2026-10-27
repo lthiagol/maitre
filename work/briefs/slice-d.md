@@ -1,4 +1,15 @@
-You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `$ORCH_PANE` — the orchestrator sets it before dispatching. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `docs/03-domain-model.md` (the spec) before you touch anything.
+You are the **runner** for the vocabulary rename of this project. The orchestrator's pane id is `w1Z:p1` — it is already substituted in this file; wherever this brief says `$ORCH_PANE`, it means `w1Z:p1`. Use it verbatim in the notify command below. The repository is `/Users/thiago/Code/Pessoal/maitre`. Read `docs/07-vocabulary.md` (the decision of record), `AGENTS.md` (house style) and `docs/03-domain-model.md` (the spec) before you touch anything.
+
+## What slices A–C already did — the names you must not undo
+
+The project is `maitre`, the binaries are `maitre` and `maitre-cli`, the ids are `RCP01`
+and `BL01`, the roles are `runner`, `reviewer`, `orchestrator`, `sous-chef`, the tabs are
+**Board** and **Sous-Chef**, and the backlog is one artifact with a `kind`. The plan
+format is version **5** after slice C.
+
+**The rule:** the kitchen names the artifact and the place; plain words name the
+machine's records and the agents' jobs. `docs/07-vocabulary.md` is the decision of
+record, and it wins over any other doc.
 
 ## Your slice — D of 5 — evidence and completion
 
@@ -49,7 +60,7 @@ cat > work/inbox/runner-slice-d.md <<EOF
 Runner: slice D done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox && git commit -q -m "inbox: runner reports slice-d"
-herdr agent prompt "$ORCH_PANE" "Runner: slice D done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+herdr agent prompt "w1Z:p1" "Runner: slice D done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```
 
 ### The version moves with the format
