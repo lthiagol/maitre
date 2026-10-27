@@ -96,7 +96,7 @@ func TestTheAgentLoop(t *testing.T) {
 		{"groom", []string{"recipe", "advance", "RCP01", "groom"}},
 		{"specify", []string{"recipe", "advance", "RCP01", "specify"}},
 		{"approve", []string{"--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef"}},
-		{"claim", []string{"recipe", "claim", "RCP01", "--agent", "line-cook"}},
+		{"claim", []string{"recipe", "claim", "RCP01", "--agent", "runner"}},
 		{"step done", []string{"step", "done", "RCP01", "G1"}},
 		{"document", []string{"recipe", "document", "RCP01", "--text", "One board, five tabs."}},
 	}
@@ -118,7 +118,7 @@ func TestTheAgentLoop(t *testing.T) {
 		args []string
 	}{
 		{"finish", []string{"recipe", "advance", "RCP01", "finish"}},
-		{"review", []string{"recipe", "review", "RCP01", "--reviewer", "taster", "--verdict", "ok"}},
+		{"review", []string{"recipe", "review", "RCP01", "--reviewer", "reviewer", "--verdict", "ok"}},
 		{"pass review", []string{"recipe", "advance", "RCP01", "pass_review"}},
 		{"close", []string{"recipe", "advance", "RCP01", "close"}},
 	} {
@@ -181,7 +181,7 @@ func TestAnUnknownVerbIsAClearError(t *testing.T) {
 // TestTheJournalIsStampedWithTheSession checks the identity reaches every write.
 func TestTheJournalIsStampedWithTheSession(t *testing.T) {
 	dir := newPlan(t)
-	t.Setenv(envActor, "line-cook")
+	t.Setenv(envActor, "runner")
 	t.Setenv(envSession, "s-42")
 	t.Setenv(envRole, "runner")
 
@@ -197,8 +197,8 @@ func TestTheJournalIsStampedWithTheSession(t *testing.T) {
 	}
 	for _, e := range events {
 		ev := e.(map[string]any)
-		if ev["actor"] != "line-cook" {
-			t.Fatalf("actor = %v, want line-cook", ev["actor"])
+		if ev["actor"] != "runner" {
+			t.Fatalf("actor = %v, want runner", ev["actor"])
 		}
 		if ev["session"] != "s-42" {
 			t.Fatalf("session = %v, want s-42", ev["session"])
@@ -303,7 +303,7 @@ func TestTheReviewLoopGoesBackwards(t *testing.T) {
 	cli(t, dir, "recipe", "advance", "RCP01", "groom")
 	cli(t, dir, "recipe", "advance", "RCP01", "specify")
 	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
-	cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
+	cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
 	cli(t, dir, "step", "done", "RCP01", "G1")
 	cli(t, dir, "--actor", "chef", "ac", "signoff", "RCP01", "AC-01", "--by", "chef", "--note", "checked")
 	cli(t, dir, "recipe", "advance", "RCP01", "finish")
@@ -314,7 +314,7 @@ func TestTheReviewLoopGoesBackwards(t *testing.T) {
 	if !res.ok(t) {
 		t.Fatalf("finding add failed:\n%s", res.Stderr)
 	}
-	res = cli(t, dir, "recipe", "review", "RCP01", "--reviewer", "taster", "--verdict", "changes-needed")
+	res = cli(t, dir, "recipe", "review", "RCP01", "--reviewer", "reviewer", "--verdict", "changes-needed")
 	if !res.ok(t) {
 		t.Fatalf("review failed:\n%s", res.Stderr)
 	}

@@ -181,7 +181,7 @@ func NewScripted(store *core.Store) *Model {
 func newConsole(store *core.Store, session string) *Model {
 	return &Model{
 		store:      store,
-		ops:        core.NewOperations(store, core.AuditContext{Actor: "chef", Session: session, Role: "coordinator"}),
+		ops:        core.NewOperations(store, core.AuditContext{Actor: "chef", Session: session, Role: "chef"}),
 		showServed: true,
 		// Kitchen is the default: a console nobody told otherwise looks exactly
 		// as it did before the theme was the chef's to choose.

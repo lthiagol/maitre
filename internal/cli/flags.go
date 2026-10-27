@@ -24,7 +24,7 @@ type flagSet struct {
 //
 // Every verb carries the three identity flags — who is acting, in which session, in
 // which role — so a command can be stamped without an environment variable. They may
-// also be given before the command: `maitre-cli --actor line-cook recipe claim RCP01`.
+// also be given before the command: `maitre-cli --actor runner recipe claim RCP01`.
 func newFlagSet(name string) *flagSet {
 	fs := &flagSet{
 		name:  name,

@@ -24,10 +24,10 @@ func liveModel(t *testing.T) (*Model, *core.Store) {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
-	taster := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-3", Role: "reviewer"})
-	addExecutedRecipe(t, ops, chef, taster, "The chef watches the plan", 2)
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
+	reviewer := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-3", Role: "reviewer"})
+	addExecutedRecipe(t, ops, chef, reviewer, "The chef watches the plan", 2)
 
 	m := NewLive(store)
 	m.pollInterval = time.Millisecond
@@ -66,7 +66,7 @@ func TestAChangeOnDiskAppears(t *testing.T) {
 	m, store := liveModel(t)
 
 	// An agent renames the recipe on disk.
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
 	title := "Renamed by an agent"
 	if _, err := ops.UpdateRecipe("RCP01", core.Fragment{Title: &title}); err != nil {
 		t.Fatal(err)
@@ -117,7 +117,7 @@ func TestTheChefsPlaceSurvivesAReload(t *testing.T) {
 	m.theme = newTheme(catppuccinMocha())
 
 	// Something changes on disk.
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
 	if _, err := ops.DocumentRecipe("RCP01", "the plan moved on"); err != nil {
 		t.Fatal(err)
 	}

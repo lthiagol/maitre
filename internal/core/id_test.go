@@ -15,7 +15,7 @@ func TestTheWriterEmitsRCPIds(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	got, err := ops.CreateRecipe(RecipeSpec{
 		Title:      "A recipe",
@@ -59,7 +59,7 @@ func TestEveryFormOfTheIdNamesTheSameRecipe(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	got, err := ops.CreateRecipe(RecipeSpec{
 		Title:      "A recipe",
@@ -119,7 +119,7 @@ func TestAFileNamedWithTheOldIdIsStillRead(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	got, err := ops.CreateRecipe(RecipeSpec{
 		Title:      "A recipe",
@@ -165,7 +165,7 @@ func TestTheJournalsOldIdStillResolves(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	got, err := ops.CreateRecipe(RecipeSpec{
 		Title:      "A recipe",
@@ -229,7 +229,7 @@ func TestTheNextIdIsNotAReusedNumber(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	for i := 0; i < 3; i++ {
 		if _, err := ops.CreateRecipe(RecipeSpec{
@@ -264,7 +264,7 @@ func TestTheReposOwnJournalStillResolves(t *testing.T) {
 		t.Skipf("the repo has no plan at %s", root)
 	}
 	s := Open(root)
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-test", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-test", Role: "runner"})
 
 	j, err := s.LoadJournal()
 	if err != nil {

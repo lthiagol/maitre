@@ -29,7 +29,7 @@ func approvedRecipe(t *testing.T, ops *Operations, title string) *Recipe {
 // closeRecipe walks a recipe all the way to closed.
 func closeRecipe(t *testing.T, ops *Operations, id string) {
 	t.Helper()
-	if _, err := ops.ClaimRecipe(id, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(id, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(id, "G1", "done"); err != nil {
@@ -41,7 +41,7 @@ func closeRecipe(t *testing.T, ops *Operations, id string) {
 	if _, err := ops.Advance(id, EventFinish); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.RecordReviewRound(id, "taster", "ok", "clean"); err != nil {
+	if _, err := ops.RecordReviewRound(id, "reviewer", "ok", "clean"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.Advance(id, EventPassReview); err != nil {
@@ -69,7 +69,7 @@ func TestClaimRefusesAnOpenDependency(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := ops.ClaimRecipe(r.ID, "line-cook")
+	_, err := ops.ClaimRecipe(r.ID, "runner")
 	if err == nil {
 		t.Fatal("a recipe whose dependency is open must not be claimed")
 	}
@@ -105,15 +105,15 @@ func TestClaimRunsWhenTheDependencyIsClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	claimed, err := ops.ClaimRecipe(r.ID, "line-cook")
+	claimed, err := ops.ClaimRecipe(r.ID, "runner")
 	if err != nil {
 		t.Fatalf("claim: %v", err)
 	}
 	if claimed.Lifecycle != LifecycleExecuting {
 		t.Fatalf("lifecycle = %q, want executing", claimed.Lifecycle)
 	}
-	if claimed.Execution.ClaimedBy != "line-cook" {
-		t.Fatalf("claimant = %q, want line-cook", claimed.Execution.ClaimedBy)
+	if claimed.Execution.ClaimedBy != "runner" {
+		t.Fatalf("claimant = %q, want runner", claimed.Execution.ClaimedBy)
 	}
 	if claimed.Execution.ClaimedAt == "" {
 		t.Fatal("the claim must record when it happened")
@@ -138,7 +138,7 @@ func TestClaimRunsWhenTheDependencyIsClosed(t *testing.T) {
 func TestClaimIsJournalledAsALifecycleEvent(t *testing.T) {
 	ops, store := newOps(t)
 	r := approvedRecipe(t, ops, "A recipe")
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 

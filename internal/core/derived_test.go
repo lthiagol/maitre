@@ -115,7 +115,7 @@ func TestTheTriageComesBeforeTheReview(t *testing.T) {
 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
@@ -128,10 +128,10 @@ func TestTheTriageComesBeforeTheReview(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The executor tastes its own dish.
-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
 		t.Fatal(err)
 	}
-	// And the taster files a note on top.
+	// And the reviewer files a note on top.
 	if _, err := ops.AddFinding(r.ID, Finding{
 		Phase:       FindingPhaseExternal,
 		Severity:    SeverityHigh,
@@ -164,7 +164,7 @@ func reviewedRecipe(t *testing.T, ops *Operations, id string) {
 	if _, err := ops.ApproveRecipe(id, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(id, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(id, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(id, "G1", "done"); err != nil {
@@ -176,7 +176,7 @@ func reviewedRecipe(t *testing.T, ops *Operations, id string) {
 	if _, err := ops.Advance(id, EventFinish); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.RecordReviewRound(id, "taster", "ok", "clean"); err != nil {
+	if _, err := ops.RecordReviewRound(id, "reviewer", "ok", "clean"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.Advance(id, EventPassReview); err != nil {

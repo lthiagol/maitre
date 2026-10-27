@@ -12,7 +12,7 @@ import (
 func TestTheCurrentEnvNamesCarryTheIdentity(t *testing.T) {
 	dir := newPlan(t)
 	clearIdentityEnv(t)
-	t.Setenv(envActor, "line-cook")
+	t.Setenv(envActor, "runner")
 	t.Setenv(envSession, "s-42")
 	t.Setenv(envRole, "runner")
 
@@ -23,8 +23,8 @@ func TestTheCurrentEnvNamesCarryTheIdentity(t *testing.T) {
 		t.Fatalf("log failed:\n%s", res.Stderr)
 	}
 	e := res.doc(t)["events"].([]any)[0].(map[string]any)
-	if e["actor"] != "line-cook" {
-		t.Fatalf("actor = %v, want line-cook", e["actor"])
+	if e["actor"] != "runner" {
+		t.Fatalf("actor = %v, want runner", e["actor"])
 	}
 	if e["session"] != "s-42" {
 		t.Fatalf("session = %v, want s-42", e["session"])
@@ -42,7 +42,7 @@ func TestTheCurrentEnvNamesCarryTheIdentity(t *testing.T) {
 func TestTheDeprecatedEnvNamesStillWork(t *testing.T) {
 	dir := newPlan(t)
 	clearIdentityEnv(t)
-	t.Setenv(deprecatedEnvActor, "line-cook")
+	t.Setenv(deprecatedEnvActor, "runner")
 	t.Setenv(deprecatedEnvSession, "s-42")
 	t.Setenv(deprecatedEnvRole, "runner")
 
@@ -53,8 +53,8 @@ func TestTheDeprecatedEnvNamesStillWork(t *testing.T) {
 		t.Fatalf("log failed:\n%s", res.Stderr)
 	}
 	e := res.doc(t)["events"].([]any)[0].(map[string]any)
-	if e["actor"] != "line-cook" {
-		t.Fatalf("actor = %v, want line-cook", e["actor"])
+	if e["actor"] != "runner" {
+		t.Fatalf("actor = %v, want runner", e["actor"])
 	}
 	if e["session"] != "s-42" {
 		t.Fatalf("session = %v, want s-42", e["session"])
@@ -71,7 +71,7 @@ func TestTheDeprecatedEnvNamesStillWork(t *testing.T) {
 func TestTheDeprecatedEnvNamesWarn(t *testing.T) {
 	dir := newPlan(t)
 	clearIdentityEnv(t)
-	t.Setenv(deprecatedEnvActor, "line-cook")
+	t.Setenv(deprecatedEnvActor, "runner")
 
 	res := cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
 	if !res.ok(t) {
@@ -92,7 +92,7 @@ func TestTheDeprecatedEnvNamesWarn(t *testing.T) {
 func TestTheCurrentEnvNamesWinOverTheDeprecatedOnes(t *testing.T) {
 	dir := newPlan(t)
 	clearIdentityEnv(t)
-	t.Setenv(envActor, "line-cook")
+	t.Setenv(envActor, "runner")
 	t.Setenv(deprecatedEnvActor, "chef")
 
 	res := cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
@@ -108,8 +108,8 @@ func TestTheCurrentEnvNamesWinOverTheDeprecatedOnes(t *testing.T) {
 		t.Fatalf("log failed:\n%s", log.Stderr)
 	}
 	e := log.doc(t)["events"].([]any)[0].(map[string]any)
-	if e["actor"] != "line-cook" {
-		t.Fatalf("actor = %v, want line-cook — the current name wins", e["actor"])
+	if e["actor"] != "runner" {
+		t.Fatalf("actor = %v, want runner — the current name wins", e["actor"])
 	}
 }
 

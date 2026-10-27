@@ -20,7 +20,7 @@ func TestTheConsoleShowsADeviation(t *testing.T) {
 	if err := core.Seed(store); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 	if _, err := ops.RecordDeviation("RCP01", "G1", "read the queue twice"); err != nil {
 		t.Fatal(err)
 	}

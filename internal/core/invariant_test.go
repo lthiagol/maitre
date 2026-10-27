@@ -40,7 +40,7 @@ func TestARecipeWithAnOpenNoteHasAMove(t *testing.T) {
 		t.Fatal(err)
 	}
 	reviewedRecipe(t, ops, r.ID)
-	// The taster files a note after the review.
+	// The reviewer files a note after the review.
 	if _, err := ops.AddFinding(r.ID, Finding{
 		Phase:       FindingPhaseExternal,
 		Severity:    SeverityHigh,
@@ -83,25 +83,25 @@ func everyShape() []shape {
 
 		// Claimed by an agent, with that agent's own review round.
 		self := r
-		self.Execution = Execution{ClaimedBy: "line-cook"}
-		self.Review.Rounds = []Round{{N: 1, Reviewer: "line-cook", Verdict: "ok"}}
+		self.Execution = Execution{ClaimedBy: "runner"}
+		self.Review.Rounds = []Round{{N: 1, Reviewer: "runner", Verdict: "ok"}}
 		out = append(out, shape{recipe: self})
 
 		// Reviewed by somebody else.
 		other := r
-		other.Execution = Execution{ClaimedBy: "line-cook"}
-		other.Review.Rounds = []Round{{N: 1, Reviewer: "taster", Verdict: "ok"}}
+		other.Execution = Execution{ClaimedBy: "runner"}
+		other.Review.Rounds = []Round{{N: 1, Reviewer: "reviewer", Verdict: "ok"}}
 		out = append(out, shape{recipe: other})
 
 		// Changes asked for.
 		changes := r
-		changes.Execution = Execution{ClaimedBy: "line-cook"}
+		changes.Execution = Execution{ClaimedBy: "runner"}
 		changes.Review.Rounds = []Round{{N: 1, Reviewer: "chef", Verdict: "changes-needed"}}
 		out = append(out, shape{recipe: changes})
 
 		// An open finding. The console can triage it, so it has a move of its own.
 		open := r
-		open.Execution = Execution{ClaimedBy: "line-cook"}
+		open.Execution = Execution{ClaimedBy: "runner"}
 		open.Review.Findings = []Finding{{ID: "F-01", Status: "open", Phase: "external"}}
 		out = append(out, shape{recipe: open})
 

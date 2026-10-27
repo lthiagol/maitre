@@ -34,7 +34,7 @@ type Runner struct {
 	Stderr io.Writer
 
 	// The identity given before the command, in the documented global form:
-	// `maitre-cli --actor line-cook recipe claim RCP01`.
+	// `maitre-cli --actor runner recipe claim RCP01`.
 	actor   string
 	session string
 	role    string
@@ -235,7 +235,7 @@ type identity struct {
 
 // splitIdentity pulls the identity flags out of the front of the argument list.
 //
-// The documented form puts them before the command — `maitre-cli --actor line-cook recipe
+// The documented form puts them before the command — `maitre-cli --actor runner recipe
 // claim RCP01` — and they may also come after the verb, where the verb's own flag set
 // reads them. The first argument that is not an identity flag ends the scan.
 func splitIdentity(args []string) ([]string, identity, error) {

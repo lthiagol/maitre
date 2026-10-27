@@ -22,7 +22,7 @@ func TestPassReviewNeedsAnOKVerdict(t *testing.T) {
 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
@@ -36,7 +36,7 @@ func TestPassReviewNeedsAnOKVerdict(t *testing.T) {
 	}
 
 	// The reviewer says no — and records no finding.
-	if _, err := ops.RecordReviewRound(r.ID, "taster", "changes-needed", "not yet"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "changes-needed", "not yet"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.Advance(r.ID, EventPassReview); err == nil {
@@ -46,7 +46,7 @@ func TestPassReviewNeedsAnOKVerdict(t *testing.T) {
 	}
 
 	// The reviewer says yes.
-	if _, err := ops.RecordReviewRound(r.ID, "taster", "ok", "clean now"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "ok", "clean now"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.Advance(r.ID, EventPassReview); err != nil {

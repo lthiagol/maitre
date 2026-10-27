@@ -19,7 +19,7 @@ func TestTheBoardDrawsARenamedRecipeOnce(t *testing.T) {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	r, err := ops.CreateRecipe(core.RecipeSpec{
 		Title:      "Dep",

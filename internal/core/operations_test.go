@@ -15,7 +15,7 @@ func newOps(t *testing.T) (*Operations, *Store) {
 	if err := store.Init(); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	ops := NewOperations(store, AuditContext{Actor: "chef", Session: "s-1", Role: "coordinator"})
+	ops := NewOperations(store, AuditContext{Actor: "chef", Session: "s-1", Role: "chef"})
 	return ops, store
 }
 
@@ -59,7 +59,7 @@ func TestOperationsCreateAndJournal(t *testing.T) {
 	if e.Kind != KindCreated || e.Recipe != "RCP01" {
 		t.Fatalf("event = %+v", e)
 	}
-	if e.Actor != "chef" || e.Session != "s-1" || e.Role != "coordinator" {
+	if e.Actor != "chef" || e.Session != "s-1" || e.Role != "chef" {
 		t.Fatalf("event is not stamped with the audit context: %+v", e)
 	}
 	if e.Seq != 1 {

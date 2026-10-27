@@ -10,7 +10,7 @@ import (
 
 // noteModel builds a console over a recipe with two open tasting notes.
 //
-// The recipe is executed and the taster has filed two notes. The close gate refuses
+// The recipe is executed and the reviewer has filed two notes. The close gate refuses
 // it while a note is open, and the chef has two notes to triage.
 func noteModel(t *testing.T) *Model {
 	t.Helper()
@@ -19,11 +19,11 @@ func noteModel(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
-	taster := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-3", Role: "reviewer"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
+	reviewer := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-3", Role: "reviewer"})
 
-	addExecutedRecipe(t, ops, chef, taster, "The chef can triage a tasting note", 2)
+	addExecutedRecipe(t, ops, chef, reviewer, "The chef can triage a tasting note", 2)
 
 	m := loadModel(t, store)
 	m.height = 30
@@ -32,9 +32,9 @@ func noteModel(t *testing.T) *Model {
 
 // addExecutedRecipe files a recipe, executes it, and gives it open tasting notes.
 //
-// The taster files the notes: they are somebody else's complaint, and the chef is
+// The reviewer files the notes: they are somebody else's complaint, and the chef is
 // the one who answers them.
-func addExecutedRecipe(t *testing.T, ops, chef, taster *core.Operations, title string, notes int) string {
+func addExecutedRecipe(t *testing.T, ops, chef, reviewer *core.Operations, title string, notes int) string {
 	t.Helper()
 	r, err := ops.CreateRecipe(core.RecipeSpec{
 		Title:      title,
@@ -58,7 +58,7 @@ func addExecutedRecipe(t *testing.T, ops, chef, taster *core.Operations, title s
 	if _, err := chef.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
@@ -75,7 +75,7 @@ func addExecutedRecipe(t *testing.T, ops, chef, taster *core.Operations, title s
 		"the thread is cut off at the bottom",
 	}
 	for i := 0; i < notes; i++ {
-		if _, err := taster.AddFinding(r.ID, core.Finding{
+		if _, err := reviewer.AddFinding(r.ID, core.Finding{
 			Phase:       core.FindingPhaseExternal,
 			Severity:    core.SeverityHigh,
 			Category:    "correctness",
@@ -200,7 +200,7 @@ func TestTheChefCanDismissANote(t *testing.T) {
 // TestTheChefCanCommentOnANote covers the other chef's move.
 //
 // The comment belongs to the note, not to the recipe: the thread is the channel
-// between the taster and the fixer.
+// between the reviewer and the fixer.
 func TestTheChefCanCommentOnANote(t *testing.T) {
 	m := noteModel(t)
 	notes := m.openNotes()

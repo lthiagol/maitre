@@ -31,7 +31,7 @@ func TestIdsAreUniqueAfterARemoval(t *testing.T) {
 		}); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ops.AddComment(r.ID, "taster", "a note", ""); err != nil {
+		if _, err := ops.AddComment(r.ID, "reviewer", "a note", ""); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -65,7 +65,7 @@ func TestIdsAreUniqueAfterARemoval(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.AddComment(r.ID, "taster", "a note", ""); err != nil {
+	if _, err := ops.AddComment(r.ID, "reviewer", "a note", ""); err != nil {
 		t.Fatal(err)
 	}
 

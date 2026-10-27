@@ -967,7 +967,7 @@ func scratchPackage(t *testing.T) string {
 	return dir
 }
 
-// TestAViewNobodyRegisteredFails is the taster's demonstration.
+// TestAViewNobodyRegisteredFails is the reviewer's demonstration.
 //
 // A view added to the package and registered nowhere must fail: the hole is not that
 // the doc was edited, but that a view exists and no list knows it.

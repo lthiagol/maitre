@@ -30,7 +30,7 @@ func main() {
 
 	store := core.Open(dir)
 	ops := core.NewOperations(store, core.AuditContext{
-		Actor: "line-cook", Session: "s-migrate", Role: "runner",
+		Actor: "runner", Session: "s-migrate", Role: "runner",
 	})
 	if err := ops.RecordMigration(from, to); err != nil {
 		fmt.Fprintln(os.Stderr, err)

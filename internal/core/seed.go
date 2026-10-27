@@ -13,7 +13,7 @@ import (
 // can see the console without setting up a project.
 //
 // The actors vary by phase, so the journal reads like a real session: the sous chef
-// composes, the chef signs off, the line cook executes, the taster reviews.
+// composes, the chef signs off, the runner executes, the reviewer reviews.
 func Seed(store *Store) error {
 	return seed(store, false)
 }
@@ -34,10 +34,10 @@ func seed(store *Store, stress bool) error {
 		return err
 	}
 
-	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-chef", Role: "coordinator"})
-	sous := NewOperations(store, AuditContext{Actor: "sous-chef", Session: "s-sous", Role: "coordinator"})
-	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-line", Role: "runner"})
-	taster := NewOperations(store, AuditContext{Actor: "taster", Session: "s-taster", Role: "reviewer"})
+	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-chef", Role: "chef"})
+	sous := NewOperations(store, AuditContext{Actor: "sous-chef", Session: "s-sous", Role: "sous-chef"})
+	runner := NewOperations(store, AuditContext{Actor: "runner", Session: "s-runner", Role: "runner"})
+	reviewer := NewOperations(store, AuditContext{Actor: "reviewer", Session: "s-reviewer", Role: "reviewer"})
 
 	// RCP01 — being shaped. One criterion cannot be proven: the filter matches nothing.
 	if _, err := sous.CreateRecipe(RecipeSpec{
@@ -120,11 +120,11 @@ func seed(store *Store, stress bool) error {
 	if _, err := chef.ApproveRecipe(r03.ID, "chef"); err != nil {
 		return fmt.Errorf("seed RCP03 approve: %w", err)
 	}
-	if _, err := line.ClaimRecipe(r03.ID, "line-cook"); err != nil {
+	if _, err := runner.ClaimRecipe(r03.ID, "runner"); err != nil {
 		return fmt.Errorf("seed RCP03 claim: %w", err)
 	}
 	for _, g := range []string{"G1", "G2", "G3"} {
-		if _, err := line.SetStepStatus(r03.ID, g, "done"); err != nil {
+		if _, err := runner.SetStepStatus(r03.ID, g, "done"); err != nil {
 			return fmt.Errorf("seed RCP03 step %s: %w", g, err)
 		}
 	}
@@ -133,10 +133,10 @@ func seed(store *Store, stress bool) error {
 			return fmt.Errorf("seed RCP03 sign off %s: %w", ac, err)
 		}
 	}
-	if _, err := line.Advance(r03.ID, EventFinish); err != nil {
+	if _, err := runner.Advance(r03.ID, EventFinish); err != nil {
 		return fmt.Errorf("seed RCP03 finish: %w", err)
 	}
-	if _, err := taster.AddFinding(r03.ID, Finding{
+	if _, err := reviewer.AddFinding(r03.ID, Finding{
 		Phase:       "external",
 		Severity:    "high",
 		Category:    "correctness",
@@ -144,11 +144,11 @@ func seed(store *Store, stress bool) error {
 	}); err != nil {
 		return fmt.Errorf("seed RCP03 finding: %w", err)
 	}
-	if _, err := line.Advance(r03.ID, EventEnterRemediation); err != nil {
+	if _, err := runner.Advance(r03.ID, EventEnterRemediation); err != nil {
 		return fmt.Errorf("seed RCP03 remediation: %w", err)
 	}
 	// A criterion regressed after the finding — which is why the board shows 1 of 3.
-	if _, err := line.VerifyCriterion(r03.ID, "AC-03"); err != nil {
+	if _, err := runner.VerifyCriterion(r03.ID, "AC-03"); err != nil {
 		return fmt.Errorf("seed RCP03 verify: %w", err)
 	}
 
@@ -214,19 +214,19 @@ func seed(store *Store, stress bool) error {
 	if _, err := chef.ApproveRecipe(r05.ID, "chef"); err != nil {
 		return fmt.Errorf("seed RCP05 approve: %w", err)
 	}
-	if _, err := line.ClaimRecipe(r05.ID, "line-cook"); err != nil {
+	if _, err := runner.ClaimRecipe(r05.ID, "runner"); err != nil {
 		return fmt.Errorf("seed RCP05 claim: %w", err)
 	}
-	if _, err := line.SetStepStatus(r05.ID, "G1", "done"); err != nil {
+	if _, err := runner.SetStepStatus(r05.ID, "G1", "done"); err != nil {
 		return fmt.Errorf("seed RCP05 step: %w", err)
 	}
-	if _, err := line.SetStepStatus(r05.ID, "G2", "in-progress"); err != nil {
+	if _, err := runner.SetStepStatus(r05.ID, "G2", "in-progress"); err != nil {
 		return fmt.Errorf("seed RCP05 step: %w", err)
 	}
 	if _, err := chef.SignOffCriterion(r05.ID, "AC-01", "chef", "three states exist"); err != nil {
 		return fmt.Errorf("seed RCP05 sign off: %w", err)
 	}
-	if _, err := line.VerifyCriterion(r05.ID, "AC-02"); err != nil {
+	if _, err := runner.VerifyCriterion(r05.ID, "AC-02"); err != nil {
 		return fmt.Errorf("seed RCP05 verify: %w", err)
 	}
 
@@ -256,19 +256,19 @@ func seed(store *Store, stress bool) error {
 	if _, err := chef.ApproveRecipe(r06.ID, "chef"); err != nil {
 		return fmt.Errorf("seed RCP06 approve: %w", err)
 	}
-	if _, err := line.ClaimRecipe(r06.ID, "line-cook"); err != nil {
+	if _, err := runner.ClaimRecipe(r06.ID, "runner"); err != nil {
 		return fmt.Errorf("seed RCP06 claim: %w", err)
 	}
-	if _, err := line.SetStepStatus(r06.ID, "G1", "done"); err != nil {
+	if _, err := runner.SetStepStatus(r06.ID, "G1", "done"); err != nil {
 		return fmt.Errorf("seed RCP06 step: %w", err)
 	}
 	if _, err := chef.SignOffCriterion(r06.ID, "AC-01", "chef", "every term has an avoid list"); err != nil {
 		return fmt.Errorf("seed RCP06 sign off: %w", err)
 	}
-	if _, err := line.Advance(r06.ID, EventFinish); err != nil {
+	if _, err := runner.Advance(r06.ID, EventFinish); err != nil {
 		return fmt.Errorf("seed RCP06 finish: %w", err)
 	}
-	if _, err := taster.AddFinding(r06.ID, Finding{
+	if _, err := reviewer.AddFinding(r06.ID, Finding{
 		Phase:       "external",
 		Severity:    "low",
 		Category:    "docs",
@@ -278,7 +278,7 @@ func seed(store *Store, stress bool) error {
 	}); err != nil {
 		return fmt.Errorf("seed RCP06 finding: %w", err)
 	}
-	if _, err := taster.AddFinding(r06.ID, Finding{
+	if _, err := reviewer.AddFinding(r06.ID, Finding{
 		Phase:       "external",
 		Severity:    "low",
 		Category:    "docs",
@@ -286,13 +286,13 @@ func seed(store *Store, stress bool) error {
 	}); err != nil {
 		return fmt.Errorf("seed RCP06 finding: %w", err)
 	}
-	if _, err := line.ResolveFinding(r06.ID, "F-02", "added an example"); err != nil {
+	if _, err := runner.ResolveFinding(r06.ID, "F-02", "added an example"); err != nil {
 		return fmt.Errorf("seed RCP06 resolve: %w", err)
 	}
-	if _, err := taster.RecordReviewRound(r06.ID, "taster", "ok", "the glossary is clear"); err != nil {
+	if _, err := reviewer.RecordReviewRound(r06.ID, "reviewer", "ok", "the glossary is clear"); err != nil {
 		return fmt.Errorf("seed RCP06 round: %w", err)
 	}
-	if _, err := taster.Advance(r06.ID, EventPassReview); err != nil {
+	if _, err := reviewer.Advance(r06.ID, EventPassReview); err != nil {
 		return fmt.Errorf("seed RCP06 pass review: %w", err)
 	}
 	if _, err := chef.DocumentRecipe(r06.ID, "One vocabulary, defined once, mapped to CPD."); err != nil {

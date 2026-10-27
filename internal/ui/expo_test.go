@@ -18,7 +18,7 @@ func expoModel(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-1", Role: "coordinator"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-1", Role: "chef"})
 	if _, err := ops.CreateSpecial("A hunch", "worth noticing", nil); err != nil {
 		t.Fatal(err)
 	}

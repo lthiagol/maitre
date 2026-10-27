@@ -131,7 +131,7 @@ func cycleModel(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	mk := func(title string, deps []string) string {
 		got, err := ops.CreateRecipe(core.RecipeSpec{
@@ -178,7 +178,7 @@ func treeModel(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 
 	mk := func(title string, deps []string) string {
 		got, err := ops.CreateRecipe(core.RecipeSpec{

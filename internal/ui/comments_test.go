@@ -17,7 +17,7 @@ func recipeWithComments(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-1", Role: "reviewer"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-1", Role: "reviewer"})
 
 	r, err := ops.CreateRecipe(core.RecipeSpec{
 		Title:      "Wire the review queue",
@@ -36,10 +36,10 @@ func recipeWithComments(t *testing.T) *Model {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.AddComment(r.ID, "taster", "reproduced — refresh() re-reads the queue", "F-01"); err != nil {
+	if _, err := ops.AddComment(r.ID, "reviewer", "reproduced — refresh() re-reads the queue", "F-01"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.AddComment(r.ID, "line-cook", "read the queue once", "F-01"); err != nil {
+	if _, err := ops.AddComment(r.ID, "runner", "read the queue once", "F-01"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.AddComment(r.ID, "chef", "the review as a whole looks fine", ""); err != nil {
@@ -79,10 +79,10 @@ func TestFindingCommentShowsItsAuthor(t *testing.T) {
 	m := recipeWithComments(t)
 	out := detail(t, m)
 
-	if !strings.Contains(out, "taster:") {
+	if !strings.Contains(out, "reviewer:") {
 		t.Errorf("a comment should show its author:\n%s", out)
 	}
-	if !strings.Contains(out, "line-cook:") {
+	if !strings.Contains(out, "runner:") {
 		t.Errorf("each comment should show its own author:\n%s", out)
 	}
 }

@@ -21,12 +21,12 @@ func twoNoteModel(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
-	taster := core.NewOperations(store, core.AuditContext{Actor: "taster", Session: "s-3", Role: "reviewer"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
+	reviewer := core.NewOperations(store, core.AuditContext{Actor: "reviewer", Session: "s-3", Role: "reviewer"})
 
-	addExecutedRecipe(t, ops, chef, taster, "The first recipe", 3)
-	addExecutedRecipe(t, ops, chef, taster, "The second recipe", 1)
+	addExecutedRecipe(t, ops, chef, reviewer, "The first recipe", 3)
+	addExecutedRecipe(t, ops, chef, reviewer, "The second recipe", 1)
 
 	m := loadModel(t, store)
 	m.height = 30
@@ -122,7 +122,7 @@ func TestTheTriageCannotOverwriteANoteTheAgentClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 	// The agent resolves the note while the prompt is open.
-	agent := core.NewOperations(m.store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
+	agent := core.NewOperations(m.store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
 	if _, err := agent.ResolveFinding("RCP01", "F-01", "fixed it properly"); err != nil {
 		t.Fatal(err)
 	}

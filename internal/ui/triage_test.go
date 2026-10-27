@@ -19,9 +19,9 @@ func selfReviewedModel(t *testing.T) *Model {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 	// The chef is the human: only the chef may sign a recipe off.
-	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
+	chef := core.NewOperations(store, core.AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
 
 	r, err := ops.CreateRecipe(core.RecipeSpec{
 		Title:      "The console shows a finding's conversation",
@@ -45,7 +45,7 @@ func selfReviewedModel(t *testing.T) *Model {
 	if _, err := chef.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
@@ -57,7 +57,7 @@ func selfReviewedModel(t *testing.T) *Model {
 	if _, err := ops.Advance(r.ID, core.EventFinish); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.DocumentRecipe(r.ID, "The console groups a finding's thread under it."); err != nil {

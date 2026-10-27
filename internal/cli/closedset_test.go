@@ -51,7 +51,7 @@ func TestAdvanceRefusesTheEventsThatHaveTheirOwnVerb(t *testing.T) {
 
 	// The verb that owns the event still works — the recipe is signed off by
 	// `signedOffRecipe`, and the claim is the only road to the line.
-	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
+	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
 	if !res.ok(t) {
 		t.Fatalf("claim failed:\n%s", res.Stderr)
 	}

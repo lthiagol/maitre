@@ -21,7 +21,7 @@ func selfReviewedRecipe(t *testing.T) (*Operations, *Recipe) {
 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
@@ -33,7 +33,7 @@ func selfReviewedRecipe(t *testing.T) (*Operations, *Recipe) {
 	if _, err := ops.Advance(r.ID, EventFinish); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
 		t.Fatal(err)
 	}
 	got, err := ops.GetRecipe(r.ID)
@@ -71,7 +71,7 @@ func TestSelfReviewedIsOneAnswer(t *testing.T) {
 func TestAnIndependentReviewNeedsNobody(t *testing.T) {
 	ops, r := selfReviewedRecipe(t)
 
-	if _, err := ops.RecordReviewRound(r.ID, "taster", "ok", "clean"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "ok", "clean"); err != nil {
 		t.Fatal(err)
 	}
 	got, err := ops.GetRecipe(r.ID)

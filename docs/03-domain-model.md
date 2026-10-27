@@ -76,7 +76,7 @@ an agent reasons about mechanically stays descriptive. See
 | Themed | Kept plain |
 |---|---|
 | recipe · special · prep note · course · menu | `acceptance_criteria` · `scope` · `evidence` · `findings` · `work_packages` |
-| chef · maître d' · sous chef · line cook · taster · expo | lifecycle states · gate names · `status` · `review_state` |
+| chef · maître d' · sous chef | runner · reviewer · orchestrator · lifecycle states · gate names · `status` · `review_state` |
 | `maitre-cli` · `maitre` · the skills | |
 
 ### IDs
@@ -134,8 +134,8 @@ Recipe
 
 | Section | Mutability | Who writes it |
 |---|---|---|
-| `intent`, `problem`, `scope` | **Frozen at approval.** Change ⇒ abort to draft, or a follow-up recipe | coordinator, pre-approval |
-| `acceptance` | **Frozen at approval.** A new AC ⇒ follow-up recipe | coordinator, pre-approval |
+| `intent`, `problem`, `scope` | **Frozen at approval.** Change ⇒ abort to draft, or a follow-up recipe | sous-chef, pre-approval |
+| `acceptance` | **Frozen at approval.** A new AC ⇒ follow-up recipe | sous-chef, pre-approval |
 | `guidance` | Mutable, always. A deviation is recorded, not hidden | runner |
 | `evidence` | Append-only | runner / verifier |
 | `review` | Append-only (findings, comments) + mutable status | runner (self) / reviewer (external) / human (triage) |
@@ -308,13 +308,15 @@ written.
    went `draft → approved` in one call — while decomposition was *blocked* behind
    approval. That deadlock is gone: the gates run in the natural order.
 2. **Approval requires a human.** `approval.by_human` refuses an approval whose actor is
-   one of the agent roles. The chef is the human; the sous chef, the line cook, the
-   taster and the expo are agents, and so is the CLI's default actor `agent`. The list
-   is a **deny**-list, so a human may approve under any name they like. It matches the
-   actor's **name**, so an agent that calls itself `chef` passes it: the deny-list is a
-   speed bump against the accident, not a boundary against the lie. CPD principle 7
-   (*"Would I trust a capable agent with this prompt as it stands?"*) turned into a
-   machine check instead of a prose reminder (P2).
+   one of the agent roles. The chef is the human; the sous chef, the runner, the
+   reviewer and the orchestrator are agents, and so is the CLI's default actor `agent`.
+   The list is a **deny**-list, so a human may approve under any name they like. It
+   matches the actor's **name**, so an agent that calls itself `chef` passes it: the
+   deny-list is a speed bump against the accident, not a boundary against the lie. CPD
+   principle 7 (*"Would I trust a capable agent with this prompt as it stands?"*) turned
+   into a machine check instead of a prose reminder (P2). The names the rename retired
+   — `line-cook`, `taster`, `expo`, `coordinator` — still name the role they stood for,
+   so a plan written before the rename is refused exactly like one written after it.
 
 ### 3.3 Overlays
 
@@ -469,7 +471,7 @@ plan, not the way plans are read.
   "seq": 412,
   "events": [
     { "seq": 412, at: "2026-10-25T12:00:00Z", kind: "lifecycle",
-      recipe: "RCP07", actor: "human", session: "s-3", role: "coordinator",
+      recipe: "RCP07", actor: "human", session: "s-3", role: "sous-chef",
       data: { from: "ready", to: "approved" } }
   ]
 }

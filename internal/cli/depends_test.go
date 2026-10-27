@@ -67,7 +67,7 @@ func TestTheDependencyGateIsReachable(t *testing.T) {
 	cli(t, dir, "recipe", "advance", "RCP01", "groom")
 	cli(t, dir, "recipe", "advance", "RCP01", "specify")
 	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
-	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
+	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
 	if res.Code != ExitGate {
 		t.Fatalf("exit = %d, want %d — a recipe with an open dependency must not be claimed",
 			res.Code, ExitGate)

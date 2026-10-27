@@ -93,7 +93,7 @@ func TestANormalisedLegacyApprovalIsRestamped(t *testing.T) {
 	}
 
 	// And the gate does not fire on a recipe nobody touched.
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatalf("the claim should not be refused: %v", err)
 	}
 }
@@ -136,7 +136,7 @@ func TestAFormChangeIsNotATamper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatalf("the claim should not be refused: %v", err)
 	}
 }
@@ -151,17 +151,17 @@ func TestAnAgentMayNotSignOff(t *testing.T) {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	line := NewOperations(store, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 	r, err := line.CreateRecipe(readySpec())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = line.SignOffCriterion(r.ID, "AC-01", "line-cook", "checked")
+	_, err = line.SignOffCriterion(r.ID, "AC-01", "runner", "checked")
 	if err == nil {
 		t.Fatal("an agent must not be able to sign off")
 	}
-	if !strings.Contains(err.Error(), "line-cook") {
+	if !strings.Contains(err.Error(), "runner") {
 		t.Fatalf("the refusal should name the actor: %v", err)
 	}
 	if !strings.Contains(err.Error(), "chef") {
@@ -169,7 +169,7 @@ func TestAnAgentMayNotSignOff(t *testing.T) {
 	}
 
 	// The chef can.
-	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
+	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
 	if _, err := chef.SignOffCriterion(r.ID, "AC-01", "chef", "checked"); err != nil {
 		t.Fatalf("the chef should be able to sign off: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestASignedOffCriterionIsPassedButNotProven(t *testing.T) {
 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {

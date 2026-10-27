@@ -186,7 +186,7 @@ func seedStress(ops *Operations) error {
 	if _, err := chef.ApproveRecipe(found.ID, "chef"); err != nil {
 		return fmt.Errorf("seed stress findings approve: %w", err)
 	}
-	if _, err := chef.ClaimRecipe(found.ID, "line-cook"); err != nil {
+	if _, err := chef.ClaimRecipe(found.ID, "runner"); err != nil {
 		return fmt.Errorf("seed stress findings claim: %w", err)
 	}
 	if _, err := chef.SetStepStatus(found.ID, "G1", "done"); err != nil {

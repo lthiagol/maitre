@@ -107,7 +107,7 @@ func TestARefusedClaimIsJournalled(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err == nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err == nil {
 		t.Fatal("a recipe with an open dependency must not be claimed")
 	}
 

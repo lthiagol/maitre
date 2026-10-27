@@ -18,7 +18,7 @@ func TestRecordingAMigrationAppendsAControlEvent(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
 
 	if err := ops.RecordMigration("R01", "RCP01"); err != nil {
 		t.Fatal(err)
@@ -60,7 +60,7 @@ func TestTheMigrationStampsThePlan(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
 
 	j, err := s.LoadJournal()
 	if err != nil {
@@ -93,7 +93,7 @@ func TestTheMigrationDoesNotRewriteTheHistory(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
 
 	// A plan with a history: a recipe, created and groomed.
 	if _, err := ops.CreateRecipe(RecipeSpec{
@@ -147,7 +147,7 @@ func TestAMigrationNeedsBothIdForms(t *testing.T) {
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	ops := NewOperations(s, AuditContext{Actor: "line-cook", Session: "s-migrate", Role: "runner"})
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-migrate", Role: "runner"})
 
 	for _, m := range [][2]string{
 		{"", "RCP01"},

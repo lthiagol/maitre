@@ -206,12 +206,12 @@ sign off with the actor as the approver.
 Every write is stamped with an actor, a session and a role:
 
 ```bash
-maitre-cli --actor line-cook --session s-exec --role runner recipe claim RCP01
+maitre-cli --actor runner --session s-exec --role runner recipe claim RCP01
 ```
 
 or through the environment — `MAITRE_CLI_ACTOR`, `MAITRE_CLI_SESSION`, `MAITRE_CLI_ROLE` — so a whole
 task can set it once. The three flags work in either position: before the command, as
-above, or after the verb — `maitre-cli recipe claim RCP01 --actor line-cook`. Every verb
+above, or after the verb — `maitre-cli recipe claim RCP01 --actor runner`. Every verb
 accepts them.
 
 **The old names are a fallback.** `SCALE_ACTOR`, `SCALE_SESSION` and `SCALE_ROLE`
@@ -225,12 +225,15 @@ runs ten commands in one task should set `MAITRE_CLI_SESSION` once; ten generate
 make the audit vacuous.
 
 **Only the chef may approve, or sign off.** The chef is the human; the sous chef, the
-line cook, the taster and the expo are agents, and so is the default actor `agent`. The
-approval gate refuses an approval whose actor is one of them, so the human says who
-they are: `maitre-cli --actor chef recipe approve RCP01 --by chef`. A **sign-off** — the one
-exception to the zero-match rule — is a human act too, and takes the same deny-list:
-`maitre-cli --actor chef ac signoff RCP01 AC-01 --by chef`. The list is a deny-list — a human
-may approve under any name — but an agent cannot sign a recipe or a criterion off.
+runner, the reviewer and the orchestrator are agents, and so is the default actor `agent`.
+The names the rename retired — `line-cook`, `taster`, `expo`, `coordinator` — still name
+the role they stood for, so a plan written before the rename is refused exactly like one
+written after it. The approval gate refuses an approval whose actor is one of them, so
+the human says who they are: `maitre-cli --actor chef recipe approve RCP01 --by chef`. A
+**sign-off** — the one exception to the zero-match rule — is a human act too, and takes
+the same deny-list: `maitre-cli --actor chef ac signoff RCP01 AC-01 --by chef`. The list
+is a deny-list — a human may approve under any name — but an agent cannot sign a recipe
+or a criterion off.
 
 ### The agent's loop
 
@@ -242,11 +245,11 @@ maitre-cli step add  RCP01 --action "…" --done-when "…" --covers AC-01
 maitre-cli recipe advance RCP01 groom
 maitre-cli recipe advance RCP01 specify
 maitre-cli --actor chef recipe approve RCP01 --by chef   # only the chef may sign off
-maitre-cli recipe claim   RCP01 --agent line-cook
+maitre-cli recipe claim   RCP01 --agent runner
 maitre-cli step done RCP01 G1
 maitre-cli ac verify RCP01 AC-01          # the tool runs the command
 maitre-cli recipe advance RCP01 finish
-maitre-cli recipe review  RCP01 --reviewer taster --verdict ok
+maitre-cli recipe review  RCP01 --reviewer reviewer --verdict ok
 maitre-cli recipe advance RCP01 pass_review
 maitre-cli recipe document RCP01 --text "…"
 maitre-cli recipe advance RCP01 close
@@ -258,7 +261,7 @@ maitre-cli recipe advance RCP01 close
 maitre-cli finding add RCP03 --description "the queue drops findings on refresh" \
   --file internal/ui/board.go --line 88 --severity high --category correctness
 maitre-cli recipe comment RCP03 --finding F-02 --body "reproduced - refresh() re-reads the queue"
-maitre-cli recipe review RCP03 --reviewer taster --verdict changes-needed
+maitre-cli recipe review RCP03 --reviewer reviewer --verdict changes-needed
 
 # the fixer
 maitre-cli recipe comment RCP03 --finding F-02 --body "I tried reading the queue once; it worked"

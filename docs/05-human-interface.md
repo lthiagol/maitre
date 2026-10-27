@@ -289,7 +289,7 @@ round was recorded by the agent that did the work opens the prompt in the footer
 
 The round goes into the artifact with the chef's name on it, exactly like the journal.
 A verdict the console invented would be a verdict nobody gave — the same lesson as the
-console claiming work as `line-cook`.
+console claiming work as `runner`.
 
 `esc` cancels, and while the prompt is open every key belongs to it: the console must
 not move the selection out from under a half-typed review.

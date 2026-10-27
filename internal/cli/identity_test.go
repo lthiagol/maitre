@@ -40,8 +40,8 @@ func TestActorFlagsAreGlobal(t *testing.T) {
 	clearIdentityEnv(t)
 	signedOffRecipe(t, dir)
 
-	res := cli(t, dir, "--actor", "line-cook", "--session", "s-exec", "--role", "runner",
-		"recipe", "claim", "RCP01", "--agent", "line-cook")
+	res := cli(t, dir, "--actor", "runner", "--session", "s-exec", "--role", "runner",
+		"recipe", "claim", "RCP01", "--agent", "runner")
 	if !res.ok(t) {
 		t.Fatalf("the documented form was refused:\n%s", res.Stderr)
 	}
@@ -56,8 +56,8 @@ func TestActorFlagsAreGlobal(t *testing.T) {
 		t.Fatal("the journal is empty")
 	}
 	e := events[0].(map[string]any)
-	if e["actor"] != "line-cook" {
-		t.Fatalf("actor = %v, want line-cook", e["actor"])
+	if e["actor"] != "runner" {
+		t.Fatalf("actor = %v, want runner", e["actor"])
 	}
 	if e["session"] != "s-exec" {
 		t.Fatalf("session = %v, want s-exec", e["session"])
@@ -76,8 +76,8 @@ func TestActorFlagsWorkAfterTheVerb(t *testing.T) {
 	clearIdentityEnv(t)
 	signedOffRecipe(t, dir)
 
-	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook",
-		"--actor", "line-cook", "--session", "s-exec", "--role", "runner")
+	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner",
+		"--actor", "runner", "--session", "s-exec", "--role", "runner")
 	if !res.ok(t) {
 		t.Fatalf("the flags were refused:\n%s", res.Stderr)
 	}
@@ -87,7 +87,7 @@ func TestActorFlagsWorkAfterTheVerb(t *testing.T) {
 		t.Fatalf("log failed:\n%s", log.Stderr)
 	}
 	e := log.doc(t)["events"].([]any)[0].(map[string]any)
-	if e["actor"] != "line-cook" || e["session"] != "s-exec" || e["role"] != "runner" {
+	if e["actor"] != "runner" || e["session"] != "s-exec" || e["role"] != "runner" {
 		t.Fatalf("the stamp did not reach the journal: %v", e)
 	}
 }

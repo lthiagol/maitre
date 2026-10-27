@@ -80,7 +80,7 @@ func TestIsGoTestIgnoresEnvPrefixes(t *testing.T) {
 func TestVerifierRunsTheCommand(t *testing.T) {
 	v := &Verifier{Dir: t.TempDir(), Timeout: 30 * time.Second}
 
-	res, err := v.Run(context.Background(), "echo hello", "line-cook")
+	res, err := v.Run(context.Background(), "echo hello", "runner")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestVerifierRunsTheCommand(t *testing.T) {
 func TestVerifierRecordsAFailure(t *testing.T) {
 	v := &Verifier{Dir: t.TempDir(), Timeout: 30 * time.Second}
 
-	res, err := v.Run(context.Background(), "false", "line-cook")
+	res, err := v.Run(context.Background(), "false", "runner")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func TestVerifierRecordsAFailure(t *testing.T) {
 func TestVerifierTimeoutIsDistinguishable(t *testing.T) {
 	v := &Verifier{Dir: t.TempDir(), Timeout: 100 * time.Millisecond}
 
-	res, err := v.Run(context.Background(), "sleep 5", "line-cook")
+	res, err := v.Run(context.Background(), "sleep 5", "runner")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestVerifierTimeoutIsDistinguishable(t *testing.T) {
 
 func TestVerifierRejectsAnEmptyCommand(t *testing.T) {
 	v := &Verifier{Dir: t.TempDir()}
-	if _, err := v.Run(context.Background(), "   ", "line-cook"); err == nil {
+	if _, err := v.Run(context.Background(), "   ", "runner"); err == nil {
 		t.Fatal("expected an empty command to be refused")
 	}
 }
@@ -148,7 +148,7 @@ func TestATimedOutVerificationLeavesNoChild(t *testing.T) {
 
 	v := &Verifier{Dir: dir, Timeout: 300 * time.Millisecond}
 	start := time.Now()
-	res, err := v.Run(context.Background(), command, "line-cook")
+	res, err := v.Run(context.Background(), command, "runner")
 	elapsed := time.Since(start)
 	if err != nil {
 		t.Fatal(err)

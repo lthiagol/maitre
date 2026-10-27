@@ -23,7 +23,7 @@ func TestPassReviewNeedsAnIndependentReviewer(t *testing.T) {
 	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(r.ID, "G1", "done"); err != nil {
@@ -37,7 +37,7 @@ func TestPassReviewNeedsAnIndependentReviewer(t *testing.T) {
 	}
 
 	// The executor reviews its own work and says it is fine.
-	if _, err := ops.RecordReviewRound(r.ID, "line-cook", "ok", "looks good to me"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "runner", "ok", "looks good to me"); err != nil {
 		t.Fatal(err)
 	}
 	_, err = ops.Advance(r.ID, EventPassReview)
@@ -49,7 +49,7 @@ func TestPassReviewNeedsAnIndependentReviewer(t *testing.T) {
 	}
 
 	// Somebody else reviews it.
-	if _, err := ops.RecordReviewRound(r.ID, "taster", "ok", "clean"); err != nil {
+	if _, err := ops.RecordReviewRound(r.ID, "reviewer", "ok", "clean"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.Advance(r.ID, EventPassReview); err != nil {

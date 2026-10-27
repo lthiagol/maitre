@@ -73,8 +73,8 @@ func TestReviewStateDerivation(t *testing.T) {
 		t.Fatalf("state = %q, want self-reviewed", got)
 	}
 	if got := ReviewStateOf(Recipe{
-		Execution: Execution{ClaimedBy: "line-cook"},
-		Review:    Review{Rounds: []Round{{Reviewer: "taster", Verdict: "ok"}}},
+		Execution: Execution{ClaimedBy: "runner"},
+		Review:    Review{Rounds: []Round{{Reviewer: "reviewer", Verdict: "ok"}}},
 	}); got != ReviewClean {
 		t.Fatalf("state = %q, want reviewed-clean", got)
 	}

@@ -19,7 +19,7 @@ func signedOffRecipe(t *testing.T, ops *Operations, id string) {
 	if _, err := ops.ApproveRecipe(id, "chef"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ops.ClaimRecipe(id, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(id, "runner"); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ops.SetStepStatus(id, "G1", "done"); err != nil {
@@ -91,7 +91,7 @@ func TestOnlyTheChefMayApprove(t *testing.T) {
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
+	line := NewOperations(store, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 	r, err := line.CreateRecipe(readySpec())
 	if err != nil {
 		t.Fatal(err)
@@ -107,7 +107,7 @@ func TestOnlyTheChefMayApprove(t *testing.T) {
 	if err == nil {
 		t.Fatal("an agent must not be able to approve")
 	}
-	if !strings.Contains(err.Error(), "line-cook") {
+	if !strings.Contains(err.Error(), "runner") {
 		t.Fatalf("the refusal should name the actor: %v", err)
 	}
 	if !strings.Contains(err.Error(), "chef") {
@@ -115,7 +115,7 @@ func TestOnlyTheChefMayApprove(t *testing.T) {
 	}
 
 	// The chef can.
-	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "coordinator"})
+	chef := NewOperations(store, AuditContext{Actor: "chef", Session: "s-2", Role: "chef"})
 	approved, err := chef.ApproveRecipe(r.ID, "chef")
 	if err != nil {
 		t.Fatalf("the chef should be able to approve: %v", err)
@@ -130,7 +130,7 @@ func TestTheDefaultActorIsAnAgentRole(t *testing.T) {
 	if !IsAgentRole("agent") {
 		t.Error("the default actor is an agent role")
 	}
-	for _, role := range []string{"line-cook", "Line Cook", "sous-chef", "taster", "expo"} {
+	for _, role := range []string{"runner", "Line Cook", "sous-chef", "reviewer", "expo"} {
 		if !IsAgentRole(role) {
 			t.Errorf("%q should be an agent role", role)
 		}
@@ -324,7 +324,7 @@ func TestALegacyApprovalIsRestampedNotRefused(t *testing.T) {
 	}
 
 	// And the gate does not refuse the recipe nobody touched.
-	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err != nil {
+	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
 		t.Fatalf("the claim should not be refused: %v", err)
 	}
 }
@@ -359,7 +359,7 @@ func TestTamperedFrozenSectionsAreCaught(t *testing.T) {
 	}
 
 	// The next transition is refused.
-	_, err = ops.ClaimRecipe(r.ID, "line-cook")
+	_, err = ops.ClaimRecipe(r.ID, "runner")
 	if err == nil {
 		t.Fatal("a recipe whose frozen sections changed must not be claimed")
 	}

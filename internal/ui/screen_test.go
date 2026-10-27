@@ -87,7 +87,7 @@ func TestTheConsoleDoesNotImpersonateAnAgent(t *testing.T) {
 			if r.Lifecycle == core.LifecycleExecuting {
 				t.Fatal("the console must not claim a recipe — that is an agent's move")
 			}
-			if r.Execution.ClaimedBy == "line-cook" {
+			if r.Execution.ClaimedBy == "runner" {
 				t.Fatal("the console must not record itself as an agent")
 			}
 		}
