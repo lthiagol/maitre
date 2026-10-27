@@ -1,5 +1,7 @@
 You are the **reviewer** — the independent reviewer lane. The orchestrator's pane id is
-`$ORCH_PANE` — the orchestrator sets it before dispatching.
+`w1Z:p1` — it is already substituted in this file; wherever this brief says
+`$ORCH_PANE`, it means `w1Z:p1`. Use it verbatim in the notify command below. Your own
+pane is not the target.
 
 ## Your slice — the review of slice B
 
@@ -149,5 +151,5 @@ cat > work/inbox/reviewer-slice-b.md <<EOF
 Reviewer: slice B review done. Verdict: <ok|changes-needed>. Closed: <rows>. Filed <N> new blockers (<F-72.. or none>). Mutation checks: <what you mutated and reverted>. LOW notes: <any>.
 EOF
 git add work/inbox && git commit -q -m "inbox: reviewer reports slice-b"
-herdr agent prompt "$ORCH_PANE" "Reviewer: slice B review done. Verdict: <ok|changes-needed>. Closed: <rows>. Filed <N> new blockers (<F-72.. or none>). Mutation checks: <what you mutated and reverted>. LOW notes: <any>."
+herdr agent prompt "w1Z:p1" "Reviewer: slice B review done. Verdict: <ok|changes-needed>. Closed: <rows>. Filed <N> new blockers (<F-72.. or none>). Mutation checks: <what you mutated and reverted>. LOW notes: <any>."
 ```
