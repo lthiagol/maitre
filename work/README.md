@@ -47,7 +47,7 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **verifier** | the reviewer's own second lane; it dispatched F-49 and F-50 |
 | **orchestrator** | dispatches, verifies, rules on the findings, writes the paper. **This one is `w1Z:p1`.** |
 
-### Slice C's rulings — and one question for the chef
+### Slice C's rulings — and two questions for the chef
 
 | | |
 |---|---|
@@ -55,6 +55,22 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **No migration verb** | nothing moves a legacy special into the backlog — a verb would move the command count this slice pins at **42**. **Open question for the chef:** is read-only the end state for an old plan's specials, or does the tool owe a migration? Not a blocker for the rename. |
 | **The version fence is one-directional** | `internal/core/lock.go` refuses when `plan > DomainVersion`: an **old tool** must not write a plan it does not understand; a **new tool** may write an old plan. The orchestrator's first review brief had this backwards, and the runner's report corrected it — the brief now says judge against the code. |
 | **F-73** | fixed — `kitchen/project.json` says `maitre`. The journal took the migration as event **34**, a `control` event stamped 5 — an append, never a rewrite. |
+
+### Two questions for the chef, both from slice C's review
+
+| | |
+|---|---|
+| **Clearing a list** | `docs/04-operations.md` says *"a list flag replaces the list it names"*, but the parser refuses a list flag with no value (`--tag needs a value`). So a list can be **replaced** but never **emptied** — and `--tag` with no values, by the doc's own rule, should clear the tags. Changing the parser's rule would touch every list flag (`--in-scope`, `--ac`, …), so the fix cycle leaves it alone. **The chef's call.** |
+| **The glossary's CPD rows** | slice C's minimal glossary work collapsed two CPD terms (*idea / note* and *brief*) into one row, leaving the split in the `_Avoid_` line. `GLOSSARY.md` is the **single source** for the mapping, and one row per CPD term is its rule. **Slice E rewrites the file** — the rule goes into slice E's brief. |
+
+### Slice C's findings
+
+| Finding | What | Where it goes |
+|---|---|---|
+| **F-74** (high) | the live console's `reloadMsg` branch never assigns `m.legacy`, so an old plan's backlog reads as empty. `--render` assigns it, and the test helper hand-copied it — **the test proved the helper, not the path the chef uses**. | fix cycle 1 → the runner → cycle 2 |
+| **F-75** (medium) | `reservedRecipeIDs` scans the backlog's pointers only, so a legacy prep note's dangling `promoted_to` does not reserve its id — the same plan reserved `RCP10` before, and now hands out `RCP04`. | fix cycle 1 |
+| **F-76** (medium) | `backlog update` wiped the tags when the flag was absent: the CLI's `StringList` returns a non-nil empty slice. The scope list, one line away, was left alone — two list fields, one operation, two behaviours. | fix cycle 1 |
+| **F-77** (medium) | `docs/03`'s small-task row said a promoted recipe is *falsifiable from the start*; the paragraph below says a criterion with no verification cannot pass `ac.falsifiable`. The code follows the paragraph. **The phrase came from the orchestrator's brief** — the brief is corrected too. | fix cycle 1 |
 
 ### Slice B's findings — and where each one lands
 

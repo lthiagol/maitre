@@ -73,7 +73,7 @@ idea ──shaped into──▶ a recipe       (promote)
 small task ──promoted──▶ a recipe
 ```
 
-- `promote` creates a recipe **in `draft`**, carrying the item's intent, its scope and — for a small task — **one** acceptance criterion, so the work is falsifiable from the start.
+- `promote` creates a recipe **in `draft`**, carrying the item's intent, its scope and — for a small task — **one** acceptance criterion, so the work is checkable from the start. It is **not** falsifiable until that criterion has its verification, which is the recipe's own life after grooming — a criterion with no verification cannot pass `ac.falsifiable`.
 - The recipe is **not** pre-groomed: the second out-of-scope item, the falsifiable verification and the steps are the recipe's own life, exactly as for any recipe. **No gate is weakened, and no gate rule changes.** If you find yourself needing to weaken a gate or to add a plan-format field to make a promotion work, **stop and report it to the orchestrator instead** — that is a design decision, not an implementation detail.
 - The promotion is one-way: the item's status becomes `promoted` and it records what it became.
 - Verification: a test proves an idea promotes to a recipe in `draft`, that a small task promotes to a recipe with exactly one acceptance criterion, that the item is `promoted`, and that the promotion is one-way.

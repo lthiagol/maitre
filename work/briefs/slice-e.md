@@ -37,7 +37,7 @@ A **funny agentic maitre**: a chef with a tall toque and a small moustache, hold
 - the roles are **chef, sous-chef, runner, reviewer, orchestrator**;
 - a recipe's record is **evidence**; the recipe-level stamp is **completion**;
 - the kitchen words that survive: recipe, kitchen, line, board, service, tasting, sign-off, method, course, menu — each with its `_Avoid_` line, as today;
-- the **CPD mapping table** is updated to match, and it stays the single source for the mapping.
+- the **CPD mapping table** is updated to match, and it stays the single source for the mapping. **One row per CPD term** — slice C collapsed *idea / note* and *brief* into a single row and left the split in the `_Avoid_` line, and a mapping that cannot be read one term at a time is not a mapping. The backlog item's kinds and the CPD terms are reconciled here, and the reconciliation is stated.
 
 ### AC-03 — the ADR
 
