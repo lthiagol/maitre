@@ -1,4 +1,4 @@
-// Command scale is the Kitchen Brigade agent CLI.
+// Command maitre-cli is the maitre agent CLI.
 //
 // Agents drive the plan through it. The human-facing console is the separate `maitre`
 // binary. See docs/decisions/0003-surface-split.md.

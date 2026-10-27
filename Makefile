@@ -5,7 +5,7 @@ BIN := bin
 
 build:
 	@mkdir -p $(BIN)
-	$(GO) build -o $(BIN)/scale ./cmd/scale
+	$(GO) build -o $(BIN)/maitre-cli ./cmd/maitre-cli
 	$(GO) build -o $(BIN)/maitre ./cmd/maitre
 
 test:
@@ -19,7 +19,7 @@ fmt:
 	gofmt -w .
 
 run:
-	$(GO) run ./cmd/scale
+	$(GO) run ./cmd/maitre-cli
 
 regen-goldens:
 	$(GO) test ./internal/ui -run Golden -update
