@@ -317,6 +317,8 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 | [docs/03-domain-model.md](docs/03-domain-model.md) | Anatomy, lifecycle, gates, plan format, operations |
 | [docs/04-operations.md](docs/04-operations.md) | The operation set — what the tool can do, and who does it |
 | [docs/05-human-interface.md](docs/05-human-interface.md) | The console — four jobs, four layout candidates, the lane graph |
+| [docs/06-proposals.md](docs/06-proposals.md) | The design proposals — courses, `design_decisions`, brownfield |
+| [docs/07-vocabulary.md](docs/07-vocabulary.md) | The vocabulary decision of record — the scope rule and the rename table |
 | [docs/testing.md](docs/testing.md) | How to test the console |
 | [prototypes/README.md](prototypes/README.md) | The board layout prototypes |
 | [skills/README.md](skills/README.md) | The vendored skills, why we took them, how to re-sync |
