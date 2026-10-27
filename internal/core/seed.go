@@ -48,12 +48,12 @@ func seed(store *Store, stress bool) error {
 		OutOfScope: []string{"web shell", "orchestration"},
 		Criteria: []CriterionSpec{
 			{Description: "the board renders 100 recipes", Verification: "go test ./internal/core -run Board"},
-			{Description: "a zero-match proof is rejected", Verification: "go test ./internal/core -run ZeroMatch"},
+			{Description: "a zero-match evidence is rejected", Verification: "go test ./internal/core -run ZeroMatch"},
 		},
 		WorkPackages: []string{"core"},
 		Steps: []StepSpec{
 			{Action: "write the board renderer", DoneWhen: "the board renders", Covers: []string{"AC-01"}},
-			{Action: "add the zero-match gate", DoneWhen: "a rejected proof blocks finish", Covers: []string{"AC-02"}},
+			{Action: "add the zero-match gate", DoneWhen: "a rejected evidence blocks finish", Covers: []string{"AC-02"}},
 		},
 	}); err != nil {
 		return fmt.Errorf("seed RCP01: %w", err)
@@ -188,14 +188,14 @@ func seed(store *Store, stress bool) error {
 
 	// RCP05 — on the line. One criterion proven, one failing.
 	r05, err := sous.CreateRecipe(RecipeSpec{
-		Title:      "Sharpen the proof contract",
-		Outcome:    "A proof carries a command, an exit code and a match count",
+		Title:      "Sharpen the evidence contract",
+		Outcome:    "An evidence carries a command, an exit code and a match count",
 		Problem:    "v1's evidence was prose, so nothing could be checked",
 		InScope:    []string{"the verifier"},
 		OutOfScope: []string{"web shell", "orchestration"},
 		Criteria: []CriterionSpec{
 			{Description: "the board renders 100 recipes", Verification: "go test ./internal/core -run Board"},
-			{Description: "a proof that matched nothing is rejected", Verification: "go test ./internal/core -run ZeroMatch"},
+			{Description: "an evidence that matched nothing is rejected", Verification: "go test ./internal/core -run ZeroMatch"},
 		},
 		WorkPackages: []string{"core"},
 		Steps: []StepSpec{
@@ -343,12 +343,12 @@ func seed(store *Store, stress bool) error {
 		tags  []string
 		scope []string
 	}{
-		{"The board needs a way to show proofs", "A proof the chef cannot read is a claim, not a proof.", KindIdea, []string{"board"}, nil},
+		{"The board needs a way to show evidence", "Evidence the chef cannot read is a claim, not evidence.", KindIdea, []string{"board"}, nil},
 		{"A recipe with no ACs is probably an idea", "If nothing can falsify it, it is a hunch wearing a costume.", KindIdea, []string{"model"}, nil},
 		{"The chef wants a weekly digest", "What changed, what is blocked, what needs a decision.", KindIdea, []string{"reporting"}, nil},
 		{"Trying the board on a real project", "Run the console against a plan that is not ours.", KindIdea, []string{"trials"}, nil},
 		{"Wire the review queue", "Findings reach the chef without leaving the board.", KindFeature, []string{"queue"}, []string{"the queue lane"}},
-		{"Sharpen the proof contract", "A proof carries a command, an exit code and a match count.", KindBug, []string{"verifier"}, []string{"the verifier"}},
+		{"Sharpen the evidence contract", "An evidence carries a command, an exit code and a match count.", KindBug, []string{"verifier"}, []string{"the verifier"}},
 	} {
 		if _, err := chef.CreateBacklogItem(it.title, it.body, it.scope, it.kind, it.tags); err != nil {
 			return fmt.Errorf("seed backlog item %q: %w", it.title, err)

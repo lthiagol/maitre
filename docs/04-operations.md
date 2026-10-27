@@ -75,7 +75,7 @@ is never the session that tastes.
 | ✅ `AddStep(id, step)` | a method step | agent decomposes |
 | ✅ `SetStepStatus(id, stepID, status)` | progress | agent executes |
 | ✅ `DeferCriterion(id, acID, reason, followUp)` | a criterion re-filed | agent executes |
-| ✅ `VerifyCriterion(id, acID)` | a **proof** | agent proves |
+| ✅ `VerifyCriterion(id, acID)` | an **evidence** | agent verifies |
 | ✅ `RecordDeviation(id, stepID, note)` | how it differed | agent executes |
 | ✅ `AddFinding(id, finding)` | a tasting note | agent tastes |
 | ✅ `RecordReviewRound(id, reviewer, verdict, notes)` | a review round | agent tastes |
@@ -91,7 +91,7 @@ is never the session that tastes.
 | ✅ `RequestChanges(id, by, notes)` | a refusal | the chef signs off |
 | ✅ `DismissFinding(id, findingID, reason)` | a dismissed tasting note | the chef triages |
 | ⏳ `TriageFinding(id, findingID, action)` | a finding's fate | the chef triages |
-| ✅ `SignOffCriterion(id, acID, by, note)` | a human proof for an unproven AC | the chef |
+| ✅ `SignOffCriterion(id, acID, by, note)` | a human evidence for an unproven AC | the chef |
 | ✅ `CreateBacklogItem` · `UpdateBacklogItem` · `DismissBacklogItem` · `PromoteBacklogItem` | the backlog | the chef |
 | ✅ `BlockRecipe` · `UnblockRecipe` · `DeferRecipe` · `ResumeRecipe` | overlays | the chef |
 | ✅ `CancelRecipe(id, reason)` | terminal states | the chef |
@@ -104,7 +104,7 @@ is never the session that tastes.
 | ✅ `ClaimRecipe(id, agent)` | the runner claims work |
 | ✅ `RecordMigration(from, to)` | the id form the plan was migrated to |
 | ⏳ `SetFocus(recipeID)` | what the chef is looking at |
-| ⏳ `GetProofSummary(id)` | how many proofs, what is rejected, what is unproven |
+| ⏳ `GetEvidenceSummary(id)` | how much evidence, what is rejected, what is unproven |
 
 The claim is the `start` transition, so it runs the transition's gates — the
 dependency rule included — and the journal records it as a `lifecycle` event carrying
@@ -299,9 +299,9 @@ notices. See [ADR-0008](decisions/0008-artifact-is-the-channel.md).
 
 ## Open questions
 
-- **`SignOffCriterion`** — a human signing off an unproven criterion is a *proof without
-  a command*. Is it a proof with a different match state, or a separate field on the
-  criterion? The criterion status must stay derivable.
+- **`SignOffCriterion`** — a human signing off an unproven criterion is an *evidence
+  without a command*. Is it an evidence with a different match state, or a separate
+  field on the criterion? The criterion status must stay derivable.
 - **The backlog operations** — answered: the special and the prep note are one
   artifact with a kind, and one verb group.
 - **Whether `Advance` should be one operation or a set.** Today it is one, taking an

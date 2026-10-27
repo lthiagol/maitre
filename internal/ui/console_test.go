@@ -208,7 +208,7 @@ func TestBacklogTabListsTheItems(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
 	out := plain(m)
-	for _, want := range []string{"IDEAS", "SMALL TASKS", "The board needs a way to show proofs", "Wire the review queue", "idea", "feature"} {
+	for _, want := range []string{"IDEAS", "SMALL TASKS", "The board needs a way to show evidence", "Wire the review queue", "idea", "feature"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the backlog is missing %q\n%s", want, out)
 		}
