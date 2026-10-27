@@ -49,8 +49,8 @@ two-word `maitre-cli` says what it is, and `maitre` stays the console the chef k
 
 ## The backlog: one artifact, three kinds
 
-Today the backlog has **two file types** — *special* (a hunch) and *prep note* (intent
-and scope before criteria) — and two CLI verb groups. They become **one artifact** with a
+The backlog had **two file types** — *special* (a hunch) and *prep note* (intent and
+scope before criteria) — and two CLI verb groups. They became **one artifact** with a
 `kind`.
 
 | | |
@@ -59,7 +59,8 @@ and scope before criteria) — and two CLI verb groups. They become **one artifa
 | Its kinds | `idea` · `feature` · `bug` |
 | Its groups in the console | **Ideas** (needs shaping) and **Small tasks** (ready to work) — **derived** from the kind, never stored |
 | Its fields | title, body, scope, kind, tags, status, created, updated, promoted_to |
-| The CLI | `scale backlog list · create · update · dismiss · promote` — **46 commands → 42** |
+| The CLI | `maitre-cli backlog list · create · update · dismiss · promote` — **46 commands → 42** |
+| An older plan's specials | read **read-only**, in a third group under the tab — the tool reads an old plan; it does not rewrite it |
 
 One artifact because v1's lesson is that *N×N surfaces over one small domain* is where
 drift comes from: two file types for one list is two nouns for one thing, and the
@@ -70,7 +71,7 @@ console's two groups do not need two file types to exist.
 ```
 idea ──shaped into──▶ a small task  (kind: idea → feature|bug, plus scope)
 idea ──shaped into──▶ a recipe       (straight to the big thing)
-small task ──promoted──▶ a recipe with ONE criterion and ONE proof
+small task ──promoted──▶ a recipe with ONE criterion and ONE evidence
 ```
 
 The last line matters: **a small task is too small to be a big recipe, not too small to
@@ -79,10 +80,10 @@ The alternative — letting a small task close without gates — is a hole in th
 promise, and the third alternative, a second executable artifact type, is a second
 anatomy, a second gate set and a second close path.
 
-`dismiss` comes to the small tasks too. Today only specials can be dismissed, and no
-one can say why.
+`dismiss` comes to the small tasks too. Before, only specials could be dismissed, and no
+one could say why.
 
-## The plan format changes (domain version 2 → 3, then 4)
+## The plan format changes (domain version 2 → 3, then 4, then 5)
 
 | Change | From | To |
 |---|---|---|
@@ -95,7 +96,8 @@ one can say why.
 The version guard is what makes this safe: a plan written under the newer version
 refuses a stale tool that speaks the older one. The ids are version 3; **version 4**
 came when the fingerprint started covering the format's facts, so a format change
-moves the version on its own instead of by hand.
+moves the version on its own instead of by hand; **version 5** came with the backlog's
+collapse into one artifact.
 
 ## What is strings only
 
@@ -133,7 +135,7 @@ moves the version on its own instead of by hand.
 | 8 | The **mascot** | an asset |
 | 9 | The docs, the goldens and the tripwires are regenerated | the whole tree |
 
-Each step goes through the taster before the next one starts.
+Each step goes through the reviewer before the next one starts.
 
 ## Not in this bundle
 
