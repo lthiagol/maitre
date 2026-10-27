@@ -246,6 +246,7 @@ internal/ui/    the maitre console (bubbletea v2)
 skills/         vendored third-party skills, pinned to an upstream commit
 templates/      our own skills (to come)
 scripts/        console-shot.py — capture what the console actually shows
+                stamp-plan/ — record a plan's id migration in its journal
 prototypes/     throwaway design sketches
 docs/           design docs
   decisions/    ADRs

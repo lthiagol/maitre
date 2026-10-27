@@ -485,6 +485,10 @@ A `refusal` records an attempt the plan turned away: the event that was refused,
 gates that refused it, and why. The plan does not change — a refusal writes no artifact
 — but the attempt is real, and the journal is the only event log.
 
+A `control` records a fact about the plan itself rather than about one recipe: the id
+form it was migrated to, for instance. It names no recipe, and it is how a plan whose
+history predates a change says what the change was.
+
 Every entry also records the **version of the domain's rules** it was written under
 (`domain_version`). The journal is written on every mutation, so the newest entry is
 the plan's stamp: a tool whose rules are older than the plan's refuses to write, and a
@@ -561,6 +565,7 @@ same recipe, so a plan written before the change is still readable. See
 ### Control
 | Operation | Purpose |
 |---|---|
+| `RecordMigration(from, to)` | The id form the plan was migrated to |
 | `SetExecutionStrategy` / `SetFocus` | |
 | `GetProofSummary(id)` | Proofs attached, zero-match proofs, forced bypasses |
 

@@ -103,6 +103,7 @@ is never the session that tastes.
 | Operation | Purpose |
 |---|---|
 | ✅ `ClaimRecipe(id, agent)` | the runner claims work |
+| ✅ `RecordMigration(from, to)` | the id form the plan was migrated to |
 | ⏳ `SetFocus(recipeID)` | what the chef is looking at |
 | ⏳ `GetProofSummary(id)` | how many proofs, what is rejected, what is unproven |
 

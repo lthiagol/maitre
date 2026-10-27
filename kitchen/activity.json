@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "seq": 32,
+  "seq": 33,
   "events": [
     {
       "seq": 1,
@@ -343,6 +343,20 @@
         "from": "reviewed",
         "to": "closed"
       }
+    },
+    {
+      "seq": 33,
+      "at": "2026-10-27T17:31:11Z",
+      "kind": "control",
+      "actor": "line-cook",
+      "session": "s-migrate",
+      "role": "runner",
+      "data": {
+        "from": "R01",
+        "kind": "migration",
+        "to": "RCP01"
+      },
+      "domain_version": 4
     }
   ]
 }
