@@ -13,7 +13,7 @@ file, which becomes the ADR's history.
 |--:|---|---|---|
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
-| **C** | the backlog — one item, `kind: idea \| feature \| bug` | 🟡 **in review** — the runner landed it (7 commits, AC-01..AC-06); cycle 2 is out | [briefs/slice-c.md](briefs/slice-c.md) |
+| **C** | the backlog — one item, `kind: idea \| feature \| bug` | ✅ **closed** — review `ok` after one fix cycle; F-73..F-77 closed | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | queued · version → 6 | [briefs/slice-d.md](briefs/slice-d.md) |
 | **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | queued | [briefs/slice-e.md](briefs/slice-e.md) |
 
@@ -83,10 +83,10 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 
 | Finding | What | Where it goes |
 |---|---|---|
-| **F-74** (high) | the live console's `reloadMsg` branch never assigns `m.legacy`, so an old plan's backlog reads as empty. `--render` assigns it, and the test helper hand-copied it — **the test proved the helper, not the path the chef uses**. | fix cycle 1 → the runner → cycle 2 |
-| **F-75** (medium) | `reservedRecipeIDs` scans the backlog's pointers only, so a legacy prep note's dangling `promoted_to` does not reserve its id — the same plan reserved `RCP10` before, and now hands out `RCP04`. | fix cycle 1 |
-| **F-76** (medium) | `backlog update` wiped the tags when the flag was absent: the CLI's `StringList` returns a non-nil empty slice. The scope list, one line away, was left alone — two list fields, one operation, two behaviours. | fix cycle 1 |
-| **F-77** (medium) | `docs/03`'s small-task row said a promoted recipe is *falsifiable from the start*; the paragraph below says a criterion with no verification cannot pass `ac.falsifiable`. The code follows the paragraph. **The phrase came from the orchestrator's brief** — the brief is corrected too. | fix cycle 1 |
+| **F-74** (high) | the live console's `reloadMsg` branch never assigns `m.legacy`, so an old plan's backlog reads as empty. `--render` assigns it, and the test helper hand-copied it — **the test proved the helper, not the path the chef uses**. | **closed** — `Model.applyReload` is now the one place that knows the model's shape, and the test drives the real `Update`. |
+| **F-75** (medium) | `reservedRecipeIDs` scans the backlog's pointers only, so a legacy prep note's dangling `promoted_to` did not reserve its id — the same plan reserved `RCP10` before, and now handed out `RCP04`. | **closed** — the legacy reader carries the pointer, and the scan reads it in the format on disk (`"recipe RCP10"`). |
+| **F-76** (medium) | `backlog update` wiped the tags when the flag was absent: the CLI's `StringList` returned a non-nil empty slice. The scope list, one line away, was left alone — two list fields, one operation, two behaviours. | **closed** — nil now means "not given", one rule (`setList`) for both fields, and `emptyIfNil` holds the JSON edge. |
+| **F-77** (medium) | `docs/03`'s small-task row said a promoted recipe is *falsifiable from the start*; the paragraph below says a criterion with no verification cannot pass `ac.falsifiable`. The code follows the paragraph. **The phrase came from the orchestrator's brief** — the brief is corrected too. | **closed** — a promoted recipe is **checkable, not yet falsifiable**; the code did not move. |
 
 ### Slice B's findings — and where each one lands
 
