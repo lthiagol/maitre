@@ -76,6 +76,18 @@ herdr agent prompt "$ORCH_PANE" "Runner: slice B done. Commits: <n>. …"
 dispatched. **The orchestrator checks `work/inbox/` when a lane goes quiet** — that is
 the receipt, and it does not depend on a pane existing at all.
 
+### The orchestrator **waits** — it does not poll
+
+**A nudge only lands while the orchestrator is idle.** A turn blocked on a shell
+`sleep` cannot receive it, so the poll and the nudge cancel each other out.
+
+| | |
+|---|---|
+| **Do** | end the turn and go idle — the lane's `herdr agent prompt "$ORCH_PANE"` arrives as the next turn |
+| **Do** | read `work/inbox/` on the next turn, whatever the nudge said — the receipt is the record, the nudge is the bell |
+| **Do not** | `sleep` in a shell to wait for a lane — that is polling, and it blocks the only channel that carries the report |
+| **Do not** | re-dispatch into a busy lane — a queued prompt looks exactly like a stall |
+
 **A prompt sent while a lane is working queues behind the running turn.** A
 re-dispatch into a busy lane looks exactly like a stall. `agent_status`, `revision`
 and the cumulative `Loading Nm` spinner are **non-signalling** — they prove nothing.

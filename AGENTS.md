@@ -319,6 +319,13 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
   without reporting — it happened on 2026-10-27, and 38 files sat uncommitted in the
   tree. The per-criterion commit is what makes that recoverable: without it, the work
   exists only in a working tree and a pane's scrollback.
+- **A lane reports twice: the file first, then the nudge.** The receipt goes in
+  `work/inbox/` and is committed; the nudge is `herdr agent prompt "<ORCH_PANE>"`.
+  **The receiver waits, it does not poll** — a nudge only lands while the receiver is
+  idle, so a turn blocked on a shell `sleep` cancels out the one channel that carries
+  the report. End the turn and let the nudge arrive; read `work/inbox/` on the way
+  back in. Never re-dispatch into a busy lane to check on it: a queued prompt looks
+  exactly like a stall.
 
 ## Reference material
 

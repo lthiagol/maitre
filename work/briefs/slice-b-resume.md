@@ -6,6 +6,9 @@ supersedes it for the work that is left.
 
 ## Two notes from the orchestrator
 
+- **The orchestrator's pane id is `w1Z:p1`.** It is already substituted in this file —
+  wherever this brief says `$ORCH_PANE`, it means `w1Z:p1`. Use it verbatim in the
+  notify command below; the runner's own pane is `w1Z:p2` and is not the target.
 - The repository moved: it is now `/Users/thiago/Code/Pessoal/maitre` (it was
   `new-project`). Every path in this brief is relative to the repo root, so nothing
   else changes — but your `cd` is the new one.
@@ -138,7 +141,7 @@ cat > work/inbox/runner-slice-b.md <<EOF
 Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox && git commit -q -m "inbox: runner reports slice-b"
-herdr agent prompt "$ORCH_PANE" "Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
+herdr agent prompt "w1Z:p1" "Runner: slice B done. Commits: <n>. Per-AC evidence: AC-01..AC-04 stamped. Pre-notify gate: pass. Notes: <anything the reviewer should know>."
 ```
 
 ## Three ways to continue — the orchestrator's recommendation

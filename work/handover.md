@@ -80,6 +80,12 @@ herdr agent prompt "$ORCH_PANE" "Runner: slice B done. Commits: <n>. …"
 
 **Check `work/inbox/` when a lane goes quiet.** The receipt does not depend on a pane.
 
+**The orchestrator waits; it does not poll.** The nudge (`herdr agent prompt
+"$ORCH_PANE"`) only reaches an **idle** orchestrator — a turn blocked on a shell
+`sleep` cannot receive it. So: end the turn, go idle, and read `work/inbox/` on the
+way back in. Never re-dispatch into a busy lane to "check" on it: a queued prompt
+looks exactly like a stall.
+
 ## The rules you inherit
 
 | | |
