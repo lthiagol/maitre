@@ -248,8 +248,12 @@ templates/      our own skills (to come)
 scripts/        console-shot.py — capture what the console actually shows
                 stamp-plan/ — record a plan's id migration in its journal
 prototypes/     throwaway design sketches
+work/           the work in progress — briefs, transcripts, the state of the rename
+  briefs/       the dispatch contracts, one per slice
+  transcripts/  the lanes' scrollback, captured at each slice boundary
 docs/           design docs
   decisions/    ADRs
+  audits/       the per-cycle review reports behind the ledger
 research/       reference material on CPD and v1
 ```
 
@@ -306,6 +310,9 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
   order.
 - **This repo is under git** since the vocabulary rename (2026-10-27). The first
   commit is the night's work as it stood; the rename lands on top of it.
+- **A brief is written into `work/briefs/` before it is dispatched**, never into
+  `/tmp`. `/tmp` took half the night's record once. The lanes' scrollback is captured
+  into `work/transcripts/` at every slice boundary — it is bounded and rotates.
 
 ## Reference material
 
@@ -322,6 +329,9 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 | [docs/06-proposals.md](docs/06-proposals.md) | The design proposals — courses, `design_decisions`, brownfield |
 | [docs/07-vocabulary.md](docs/07-vocabulary.md) | The vocabulary decision of record — the scope rule and the rename table |
 | [docs/testing.md](docs/testing.md) | How to test the console |
+| [docs/audit.md](docs/audit.md) | The audit ledger — every finding, open or closed |
+| [docs/audits/](docs/audits/) | The per-cycle review reports behind the ledger's rows |
+| [work/README.md](work/README.md) | The work in progress — the state of the rename, and how to resume it |
 | [prototypes/README.md](prototypes/README.md) | The board layout prototypes |
 | [skills/README.md](skills/README.md) | The vendored skills, why we took them, how to re-sync |
 

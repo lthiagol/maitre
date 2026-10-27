@@ -11,6 +11,7 @@
 | [06-proposals.md](06-proposals.md) | The design proposals — courses, `design_decisions`, brownfield | 🔄 draft |
 | [07-vocabulary.md](07-vocabulary.md) | The vocabulary decision of record — the scope rule and the rename table | ✅ |
 | [audit.md](audit.md) | The audit ledger — every finding, open or closed | ✅ |
+| [audits/](audits/) | The per-cycle review reports behind the ledger's rows | ✅ |
 | [testing.md](testing.md) | How to test the console | ✅ |
 | [decisions/](decisions/) | ADRs | — |
 | [../research/00-legacy-analysis.md](../research/00-legacy-analysis.md) | v1 analysis | ✅ |
