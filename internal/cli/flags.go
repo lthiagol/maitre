@@ -8,7 +8,7 @@ import (
 // flagSet is a small argument parser.
 //
 // The standard library's flag package stops at the first positional argument, which
-// breaks the natural `maitre-cli recipe approve R07 --by alice` ordering. This parser
+// breaks the natural `maitre-cli recipe approve RCP07 --by alice` ordering. This parser
 // accepts flags before, between and after positionals.
 type flagSet struct {
 	name  string
@@ -24,7 +24,7 @@ type flagSet struct {
 //
 // Every verb carries the three identity flags — who is acting, in which session, in
 // which role — so a command can be stamped without an environment variable. They may
-// also be given before the command: `maitre-cli --actor line-cook recipe claim R01`.
+// also be given before the command: `maitre-cli --actor line-cook recipe claim RCP01`.
 func newFlagSet(name string) *flagSet {
 	fs := &flagSet{
 		name:  name,

@@ -458,7 +458,7 @@ func (s *Store) reservedRecipeIDs() ([]string, error) {
 	return referencedIDs(promoted, "R"), nil
 }
 
-// parseNumericID extracts the number from an id like "R07" or "07".
+// parseNumericID extracts the number from an id like "RCP07" or "07".
 func parseNumericID(id string) (int, bool) {
 	s := stripKindPrefix(id)
 	if s == "" {

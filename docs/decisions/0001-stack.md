@@ -139,7 +139,7 @@ the cost of a server and a browser. Revisit once the TUI proves the model.
 
 ## Open questions
 
-- The tool's module path is `github.com/lthiagol/kitchen-brigade`. Confirm the hosting
+- The tool's module path is `github.com/lthiagol/maitre`. Confirm the hosting
   account before the first release.
 - `go.mod` requires Go 1.26 (raised by the Charm v2 modules). Confirm that is an
   acceptable floor for adopters.

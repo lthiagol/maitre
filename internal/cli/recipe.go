@@ -196,7 +196,7 @@ func (r *Runner) cmdRecipeUpdate(args []string) int {
 		fragment.OutOfScope = outScope
 	}
 	if len(*dependsOn) > 0 {
-		// The list replaces: `--depends-on R02` says the recipe depends on R02 and
+		// The list replaces: `--depends-on RCP02` says the recipe depends on RCP02 and
 		// on nothing else. Leaving it alone would need a second flag to clear it,
 		// and a dependency you cannot take off is a dependency you cannot undo.
 		fragment.DependsOn = dependsOn

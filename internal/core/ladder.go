@@ -217,7 +217,7 @@ func (s *Store) reservedPrepNoteIDs() ([]string, error) {
 
 // referencedIDs collects the ids a list of `promoted_to` values names.
 //
-// The value reads "<kind> <id>" — "prep-note N01", "recipe R01". Only the ids with
+// The value reads "<kind> <id>" — "prep-note N01", "recipe RCP01". Only the ids with
 // the given prefix are collected: a pointer to a recipe does not reserve a prep note
 // id.
 func referencedIDs(promotedTo []string, prefix string) []string {

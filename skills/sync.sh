@@ -5,7 +5,7 @@
 #   skills/sync.sh --bump   move the pin to the latest upstream main, then copy
 #
 # Vendored files stay byte-identical to upstream. A skill that needs changing for
-# Kitchen Brigade becomes ours, under templates/skills/.
+# maitre becomes ours, under templates/skills/.
 
 set -euo pipefail
 

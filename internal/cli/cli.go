@@ -236,7 +236,7 @@ type identity struct {
 // splitIdentity pulls the identity flags out of the front of the argument list.
 //
 // The documented form puts them before the command — `maitre-cli --actor line-cook recipe
-// claim R01` — and they may also come after the verb, where the verb's own flag set
+// claim RCP01` — and they may also come after the verb, where the verb's own flag set
 // reads them. The first argument that is not an identity flag ends the scan.
 func splitIdentity(args []string) ([]string, identity, error) {
 	var id identity

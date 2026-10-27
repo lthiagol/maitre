@@ -1,9 +1,29 @@
 # 0004. Naming
 
-- **Status:** ✅ accepted — superseded in part on 2026-10-27; see
-  [docs/07-vocabulary.md](../07-vocabulary.md), the decision of record
+- **Status:** ✅ accepted — **superseded in part** on 2026-10-27 by **ADR 0009**
+  (`docs/decisions/0009-naming.md`), which carries the naming. 0009 is written in a
+  later slice; until it is, the decision of record is
+  [docs/07-vocabulary.md](../07-vocabulary.md).
 - **Date:** 2026-10-25
 - **Deciders:** TBD
+
+## What 0009 supersedes
+
+0009 replaces the **names** decided below. Everything else here stands.
+
+| Decided here | Superseded by 0009 |
+|---|---|
+| The project's name — *Kitchen Brigade* | **maitre** |
+| The module path — `github.com/lthiagol/kitchen-brigade` | `github.com/lthiagol/maitre` |
+| The agent CLI's name — `scale` | **`maitre-cli`** |
+| A recipe's id — `R01` | **`RCP01`** |
+
+What 0009 does **not** supersede: the console's name (`maitre`), the plan directory
+(`kitchen/`), the artifact ladder, the kitchen theme, and the vocabulary rule of
+[ADR-0005](0005-vocabulary.md). Those stand as decided here.
+
+The names this ADR chose are recorded below as the record it is. The decision of
+record for what they are now is [docs/07-vocabulary.md](../07-vocabulary.md).
 
 ## Context
 
