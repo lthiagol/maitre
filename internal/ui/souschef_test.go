@@ -10,8 +10,8 @@ import (
 	"github.com/lthiagol/maitre/internal/core"
 )
 
-// expoModel is a console over a plan with a journal.
-func expoModel(t *testing.T) *Model {
+// sousChefModel is a console over a plan with a journal.
+func sousChefModel(t *testing.T) *Model {
 	t.Helper()
 	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
 	store := core.Open(root)
@@ -28,38 +28,38 @@ func expoModel(t *testing.T) *Model {
 	return m
 }
 
-// TestTheExpoTabIsThere covers the tab.
+// TestTheSousChefTabIsThere covers the tab.
 //
 // It is a placeholder, and a placeholder that looks broken is worse than no tab at
 // all — so it has to render, and it has to say what it is.
-func TestTheExpoTabIsThere(t *testing.T) {
-	m := expoModel(t)
-	switchToTab(t, m, TabExpo)
+func TestTheSousChefTabIsThere(t *testing.T) {
+	m := sousChefModel(t)
+	switchToTab(t, m, TabSousChef)
 	out := plain(m)
 
-	if !strings.Contains(out, "Expo") {
-		t.Errorf("the tab bar should name the Expo:\n%s", out)
+	if !strings.Contains(out, "Sous-Chef") {
+		t.Errorf("the tab bar should name the Sous-Chef:\n%s", out)
 	}
-	// The bar's order: the Expo sits with the Log, the other view of the
+	// The bar's order: the Sous-Chef sits with the Log, the other view of the
 	// automation's running.
-	if !strings.Contains(out, "Log  ▸ Expo") && !strings.Contains(out, "Log    Expo") {
-		t.Errorf("the Expo should sit next to the Log:\n%s", out)
+	if !strings.Contains(out, "Log  ▸ Sous-Chef") && !strings.Contains(out, "Log    Sous-Chef") {
+		t.Errorf("the Sous-Chef should sit next to the Log:\n%s", out)
 	}
 	if !strings.Contains(out, "The orchestrator agent") {
-		t.Errorf("the tab should say what the Expo is:\n%s", out)
+		t.Errorf("the tab should say what the Sous-Chef is:\n%s", out)
 	}
 	if !strings.Contains(out, "Not built yet.") {
 		t.Errorf("the tab should say it is not built yet:\n%s", out)
 	}
 }
 
-// TestTheExpoShowsTheVitalSigns covers the versions.
+// TestTheSousChefShowsTheVitalSigns covers the versions.
 //
 // The chef can already see whether the automation is running on the same rules as the
 // plan — that is why this tab exists before the autopilot does.
-func TestTheExpoShowsTheVitalSigns(t *testing.T) {
-	m := expoModel(t)
-	switchToTab(t, m, TabExpo)
+func TestTheSousChefShowsTheVitalSigns(t *testing.T) {
+	m := sousChefModel(t)
+	switchToTab(t, m, TabSousChef)
 	out := plain(m)
 
 	if !strings.Contains(out, "plan written under") {
@@ -73,17 +73,17 @@ func TestTheExpoShowsTheVitalSigns(t *testing.T) {
 	}
 }
 
-// TestTheExpoSaysWhenTheVersionsDisagree covers the mismatch.
+// TestTheSousChefSaysWhenTheVersionsDisagree covers the mismatch.
 //
 // A plan written by a different build of the tool is a fact the chef needs, and the
 // version guard turns it into a refusal to write.
-func TestTheExpoSaysWhenTheVersionsDisagree(t *testing.T) {
-	m := expoModel(t)
+func TestTheSousChefSaysWhenTheVersionsDisagree(t *testing.T) {
+	m := sousChefModel(t)
 	store := m.store
 	stampPlan(t, store, core.DomainVersion+1)
 
 	m = loadModel(t, store)
-	switchToTab(t, m, TabExpo)
+	switchToTab(t, m, TabSousChef)
 	out := plain(m)
 
 	if !strings.Contains(out, "they do not agree") {
@@ -94,12 +94,12 @@ func TestTheExpoSaysWhenTheVersionsDisagree(t *testing.T) {
 	}
 }
 
-// TestTheExpoShowsTheLastEvent covers the history.
+// TestTheSousChefShowsTheLastEvent covers the history.
 //
 // The newest event, with its kind, the recipe, the actor and the time.
-func TestTheExpoShowsTheLastEvent(t *testing.T) {
-	m := expoModel(t)
-	switchToTab(t, m, TabExpo)
+func TestTheSousChefShowsTheLastEvent(t *testing.T) {
+	m := sousChefModel(t)
+	switchToTab(t, m, TabSousChef)
 	out := plain(m)
 
 	if !strings.Contains(out, "LAST EVENT") {
@@ -113,10 +113,10 @@ func TestTheExpoShowsTheLastEvent(t *testing.T) {
 	}
 }
 
-// TestTheExpoSaysWhenThereAreNoEvents covers the empty plan.
+// TestTheSousChefSaysWhenThereAreNoEvents covers the empty plan.
 //
 // A plan with no journal has no last event. It does not have a blank one.
-func TestTheExpoSaysWhenThereAreNoEvents(t *testing.T) {
+func TestTheSousChefSaysWhenThereAreNoEvents(t *testing.T) {
 	root := filepath.Join(t.TempDir(), core.PlanDirName)
 	store := core.Open(root)
 	if err := store.Init(); err != nil {
@@ -126,7 +126,7 @@ func TestTheExpoSaysWhenThereAreNoEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m.tab = TabExpo
+	m.tab = TabSousChef
 	out := plain(m)
 
 	if !strings.Contains(out, "the plan has no events") {

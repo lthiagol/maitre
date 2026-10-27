@@ -24,9 +24,9 @@ through `maitre-cli`.
 | **Recipes** | every recipe, triage-ordered | view · decide |
 | **Backlog** | specials and prep notes | manage the backlog |
 | **Path** | the execution order, and what blocks what | run |
-| **Chopboard** | the same plan as a dependency tree — what waits on what | run |
+| **Board** | the same plan as a dependency tree — what waits on what | run |
 | **Log** | the activity journal | see the audit trail |
-| **Expo** | the automation's vital signs — and, one day, the automation | run |
+| **Sous-Chef** | the automation's vital signs — and, one day, the automation | run |
 | **Settings** | theme, keybinds, preferences | — |
 
 v1's `raul` had **seven** lanes — Overview · Milestones · Path · Backlog · Ideas ·
@@ -167,9 +167,9 @@ lead and the id should be secondary and dim — the id is for the agent and for 
 This is a small change with a real effect on how the board reads. **Decided, not
 applied:** the board still leads with the id.
 
-### The Chopboard — the plan as a tree
+### The Board — the plan as a tree
 
-The Path tab is the flat order; the **Chopboard** is the same plan as a tree. It is the
+The Path tab is the flat order; the **Board** is the same plan as a tree. It is the
 view v1's `raul` had: an execution trunk with labelled side branches, and blocked
 milestones forked at their dependency.
 
@@ -212,7 +212,7 @@ title. Quitting restores the terminal exactly, and the shell's scrollback stays 
 ```
 row 0        maitre - <project>
 row 1        --------------------------------------------
-row 2        > Recipes   Backlog   Path   Chopboard   Log   Expo   Settings
+row 2        > Recipes   Backlog   Path   Board   Log   Sous-Chef   Settings
 row 3        7 recipes - 3 need you        refused - ac.covered
 row 4..      the list - scrollable, fills to the bottom
 row N-1      up/down move - tab switch - space sign off - q quit
@@ -333,15 +333,15 @@ the journal says which, so a reader can tell a human's verdict from a driven one
 writes under `console`. Nothing else changes: the actor is still the chef, because
 the console is the chef's surface either way.
 
-## The Expo
+## The Sous-Chef
 
-**A placeholder, and it says so.** The Expo is the orchestrator agent: it calls the
+**A placeholder, and it says so.** The Sous-Chef is the orchestrator agent: it calls the
 tickets, routes them, and keeps the line moving. It is not built, and the tab says
 that plainly — a tab that is *waiting* must not look like a tab that is failing, and a
 tab that is failing is worse than no tab at all.
 
 ```
- EXPO
+ SOUS-CHEF
   The orchestrator agent. It calls the tickets, routes
   them, and keeps the line moving.
 
@@ -365,7 +365,7 @@ version guard will refuse to write. And the last thing that happened, so the che
 see the automation moving even before it can be watched.
 
 Nothing else is here: the recipe counts, the triage and the tree are the Recipes and
-Chopboard tabs' business. The Expo shows what only the Expo can show.
+Board tabs' business. The Sous-Chef shows what only the Sous-Chef can show.
 
 ---
 

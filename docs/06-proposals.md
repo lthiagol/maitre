@@ -64,7 +64,7 @@ that grouping is a query, not a word.
 |---|---|
 | The plan format | **Nothing** — `courses/` is already created and empty; it would simply stop being named. |
 | The lifecycle | **Nothing** — a course is not promoted to and not signed off; the recipes inside it are. |
-| The console | A *lane* or a *group* over the Chopboard's tree — a view, not a tab. |
+| The console | A *lane* or a *group* over the Board's tree — a view, not a tab. |
 | The CLI | Nothing to write; a filter that reads like `--course` would be a query over `depends_on` and the recipes' titles. |
 
 **What it forecloses.** A course cannot be shared between plans, cannot be signed off as a
@@ -241,6 +241,6 @@ writes it.)
 
 ## What this document does not decide
 
-These are proposals. Each table's recommendation is the taster's reading of the evidence,
+These are proposals. Each table's recommendation is the reviewer's reading of the evidence,
 and the chef may take the other option, or a fourth one, without the domain breaking —
 which is the test of whether a decision belongs here at all.

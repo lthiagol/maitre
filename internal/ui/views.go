@@ -357,7 +357,7 @@ func (m *Model) summaryText() string {
 	case TabPath:
 		ready, waiting := core.Path(m.recipes)
 		return fmt.Sprintf("the path · %d ready · %d waiting", len(ready), len(waiting))
-	case TabChopboard:
+	case TabBoard:
 		tree := core.TreeOf(m.recipes)
 		waiting := 0
 		var count func(n core.TreeNode)
@@ -382,8 +382,8 @@ func (m *Model) summaryText() string {
 			len(tree.Roots)+waiting, len(tree.Roots), waiting)
 	case TabLog:
 		return fmt.Sprintf("recent activity · %d events", len(m.journal.Events))
-	case TabExpo:
-		return "the expo · the orchestrator · not built yet"
+	case TabSousChef:
+		return "the sous-chef · the orchestrator · not built yet"
 	default:
 		return "the plan"
 	}
@@ -477,12 +477,12 @@ func (m *Model) listLines() []listLine {
 		return m.backlogLines()
 	case TabPath:
 		return m.pathLines()
-	case TabChopboard:
-		return m.chopTree().rows
+	case TabBoard:
+		return m.boardTree().rows
 	case TabLog:
 		return m.logLines()
-	case TabExpo:
-		return m.expoLines()
+	case TabSousChef:
+		return m.sousChefLines()
 	case TabSettings:
 		return m.settingsLines()
 	default:
@@ -666,32 +666,32 @@ func (m *Model) pathRow(e core.PathEntry) string {
 	return "  " + m.styFaint.Render(padRight(e.Summary.ID, 6)) + title + m.styDim.Render(note)
 }
 
-// chopBuilder builds the Chopboard's rows.
+// boardBuilder builds the Board's rows.
 //
 // The tree is drawn as a trunk with branches: the trunk is the ready list, and each
 // branch holds the recipes that fork at the recipe above it.
-type chopBuilder struct {
+type boardBuilder struct {
 	m      *Model
 	out    []listLine
 	recipe []string
 }
 
 // trunk draws a trunk recipe and the branch that forks at it.
-func (b *chopBuilder) trunk(node core.TreeNode) {
-	b.out = append(b.out, listLine{text: b.m.chopRow(node, "● ", b.sel()), itemIdx: len(b.recipe)})
+func (b *boardBuilder) trunk(node core.TreeNode) {
+	b.out = append(b.out, listLine{text: b.m.boardRow(node, "● ", b.sel()), itemIdx: len(b.recipe)})
 	b.recipe = append(b.recipe, node.Summary.ID)
 	b.branch(node, "", true)
 }
 
 // sel reports whether the row being drawn is the selected one.
-func (b *chopBuilder) sel() bool { return len(b.recipe) == b.m.selChop }
+func (b *boardBuilder) sel() bool { return len(b.recipe) == b.m.selBoard }
 
 // orphan draws a recipe whose dependency is not in the plan.
 //
 // It cannot fork at anything, and the plan is broken: it is marked, and it says which
 // dependency is missing.
-func (b *chopBuilder) orphan(node core.TreeNode) {
-	b.out = append(b.out, listLine{text: b.m.chopOrphanRow(node, b.sel()), itemIdx: len(b.recipe)})
+func (b *boardBuilder) orphan(node core.TreeNode) {
+	b.out = append(b.out, listLine{text: b.m.boardOrphanRow(node, b.sel()), itemIdx: len(b.recipe)})
 	b.recipe = append(b.recipe, node.Summary.ID)
 	b.branch(node, "", true)
 }
@@ -700,19 +700,19 @@ func (b *chopBuilder) orphan(node core.TreeNode) {
 //
 // The plan cannot be executed as written, and the tree says so rather than dropping
 // the recipe.
-func (b *chopBuilder) stuck(node core.TreeNode) {
-	b.out = append(b.out, listLine{text: b.m.chopStuckRow(node, b.sel()), itemIdx: len(b.recipe)})
+func (b *boardBuilder) stuck(node core.TreeNode) {
+	b.out = append(b.out, listLine{text: b.m.boardStuckRow(node, b.sel()), itemIdx: len(b.recipe)})
 	b.recipe = append(b.recipe, node.Summary.ID)
 	b.branch(node, "", true)
 }
 
-// chopOrphanRow renders a recipe whose dependency is not in the plan.
+// boardOrphanRow renders a recipe whose dependency is not in the plan.
 //
 // The plan is broken, and the marker says so: the row carries the warning, not the
 // whole line.
-func (m *Model) chopOrphanRow(node core.TreeNode, selected bool) string {
+func (m *Model) boardOrphanRow(node core.TreeNode, selected bool) string {
 	width := m.listColumn()
-	note := chopNote(node)
+	note := boardNote(node)
 	marks := proofMarks(node.Summary)
 	tail := marks
 	if note != "" {
@@ -728,12 +728,12 @@ func (m *Model) chopOrphanRow(node core.TreeNode, selected bool) string {
 	return row
 }
 
-// chopStuckRow renders a recipe a dependency cycle keeps out of the tree.
+// boardStuckRow renders a recipe a dependency cycle keeps out of the tree.
 //
 // The plan cannot be executed as written, and the row says so.
-func (m *Model) chopStuckRow(node core.TreeNode, selected bool) string {
+func (m *Model) boardStuckRow(node core.TreeNode, selected bool) string {
 	width := m.listColumn()
-	note := chopNote(node)
+	note := boardNote(node)
 	marks := proofMarks(node.Summary)
 	tail := marks
 	if note != "" {
@@ -753,7 +753,7 @@ func (m *Model) chopStuckRow(node core.TreeNode, selected bool) string {
 //
 // The heading names the branch's subject — the dependency they all wait on — and the
 // rows under it are the recipes that fork there.
-func (b *chopBuilder) branch(node core.TreeNode, prefix string, last bool) {
+func (b *boardBuilder) branch(node core.TreeNode, prefix string, last bool) {
 	if len(node.Waiting) == 0 {
 		return
 	}
@@ -777,15 +777,15 @@ func (b *chopBuilder) branch(node core.TreeNode, prefix string, last bool) {
 		if cLast {
 			conn = "└─ "
 		}
-		b.out = append(b.out, listLine{text: b.m.chopRow(c, spine+conn, b.sel()), itemIdx: len(b.recipe)})
+		b.out = append(b.out, listLine{text: b.m.boardRow(c, spine+conn, b.sel()), itemIdx: len(b.recipe)})
 		b.recipe = append(b.recipe, c.Summary.ID)
 		// Their own branches fork deeper still.
 		b.branch(c, spine+"   ", cLast)
 	}
 }
 
-// chopNote is what a tree row says about what the recipe waits on.
-func chopNote(node core.TreeNode) string {
+// boardNote is what a tree row says about what the recipe waits on.
+func boardNote(node core.TreeNode) string {
 	var parts []string
 	if len(node.Needs) > 0 {
 		parts = append(parts, "needs "+strings.Join(node.Needs, ", "))
@@ -799,13 +799,13 @@ func chopNote(node core.TreeNode) string {
 	return strings.Join(parts, " — ")
 }
 
-// chopRow renders one recipe in the tree.
+// boardRow renders one recipe in the tree.
 //
 // The row says what the console already says about a recipe — its lifecycle, its
 // proof count, its open tasting notes — and what it waits on.
-func (m *Model) chopRow(node core.TreeNode, prefix string, selected bool) string {
+func (m *Model) boardRow(node core.TreeNode, prefix string, selected bool) string {
 	width := m.listColumn()
-	note := chopNote(node)
+	note := boardNote(node)
 	marks := proofMarks(node.Summary)
 	tail := marks
 	if note != "" {
@@ -871,21 +871,21 @@ func (m *Model) logRow(e core.JournalEntry) string {
 		m.styFaint.Render(padRight(recipe, 5)) + m.styDim.Render(e.Actor)
 }
 
-// expoLines renders the Expo tab.
+// sousChefLines renders the Sous-Chef tab.
 //
-// The Expo is the orchestrator agent: it calls the tickets, routes them, and keeps the
+// The Sous-Chef is the orchestrator agent: it calls the tickets, routes them, and keeps the
 // line moving. It is not built yet, and this tab says so — a tab that is *waiting*
 // must not look like a tab that is failing.
 //
 // What it shows for now is the automation's vital signs: the rules the plan was last
 // written under, the rules this build speaks, and the last thing that happened. The
 // recipe counts, the triage and the tree are the other tabs' business.
-func (m *Model) expoLines() []listLine {
+func (m *Model) sousChefLines() []listLine {
 	var out []listLine
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 
 	add("")
-	add(" " + m.stySec.Render("EXPO"))
+	add(" " + m.stySec.Render("SOUS-CHEF"))
 	add("  " + m.styDim.Render("The orchestrator agent. It calls the tickets, routes"))
 	add("  " + m.styDim.Render("them, and keeps the line moving."))
 	add("")

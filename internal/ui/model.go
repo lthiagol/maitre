@@ -18,18 +18,18 @@ const (
 	TabRecipes Tab = iota
 	TabBacklog
 	TabPath
-	TabChopboard
+	TabBoard
 	TabLog
-	TabExpo
+	TabSousChef
 	TabSettings
 )
 
 // TabNames are the tab labels, in order.
 //
-// The Chopboard sits next to the Path: the two are the same plan seen two ways — the
-// flat order, and the tree. The Expo sits with the Log: the two are the automation's
+// The Board sits next to the Path: the two are the same plan seen two ways — the
+// flat order, and the tree. The Sous-Chef sits with the Log: the two are the automation's
 // running, seen two ways — the history, and the place that will watch it happen.
-var TabNames = []string{"Recipes", "Backlog", "Path", "Chopboard", "Log", "Expo", "Settings"}
+var TabNames = []string{"Recipes", "Backlog", "Path", "Board", "Log", "Sous-Chef", "Settings"}
 
 // Label is the tab's name.
 func (t Tab) Label() string { return TabNames[int(t)] }
@@ -113,7 +113,7 @@ type Model struct {
 	selRecipes int
 	selBacklog int
 	selPath    int
-	selChop    int
+	selBoard   int
 	selLog     int
 	// selTheme is the cursor over the theme list on the Settings tab.
 	selTheme int
@@ -363,19 +363,19 @@ func (m *Model) currentPathEntry() (core.PathEntry, bool) {
 	return all[m.selPath], true
 }
 
-// chopboard is the tree the Chopboard tab shows.
+// board is the tree the Board tab shows.
 //
 // The rows are the rendered lines; the recipes are the ids of the selectable ones, in
 // the same order, so the selection always names a recipe the list draws.
-type chopboard struct {
+type board struct {
 	rows   []listLine
 	recipe []string
 }
 
-// chopTree is the tree the Chopboard tab shows, and the rows it draws.
-func (m *Model) chopTree() chopboard {
+// boardTree is the tree the Board tab shows, and the rows it draws.
+func (m *Model) boardTree() board {
 	tree := core.TreeOf(m.recipes)
-	b := &chopBuilder{m: m}
+	b := &boardBuilder{m: m}
 	if len(tree.Roots) == 0 && len(tree.Orphans) == 0 && len(tree.Stuck) == 0 {
 		// "The tree is empty" means the plan has no recipes. A plan that has
 		// recipes and an empty tree is a different thing, and the console must not
@@ -388,7 +388,7 @@ func (m *Model) chopTree() chopboard {
 			text:    "  " + m.styDim.Render(text),
 			itemIdx: -1,
 		})
-		return chopboard{rows: b.out}
+		return board{rows: b.out}
 	}
 	for _, root := range tree.Roots {
 		b.trunk(root)
@@ -399,7 +399,7 @@ func (m *Model) chopTree() chopboard {
 	for _, stuck := range tree.Stuck {
 		b.stuck(stuck)
 	}
-	return chopboard{rows: b.out, recipe: b.recipe}
+	return board{rows: b.out, recipe: b.recipe}
 }
 
 // currentRecipe is the recipe the detail pane shows.
@@ -414,8 +414,8 @@ func (m *Model) currentRecipe() (*core.Recipe, bool) {
 		if e, ok := m.currentPathEntry(); ok {
 			id = e.Summary.ID
 		}
-	case TabChopboard:
-		if r, ok := m.currentChopRecipe(); ok {
+	case TabBoard:
+		if r, ok := m.currentBoardRecipe(); ok {
 			id = r
 		}
 	}
@@ -430,13 +430,13 @@ func (m *Model) currentRecipe() (*core.Recipe, bool) {
 	return nil, false
 }
 
-// currentChopRecipe is the recipe the Chopboard's selection points at.
-func (m *Model) currentChopRecipe() (string, bool) {
-	ids := m.chopTree().recipe
-	if m.selChop < 0 || m.selChop >= len(ids) {
+// currentBoardRecipe is the recipe the Board's selection points at.
+func (m *Model) currentBoardRecipe() (string, bool) {
+	ids := m.boardTree().recipe
+	if m.selBoard < 0 || m.selBoard >= len(ids) {
 		return "", false
 	}
-	return ids[m.selChop], true
+	return ids[m.selBoard], true
 }
 
 // currentSel is the selection index for the current tab.
@@ -448,8 +448,8 @@ func (m *Model) currentSel() int {
 		return m.selBacklog
 	case TabPath:
 		return m.selPath
-	case TabChopboard:
-		return m.selChop
+	case TabBoard:
+		return m.selBoard
 	case TabLog:
 		return m.selLog
 	case TabSettings:
@@ -475,7 +475,7 @@ func (m *Model) clampSelections() {
 	clamp(&m.selRecipes, len(m.visibleRows()))
 	clamp(&m.selBacklog, len(m.specials)+len(m.notes))
 	clamp(&m.selPath, len(m.pathEntries()))
-	clamp(&m.selChop, len(m.chopTree().recipe))
+	clamp(&m.selBoard, len(m.boardTree().recipe))
 	clamp(&m.selLog, len(m.logWindow()))
 	clamp(&m.selTheme, len(palettes()))
 	clamp(&m.selNote, len(m.openNotes()))
@@ -657,8 +657,8 @@ func (m *Model) move(delta int) {
 		m.selBacklog += delta
 	case TabPath:
 		m.selPath += delta
-	case TabChopboard:
-		m.selChop += delta
+	case TabBoard:
+		m.selBoard += delta
 	case TabLog:
 		m.selLog += delta
 	case TabSettings:
@@ -677,8 +677,8 @@ func (m *Model) moveTo(index int) {
 		m.selBacklog = index
 	case TabPath:
 		m.selPath = index
-	case TabChopboard:
-		m.selChop = index
+	case TabBoard:
+		m.selBoard = index
 	case TabLog:
 		m.selLog = index
 	case TabSettings:
@@ -697,8 +697,8 @@ func (m *Model) listCount() int {
 		return len(m.specials) + len(m.notes)
 	case TabPath:
 		return len(m.pathEntries())
-	case TabChopboard:
-		return len(m.chopTree().recipe)
+	case TabBoard:
+		return len(m.boardTree().recipe)
 	case TabLog:
 		return len(m.logWindow())
 	case TabSettings:
@@ -712,7 +712,7 @@ func (m *Model) primaryAction() (tea.Model, tea.Cmd) {
 	switch m.tab {
 	case TabBacklog:
 		return m.promoteSelected()
-	case TabRecipes, TabPath, TabChopboard:
+	case TabRecipes, TabPath, TabBoard:
 		return m.actOnRecipe()
 	}
 	return m, nil

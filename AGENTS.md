@@ -29,7 +29,9 @@ The plan lives in `kitchen/`: `recipes/`, `courses/`, `prep-notes/`, `specials/`
 `activity.json` — the only event log — and `project.json`.
 
 The console's tabs: **Recipes** (grouped by what needs the chef) · **Backlog** (specials
-and prep notes) · **Path** (the execution order) · **Log** (the journal) · **Settings**.
+and prep notes) · **Path** (the execution order) · **Board** (the plan as a dependency
+tree) · **Log** (the journal) · **Sous-Chef** (the automation's vital signs) ·
+**Settings**.
 
 ```bash
 maitre-cli demo --dir /tmp/kb && cd /tmp/kb && maitre           # see it
@@ -175,7 +177,7 @@ across a reload: the recipe, the scroll, the note cursor, the theme, the order, 
 served checkbox and the tab. `--render` and `--keys` do not poll: they are not
 interactive programs.
 
-**Slice 12 — the Chopboard.** The Path tab is the flat order; the Chopboard is the same
+**Slice 12 — the Board.** The Path tab is the flat order; the Board is the same
 plan as a **dependency tree** — the shape v1's `raul` had, with an execution trunk and
 labelled side branches. The trunk is `core.Path`'s ready list, in the same order (one
 fact, one answer); a recipe that waits on something forks at its first unmet
@@ -185,7 +187,7 @@ tree draws what the walk cannot reach rather than dropping it, because a tree th
 forgets a recipe tells the chef a story the plan does not. Derived, never stored:
 `core.TreeOf`.
 
-**Slice 13 — the Expo tab.** The orchestrator agent gets a home in the console. It is a
+**Slice 13 — the Sous-Chef tab.** The orchestrator agent gets a home in the console. It is a
 **placeholder**: the autopilot is not built, and the tab says so plainly — a tab that
 is waiting must not look like a tab that is failing. What it shows for now is the
 automation's vital signs: the domain version the plan was last written under, this
@@ -193,7 +195,7 @@ build's, whether they agree, and the last event in the journal. That is why the 
 exists before the autopilot does — the chef can already see whether the automation is
 running on the same rules as the plan.
 
-**Open gaps:** Courses — ladder rung 3 — are not built. The Expo tab is a placeholder:
+**Open gaps:** Courses — ladder rung 3 — are not built. The Sous-Chef tab is a placeholder:
 the autopilot itself is not built.
 
 **Slice 14 — the specification's table of derived views is checked.** `docs/03` § 8

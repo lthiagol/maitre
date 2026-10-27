@@ -9,11 +9,11 @@ import (
 
 // detailLines renders the detail pane for the current tab's selection.
 //
-// The pane follows the tab: a recipe on Recipes, Path and Chopboard, a backlog item
+// The pane follows the tab: a recipe on Recipes, Path and Board, a backlog item
 // on Backlog, a journal entry on Log. One pane, whatever is selected.
 func (m *Model) detailLines(width int) []string {
 	switch m.tab {
-	case TabRecipes, TabPath, TabChopboard:
+	case TabRecipes, TabPath, TabBoard:
 		rec, ok := m.currentRecipe()
 		if !ok {
 			return []string{m.styDim.Render("  (nothing selected)")}
@@ -23,10 +23,10 @@ func (m *Model) detailLines(width int) []string {
 		return m.backlogDetail(width)
 	case TabLog:
 		return m.logDetail(width)
-	case TabExpo:
-		// There is nothing to open: the Expo is not a list of recipes. Saying so is
+	case TabSousChef:
+		// There is nothing to open: the Sous-Chef is not a list of recipes. Saying so is
 		// better than an empty pane, which looks like a broken console.
-		return []string{m.styDim.Render("  Nothing to open here — the Expo is not a list of recipes.")}
+		return []string{m.styDim.Render("  Nothing to open here — the Sous-Chef is not a list of recipes.")}
 	}
 	return []string{m.styDim.Render("  (nothing to show here)")}
 }

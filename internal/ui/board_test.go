@@ -8,17 +8,17 @@ import (
 	"github.com/lthiagol/maitre/internal/core"
 )
 
-// TestTheChopboardShowsTheTree covers the tab.
+// TestTheBoardShowsTheTree covers the tab.
 //
-// The chef switches to the Chopboard, sees the tree, moves down it, and opens a
+// The chef switches to the Board, sees the tree, moves down it, and opens a
 // recipe's detail — the same keys as every other tab.
-func TestTheChopboardShowsTheTree(t *testing.T) {
+func TestTheBoardShowsTheTree(t *testing.T) {
 	m := newModel(t)
-	switchToTab(t, m, TabChopboard)
+	switchToTab(t, m, TabBoard)
 
 	out := plain(m)
-	if !strings.Contains(out, "Chopboard") {
-		t.Fatalf("the tab bar should name the Chopboard:\n%s", out)
+	if !strings.Contains(out, "Board") {
+		t.Fatalf("the tab bar should name the Board:\n%s", out)
 	}
 	if !strings.Contains(out, "● R") {
 		t.Errorf("the tree should draw its trunk:\n%s", out)
@@ -28,11 +28,11 @@ func TestTheChopboardShowsTheTree(t *testing.T) {
 	}
 
 	// The selection moves.
-	before := m.selChop
+	before := m.selBoard
 	if _, err := Drive(m, []string{"down"}); err != nil {
 		t.Fatal(err)
 	}
-	if m.selChop == before {
+	if m.selBoard == before {
 		t.Error("the selection should move down the tree")
 	}
 
@@ -47,17 +47,17 @@ func TestTheChopboardShowsTheTree(t *testing.T) {
 	if !ok {
 		t.Fatal("no recipe is selected")
 	}
-	if rec.ID != m.chopTree().recipe[m.selChop] {
-		t.Errorf("the detail shows %q, the tree's selection is %q", rec.ID, m.chopTree().recipe[m.selChop])
+	if rec.ID != m.boardTree().recipe[m.selBoard] {
+		t.Errorf("the detail shows %q, the tree's selection is %q", rec.ID, m.boardTree().recipe[m.selBoard])
 	}
 }
 
-// TestTheChopboardDrawsTheConnectors covers the shape on the screen.
+// TestTheBoardDrawsTheConnectors covers the shape on the screen.
 //
 // The trunk, the branches and the connectors: the tree must read as a tree.
-func TestTheChopboardDrawsTheConnectors(t *testing.T) {
+func TestTheBoardDrawsTheConnectors(t *testing.T) {
 	m := treeModel(t)
-	switchToTab(t, m, TabChopboard)
+	switchToTab(t, m, TabBoard)
 	out := plain(m)
 
 	if !strings.Contains(out, "● RCP01") {
@@ -77,11 +77,11 @@ func TestTheChopboardDrawsTheConnectors(t *testing.T) {
 	}
 }
 
-// TestTheChopboardSaysWhenItIsEmpty covers the empty plan.
+// TestTheBoardSaysWhenItIsEmpty covers the empty plan.
 //
 // An empty plan says so. A blank screen is a broken console, and an error is a lie:
 // there is nothing wrong, there is simply nothing.
-func TestTheChopboardSaysWhenItIsEmpty(t *testing.T) {
+func TestTheBoardSaysWhenItIsEmpty(t *testing.T) {
 	root := filepath.Join(t.TempDir(), core.PlanDirName)
 	store := core.Open(root)
 	if err := store.Init(); err != nil {
@@ -91,7 +91,7 @@ func TestTheChopboardSaysWhenItIsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	m.tab = TabChopboard
+	m.tab = TabBoard
 
 	out := plain(m)
 	if !strings.Contains(out, "The tree is empty") {
@@ -102,14 +102,14 @@ func TestTheChopboardSaysWhenItIsEmpty(t *testing.T) {
 	}
 }
 
-// TestTheChopboardDoesNotCallACycleEmpty covers the broken plan.
+// TestTheBoardDoesNotCallACycleEmpty covers the broken plan.
 //
 // "The tree is empty" means the plan has no recipes. A plan with a dependency cycle
 // has recipes — the Path tab lists them — and the tree must not say the same words
 // about both.
-func TestTheChopboardDoesNotCallACycleEmpty(t *testing.T) {
+func TestTheBoardDoesNotCallACycleEmpty(t *testing.T) {
 	m := cycleModel(t)
-	switchToTab(t, m, TabChopboard)
+	switchToTab(t, m, TabBoard)
 	out := plain(m)
 
 	if strings.Contains(out, "The tree is empty") {
@@ -140,7 +140,7 @@ func cycleModel(t *testing.T) *Model {
 			Problem:    "a cycle leaves the tree empty",
 			OutOfScope: []string{"web shell", "orchestration"},
 			Criteria: []core.CriterionSpec{
-				{Description: "the cycle is drawn", Verification: "go test ./internal/ui -run TestTheChopboardDoesNotCallACycleEmpty"},
+				{Description: "the cycle is drawn", Verification: "go test ./internal/ui -run TestTheBoardDoesNotCallACycleEmpty"},
 			},
 			WorkPackages: []string{"ui"},
 			Steps:        []core.StepSpec{{Action: "draw the cycle", DoneWhen: "the cycle is visible", Covers: []string{"AC-01"}}},
@@ -187,7 +187,7 @@ func treeModel(t *testing.T) *Model {
 			Problem:    "the flat order does not show what waits on what",
 			OutOfScope: []string{"web shell", "orchestration"},
 			Criteria: []core.CriterionSpec{
-				{Description: "the tree draws the forks", Verification: "go test ./internal/ui -run TestTheChopboard"},
+				{Description: "the tree draws the forks", Verification: "go test ./internal/ui -run TestTheBoard"},
 			},
 			WorkPackages: []string{"ui"},
 			Steps:        []core.StepSpec{{Action: "draw the tree", DoneWhen: "the tree is right", Covers: []string{"AC-01"}}},
