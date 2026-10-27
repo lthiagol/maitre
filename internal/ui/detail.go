@@ -135,7 +135,11 @@ func (m *Model) recipeDetail(r *core.Recipe, width int) []string {
 	var out []string
 
 	out = append(out, " "+m.styTitle.Render(r.ID+" · "+r.Title))
-	meta := []string{string(r.Lifecycle), core.LaneOf(*r).Label()}
+	// One word per fact. The state word is the plain one — `closed`, `executing` —
+	// and the lane is a *section* the board groups by, not a second name for where
+	// the recipe is. A blocked recipe says so on its own line, below, with the
+	// reason; nothing here needs the kitchen word for it.
+	meta := []string{string(r.Lifecycle)}
 	s := core.ProofSummaryOf(*r)
 	if s.Criteria > 0 {
 		meta = append(meta, fmt.Sprintf("%d/%d proven", s.Proven, s.Criteria))

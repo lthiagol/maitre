@@ -73,6 +73,19 @@ flowchart TB
 `On hold` is an **overlay**, not a state — a blocked recipe keeps its lifecycle state
 and shows up in `On hold` instead of its own lane. That is why the lane is derived.
 
+### One word per fact
+
+A recipe's **row** shows the plain state word — `closed`, `executing`. A **lane header**
+is a section the board groups by — `Served`, `On the line` — and it is never a second
+name for the row's state. The detail pane follows the same rule: the meta line holds
+the state word and the facts beside it (how much is proven, what the tasting says),
+and the lane's word appears nowhere beside it.
+
+The reason is not tidiness. Two words for one fact is a place to drift: the two can
+disagree, and the reader cannot tell which one the tool believes. A blocked recipe
+says so on its own line, with the reason — that is a fact of its own, and the reason is
+what the chef acts on.
+
 ---
 
 ## Layout candidates
