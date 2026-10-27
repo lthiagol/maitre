@@ -1,0 +1,137 @@
+diff --git a/docs/03-domain-model.md b/docs/03-domain-model.md
+index 488038f..0fb1c6d 100644
+--- a/docs/03-domain-model.md
++++ b/docs/03-domain-model.md
+@@ -15,7 +15,7 @@ Every rule traces to a v1 failure. This is the checklist the model must satisfy.
+ | C4 | **Gates and transitions are one step.** | v1's `TransitionContext::default()` was `gates_satisfied: true` → the guard was **dead code** |
+ | C5 | **Every state is reachable and producible.** | v1's `LIFECYCLE_STATES` had 9 strings, `RecipePhase` had 7; two were never produced |
+ | C6 | **One closed enum per concept, one source of truth.** | v1's step status had three answers in three places |
+-| C7 | **Proof, not assertion.** A proof that matched nothing is not a proof. | v1 marked an AC `passed` on a zero-match filter |
++| C7 | **Evidence, not assertion.** An evidence that matched nothing is not evidence. | v1 marked an AC `passed` on a zero-match filter |
+ | C8 | **Evidence is append-only.** | v1's close-out ceremony overwrote per-AC evidence (3 recipes) |
+ | C9 | **The domain is UI-free.** | v1's `raul` shelled out to `mp` → version skew |
+ | C10 | **Every field is reachable from a surface.** | v1's `list recipes` omitted `priority` → the TUI's sort could not work |
+@@ -191,7 +191,7 @@ reading it as tampering.
+ | `id` | `AC-01` |
+ | `description` | What must be true |
+ | `verification` | A command, or `manual:` + a reproducible procedure. **Not prose.** |
+-| `status` | `pending` · `passed` · `failed` · `deferred` — **derived** from the proofs (C1) |
++| `status` | `pending` · `passed` · `failed` · `deferred` — **derived** from the evidence (C1) |
+ | `evidence[]` | Append-only: `{command, exit_code, output_digest, matched, at, by}` |
+ | `deferral` | Required when `status = deferred`: reason + follow-up reference |
+ 
+@@ -265,7 +265,7 @@ dropped it would erase the fixer's record by the back door.
+ | `ready` | 3 | **Locked.** Guidance decomposed; every AC covered and verifiable |
+ | `approved` | 4 | **A human said go.** Recorded with an approver identity |
+ | `executing` | 5–6 | Claimed and being implemented. Guidance may be revised |
+-| `executed` | 7–8 | Implementation done, ACs passed with proof, awaiting round-2 review |
++| `executed` | 7–8 | Implementation done, ACs passed with evidence, awaiting round-2 review |
+ | `remediation` | 9 | External findings open; being fixed |
+ | `reviewed` | 10 | Round-2 review clean |
+ | `closed` | 12 | Handed off. **Terminal** |
+@@ -375,7 +375,7 @@ and had two that didn't exist (`B2`, `B3` documented but never implemented).
+ | `changes.recorded` | a reason is recorded for the change | `request_changes` |
+ | `dependencies.satisfied` | every `depends_on` recipe is `closed` | `start` |
+ | `steps.settled` | every step is `done` or `skipped` | `finish` |
+-| `ac.all_proven` | every AC is `passed` — a proof that matched something **or a human sign-off** — or **deferred** (re-filed as a follow-up) | `finish` |
++| `ac.all_proven` | every AC is `passed` — an evidence that matched something **or a human sign-off** — or **deferred** (re-filed as a follow-up) | `finish` |
+ | `review.findings_exist` | ≥1 open external finding | `enter_remediation` |
+ | `review.findings_closed` | no open external finding | `exit_remediation` |
+ | `review.verdict_ok` | the last review round says `ok` | `pass_review`, `close` |
+@@ -400,15 +400,15 @@ without running it:
+ 1. **It is a command the tool can count matches from** — a `go test` command, or a
+    `manual:` procedure that carries a reproducible procedure. **Not prose, not a
+    placeholder.** A command the tool cannot count from would produce an *unproven*
+-   proof, and an unproven proof never satisfies a gate — so the criterion could never
+-   be finished. The gate refuses it at grooming time, where the chef reads it.
+-2. **It runs.** The proof records the exit code, so a command that cannot run fails
++   evidence, and unproven evidence never satisfies a gate — so the criterion could
++   never be finished. The gate refuses it at grooming time, where the chef reads it.
++2. **It runs.** The evidence records the exit code, so a command that cannot run fails
+    loudly instead of passing quietly.
+ 3. **Its filter matches at least one thing.** The count comes from the output the tool
+    captured: *"a gate that manufactures confidence."*
+ 
+-`ac.all_proven` then enforces the third at completion: every attached proof must report
+-**a non-zero match count**. A proof that ran and matched nothing is rejected.
++`ac.all_proven` then enforces the third at completion: every attached record must
++report **a non-zero match count**. Evidence that ran and matched nothing is rejected.
+ 
+ **The one exception is a human sign-off.** A criterion the tool cannot check may be
+ signed off by the chef — the same deny-list the approval takes, because a sign-off is a
+@@ -417,17 +417,17 @@ satisfies `ac.all_proven` explicitly, and it is the only thing that does.
+ 
+ ---
+ 
+-## 5. Proofs and evidence
++## 5. Evidence
+ 
+ The rules that make CPD principle 9 (*"Verification is auditable, not aspirational"*)
+ actually hold.
+ 
+ | Rule | Detail |
+ |---|---|
+-| **A proof is machine-attached** | `{command, exit_code, output_digest, matched, at, by}` — never prose |
+-| **Append-only** (C8) | Re-running appends. It never overwrites. `status` derives from the latest proof |
+-| **Zero-match is not a proof** | `matched == 0` ⇒ rejected, recorded as a failure |
+-| **A sign-off is not a proof** | it is its own state (`signed-off`) — **the chef** vouching for a procedure the tool could not check. It claims no match, and it is the one exception to the zero-match rule |
++| **An evidence is machine-attached** | `{command, exit_code, output_digest, matched, at, by}` — never prose |
++| **Append-only** (C8) | Re-running appends. It never overwrites. `status` derives from the latest evidence |
++| **Zero-match is not evidence** | `matched == 0` ⇒ rejected, recorded as a failure |
++| **A sign-off is not machine evidence** | it is its own state (`signed-off`) — **the chef** vouching for a procedure the tool could not check. It claims no match, and it is the one exception to the zero-match rule |
+ | **Exit code is the truth** | `exit 0` is a pass; anything else is a fail |
+ | **Bypass is debt** | A forced transition is stamped `[forced]` and shows in the UI as debt, never as success (CPD principle 9) |
+ | **Timeouts are distinguishable** | v1's timeout message (*"verification command did not run"*) was indistinguishable from a real failure. A timeout is its own outcome, and the default deadline must fit a realistic full-suite run |
+@@ -644,7 +644,7 @@ variations of a handful of these. **One operation, one name.**
+ 
+ | View | Computed by | Definition |
+ |---|---|---|
+-| `status` | `Criterion.Status` | AC status derived from its latest proof |
++| `status` | `Criterion.Status` | AC status derived from its latest evidence |
+ | `review_state` | `ReviewStateOf` | `pending-review` · `open-findings` · `remediated` · `self-reviewed` · `reviewed-clean` |
+ | `lane` | `LaneOf` | `grooming` · `approval` · `execution` · `review` · `blocked` · `done` — the UI's primary axis |
+ | `readiness` | `ReadinessOf` | Can it be claimed? Why not, if not |
+diff --git a/docs/04-operations.md b/docs/04-operations.md
+index a375518..3c3d729 100644
+--- a/docs/04-operations.md
++++ b/docs/04-operations.md
+@@ -75,7 +75,7 @@ is never the session that tastes.
+ | ✅ `AddStep(id, step)` | a method step | agent decomposes |
+ | ✅ `SetStepStatus(id, stepID, status)` | progress | agent executes |
+ | ✅ `DeferCriterion(id, acID, reason, followUp)` | a criterion re-filed | agent executes |
+-| ✅ `VerifyCriterion(id, acID)` | a **proof** | agent proves |
++| ✅ `VerifyCriterion(id, acID)` | an **evidence** | agent verifies |
+ | ✅ `RecordDeviation(id, stepID, note)` | how it differed | agent executes |
+ | ✅ `AddFinding(id, finding)` | a tasting note | agent tastes |
+ | ✅ `RecordReviewRound(id, reviewer, verdict, notes)` | a review round | agent tastes |
+@@ -91,7 +91,7 @@ is never the session that tastes.
+ | ✅ `RequestChanges(id, by, notes)` | a refusal | the chef signs off |
+ | ✅ `DismissFinding(id, findingID, reason)` | a dismissed tasting note | the chef triages |
+ | ⏳ `TriageFinding(id, findingID, action)` | a finding's fate | the chef triages |
+-| ✅ `SignOffCriterion(id, acID, by, note)` | a human proof for an unproven AC | the chef |
++| ✅ `SignOffCriterion(id, acID, by, note)` | a human evidence for an unproven AC | the chef |
+ | ✅ `CreateBacklogItem` · `UpdateBacklogItem` · `DismissBacklogItem` · `PromoteBacklogItem` | the backlog | the chef |
+ | ✅ `BlockRecipe` · `UnblockRecipe` · `DeferRecipe` · `ResumeRecipe` | overlays | the chef |
+ | ✅ `CancelRecipe(id, reason)` | terminal states | the chef |
+@@ -104,7 +104,7 @@ is never the session that tastes.
+ | ✅ `ClaimRecipe(id, agent)` | the runner claims work |
+ | ✅ `RecordMigration(from, to)` | the id form the plan was migrated to |
+ | ⏳ `SetFocus(recipeID)` | what the chef is looking at |
+-| ⏳ `GetProofSummary(id)` | how many proofs, what is rejected, what is unproven |
++| ⏳ `GetEvidenceSummary(id)` | how much evidence, what is rejected, what is unproven |
+ 
+ The claim is the `start` transition, so it runs the transition's gates — the
+ dependency rule included — and the journal records it as a `lifecycle` event carrying
+@@ -299,9 +299,9 @@ notices. See [ADR-0008](decisions/0008-artifact-is-the-channel.md).
+ 
+ ## Open questions
+ 
+-- **`SignOffCriterion`** — a human signing off an unproven criterion is a *proof without
+-  a command*. Is it a proof with a different match state, or a separate field on the
+-  criterion? The criterion status must stay derivable.
++- **`SignOffCriterion`** — a human signing off an unproven criterion is an *evidence
++  without a command*. Is it an evidence with a different match state, or a separate
++  field on the criterion? The criterion status must stay derivable.
+ - **The backlog operations** — answered: the special and the prep note are one
+   artifact with a kind, and one verb group.
+ - **Whether `Advance` should be one operation or a set.** Today it is one, taking an
