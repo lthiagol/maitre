@@ -35,6 +35,7 @@ can substantiate with a command.
 | Cycle 14 | The last sweep: the check reads the package, and the marker travels with the function | One note closed, and the families that admit a view without a classification |
 | Cycle 15 | The closing review of the night: no read-side family, and a symmetric judgement | One note closed, and the shape judged |
 | Slice A | The vocabulary rename: the module, the binaries, the recipe ids, the version | The ids and the guard hold; two mediums and four lows filed |
+| Cycle 2 | The fixes to slice A: the usage lines, the two-way wire, the plan's stamp, the format facts | Six notes closed, and the fence checked by mutation |
 | The rounds inside a cycle | Fix → verify → back to the executor → repeat, until the verifier is satisfied | Three rounds in cycle 8: the first fix introduced three new mediums, the second closed them |
 
 ### The discipline every round runs
@@ -65,22 +66,17 @@ fail.
 | The open questions | § 9's links to the proposals, the anchors they point at, the new question, and the seven that were there before |
 | The lifecycles | The state table and the code's lifecycles, both ways |
 | The interface | The footer paragraph names the triage |
-| The plan format | Every directory and file the code creates is named in `docs/03` § 6, and the recipe file's name is the id the writer allocates — one direction only (F-67) |
+| The plan format | Every directory and file the code creates is named in `docs/03` § 6, and every directory and file § 6 names is the code's — both ways — and the section's version is the code's |
+| The usage lines | Every usage line the CLI prints names a binary that exists, and the console's errors name it too |
 
 ## Open findings
 
 | # | Severity | What | Where |
 |---|---|---|---|
-| **F-66** | medium | **The CLI's usage strings still name the binary the rename removed.** `maitre-cli recipe show` with a bad id answers `"usage: scale recipe show <id>"` — 29 usage lines and two console errors tell the user to run a command that does not exist. | `internal/cli/recipe.go`, `fragments.go`, `backlog.go`; `cmd/maitre/main.go:48,84` |
-| **F-67** | medium | **The plan-format wire fires in one direction only.** It checks that the code's directories and files are named in `docs/03` § 6, not that the directories § 6 names are the code's: adding `backlog/BL01-<slug>.json` to § 6 leaves the test green. The doc can promise a directory the reader cannot find — and the backlog move is exactly that. | `internal/core/planformat_test.go` — `TestTheDocNamesThePlanFormatTheCodeHas` |
 | **F-59** | medium | **`core.Audit.Decisions` has a shape and no writer** — it is where a decision *about the plan* would live, and nothing writes it. `kitchen/decisions.json` is named by the plan format and opened by nothing. The remedy is on the table in [06-proposals.md](06-proposals.md) § 2. | `internal/core/model.go:270`; `internal/core/store.go:24` |
 | **F-60** | medium | **`core.Questions` has a writer-less shape, so the `questions.resolved` gate can never fire** — nothing ever sets a question, so the list is always empty and the gate always passes. A gate nobody can fail is not a guard. | `internal/core/model.go:31`; `internal/core/lifecycle.go:197` |
 | **F-61** | medium | **The `courses/` directory is named by the plan format, created by `Init`, and never written** — a directory no writer touches. Per [06-proposals.md](06-proposals.md) § 1 the honest answer is to stop naming it: a course is the relation, not a file. | `internal/core/store.go:18,63`; [docs/03 §6](03-domain-model.md) |
 | F-56 | low | **The poll's fingerprint is blind to a write that keeps the mtime and the size.** It is path + mtime + size per file, so two different contents can share one fingerprint. The tool's own writes always change the mtime, so in practice only a hand edit that restores the mtime is missed — and the chef's `r` reloads it. | `internal/core/store.go` — `DiskFingerprint`. |
-| **F-68** | low | **The migrated plan records no domain version.** No event in `kitchen/activity.json` carries `domain_version`, so the plan is stamped 0, not 2 — and the guard cannot fence the removed version-2 tool off from it. Every plan the tool writes is stamped (the demo's is 3); only the hand-migrated plan is not, and an append-only journal cannot be rewritten to add it. | `kitchen/activity.json`; `internal/core/activity.go:82` |
-| **F-69** | low | **The CLI's identity variables still carry the removed binary's name** — `SCALE_ACTOR`, `SCALE_SESSION`, `SCALE_ROLE`, printed in the CLI's own help. The decision of record does not list them, so the rename may leave them; but the name is the binary's, and the help is a surface the rename did reach. New names: `MAITRE_CLI_ACTOR`, `MAITRE_CLI_SESSION`, `MAITRE_CLI_ROLE`. | `internal/cli/cli.go:193-195,267-269`; `docs/04-operations.md:211` |
-| **F-70** | low | **The old names left the decision records and the sketches.** ADR 0004 still names the project, the module and the `scale` binary — its banner says "superseded in part" without saying which parts, and `AGENTS.md` points at it as the naming decision; ADR 0001 still asks about the old module path; six `prototypes/*.txt` still read "Kitchen Brigade · demo"; a dozen code comments still say `scale`. The shipped surfaces are clean. | `docs/decisions/0004-naming.md`, `0001-stack.md`; `prototypes/`; `internal/cli/cli.go:1` |
-| **F-71** | low | **`docs/03` § 6 states the plan format's version and no wire checks it.** The section says "Version 3 is the plan format", and `core.DomainVersion` is 3 — but nothing ties the two, so the doc's version paragraph and the number that fences a stale tool can drift apart. The format is covered by the number, not by the fingerprint (the fingerprint hashes the rules), so a format change has to move the number by hand. | `docs/03-domain-model.md:499`; `internal/core/lifecycle.go:173`; `internal/core/version_test.go:22` |
 | P-8 | — | `--depends-on=` writes `depends_on: [""]` — inert, the same as `--in-scope=`. | Recorded so nobody calls it a regression later. Not a defect. |
 
 ## Closed findings
@@ -105,6 +101,12 @@ fail.
 | F-64 | medium | `internal/core/views.go` — the coverage check reads the whole package; a view is a function that carries the `// view` marker, the write path and the boilerplate are exempt as a family, and a function that is both fails; the read-side families are F-65 | `internal/core/docs_test.go` — the coverage check |
 | F-63 | medium | `internal/core/views.go` — a view added to the code fails the wire even when the doc is untouched | `internal/core/docs_test.go` — the coverage check |
 | F-62 | medium | `docs/03-domain-model.md` §8 — the triage's row is there; `core.AllTriageSections` holds the board's display order so `TriageSections` and the doc cannot disagree; § 9 links the two proposals and carries the new question | `internal/core/docs_test.go` — the derived-views and open-questions checks |
+| F-66 | medium | `internal/cli/recipe.go`, `fragments.go`, `backlog.go` — every usage line names `maitre-cli`; `cmd/maitre/main.go` — the console's errors name `maitre-cli init` | `internal/cli/usage_test.go` — the usage-lines and console-errors checks |
+| F-67 | medium | `internal/core/planformat_test.go` — the plan-format wire checks both ways: the code's directories and files are in the doc, and the doc's are in the code | `internal/core/planformat_test.go` — `TestTheDocNamesThePlanFormatTheCodeHas` |
+| F-68 | low | `internal/core/migration.go` — `RecordMigration` appends a `control` event carrying the version, through the domain's own journal path; `scripts/stamp-plan/` — the script that records it | `internal/core/migration_test.go` |
+| F-69 | low | `internal/cli/cli.go` — `MAITRE_CLI_ACTOR`, `MAITRE_CLI_SESSION` and `MAITRE_CLI_ROLE` are read; the old `SCALE_*` names still work as a fallback and warn | `internal/cli/env_test.go` |
+| F-70 | low | `docs/decisions/0004-naming.md` — the table of what 0009 supersedes; `docs/decisions/0001-stack.md`; the six `prototypes/*.txt` sketches; the code comments | — (a doc fix; nothing to hold it) |
+| F-71 | low | `internal/core/format.go` — the facts of the plan's format; `internal/core/version_test.go` — the fingerprint hashes them, so a format change moves the version; `docs/03-domain-model.md` §6 — the version paragraph | `internal/core/version_test.go` — the shape test; `internal/core/planformat_test.go` — the version check |
 | P-1 | medium | `internal/core/lifecycle.go`, `internal/core/version_test.go` — the version guard sees the rules T3 and F-50 changed | `internal/core/version_test.go` |
 | P-2 | low | `internal/core/ladder.go` — the overlay refusals are journalled too | `internal/core/refusal_test.go` |
 | P-3 | low | `internal/ui/model.go` — `refusalText` reads a wrapped error with `errors.As` | `internal/ui/refusal_test.go` |
@@ -139,5 +141,5 @@ Two other limits, stated plainly:
 - **A closed row is a claim about the tree, not about the history.** It says the defect
   is gone and a test holds it. It does not say which round closed it, and it cannot.
 - **The open table is only as live as the last person to look.** It was written against
-  the tree at the end of the slice A review. If a fix lands and the row is not moved,
+  the tree at the end of the cycle 2 review. If a fix lands and the row is not moved,
   the ledger is wrong — which is the failure this document exists to prevent.
