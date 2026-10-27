@@ -128,6 +128,58 @@ func TestTheBacklogKindIsTheShapingStep(t *testing.T) {
 	}
 }
 
+// TestTheBacklogUpdateLeavesTheListsAlone covers the list rule.
+//
+// A list flag replaces the list it names; a flag that is not given leaves its field
+// alone. **Both** list fields obey it — the scope and the tags. The tags used to be
+// wiped by an update that never mentioned them, because the two fields had two
+// different guards.
+func TestTheBacklogUpdateLeavesTheListsAlone(t *testing.T) {
+	dir := newPlan(t)
+
+	res := cli(t, dir, "backlog", "create", "--title", "An item", "--body", "b",
+		"--tag", "one", "--tag", "two", "--scope", "the work")
+	if !res.ok(t) {
+		t.Fatalf("backlog create failed:\n%s", res.Stderr)
+	}
+
+	// An update that names neither list leaves both alone.
+	res = cli(t, dir, "backlog", "update", "BL01", "--title", "A better item")
+	if !res.ok(t) {
+		t.Fatalf("backlog update failed:\n%s", res.Stderr)
+	}
+	item := res.doc(t)["item"].(map[string]any)
+	tags, ok := item["tags"].([]any)
+	if !ok {
+		t.Fatalf("the update dropped the tags: %v", item)
+	}
+	if len(tags) != 2 {
+		t.Fatalf("the tags are %v, want the two the item had", tags)
+	}
+	scope, ok := item["scope"].([]any)
+	if !ok {
+		t.Fatalf("the update dropped the scope: %v", item)
+	}
+	if len(scope) != 1 || scope[0] != "the work" {
+		t.Fatalf("the scope is %v, want the one the item had", scope)
+	}
+
+	// A list flag that is given replaces the list it names — and only that one.
+	res = cli(t, dir, "backlog", "update", "BL01", "--tag", "three")
+	if !res.ok(t) {
+		t.Fatalf("backlog update failed:\n%s", res.Stderr)
+	}
+	item = res.doc(t)["item"].(map[string]any)
+	tags, ok = item["tags"].([]any)
+	if !ok || len(tags) != 1 || tags[0] != "three" {
+		t.Fatalf("the tags are %v, want the one the flag named", tags)
+	}
+	scope, ok = item["scope"].([]any)
+	if !ok || len(scope) != 1 {
+		t.Fatalf("the tags wiped the scope: %v", item)
+	}
+}
+
 // TestAnUnknownKindNamesTheKinds covers the closed set.
 //
 // A kind nobody knows is a typo, and a typo that silently disabled a feature is

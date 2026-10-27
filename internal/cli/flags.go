@@ -16,6 +16,13 @@ type flagSet struct {
 	strs  map[string]*string
 	ints  map[string]*int
 	lists map[string]*[]string
+	// given holds the list flags that were given on the command line.
+	//
+	// A list flag that is not given and a list flag that was given are two
+	// different things, and only the parser can tell them apart: the value of a
+	// list flag that was not given is an empty slice, exactly like one that was
+	// given and named nothing.
+	given map[string]bool
 	known map[string]bool
 	args  []string
 }
@@ -32,6 +39,7 @@ func newFlagSet(name string) *flagSet {
 		strs:  map[string]*string{},
 		ints:  map[string]*int{},
 		lists: map[string]*[]string{},
+		given: map[string]bool{},
 		known: map[string]bool{},
 	}
 	fs.String("actor", "", "who is acting")
@@ -78,6 +86,27 @@ func (f *flagSet) StringValue(name string) string {
 		return *v
 	}
 	return ""
+}
+
+// listArg returns the list a flag names.
+//
+// **nil when the flag was not given.** A list flag that is not given leaves its
+// field alone; a list flag that is given replaces the list it names. So nil says
+// "not given", and an empty list says "replace it with nothing" — two different
+// things, and the parser refuses a list flag with no values, so only the first
+// reaches here.
+//
+// The rule is the doc's: *a list flag replaces the list it names; a flag that is not
+// given leaves its field alone*.
+func (f *flagSet) listArg(name string) []string {
+	if !f.given[name] {
+		return nil
+	}
+	list, ok := f.lists[name]
+	if !ok {
+		return nil
+	}
+	return *list
 }
 
 // parse reads the arguments.
@@ -150,6 +179,7 @@ func (f *flagSet) parse(args []string) error {
 				value = args[i]
 			}
 			*f.lists[name] = append(*f.lists[name], value)
+			f.given[name] = true
 
 		default:
 			return fmt.Errorf("unknown flag --%s", name)

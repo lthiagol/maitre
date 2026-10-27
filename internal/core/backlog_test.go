@@ -219,6 +219,60 @@ func TestAnUnknownKindIsRefused(t *testing.T) {
 	}
 }
 
+// TestTheBacklogUpdateLeavesTheListsAlone covers the list rule.
+//
+// nil means "not given" and leaves the field alone; a list means "replace the list
+// it names". **Both** list fields obey the rule — the scope and the tags. The tags
+// used to be wiped by an update that never mentioned them, because the two fields
+// had two different guards.
+func TestTheBacklogUpdateLeavesTheListsAlone(t *testing.T) {
+	ops, store := newOps(t)
+
+	item, err := ops.CreateBacklogItem("An item", "why", []string{"the work"}, KindIdea, []string{"one", "two"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// An update that names neither list leaves both alone.
+	got, err := ops.UpdateBacklogItem(item.ID, "A better item", "", nil, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Tags) != 2 || len(got.Scope) != 1 {
+		t.Fatalf("the update dropped a list: %+v", got)
+	}
+
+	// A list that is given replaces the list it names — and only that one.
+	got, err = ops.UpdateBacklogItem(item.ID, "", "", nil, "", []string{"three"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Tags) != 1 || got.Tags[0] != "three" {
+		t.Fatalf("the tags are %v, want the one the update named", got.Tags)
+	}
+	if len(got.Scope) != 1 {
+		t.Fatalf("the tags wiped the scope: %+v", got)
+	}
+
+	// And the list on disk is the same.
+	onDisk, err := store.LoadBacklogItem(item.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(onDisk.Tags) != 1 || len(onDisk.Scope) != 1 {
+		t.Fatalf("the item on disk is %+v", onDisk)
+	}
+
+	// An **empty** list that was given clears the field: it is not "not given".
+	got, err = ops.UpdateBacklogItem(item.ID, "", "", []string{}, "", []string{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Tags) != 0 || len(got.Scope) != 0 {
+		t.Fatalf("the empty lists did not clear the fields: %+v", got)
+	}
+}
+
 // TestTheBacklogItemLifecycle covers the ordinary path: create, edit, dismiss.
 func TestTheBacklogItemLifecycle(t *testing.T) {
 	ops, store := newOps(t)

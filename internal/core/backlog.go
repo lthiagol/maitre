@@ -211,7 +211,7 @@ func (o *Operations) CreateBacklogItem(title, body string, scope []string, kind 
 	}
 	now := Now()
 	v := &BacklogItem{
-		ID: id, Title: title, Body: body, Scope: scope, Kind: kind, Tags: tags,
+		ID: id, Title: title, Body: body, Scope: emptyIfNil(scope), Kind: kind, Tags: emptyIfNil(tags),
 		Status: StatusOpen, Created: now, Updated: now,
 	}
 	if err := o.store.SaveBacklogItem(v); err != nil {
@@ -230,7 +230,9 @@ func (o *Operations) CreateBacklogItem(title, body string, scope []string, kind 
 // — the item stays one item, and its id does not change.
 //
 // A field that is empty is left alone: an update says what changes, not what the
-// item is.
+// item is. A **list** that was not given is nil, and nil is left alone too: the two
+// list fields obey one rule — a list that is given replaces the list it names, a
+// list that was not given leaves its field alone.
 func (o *Operations) UpdateBacklogItem(id, title, body string, scope []string, kind string, tags []string) (*BacklogItem, error) {
 	if kind != "" && !isKnownKind(kind) {
 		return nil, fmt.Errorf("unknown kind %q (want one of %s)", kind, strings.Join(BacklogKinds, ", "))
@@ -254,15 +256,13 @@ func (o *Operations) UpdateBacklogItem(id, title, body string, scope []string, k
 	if strings.TrimSpace(body) != "" {
 		v.Body = body
 	}
-	if len(scope) > 0 {
-		v.Scope = scope
-	}
 	if kind != "" {
 		v.Kind = kind
 	}
-	if tags != nil {
-		v.Tags = tags
-	}
+	setList(&v.Scope, scope)
+	setList(&v.Tags, tags)
+	v.Scope = emptyIfNil(v.Scope)
+	v.Tags = emptyIfNil(v.Tags)
 	v.Updated = Now()
 	if err := o.store.SaveBacklogItem(v); err != nil {
 		return nil, err
@@ -271,6 +271,30 @@ func (o *Operations) UpdateBacklogItem(id, title, body string, scope []string, k
 		return nil, err
 	}
 	return v, nil
+}
+
+// setList replaces a list field when the list was given, and leaves it alone when it
+// was not.
+//
+// **One rule for every list field of the operation.** nil means "not given"; an
+// empty list means "replace it with nothing". Two guards with two different rules
+// is how the tags came to be wiped by an update that never mentioned them.
+func setList(dst *[]string, given []string) {
+	if given != nil {
+		*dst = given
+	}
+}
+
+// emptyIfNil makes a list a list: never nil.
+//
+// The plan's own rule is that a list is a list — an empty one is `[]`, never `null`.
+// The JSON edge honours it: a nil list would be `null` in a document, and the
+// standard readers break on that.
+func emptyIfNil(list []string) []string {
+	if list == nil {
+		return []string{}
+	}
+	return list
 }
 
 // DismissBacklogItem marks a backlog item as not worth pursuing.

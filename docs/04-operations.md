@@ -194,7 +194,14 @@ the agent surface cannot reach, and a gate over it can never be tripped from `ma
 | the backlog item's `title` · `body` · `scope` · `kind` · `tags` | `maitre-cli backlog update --title --body --scope --kind --tag` |
 
 A list flag replaces the list it names; a flag that is not given leaves its field
-alone.
+alone. The domain reads the two apart: a list that was not given is `nil`, and a list
+that was given is a list — an **empty** list is a list that was given, and it clears
+the field.
+
+**A list cannot be emptied from the command line yet.** The parser refuses a list flag
+with no values (`--tag needs a value`), so there is no way to say "no tags". The
+domain can clear a list; the CLI cannot ask it to. Whether the parser should grow a
+way to say it is an open question.
 
 A typo is an error, never an empty result: an unknown lane, an unknown finding phase,
 an unknown severity and an unknown event are all refused with the list of what is

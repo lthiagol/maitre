@@ -39,9 +39,11 @@ func (r *Runner) cmdBacklogCreate(args []string) int {
 	fs := newFlagSet("backlog create")
 	title := fs.String("title", "", "what it is")
 	body := fs.String("body", "", "why it is worth doing")
-	scope := fs.StringList("scope")
 	kind := fs.String("kind", core.KindIdea, "idea, feature or bug")
-	tags := fs.StringList("tag")
+	// The list flags are declared here and read below: a list flag that is not
+	// given leaves its field alone.
+	fs.StringList("scope")
+	fs.StringList("tag")
 	if err := fs.parse(args); err != nil {
 		r.fail("bad flags", err.Error())
 		return ExitError
@@ -55,7 +57,7 @@ func (r *Runner) cmdBacklogCreate(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	item, err := ops.CreateBacklogItem(*title, *body, *scope, *kind, *tags)
+	item, err := ops.CreateBacklogItem(*title, *body, fs.listArg("scope"), *kind, fs.listArg("tag"))
 	if err != nil {
 		return r.failOp(err)
 	}
@@ -71,9 +73,11 @@ func (r *Runner) cmdBacklogUpdate(args []string) int {
 	fs := newFlagSet("backlog update")
 	title := fs.String("title", "", "new title")
 	body := fs.String("body", "", "new body")
-	scope := fs.StringList("scope")
 	kind := fs.String("kind", "", "idea, feature or bug")
-	tags := fs.StringList("tag")
+	// The list flags are declared here and read below: a list flag that is not
+	// given leaves its field alone.
+	fs.StringList("scope")
+	fs.StringList("tag")
 	if err := fs.parse(args); err != nil {
 		r.fail("bad flags", err.Error())
 		return ExitError
@@ -87,7 +91,7 @@ func (r *Runner) cmdBacklogUpdate(args []string) int {
 		r.fail("no plan", err.Error())
 		return ExitError
 	}
-	item, err := ops.UpdateBacklogItem(fs.arg(0), *title, *body, *scope, *kind, *tags)
+	item, err := ops.UpdateBacklogItem(fs.arg(0), *title, *body, fs.listArg("scope"), *kind, fs.listArg("tag"))
 	if err != nil {
 		return r.failOp(err)
 	}
