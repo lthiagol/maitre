@@ -83,7 +83,7 @@ an agent reasons about mechanically stays descriptive. See
 
 | Entity | Form | Scope |
 |---|---|---|
-| recipe | `R01`, children `R01.1` | workspace |
+| recipe | `RCP01`, children `RCP01.1` | workspace |
 | course | `C01` | workspace |
 | prep note | `N01` | workspace |
 | special | `S01` | workspace |
@@ -96,6 +96,13 @@ an agent reasons about mechanically stays descriptive. See
 Prefixes are distinct per kind so a reference is unambiguous across directories. Allocated
 from a **scan of what exists**, never from a count. (v1's `len()+1` produced
 `[AC-01, AC-03, AC-03]` after a removal.)
+
+**The reader strips every leading letter.** `RCP01`, `rcp01`, `RCP1`, `R01`, `r1` and `1`
+all name the same recipe, and a file named `R01-<slug>.json` is read as readily as one
+named `RCP01-<slug>.json`. The ids changed when the vocabulary was decided; the plans
+and journals written before it carry the old forms, and a reader that cannot resolve
+them cannot read the past. One letter would not be enough: `RCP01` reduced by a single
+letter is `CP01`, which matches neither the new id nor the old one.
 
 ---
 
@@ -414,7 +421,7 @@ it otherwise.
 ```
 kitchen/
   project.json                 project meta · charter · settings — NO index
-  recipes/R01-<slug>.json      self-contained: spec + guidance + evidence + review + audit
+  recipes/RCP01-<slug>.json    self-contained: spec + guidance + evidence + review + audit
   courses/C01-<slug>.json
   prep-notes/N01-<slug>.json
   specials/S01-<slug>.json
@@ -456,7 +463,7 @@ plan, not the way plans are read.
   "seq": 412,
   "events": [
     { "seq": 412, at: "2026-10-25T12:00:00Z", kind: "lifecycle",
-      recipe: "R07", actor: "human", session: "s-3", role: "coordinator",
+      recipe: "RCP07", actor: "human", session: "s-3", role: "coordinator",
       data: { from: "ready", to: "approved" } }
   ]
 }

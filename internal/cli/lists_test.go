@@ -36,15 +36,15 @@ func TestNoListIsEverNull(t *testing.T) {
 	cli(t, populated, "recipe", "create", "--title", "A recipe",
 		"--outcome", "o", "--problem", "p",
 		"--out-of-scope", "a", "--out-of-scope", "b")
-	cli(t, populated, "ac", "add", "R01", "--description", "d", "--verification", "go test ./...")
-	cli(t, populated, "wp", "add", "R01", "--name", "core")
-	cli(t, populated, "step", "add", "R01", "--action", "do it", "--done-when", "done")
+	cli(t, populated, "ac", "add", "RCP01", "--description", "d", "--verification", "go test ./...")
+	cli(t, populated, "wp", "add", "RCP01", "--name", "core")
+	cli(t, populated, "step", "add", "RCP01", "--action", "do it", "--done-when", "done")
 	cli(t, populated, "special", "create", "--title", "A hunch", "--body", "worth noticing")
 	cli(t, populated, "prepnote", "create", "--title", "A note", "--intent", "first")
 	for _, args := range listCommands() {
 		checkNoNulls(t, populated, args...)
 	}
-	checkNoNulls(t, populated, "recipe", "show", "R01")
+	checkNoNulls(t, populated, "recipe", "show", "RCP01")
 }
 
 // checkNoNulls runs a command and asserts that no field in its document is null.

@@ -14,7 +14,7 @@ func TestARefusalIsInTheLog(t *testing.T) {
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o", "--problem", "p")
 
 	// Groom is refused: no criteria and no out-of-scope.
-	res := cli(t, dir, "recipe", "advance", "R01", "groom")
+	res := cli(t, dir, "recipe", "advance", "RCP01", "groom")
 	if res.Code != ExitGate {
 		t.Fatalf("exit = %d, want %d", res.Code, ExitGate)
 	}

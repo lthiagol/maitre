@@ -34,9 +34,9 @@ make build && make test
 ──────────────────────────
 12 recipes · /path/to/kitchen
 
-▸ Grooming      2 │ R03  draft     Sharpen the AC gate
-  Sign-off      1 │ R07  ready     Add the backlog view
-  On the line   3 │ R11  executing  Wire the review queue
+▸ Grooming      2 │ RCP03  draft     Sharpen the AC gate
+  Sign-off      1 │ RCP07  ready     Add the backlog view
+  On the line   3 │ RCP11  executing  Wire the review queue
   Tasting       2 │
   On hold       1 │
   Served        3 │

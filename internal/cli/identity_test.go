@@ -12,14 +12,14 @@ func signedOffRecipe(t *testing.T, dir string) {
 		{"create", []string{"recipe", "create", "--title", "A recipe",
 			"--outcome", "o", "--problem", "p",
 			"--out-of-scope", "a", "--out-of-scope", "b"}},
-		{"criterion", []string{"ac", "add", "R01",
+		{"criterion", []string{"ac", "add", "RCP01",
 			"--description", "d", "--verification", "go test ./..."}},
-		{"work package", []string{"wp", "add", "R01", "--name", "core"}},
-		{"step", []string{"step", "add", "R01",
+		{"work package", []string{"wp", "add", "RCP01", "--name", "core"}},
+		{"step", []string{"step", "add", "RCP01",
 			"--action", "do it", "--done-when", "done", "--covers", "AC-01"}},
-		{"groom", []string{"recipe", "advance", "R01", "groom"}},
-		{"specify", []string{"recipe", "advance", "R01", "specify"}},
-		{"approve", []string{"--actor", "chef", "recipe", "approve", "R01", "--by", "chef"}},
+		{"groom", []string{"recipe", "advance", "RCP01", "groom"}},
+		{"specify", []string{"recipe", "advance", "RCP01", "specify"}},
+		{"approve", []string{"--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef"}},
 	} {
 		res := cli(t, dir, s.args...)
 		if !res.ok(t) {
@@ -32,7 +32,7 @@ func signedOffRecipe(t *testing.T, dir string) {
 //
 // The three identity flags were declared only by `recipe create`. Every other verb
 // rejected them as unknown flags, and the documented form — `scale --actor x --session
-// y --role z recipe claim R01` — was refused by the top-level dispatcher as an
+// y --role z recipe claim RCP01` — was refused by the top-level dispatcher as an
 // unknown command. The L5 session stamp could then only be set through environment
 // variables.
 func TestActorFlagsAreGlobal(t *testing.T) {
@@ -43,7 +43,7 @@ func TestActorFlagsAreGlobal(t *testing.T) {
 	signedOffRecipe(t, dir)
 
 	res := cli(t, dir, "--actor", "line-cook", "--session", "s-exec", "--role", "runner",
-		"recipe", "claim", "R01", "--agent", "line-cook")
+		"recipe", "claim", "RCP01", "--agent", "line-cook")
 	if !res.ok(t) {
 		t.Fatalf("the documented form was refused:\n%s", res.Stderr)
 	}
@@ -80,7 +80,7 @@ func TestActorFlagsWorkAfterTheVerb(t *testing.T) {
 	t.Setenv("SCALE_ROLE", "")
 	signedOffRecipe(t, dir)
 
-	res := cli(t, dir, "recipe", "claim", "R01", "--agent", "line-cook",
+	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook",
 		"--actor", "line-cook", "--session", "s-exec", "--role", "runner")
 	if !res.ok(t) {
 		t.Fatalf("the flags were refused:\n%s", res.Stderr)

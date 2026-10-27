@@ -6,15 +6,15 @@ import (
 
 // treePlan is a plan with a dependency chain, a branch and a cycle.
 //
-//	R01  nothing waits on it, but R02, R03 and R04 do
-//	R02  waits on R01
-//	R03  waits on R01 and R04 — it forks at R01, the first unmet dependency
-//	R04  waits on R01
-//	R05  waits on R99 — a dependency that is not in the plan
-//	R06  waits on nothing, and nothing waits on it
-//	R07  waits on R08, and R08 waits on R07 — a dependency cycle
-//	R08  waits on R07 — the other half of the cycle
-//	R09  waits on R07 and R01 — on a cycle member, and on the trunk
+//	RCP01  nothing waits on it, but RCP02, RCP03 and RCP04 do
+//	RCP02  waits on RCP01
+//	RCP03  waits on RCP01 and RCP04 — it forks at RCP01, the first unmet dependency
+//	RCP04  waits on RCP01
+//	RCP05  waits on R99 — a dependency that is not in the plan
+//	RCP06  waits on nothing, and nothing waits on it
+//	RCP07  waits on RCP08, and RCP08 waits on RCP07 — a dependency cycle
+//	RCP08  waits on RCP07 — the other half of the cycle
+//	RCP09  waits on RCP07 and RCP01 — on a cycle member, and on the trunk
 func treePlan(t *testing.T) []Recipe {
 	t.Helper()
 	ops, _ := newOps(t)
@@ -55,18 +55,18 @@ func treePlan(t *testing.T) []Recipe {
 		return *got
 	}
 
-	// The recipes are created in order, so their ids are R02, R03, R04, R05.
-	r02 := mk("", "Second", []string{"R01"})
-	r03 := mk("", "Third", []string{"R01", "R04"})
-	r04 := mk("", "Fourth", []string{"R01"})
+	// The recipes are created in order, so their ids are RCP02, RCP03, RCP04, RCP05.
+	r02 := mk("", "Second", []string{"RCP01"})
+	r03 := mk("", "Third", []string{"RCP01", "RCP04"})
+	r04 := mk("", "Fourth", []string{"RCP01"})
 	r05 := mk("", "Fifth", []string{"R99"})
 	r06 := mk("", "Sixth", nil)
-	r07 := mk("", "Seventh", []string{"R08"})
-	r08 := mk("", "Eighth", []string{"R07"})
-	r09 := mk("", "Ninth", []string{"R07", "R01"})
+	r07 := mk("", "Seventh", []string{"RCP08"})
+	r08 := mk("", "Eighth", []string{"RCP07"})
+	r09 := mk("", "Ninth", []string{"RCP07", "RCP01"})
 
 	var out []Recipe
-	for _, id := range []string{"R01", r02.ID, r03.ID, r04.ID, r05.ID, r06.ID, r07.ID, r08.ID, r09.ID} {
+	for _, id := range []string{"RCP01", r02.ID, r03.ID, r04.ID, r05.ID, r06.ID, r07.ID, r08.ID, r09.ID} {
 		got, err := ops.GetRecipe(id)
 		if err != nil {
 			t.Fatal(err)
@@ -108,11 +108,11 @@ func TestACycleIsDrawn(t *testing.T) {
 	tree := TreeOf(treePlan(t))
 	ids := treeIDs(tree)
 
-	if !ids["R07"] {
-		t.Error("R07 is in a cycle and must still be drawn")
+	if !ids["RCP07"] {
+		t.Error("RCP07 is in a cycle and must still be drawn")
 	}
-	if !ids["R08"] {
-		t.Error("R08 is in a cycle and must still be drawn")
+	if !ids["RCP08"] {
+		t.Error("RCP08 is in a cycle and must still be drawn")
 	}
 }
 
@@ -122,8 +122,8 @@ func TestACycleIsDrawn(t *testing.T) {
 // under is never drawn.
 func TestARecipeWaitingOnACycleIsDrawn(t *testing.T) {
 	tree := TreeOf(treePlan(t))
-	if !treeIDs(tree)["R09"] {
-		t.Error("R09 waits on a cycle member and must still be drawn")
+	if !treeIDs(tree)["RCP09"] {
+		t.Error("RCP09 waits on a cycle member and must still be drawn")
 	}
 }
 
@@ -161,26 +161,26 @@ func findNode(tree Tree, id string) (TreeNode, bool) {
 func TestACycleIsMarked(t *testing.T) {
 	tree := TreeOf(treePlan(t))
 
-	r07, ok := findNode(tree, "R07")
+	r07, ok := findNode(tree, "RCP07")
 	if !ok {
-		t.Fatal("R07 is not in the tree")
+		t.Fatal("RCP07 is not in the tree")
 	}
 	if !r07.Cycle {
-		t.Error("R07 waits on itself: it is in a cycle and must be marked")
+		t.Error("RCP07 waits on itself: it is in a cycle and must be marked")
 	}
 	if r07.WaitsOnCycle {
-		t.Error("R07 is in the cycle itself; it does not merely wait on one")
+		t.Error("RCP07 is in the cycle itself; it does not merely wait on one")
 	}
 
-	r09, ok := findNode(tree, "R09")
+	r09, ok := findNode(tree, "RCP09")
 	if !ok {
-		t.Fatal("R09 is not in the tree")
+		t.Fatal("RCP09 is not in the tree")
 	}
 	if r09.Cycle {
-		t.Error("R09 waits on a cycle member; it is not in the cycle itself")
+		t.Error("RCP09 waits on a cycle member; it is not in the cycle itself")
 	}
 	if !r09.WaitsOnCycle {
-		t.Error("R09 waits on a cycle and must be marked")
+		t.Error("RCP09 waits on a cycle and must be marked")
 	}
 }
 
@@ -193,23 +193,23 @@ func TestTheTreeForksAtTheDependency(t *testing.T) {
 	tree := TreeOf(treePlan(t))
 
 	if len(tree.Roots) != 2 {
-		t.Fatalf("the tree has %d roots, want 2 (R01 and R06)", len(tree.Roots))
+		t.Fatalf("the tree has %d roots, want 2 (RCP01 and RCP06)", len(tree.Roots))
 	}
 	root := tree.Roots[0]
-	if root.Summary.ID != "R01" {
-		t.Fatalf("the root is %q, want R01", root.Summary.ID)
+	if root.Summary.ID != "RCP01" {
+		t.Fatalf("the root is %q, want RCP01", root.Summary.ID)
 	}
 	if len(root.Waiting) != 3 {
-		t.Fatalf("the root has %d branches, want 3 (R02, R03 and R04 fork at R01)", len(root.Waiting))
+		t.Fatalf("the root has %d branches, want 3 (RCP02, RCP03 and RCP04 fork at RCP01)", len(root.Waiting))
 	}
-	if root.Waiting[0].Summary.ID != "R02" {
-		t.Errorf("the first branch is %q, want R02", root.Waiting[0].Summary.ID)
+	if root.Waiting[0].Summary.ID != "RCP02" {
+		t.Errorf("the first branch is %q, want RCP02", root.Waiting[0].Summary.ID)
 	}
-	if root.Waiting[1].Summary.ID != "R03" {
-		t.Errorf("the second branch is %q, want R03", root.Waiting[1].Summary.ID)
+	if root.Waiting[1].Summary.ID != "RCP03" {
+		t.Errorf("the second branch is %q, want RCP03", root.Waiting[1].Summary.ID)
 	}
-	if root.Waiting[2].Summary.ID != "R04" {
-		t.Errorf("the third branch is %q, want R04", root.Waiting[2].Summary.ID)
+	if root.Waiting[2].Summary.ID != "RCP04" {
+		t.Errorf("the third branch is %q, want RCP04", root.Waiting[2].Summary.ID)
 	}
 }
 
@@ -243,18 +243,18 @@ func TestARowSaysEveryDependencyItWaitsOn(t *testing.T) {
 
 	var r03 *TreeNode
 	for i := range root.Waiting {
-		if root.Waiting[i].Summary.ID == "R03" {
+		if root.Waiting[i].Summary.ID == "RCP03" {
 			r03 = &root.Waiting[i]
 		}
 	}
 	if r03 == nil {
-		t.Fatal("R03 does not fork at R01")
+		t.Fatal("RCP03 does not fork at RCP01")
 	}
 	if len(r03.Needs) != 2 {
-		t.Fatalf("R03 waits on %v, want two dependencies", r03.Needs)
+		t.Fatalf("RCP03 waits on %v, want two dependencies", r03.Needs)
 	}
-	if r03.Needs[0] != "R01" || r03.Needs[1] != "R04" {
-		t.Fatalf("R03 waits on %v, want R01 then R04", r03.Needs)
+	if r03.Needs[0] != "RCP01" || r03.Needs[1] != "RCP04" {
+		t.Fatalf("RCP03 waits on %v, want RCP01 then RCP04", r03.Needs)
 	}
 }
 
@@ -269,8 +269,8 @@ func TestADanglingDependencyIsVisible(t *testing.T) {
 		t.Fatalf("the tree has %d orphans, want 1", len(tree.Orphans))
 	}
 	orphan := tree.Orphans[0]
-	if orphan.Summary.ID != "R05" {
-		t.Fatalf("the orphan is %q, want R05", orphan.Summary.ID)
+	if orphan.Summary.ID != "RCP05" {
+		t.Fatalf("the orphan is %q, want RCP05", orphan.Summary.ID)
 	}
 	if len(orphan.Needs) == 0 || orphan.Needs[0] != "R99" {
 		t.Fatalf("the orphan waits on %v, want R99", orphan.Needs)
@@ -288,21 +288,21 @@ func TestARecipeWithNothingWaitingOnItIsOnTheTrunk(t *testing.T) {
 	recipes := treePlan(t)
 	tree := TreeOf(recipes)
 
-	// R06 waits on nothing and nothing waits on it.
+	// RCP06 waits on nothing and nothing waits on it.
 	var r06 *TreeNode
 	for i := range tree.Roots {
-		if tree.Roots[i].Summary.ID == "R06" {
+		if tree.Roots[i].Summary.ID == "RCP06" {
 			r06 = &tree.Roots[i]
 		}
 	}
 	if r06 == nil {
-		t.Fatal("R06 is not on the trunk")
+		t.Fatal("RCP06 is not on the trunk")
 	}
 	if len(r06.Needs) != 0 {
-		t.Errorf("R06 waits on %v, want nothing", r06.Needs)
+		t.Errorf("RCP06 waits on %v, want nothing", r06.Needs)
 	}
 	if len(r06.Waiting) != 0 {
-		t.Errorf("R06 has %d branches, want none", len(r06.Waiting))
+		t.Errorf("RCP06 has %d branches, want none", len(r06.Waiting))
 	}
 }
 

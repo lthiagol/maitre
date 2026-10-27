@@ -198,14 +198,14 @@ func TestAPromotionStillWorksInBothDirections(t *testing.T) {
 	if err != nil {
 		t.Fatalf("promote prep note: %v", err)
 	}
-	if recipe.ID != "R01" {
-		t.Fatalf("recipe id = %q, want R01", recipe.ID)
+	if recipe.ID != "RCP01" {
+		t.Fatalf("recipe id = %q, want RCP01", recipe.ID)
 	}
 	afterNote, err := store.LoadPrepNote(note.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if afterNote.Status != StatusPromoted || afterNote.PromotedTo != "recipe R01" {
+	if afterNote.Status != StatusPromoted || afterNote.PromotedTo != "recipe RCP01" {
 		t.Fatalf("the prep note should record where it went: %+v", afterNote)
 	}
 	j, err = store.LoadJournal()

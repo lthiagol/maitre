@@ -153,7 +153,7 @@ Two things worth keeping regardless of the answer:
 - **Map-as-index, not map-as-store** — a decision lives in exactly one place; the map
   only gists and links. That is principle P1 (*derive, never store*) applied to a
   planning artifact, arrived at independently.
-- **Refer by name, never by bare id** — a wall of `R07, R11, R23` is illegible. Our
+- **Refer by name, never by bare id** — a wall of `RCP07, RCP11, RCP23` is illegible. Our
   board leads with ids because v1 did. Worth revisiting when we design the board for
   real (slice 3).
 

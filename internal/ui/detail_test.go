@@ -21,14 +21,14 @@ func TestTheConsoleShowsADeviation(t *testing.T) {
 		t.Fatal(err)
 	}
 	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-1", Role: "runner"})
-	if _, err := ops.RecordDeviation("R01", "G1", "read the queue twice"); err != nil {
+	if _, err := ops.RecordDeviation("RCP01", "G1", "read the queue twice"); err != nil {
 		t.Fatal(err)
 	}
 	// The console reads the plan after the deviation was recorded.
 	m := loadModel(t, store)
 	for {
 		s, ok := m.currentSummary()
-		if ok && s.ID == "R01" {
+		if ok && s.ID == "RCP01" {
 			break
 		}
 		m.Update(tea.KeyPressMsg{Code: 'j'})

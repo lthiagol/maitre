@@ -119,19 +119,19 @@ func TestTabKeySwitchesTabs(t *testing.T) {
 
 func TestSpaceSignsOffAReadyRecipe(t *testing.T) {
 	m := newModel(t)
-	// R02 is the ready one, and triage puts it first.
-	if s, ok := m.currentSummary(); !ok || s.ID != "R02" {
-		t.Fatalf("the first recipe should be R02, got %+v", s)
+	// RCP02 is the ready one, and triage puts it first.
+	if s, ok := m.currentSummary(); !ok || s.ID != "RCP02" {
+		t.Fatalf("the first recipe should be RCP02, got %+v", s)
 	}
 	m.Update(tea.KeyPressMsg{Code: ' '})
 	if m.refusal != "" {
 		t.Fatalf("the sign-off was refused: %s", m.refusal)
 	}
-	if !strings.Contains(m.status, "signed off R02") {
+	if !strings.Contains(m.status, "signed off RCP02") {
 		t.Fatalf("status = %q", m.status)
 	}
 	// The recipe really moved.
-	rec, err := m.ops.GetRecipe("R02")
+	rec, err := m.ops.GetRecipe("RCP02")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,10 +142,10 @@ func TestSpaceSignsOffAReadyRecipe(t *testing.T) {
 
 func TestSpaceDoesNotStartWork(t *testing.T) {
 	m := newModel(t)
-	// Move to R04, which is approved.
+	// Move to RCP04, which is approved.
 	for {
 		s, _ := m.currentSummary()
-		if s.ID == "R04" {
+		if s.ID == "RCP04" {
 			break
 		}
 		m.Update(tea.KeyPressMsg{Code: 'j'})
@@ -154,7 +154,7 @@ func TestSpaceDoesNotStartWork(t *testing.T) {
 	if m.refusal != "" {
 		t.Fatalf("unexpected refusal: %s", m.refusal)
 	}
-	rec, err := m.ops.GetRecipe("R04")
+	rec, err := m.ops.GetRecipe("RCP04")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,10 +168,10 @@ func TestSpaceDoesNotStartWork(t *testing.T) {
 
 func TestNothingToDoIsNotARefusal(t *testing.T) {
 	m := newModel(t)
-	// R07 is a draft — there is nothing for the chef to do.
+	// RCP07 is a draft — there is nothing for the chef to do.
 	for {
 		s, _ := m.currentSummary()
-		if s.ID == "R07" {
+		if s.ID == "RCP07" {
 			break
 		}
 		m.Update(tea.KeyPressMsg{Code: 'j'})
@@ -238,7 +238,7 @@ func TestPathTabSeparatesReadyFromWaiting(t *testing.T) {
 	if !strings.Contains(out, "READY") || !strings.Contains(out, "WAITING") {
 		t.Errorf("the path is missing a group\n%s", out)
 	}
-	if !strings.Contains(out, "needs R02") {
+	if !strings.Contains(out, "needs RCP02") {
 		t.Errorf("the path should say what is blocking\n%s", out)
 	}
 }

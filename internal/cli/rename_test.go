@@ -41,7 +41,7 @@ func TestARenameDoesNotMultiplyThePlan(t *testing.T) {
 	if !create.ok(t) {
 		t.Fatalf("create failed:\n%s", create.Stderr)
 	}
-	update := cli(t, dir, "recipe", "update", "R01", "--title", "Renamed")
+	update := cli(t, dir, "recipe", "update", "RCP01", "--title", "Renamed")
 	if !update.ok(t) {
 		t.Fatalf("update failed:\n%s", update.Stderr)
 	}
@@ -53,7 +53,7 @@ func TestARenameDoesNotMultiplyThePlan(t *testing.T) {
 	}
 
 	// `show` reads the new title.
-	show := cli(t, dir, "recipe", "show", "R01")
+	show := cli(t, dir, "recipe", "show", "RCP01")
 	if !show.ok(t) {
 		t.Fatalf("show failed:\n%s", show.Stderr)
 	}

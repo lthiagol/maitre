@@ -10,7 +10,7 @@ import (
 
 // twoNoteModel builds a console over two recipes, each with open tasting notes.
 //
-// R01 has three notes, R02 has one. The Path tab lists the recipes by id and the
+// RCP01 has three notes, RCP02 has one. The Path tab lists the recipes by id and the
 // console keeps a selection per tab, so the two tabs can show different recipes —
 // which is how the note cursor could end up pointing past the end of the recipe the
 // console was showing.
@@ -57,12 +57,12 @@ func switchToTab(t *testing.T, m *Model, tab Tab) {
 func TestTheNoteCursorFollowsTheRecipe(t *testing.T) {
 	m := twoNoteModel(t)
 
-	// The Path tab's selection is pointed at R02, which has one note.
+	// The Path tab's selection is pointed at RCP02, which has one note.
 	switchToTab(t, m, TabPath)
 	if _, err := Drive(m, []string{"down"}); err != nil {
 		t.Fatal(err)
 	}
-	// Back to the Recipes tab, where R01 — three notes — is selected.
+	// Back to the Recipes tab, where RCP01 — three notes — is selected.
 	switchToTab(t, m, TabRecipes)
 	if _, err := Drive(m, []string{"n", "n"}); err != nil {
 		t.Fatal(err)
@@ -71,7 +71,7 @@ func TestTheNoteCursorFollowsTheRecipe(t *testing.T) {
 		t.Fatalf("the cursor should be on the third note, got %d", m.selNote)
 	}
 
-	// And to the Path tab again: R02, one note.
+	// And to the Path tab again: RCP02, one note.
 	switchToTab(t, m, TabPath)
 
 	// The cursor is within the recipe the console is showing.
@@ -123,7 +123,7 @@ func TestTheTriageCannotOverwriteANoteTheAgentClosed(t *testing.T) {
 	}
 	// The agent resolves the note while the prompt is open.
 	agent := core.NewOperations(m.store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
-	if _, err := agent.ResolveFinding("R01", "F-01", "fixed it properly"); err != nil {
+	if _, err := agent.ResolveFinding("RCP01", "F-01", "fixed it properly"); err != nil {
 		t.Fatal(err)
 	}
 	// The chef types the reason and hits enter.
@@ -131,7 +131,7 @@ func TestTheTriageCannotOverwriteANoteTheAgentClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}

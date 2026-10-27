@@ -96,8 +96,8 @@ func TestDriveReplaysKeys(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(StripANSI(out), "signed off R02") {
-		t.Errorf("the scripted drive did not sign off R02:\n%s", StripANSI(out))
+	if !strings.Contains(StripANSI(out), "signed off RCP02") {
+		t.Errorf("the scripted drive did not sign off RCP02:\n%s", StripANSI(out))
 	}
 }
 

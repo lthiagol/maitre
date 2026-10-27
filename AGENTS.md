@@ -130,7 +130,7 @@ L5 law is about sessions. Every command prints one JSON document; a gate refusal
 exit 2. The command surface is in
 [`docs/04-operations.md`](docs/04-operations.md#the-cli-surface).
 
-**Slice 7 — the console stops lying.** The first dogfooded recipe (R01) found three
+**Slice 7 — the console stops lying.** The first dogfooded recipe (RCP01) found three
 places where the console's story and the domain's story diverged:
 
 - **The triage hid the wait.** A recipe the executor reviewed itself cannot close —
@@ -163,7 +163,7 @@ fixer's move, and the console must not do an agent's job ([ADR-0003](docs/decisi
 second framework. An open note outranks the review: it is the concrete blocker — the
 close gate refuses a recipe with an open note — and a verdict can wait.
 
-**The round trip ran.** R01 was authored through `maitre-cli`, executed with real proofs,
+**The round trip ran.** RCP01 was authored through `maitre-cli`, executed with real proofs,
 self-reviewed, and then reviewed independently in `maitre` — the first time the loop
 ran on real content. See `kitchen/` for the artifact and the journal.
 

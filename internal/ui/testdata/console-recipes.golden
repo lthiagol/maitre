@@ -4,19 +4,19 @@
  7 recipes · 2 need you   ☑ show served
  Needs you                                                                                      2
 ──────────────────────────────────────────────────────────────────────────────────────────────────
-  R02  ready       Sign off the menu                             1/2
-  R03  remediation Wire the review queue                         2/3 1 note
+  RCP02 ready       Sign off the menu                             1/2
+  RCP03 remediation Wire the review queue                         2/3 1 note
  On the line                                                                                    2
 ──────────────────────────────────────────────────────────────────────────────────────────────────
-  R04  approved    Add the backlog view                          1/1 ●
-  R05  executing   Sharpen the proof contract                    1/2
+  RCP04 approved    Add the backlog view                          1/1 ●
+  RCP05 executing   Sharpen the proof contract                    1/2
  Being shaped                                                                                   2
 ──────────────────────────────────────────────────────────────────────────────────────────────────
-  R01  draft       Sharpen the AC gate                           0/2
-  R07  draft       Record the review protocol                    0/1
+  RCP01 draft       Sharpen the AC gate                           0/2
+  RCP07 draft       Record the review protocol                    0/1
  Served                                                                                         1
 ──────────────────────────────────────────────────────────────────────────────────────────────────
-  R06  closed      Draft the glossary                            1/1
+  RCP06 closed      Draft the glossary                            1/1
 
 
 

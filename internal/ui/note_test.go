@@ -178,7 +178,7 @@ func TestTheChefCanDismissANote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,7 +208,7 @@ func TestTheChefCanCommentOnANote(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -268,7 +268,7 @@ func TestTheConsoleDoesNotOfferToResolve(t *testing.T) {
 // TestTheTriageCanBeCancelled checks esc leaves no trace.
 func TestTheTriageCanBeCancelled(t *testing.T) {
 	m := noteModel(t)
-	before, err := m.ops.GetRecipe("R01")
+	before, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -281,7 +281,7 @@ func TestTheTriageCanBeCancelled(t *testing.T) {
 		t.Fatal("the prompt should be closed")
 	}
 
-	after, err := m.ops.GetRecipe("R01")
+	after, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}

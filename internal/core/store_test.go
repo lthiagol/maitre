@@ -45,8 +45,12 @@ func TestInitIsIdempotent(t *testing.T) {
 func TestNextRecipeIDScanRatherThanCount(t *testing.T) {
 	s := newStore(t)
 
-	// Create R01 and R03 by hand, leaving a gap. The next id must be R04 — not R03
-	// (a count) and not R02 (a len).
+	// Create R01 and R03 by hand, leaving a gap. The next id must be RCP04 — not
+	// RCP03 (a count) and not RCP02 (a len).
+	//
+	// The two on disk carry the ids the plans written before the rename carry, on
+	// purpose: the number is what must not be handed out twice, so a plan whose
+	// files are still called R01 must not get RCP01 handed out again.
 	for _, id := range []string{"R01", "R03"} {
 		r := &Recipe{ID: id, Title: "t " + id, Slug: "t-" + id, Lifecycle: LifecycleDraft}
 		if err := s.SaveRecipe(r); err != nil {
@@ -57,8 +61,8 @@ func TestNextRecipeIDScanRatherThanCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got != "R04" {
-		t.Fatalf("next id = %q, want R04", got)
+	if got != "RCP04" {
+		t.Fatalf("next id = %q, want RCP04", got)
 	}
 }
 

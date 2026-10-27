@@ -68,7 +68,7 @@ func TestAChangeOnDiskAppears(t *testing.T) {
 	// An agent renames the recipe on disk.
 	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
 	title := "Renamed by an agent"
-	if _, err := ops.UpdateRecipe("R01", core.Fragment{Title: &title}); err != nil {
+	if _, err := ops.UpdateRecipe("RCP01", core.Fragment{Title: &title}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -118,7 +118,7 @@ func TestTheChefsPlaceSurvivesAReload(t *testing.T) {
 
 	// Something changes on disk.
 	ops := core.NewOperations(store, core.AuditContext{Actor: "line-cook", Session: "s-9", Role: "runner"})
-	if _, err := ops.DocumentRecipe("R01", "the plan moved on"); err != nil {
+	if _, err := ops.DocumentRecipe("RCP01", "the plan moved on"); err != nil {
 		t.Fatal(err)
 	}
 

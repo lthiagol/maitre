@@ -25,7 +25,7 @@ The console is driven by keys, so it can be driven by a script too.
 maitre --render --plain
 
 # one recipe
-maitre --render --plain --show R03
+maitre --render --plain --show RCP03
 
 # drive it first, then render — this is the interesting one
 maitre --keys "down,down,space" --plain
@@ -37,7 +37,7 @@ a drive that signs off a recipe really signs it off.
 
 ```bash
 maitre --keys "down,down,space" --plain | head -20
-#   "started R04" — and the board below it has already moved R04 out of "Needs you"
+#   "started RCP04" — and the board below it has already moved RCP04 out of "Needs you"
 ```
 
 That is how you check a behaviour without a terminal, and it is how you paste a repro

@@ -44,7 +44,7 @@ func TestOperationsCreateAndJournal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.ID != "R01" || r.Lifecycle != LifecycleDraft {
+	if r.ID != "RCP01" || r.Lifecycle != LifecycleDraft {
 		t.Fatalf("recipe = %+v", r)
 	}
 
@@ -56,7 +56,7 @@ func TestOperationsCreateAndJournal(t *testing.T) {
 		t.Fatalf("journal has %d events, want 1", len(j.Events))
 	}
 	e := j.Events[0]
-	if e.Kind != KindCreated || e.Recipe != "R01" {
+	if e.Kind != KindCreated || e.Recipe != "RCP01" {
 		t.Fatalf("event = %+v", e)
 	}
 	if e.Actor != "chef" || e.Session != "s-1" || e.Role != "coordinator" {
@@ -231,13 +231,13 @@ func TestSeedProducesARealisticPlan(t *testing.T) {
 	}
 
 	want := map[string]Lifecycle{
-		"R01": LifecycleDraft,
-		"R02": LifecycleReady,
-		"R03": LifecycleRemediation,
-		"R04": LifecycleApproved,
-		"R05": LifecycleExecuting,
-		"R06": LifecycleClosed,
-		"R07": LifecycleDraft,
+		"RCP01": LifecycleDraft,
+		"RCP02": LifecycleReady,
+		"RCP03": LifecycleRemediation,
+		"RCP04": LifecycleApproved,
+		"RCP05": LifecycleExecuting,
+		"RCP06": LifecycleClosed,
+		"RCP07": LifecycleDraft,
 	}
 	for _, r := range recipes {
 		if got := want[r.ID]; got != r.Lifecycle {
@@ -251,8 +251,8 @@ func TestSeedProducesARealisticPlan(t *testing.T) {
 		lanes[r.ID] = LaneOf(r)
 	}
 	for id, want := range map[string]Lane{
-		"R01": LaneGrooming, "R02": LaneApproval, "R03": LaneReview,
-		"R04": LaneExecution, "R05": LaneExecution, "R06": LaneDone, "R07": LaneGrooming,
+		"RCP01": LaneGrooming, "RCP02": LaneApproval, "RCP03": LaneReview,
+		"RCP04": LaneExecution, "RCP05": LaneExecution, "RCP06": LaneDone, "RCP07": LaneGrooming,
 	} {
 		if lanes[id] != want {
 			t.Errorf("%s lane = %q, want %q", id, lanes[id], want)

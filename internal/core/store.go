@@ -442,7 +442,7 @@ func (s *Store) NextRecipeID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return nextIDIn(s.RecipeDir(), "R", reserved...)
+	return nextIDIn(s.RecipeDir(), "RCP", reserved...)
 }
 
 // reservedRecipeIDs are the recipe ids a prep note points at.
@@ -460,10 +460,7 @@ func (s *Store) reservedRecipeIDs() ([]string, error) {
 
 // parseNumericID extracts the number from an id like "R07" or "07".
 func parseNumericID(id string) (int, bool) {
-	s := id
-	if len(s) > 0 && s[0] >= 'A' && s[0] <= 'Z' {
-		s = s[1:]
-	}
+	s := stripKindPrefix(id)
 	if s == "" {
 		return 0, false
 	}
@@ -511,18 +508,23 @@ func (s *Store) findRecipePath(id string) (string, error) {
 	return currentCopy(paths), nil
 }
 
-// normaliseID strips a leading kind prefix and zero padding so "r1", "R01" and "1"
-// match.
+// stripKindPrefix takes the kind letters off an id.
 //
-// The prefix is stripped whatever it is — "R", "N", "S" — so every artifact kind
-// answers to the same forms. The ids are unambiguous by directory, so the kind
-// letter carries no information once the number is known.
+// **Every** leading letter goes, not just the first: a recipe's id is `RCP01`, and a
+// stripper that stopped at one letter would leave `CP01` — which matches neither the
+// new id nor the `R01` the plans written before the rename carry.
+func stripKindPrefix(id string) string {
+	return strings.TrimLeft(strings.ToUpper(strings.TrimSpace(id)), "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+}
+
+// normaliseID strips the kind prefix and the zero padding so "rcp1", "RCP01",
+// "R01", "r1" and "1" match.
+//
+// The letters are stripped whatever they are — "RCP", "R", "N", "S" — so every
+// artifact kind answers to the same forms. The ids are unambiguous by directory, so
+// the kind letters carry no information once the number is known.
 func normaliseID(id string) string {
-	s := strings.ToUpper(strings.TrimSpace(id))
-	if len(s) > 0 && s[0] >= 'A' && s[0] <= 'Z' {
-		s = s[1:]
-	}
-	s = strings.TrimLeft(s, "0")
+	s := strings.TrimLeft(stripKindPrefix(id), "0")
 	if s == "" {
 		return "0"
 	}
@@ -551,11 +553,7 @@ func recipeLess(a, b string) bool {
 
 // idSegments splits an id into its numeric segments, dropping the kind prefix.
 func idSegments(id string) []string {
-	s := id
-	if len(s) > 0 && s[0] >= 'A' && s[0] <= 'Z' {
-		s = s[1:]
-	}
-	return strings.Split(s, ".")
+	return strings.Split(stripKindPrefix(id), ".")
 }
 
 // writeJSONAtomic writes JSON via a temp file, fsync and rename, so a crash leaves the

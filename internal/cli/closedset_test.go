@@ -40,7 +40,7 @@ func TestAdvanceRefusesTheEventsThatHaveTheirOwnVerb(t *testing.T) {
 	signedOffRecipe(t, dir)
 
 	for _, ev := range []string{"approve", "request_changes", "start"} {
-		res := cli(t, dir, "recipe", "advance", "R01", ev)
+		res := cli(t, dir, "recipe", "advance", "RCP01", ev)
 		if res.Code == 0 {
 			t.Fatalf("advance %s should be refused", ev)
 		}
@@ -51,7 +51,7 @@ func TestAdvanceRefusesTheEventsThatHaveTheirOwnVerb(t *testing.T) {
 
 	// The verb that owns the event still works — the recipe is signed off by
 	// `signedOffRecipe`, and the claim is the only road to the line.
-	res := cli(t, dir, "recipe", "claim", "R01", "--agent", "line-cook")
+	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
 	if !res.ok(t) {
 		t.Fatalf("claim failed:\n%s", res.Stderr)
 	}
@@ -67,7 +67,7 @@ func TestEveryKindAcceptsItsShortID(t *testing.T) {
 	cli(t, dir, "special", "create", "--title", "A hunch", "--body", "worth noticing")
 	cli(t, dir, "prepnote", "create", "--title", "A note", "--intent", "first")
 
-	for _, id := range []string{"R1", "r1", "R01"} {
+	for _, id := range []string{"R1", "r1", "RCP01"} {
 		res := cli(t, dir, "recipe", "show", id)
 		if !res.ok(t) {
 			t.Fatalf("recipe %s: %s", id, res.Stderr)
@@ -94,7 +94,7 @@ func TestEveryKindAcceptsItsShortID(t *testing.T) {
 func TestEveryDocumentedStepStatusIsReachable(t *testing.T) {
 	dir := newPlan(t)
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
-	res := cli(t, dir, "step", "add", "R01", "--action", "do it", "--done-when", "done")
+	res := cli(t, dir, "step", "add", "RCP01", "--action", "do it", "--done-when", "done")
 	if !res.ok(t) {
 		t.Fatalf("step add failed:\n%s", res.Stderr)
 	}
@@ -109,7 +109,7 @@ func TestEveryDocumentedStepStatusIsReachable(t *testing.T) {
 		{"skip", "skipped"},
 		{"fail", "failed"},
 	} {
-		res := cli(t, dir, "step", s.verb, "R01", "G1")
+		res := cli(t, dir, "step", s.verb, "RCP01", "G1")
 		if !res.ok(t) {
 			t.Fatalf("step %s failed:\n%s", s.verb, res.Stderr)
 		}
@@ -122,7 +122,7 @@ func TestEveryDocumentedStepStatusIsReachable(t *testing.T) {
 // stepStatus is the status of the recipe's first step.
 func stepStatus(t *testing.T, dir string) string {
 	t.Helper()
-	res := cli(t, dir, "recipe", "show", "R01")
+	res := cli(t, dir, "recipe", "show", "RCP01")
 	if !res.ok(t) {
 		t.Fatalf("show failed:\n%s", res.Stderr)
 	}

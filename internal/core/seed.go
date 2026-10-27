@@ -39,7 +39,7 @@ func seed(store *Store, stress bool) error {
 	line := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-line", Role: "runner"})
 	taster := NewOperations(store, AuditContext{Actor: "taster", Session: "s-taster", Role: "reviewer"})
 
-	// R01 — being shaped. One criterion cannot be proven: the filter matches nothing.
+	// RCP01 — being shaped. One criterion cannot be proven: the filter matches nothing.
 	if _, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Sharpen the AC gate",
 		Outcome:    "A zero-match verification can never satisfy a gate",
@@ -56,10 +56,10 @@ func seed(store *Store, stress bool) error {
 			{Action: "add the zero-match gate", DoneWhen: "a rejected proof blocks finish", Covers: []string{"AC-02"}},
 		},
 	}); err != nil {
-		return fmt.Errorf("seed R01: %w", err)
+		return fmt.Errorf("seed RCP01: %w", err)
 	}
 
-	// R02 — waiting for the chef. One criterion proven, one not.
+	// RCP02 — waiting for the chef. One criterion proven, one not.
 	r02, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Sign off the menu",
 		Outcome:    "The chef can approve a recipe from the console",
@@ -77,19 +77,19 @@ func seed(store *Store, stress bool) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("seed R02: %w", err)
+		return fmt.Errorf("seed RCP02: %w", err)
 	}
 	if _, err := sous.Advance(r02.ID, EventGroom); err != nil {
-		return fmt.Errorf("seed R02 groom: %w", err)
+		return fmt.Errorf("seed RCP02 groom: %w", err)
 	}
 	if _, err := sous.Advance(r02.ID, EventSpecify); err != nil {
-		return fmt.Errorf("seed R02 specify: %w", err)
+		return fmt.Errorf("seed RCP02 specify: %w", err)
 	}
 	if _, err := chef.SignOffCriterion(r02.ID, "AC-01", "chef", "the board renders 100 recipes"); err != nil {
-		return fmt.Errorf("seed R02 sign off: %w", err)
+		return fmt.Errorf("seed RCP02 sign off: %w", err)
 	}
 
-	// R03 — in the tasting lane. Was executed, then a finding was filed and a criterion
+	// RCP03 — in the tasting lane. Was executed, then a finding was filed and a criterion
 	// regressed, so it is being remediated.
 	r03, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Wire the review queue",
@@ -110,31 +110,31 @@ func seed(store *Store, stress bool) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("seed R03: %w", err)
+		return fmt.Errorf("seed RCP03: %w", err)
 	}
 	for _, ev := range []Event{EventGroom, EventSpecify} {
 		if _, err := sous.Advance(r03.ID, ev); err != nil {
-			return fmt.Errorf("seed R03 %s: %w", ev, err)
+			return fmt.Errorf("seed RCP03 %s: %w", ev, err)
 		}
 	}
 	if _, err := chef.ApproveRecipe(r03.ID, "chef"); err != nil {
-		return fmt.Errorf("seed R03 approve: %w", err)
+		return fmt.Errorf("seed RCP03 approve: %w", err)
 	}
 	if _, err := line.ClaimRecipe(r03.ID, "line-cook"); err != nil {
-		return fmt.Errorf("seed R03 claim: %w", err)
+		return fmt.Errorf("seed RCP03 claim: %w", err)
 	}
 	for _, g := range []string{"G1", "G2", "G3"} {
 		if _, err := line.SetStepStatus(r03.ID, g, "done"); err != nil {
-			return fmt.Errorf("seed R03 step %s: %w", g, err)
+			return fmt.Errorf("seed RCP03 step %s: %w", g, err)
 		}
 	}
 	for _, ac := range []string{"AC-01", "AC-02", "AC-03"} {
 		if _, err := chef.SignOffCriterion(r03.ID, ac, "chef", "checked against the diff"); err != nil {
-			return fmt.Errorf("seed R03 sign off %s: %w", ac, err)
+			return fmt.Errorf("seed RCP03 sign off %s: %w", ac, err)
 		}
 	}
 	if _, err := line.Advance(r03.ID, EventFinish); err != nil {
-		return fmt.Errorf("seed R03 finish: %w", err)
+		return fmt.Errorf("seed RCP03 finish: %w", err)
 	}
 	if _, err := taster.AddFinding(r03.ID, Finding{
 		Phase:       "external",
@@ -142,17 +142,17 @@ func seed(store *Store, stress bool) error {
 		Category:    "correctness",
 		Description: "the queue drops findings on refresh",
 	}); err != nil {
-		return fmt.Errorf("seed R03 finding: %w", err)
+		return fmt.Errorf("seed RCP03 finding: %w", err)
 	}
 	if _, err := line.Advance(r03.ID, EventEnterRemediation); err != nil {
-		return fmt.Errorf("seed R03 remediation: %w", err)
+		return fmt.Errorf("seed RCP03 remediation: %w", err)
 	}
 	// A criterion regressed after the finding — which is why the board shows 1 of 3.
 	if _, err := line.VerifyCriterion(r03.ID, "AC-03"); err != nil {
-		return fmt.Errorf("seed R03 verify: %w", err)
+		return fmt.Errorf("seed RCP03 verify: %w", err)
 	}
 
-	// R04 — approved and idle. It has no runner yet, and it waits on R02.
+	// RCP04 — approved and idle. It has no runner yet, and it waits on RCP02.
 	r04, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Add the backlog view",
 		Outcome:    "Specials and prep notes are visible and promotable",
@@ -168,25 +168,25 @@ func seed(store *Store, stress bool) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("seed R04: %w", err)
+		return fmt.Errorf("seed RCP04: %w", err)
 	}
 	for _, ev := range []Event{EventGroom, EventSpecify} {
 		if _, err := sous.Advance(r04.ID, ev); err != nil {
-			return fmt.Errorf("seed R04 %s: %w", ev, err)
+			return fmt.Errorf("seed RCP04 %s: %w", ev, err)
 		}
 	}
 	if _, err := chef.ApproveRecipe(r04.ID, "chef"); err != nil {
-		return fmt.Errorf("seed R04 approve: %w", err)
+		return fmt.Errorf("seed RCP04 approve: %w", err)
 	}
 	if _, err := chef.SignOffCriterion(r04.ID, "AC-01", "chef", "the backlog lists specials"); err != nil {
-		return fmt.Errorf("seed R04 sign off: %w", err)
+		return fmt.Errorf("seed RCP04 sign off: %w", err)
 	}
-	// R04 cannot run until R02 is signed off and closed.
-	if _, err := sous.UpdateRecipe(r04.ID, Fragment{DependsOn: &[]string{"R02"}}); err != nil {
-		return fmt.Errorf("seed R04 depends: %w", err)
+	// RCP04 cannot run until RCP02 is signed off and closed.
+	if _, err := sous.UpdateRecipe(r04.ID, Fragment{DependsOn: &[]string{"RCP02"}}); err != nil {
+		return fmt.Errorf("seed RCP04 depends: %w", err)
 	}
 
-	// R05 — on the line. One criterion proven, one failing.
+	// RCP05 — on the line. One criterion proven, one failing.
 	r05, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Sharpen the proof contract",
 		Outcome:    "A proof carries a command, an exit code and a match count",
@@ -204,33 +204,33 @@ func seed(store *Store, stress bool) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("seed R05: %w", err)
+		return fmt.Errorf("seed RCP05: %w", err)
 	}
 	for _, ev := range []Event{EventGroom, EventSpecify} {
 		if _, err := sous.Advance(r05.ID, ev); err != nil {
-			return fmt.Errorf("seed R05 %s: %w", ev, err)
+			return fmt.Errorf("seed RCP05 %s: %w", ev, err)
 		}
 	}
 	if _, err := chef.ApproveRecipe(r05.ID, "chef"); err != nil {
-		return fmt.Errorf("seed R05 approve: %w", err)
+		return fmt.Errorf("seed RCP05 approve: %w", err)
 	}
 	if _, err := line.ClaimRecipe(r05.ID, "line-cook"); err != nil {
-		return fmt.Errorf("seed R05 claim: %w", err)
+		return fmt.Errorf("seed RCP05 claim: %w", err)
 	}
 	if _, err := line.SetStepStatus(r05.ID, "G1", "done"); err != nil {
-		return fmt.Errorf("seed R05 step: %w", err)
+		return fmt.Errorf("seed RCP05 step: %w", err)
 	}
 	if _, err := line.SetStepStatus(r05.ID, "G2", "in-progress"); err != nil {
-		return fmt.Errorf("seed R05 step: %w", err)
+		return fmt.Errorf("seed RCP05 step: %w", err)
 	}
 	if _, err := chef.SignOffCriterion(r05.ID, "AC-01", "chef", "three states exist"); err != nil {
-		return fmt.Errorf("seed R05 sign off: %w", err)
+		return fmt.Errorf("seed RCP05 sign off: %w", err)
 	}
 	if _, err := line.VerifyCriterion(r05.ID, "AC-02"); err != nil {
-		return fmt.Errorf("seed R05 verify: %w", err)
+		return fmt.Errorf("seed RCP05 verify: %w", err)
 	}
 
-	// R06 — served.
+	// RCP06 — served.
 	r06, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Draft the glossary",
 		Outcome:    "One vocabulary for the tool and the methodology",
@@ -246,27 +246,27 @@ func seed(store *Store, stress bool) error {
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("seed R06: %w", err)
+		return fmt.Errorf("seed RCP06: %w", err)
 	}
 	for _, ev := range []Event{EventGroom, EventSpecify} {
 		if _, err := sous.Advance(r06.ID, ev); err != nil {
-			return fmt.Errorf("seed R06 %s: %w", ev, err)
+			return fmt.Errorf("seed RCP06 %s: %w", ev, err)
 		}
 	}
 	if _, err := chef.ApproveRecipe(r06.ID, "chef"); err != nil {
-		return fmt.Errorf("seed R06 approve: %w", err)
+		return fmt.Errorf("seed RCP06 approve: %w", err)
 	}
 	if _, err := line.ClaimRecipe(r06.ID, "line-cook"); err != nil {
-		return fmt.Errorf("seed R06 claim: %w", err)
+		return fmt.Errorf("seed RCP06 claim: %w", err)
 	}
 	if _, err := line.SetStepStatus(r06.ID, "G1", "done"); err != nil {
-		return fmt.Errorf("seed R06 step: %w", err)
+		return fmt.Errorf("seed RCP06 step: %w", err)
 	}
 	if _, err := chef.SignOffCriterion(r06.ID, "AC-01", "chef", "every term has an avoid list"); err != nil {
-		return fmt.Errorf("seed R06 sign off: %w", err)
+		return fmt.Errorf("seed RCP06 sign off: %w", err)
 	}
 	if _, err := line.Advance(r06.ID, EventFinish); err != nil {
-		return fmt.Errorf("seed R06 finish: %w", err)
+		return fmt.Errorf("seed RCP06 finish: %w", err)
 	}
 	if _, err := taster.AddFinding(r06.ID, Finding{
 		Phase:       "external",
@@ -276,7 +276,7 @@ func seed(store *Store, stress bool) error {
 		Status:      "fixed",
 		Resolved:    Now(),
 	}); err != nil {
-		return fmt.Errorf("seed R06 finding: %w", err)
+		return fmt.Errorf("seed RCP06 finding: %w", err)
 	}
 	if _, err := taster.AddFinding(r06.ID, Finding{
 		Phase:       "external",
@@ -284,25 +284,25 @@ func seed(store *Store, stress bool) error {
 		Category:    "docs",
 		Description: "the glossary needs a worked example",
 	}); err != nil {
-		return fmt.Errorf("seed R06 finding: %w", err)
+		return fmt.Errorf("seed RCP06 finding: %w", err)
 	}
 	if _, err := line.ResolveFinding(r06.ID, "F-02", "added an example"); err != nil {
-		return fmt.Errorf("seed R06 resolve: %w", err)
+		return fmt.Errorf("seed RCP06 resolve: %w", err)
 	}
 	if _, err := taster.RecordReviewRound(r06.ID, "taster", "ok", "the glossary is clear"); err != nil {
-		return fmt.Errorf("seed R06 round: %w", err)
+		return fmt.Errorf("seed RCP06 round: %w", err)
 	}
 	if _, err := taster.Advance(r06.ID, EventPassReview); err != nil {
-		return fmt.Errorf("seed R06 pass review: %w", err)
+		return fmt.Errorf("seed RCP06 pass review: %w", err)
 	}
 	if _, err := chef.DocumentRecipe(r06.ID, "One vocabulary, defined once, mapped to CPD."); err != nil {
-		return fmt.Errorf("seed R06 document: %w", err)
+		return fmt.Errorf("seed RCP06 document: %w", err)
 	}
 	if _, err := chef.Advance(r06.ID, EventClose); err != nil {
-		return fmt.Errorf("seed R06 close: %w", err)
+		return fmt.Errorf("seed RCP06 close: %w", err)
 	}
 
-	// R07 — being shaped, nothing proven yet.
+	// RCP07 — being shaped, nothing proven yet.
 	if _, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Record the review protocol",
 		Outcome:    "The hand-off points are named and audited",
@@ -317,15 +317,15 @@ func seed(store *Store, stress bool) error {
 			{Action: "write the protocol", DoneWhen: "the four points are documented", Covers: []string{"AC-01"}},
 		},
 	}); err != nil {
-		return fmt.Errorf("seed R07: %w", err)
+		return fmt.Errorf("seed RCP07: %w", err)
 	}
-	// R07 waits on R05.
-	r07, err := sous.GetRecipe("R07")
+	// RCP07 waits on RCP05.
+	r07, err := sous.GetRecipe("RCP07")
 	if err != nil {
-		return fmt.Errorf("seed R07 read: %w", err)
+		return fmt.Errorf("seed RCP07 read: %w", err)
 	}
-	if _, err := sous.UpdateRecipe(r07.ID, Fragment{DependsOn: &[]string{"R05"}}); err != nil {
-		return fmt.Errorf("seed R07 depends: %w", err)
+	if _, err := sous.UpdateRecipe(r07.ID, Fragment{DependsOn: &[]string{"RCP05"}}); err != nil {
+		return fmt.Errorf("seed RCP07 depends: %w", err)
 	}
 
 	if stress {

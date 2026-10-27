@@ -23,7 +23,7 @@ func TestTheDetailPaneScrolls(t *testing.T) {
 	}
 
 	// The title is the first line of the detail, so it is what leaves first.
-	if !strings.Contains(StripANSI(out), "R02") {
+	if !strings.Contains(StripANSI(out), "RCP02") {
 		t.Fatalf("the detail should open at the title:\n%s", StripANSI(out))
 	}
 
@@ -31,7 +31,7 @@ func TestTheDetailPaneScrolls(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(StripANSI(out), "R02  ") {
+	if strings.Contains(StripANSI(out), "RCP02  ") {
 		t.Errorf("the detail should have scrolled past the title:\n%s", StripANSI(out))
 	}
 	if !strings.Contains(StripANSI(out), "↑↓ scroll") {

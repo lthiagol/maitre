@@ -268,9 +268,9 @@ func nextIDIn(dir, prefix string, reserved ...string) (string, error) {
 			continue
 		}
 		base := strings.SplitN(e.Name(), "-", 2)[0]
-		if !strings.HasPrefix(base, prefix) {
-			continue
-		}
+		// Every file in the directory is of this kind, and the kind's letters have
+		// changed: a recipe is RCP01 now and was R01 before. The number is what
+		// must not be handed out twice, so it is what is counted.
 		n, ok := parseNumericID(base)
 		if !ok {
 			continue

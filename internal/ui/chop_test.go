@@ -60,16 +60,16 @@ func TestTheChopboardDrawsTheConnectors(t *testing.T) {
 	switchToTab(t, m, TabChopboard)
 	out := plain(m)
 
-	if !strings.Contains(out, "● R01") {
+	if !strings.Contains(out, "● RCP01") {
 		t.Errorf("the trunk should carry the trunk marker:\n%s", out)
 	}
-	if !strings.Contains(out, "needs R01") {
+	if !strings.Contains(out, "needs RCP01") {
 		t.Errorf("the branch should name the dependency it forks at:\n%s", out)
 	}
 	if !strings.Contains(out, "├─") || !strings.Contains(out, "└─") {
 		t.Errorf("the branches should carry the connectors:\n%s", out)
 	}
-	if !strings.Contains(out, "R04") {
+	if !strings.Contains(out, "RCP04") {
 		t.Errorf("the tree should hold every recipe:\n%s", out)
 	}
 	if !strings.Contains(out, "not in the plan") {
@@ -115,7 +115,7 @@ func TestTheChopboardDoesNotCallACycleEmpty(t *testing.T) {
 	if strings.Contains(out, "The tree is empty") {
 		t.Errorf("the console must not call a plan with a cycle empty:\n%s", out)
 	}
-	if !strings.Contains(out, "R01") || !strings.Contains(out, "R02") {
+	if !strings.Contains(out, "RCP01") || !strings.Contains(out, "RCP02") {
 		t.Errorf("the cycle's recipes must be drawn:\n%s", out)
 	}
 	if !strings.Contains(out, "dependency cycle") {

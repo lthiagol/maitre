@@ -60,7 +60,7 @@ func TestTheReviewRoundIsRecorded(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestThePromptCanBeCancelled(t *testing.T) {
 	if m.prompt != nil {
 		t.Fatal("the prompt should be closed")
 	}
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +139,7 @@ func TestServingClosesTheRecipe(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +157,7 @@ func TestServingClosesTheRecipe(t *testing.T) {
 func TestTheConsoleDoesNotOfferADoomedServe(t *testing.T) {
 	m := selfReviewedModel(t)
 	// An open finding: the recipe is not clean, so it cannot be served.
-	if _, err := m.ops.AddFinding("R01", core.Finding{
+	if _, err := m.ops.AddFinding("RCP01", core.Finding{
 		Phase:       "external",
 		Severity:    "high",
 		Category:    "correctness",
@@ -172,7 +172,7 @@ func TestTheConsoleDoesNotOfferADoomedServe(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, err := m.ops.GetRecipe("R01")
+	rec, err := m.ops.GetRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}

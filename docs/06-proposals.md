@@ -120,7 +120,7 @@ decision live?"* but also *"what is `Audit.Decisions` for, and who writes it?"*
 
 **Option C — the plan already has this, and it does not need another file.** A design
 decision is a choice about *how to build*, and the place a builder looks for it is the
-thread of the recipe it is about: `maitre-cli recipe comment R01 --body "…"`. The journal
+thread of the recipe it is about: `maitre-cli recipe comment RCP01 --body "…"`. The journal
 records it, the detail pane shows it, and the audit trail is complete. The alternatives
 each add a place where a decision can be written down and not found — which is the
 "field with no writer" shape v1 died of ✓.

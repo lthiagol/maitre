@@ -87,18 +87,18 @@ func TestTheAgentLoop(t *testing.T) {
 			"--problem", "v1 had 47 commands for one workflow",
 			"--out-of-scope", "web shell",
 			"--out-of-scope", "orchestration"}},
-		{"add criterion", []string{"ac", "add", "R01",
+		{"add criterion", []string{"ac", "add", "RCP01",
 			"--description", "the board renders 100 recipes",
 			"--verification", "go test ./internal/core -run Board"}},
-		{"add work package", []string{"wp", "add", "R01", "--name", "core"}},
-		{"add step", []string{"step", "add", "R01",
+		{"add work package", []string{"wp", "add", "RCP01", "--name", "core"}},
+		{"add step", []string{"step", "add", "RCP01",
 			"--action", "render the board", "--done-when", "it renders", "--covers", "AC-01"}},
-		{"groom", []string{"recipe", "advance", "R01", "groom"}},
-		{"specify", []string{"recipe", "advance", "R01", "specify"}},
-		{"approve", []string{"--actor", "chef", "recipe", "approve", "R01", "--by", "chef"}},
-		{"claim", []string{"recipe", "claim", "R01", "--agent", "line-cook"}},
-		{"step done", []string{"step", "done", "R01", "G1"}},
-		{"document", []string{"recipe", "document", "R01", "--text", "One board, five tabs."}},
+		{"groom", []string{"recipe", "advance", "RCP01", "groom"}},
+		{"specify", []string{"recipe", "advance", "RCP01", "specify"}},
+		{"approve", []string{"--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef"}},
+		{"claim", []string{"recipe", "claim", "RCP01", "--agent", "line-cook"}},
+		{"step done", []string{"step", "done", "RCP01", "G1"}},
+		{"document", []string{"recipe", "document", "RCP01", "--text", "One board, five tabs."}},
 	}
 	for _, s := range steps {
 		res := cli(t, dir, s.args...)
@@ -108,7 +108,7 @@ func TestTheAgentLoop(t *testing.T) {
 	}
 
 	// The proof is what the gates want, so sign one off.
-	res := cli(t, dir, "--actor", "chef", "ac", "signoff", "R01", "AC-01", "--by", "chef", "--note", "checked by hand")
+	res := cli(t, dir, "--actor", "chef", "ac", "signoff", "RCP01", "AC-01", "--by", "chef", "--note", "checked by hand")
 	if !res.ok(t) {
 		t.Fatalf("signoff failed:\n%s", res.Stderr)
 	}
@@ -117,10 +117,10 @@ func TestTheAgentLoop(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"finish", []string{"recipe", "advance", "R01", "finish"}},
-		{"review", []string{"recipe", "review", "R01", "--reviewer", "taster", "--verdict", "ok"}},
-		{"pass review", []string{"recipe", "advance", "R01", "pass_review"}},
-		{"close", []string{"recipe", "advance", "R01", "close"}},
+		{"finish", []string{"recipe", "advance", "RCP01", "finish"}},
+		{"review", []string{"recipe", "review", "RCP01", "--reviewer", "taster", "--verdict", "ok"}},
+		{"pass review", []string{"recipe", "advance", "RCP01", "pass_review"}},
+		{"close", []string{"recipe", "advance", "RCP01", "close"}},
 	} {
 		res := cli(t, dir, s.args...)
 		if !res.ok(t) {
@@ -129,7 +129,7 @@ func TestTheAgentLoop(t *testing.T) {
 	}
 
 	// It is closed.
-	show := cli(t, dir, "recipe", "show", "R01")
+	show := cli(t, dir, "recipe", "show", "RCP01")
 	if !show.ok(t) {
 		t.Fatalf("show failed:\n%s", show.Stderr)
 	}
@@ -146,7 +146,7 @@ func TestTheGatesRefuseWhatIsNotReady(t *testing.T) {
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o")
 
 	// No criteria, no scope, no steps — grooming must be refused.
-	res := cli(t, dir, "recipe", "advance", "R01", "groom")
+	res := cli(t, dir, "recipe", "advance", "RCP01", "groom")
 	if res.Code != ExitGate {
 		t.Fatalf("exit = %d, want %d", res.Code, ExitGate)
 	}
@@ -228,8 +228,8 @@ func TestTheBacklogPromotesUpTheLadder(t *testing.T) {
 		t.Fatalf("prepnote promote failed:\n%s", res.Stderr)
 	}
 	recipe := res.doc(t)["recipe"].(map[string]any)
-	if recipe["id"] != "R01" {
-		t.Fatalf("recipe id = %v, want R01", recipe["id"])
+	if recipe["id"] != "RCP01" {
+		t.Fatalf("recipe id = %v, want RCP01", recipe["id"])
 	}
 }
 
@@ -274,14 +274,14 @@ func TestTheCLIUsesOnlyTheOperations(t *testing.T) {
 		"--out-of-scope", "a", "--out-of-scope", "b")
 
 	// The frozen sections are closed after sign-off, and the CLI says so.
-	cli(t, dir, "ac", "add", "R01", "--description", "d", "--verification", "go test ./...")
-	cli(t, dir, "wp", "add", "R01", "--name", "core")
-	cli(t, dir, "step", "add", "R01", "--action", "do it", "--done-when", "done", "--covers", "AC-01")
-	cli(t, dir, "recipe", "advance", "R01", "groom")
-	cli(t, dir, "recipe", "advance", "R01", "specify")
-	cli(t, dir, "--actor", "chef", "recipe", "approve", "R01", "--by", "chef")
+	cli(t, dir, "ac", "add", "RCP01", "--description", "d", "--verification", "go test ./...")
+	cli(t, dir, "wp", "add", "RCP01", "--name", "core")
+	cli(t, dir, "step", "add", "RCP01", "--action", "do it", "--done-when", "done", "--covers", "AC-01")
+	cli(t, dir, "recipe", "advance", "RCP01", "groom")
+	cli(t, dir, "recipe", "advance", "RCP01", "specify")
+	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
 
-	res := cli(t, dir, "ac", "add", "R01", "--description", "another", "--verification", "go test ./...")
+	res := cli(t, dir, "ac", "add", "RCP01", "--description", "another", "--verification", "go test ./...")
 	if res.Code == 0 {
 		t.Fatal("adding a criterion after sign-off should be refused")
 	}
@@ -297,42 +297,42 @@ func TestTheReviewLoopGoesBackwards(t *testing.T) {
 	cli(t, dir, "recipe", "create", "--title", "A recipe",
 		"--outcome", "o", "--problem", "p",
 		"--out-of-scope", "a", "--out-of-scope", "b")
-	cli(t, dir, "ac", "add", "R01", "--description", "d", "--verification", "go test ./...")
-	cli(t, dir, "wp", "add", "R01", "--name", "core")
-	cli(t, dir, "step", "add", "R01", "--action", "do it", "--done-when", "done", "--covers", "AC-01")
-	cli(t, dir, "recipe", "advance", "R01", "groom")
-	cli(t, dir, "recipe", "advance", "R01", "specify")
-	cli(t, dir, "--actor", "chef", "recipe", "approve", "R01", "--by", "chef")
-	cli(t, dir, "recipe", "claim", "R01", "--agent", "line-cook")
-	cli(t, dir, "step", "done", "R01", "G1")
-	cli(t, dir, "--actor", "chef", "ac", "signoff", "R01", "AC-01", "--by", "chef", "--note", "checked")
-	cli(t, dir, "recipe", "advance", "R01", "finish")
+	cli(t, dir, "ac", "add", "RCP01", "--description", "d", "--verification", "go test ./...")
+	cli(t, dir, "wp", "add", "RCP01", "--name", "core")
+	cli(t, dir, "step", "add", "RCP01", "--action", "do it", "--done-when", "done", "--covers", "AC-01")
+	cli(t, dir, "recipe", "advance", "RCP01", "groom")
+	cli(t, dir, "recipe", "advance", "RCP01", "specify")
+	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
+	cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
+	cli(t, dir, "step", "done", "RCP01", "G1")
+	cli(t, dir, "--actor", "chef", "ac", "signoff", "RCP01", "AC-01", "--by", "chef", "--note", "checked")
+	cli(t, dir, "recipe", "advance", "RCP01", "finish")
 
 	// The reviewer files a finding and says no.
-	res := cli(t, dir, "finding", "add", "R01", "--description", "the queue drops findings",
+	res := cli(t, dir, "finding", "add", "RCP01", "--description", "the queue drops findings",
 		"--severity", "high", "--category", "correctness")
 	if !res.ok(t) {
 		t.Fatalf("finding add failed:\n%s", res.Stderr)
 	}
-	res = cli(t, dir, "recipe", "review", "R01", "--reviewer", "taster", "--verdict", "changes-needed")
+	res = cli(t, dir, "recipe", "review", "RCP01", "--reviewer", "taster", "--verdict", "changes-needed")
 	if !res.ok(t) {
 		t.Fatalf("review failed:\n%s", res.Stderr)
 	}
 
 	// The reviewer says no — the recipe must not advance.
-	res = cli(t, dir, "recipe", "advance", "R01", "pass_review")
+	res = cli(t, dir, "recipe", "advance", "RCP01", "pass_review")
 	if res.Code != ExitGate {
 		t.Fatalf("exit = %d, want %d — a changes-needed verdict must not advance", res.Code, ExitGate)
 	}
 
 	// The fixer resolves it, and the reviewer sends it back.
-	cli(t, dir, "finding", "resolve", "R01", "F-01", "--note", "read the queue once")
-	res = cli(t, dir, "finding", "reopen", "R01", "F-01", "--reason", "the empty case is still missed")
+	cli(t, dir, "finding", "resolve", "RCP01", "F-01", "--note", "read the queue once")
+	res = cli(t, dir, "finding", "reopen", "RCP01", "F-01", "--reason", "the empty case is still missed")
 	if !res.ok(t) {
 		t.Fatalf("reopen failed:\n%s", res.Stderr)
 	}
 
-	show := cli(t, dir, "recipe", "show", "R01")
+	show := cli(t, dir, "recipe", "show", "RCP01")
 	if !show.ok(t) {
 		t.Fatalf("show failed:\n%s", show.Stderr)
 	}

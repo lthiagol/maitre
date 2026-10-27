@@ -174,13 +174,13 @@ view v1's `raul` had: an execution trunk with labelled side branches, and blocke
 milestones forked at their dependency.
 
 ```
-● R01   draft       Sharpen the AC gate                           0/2
-● R02   ready       Sign off the menu                             1/2
- └─ needs R02
-   └─ R04   approved    Add the backlog view                          1/1 ● needs R02
-● R05   executing   Sharpen the proof contract                    1/2
- └─ needs R05
-   └─ R07   draft       Record the review protocol                    0/1 needs R05
+● RCP01   draft       Sharpen the AC gate                           0/2
+● RCP02   ready       Sign off the menu                             1/2
+ └─ needs RCP02
+   └─ RCP04   approved    Add the backlog view                          1/1 ● needs RCP02
+● RCP05   executing   Sharpen the proof contract                    1/2
+ └─ needs RCP05
+   └─ RCP07   draft       Record the review protocol                    0/1 needs RCP05
 ```
 
 - **The trunk** is the Path tab's ready list, in the same order. Two tabs showing one
@@ -188,7 +188,7 @@ milestones forked at their dependency.
   computing a second one.
 - **The branches** are the recipes that fork at a recipe — the ones waiting on it. A
   recipe with several unmet dependencies forks at the **first** one, the same rule
-  `core.Path` uses, and its row says it needs them all: `needs R01, R02`.
+  `core.Path` uses, and its row says it needs them all: `needs RCP01, RCP02`.
 - **A dangling dependency** is a broken plan, and the tree is where the chef sees it:
   the recipe is marked, and it names the dependency that is not in the plan.
 - **A dependency cycle** is a broken plan too, and the tree draws it rather than
@@ -283,8 +283,8 @@ The console never decides a verdict — it asks. `space` on a recipe whose only 
 round was recorded by the agent that did the work opens the prompt in the footer:
 
 ```
- ▸ review R01 · o) ok · c) changes needed · esc cancel
- ▸ notes for R01 · ⏎ record · esc cancel · what I think
+ ▸ review RCP01 · o) ok · c) changes needed · esc cancel
+ ▸ notes for RCP01 · ⏎ record · esc cancel · what I think
 ```
 
 The round goes into the artifact with the chef's name on it, exactly like the journal.
@@ -300,8 +300,8 @@ One prompt, two questions. `space` on a recipe with an open tasting note asks wh
 do with the note under the cursor:
 
 ```
- ▸ triage R03 F-01 · d) dismiss · c) comment · esc cancel
- ▸ notes for R03 F-01 · ⏎ record · esc cancel · the queue drops it on refresh
+ ▸ triage RCP03 F-01 · d) dismiss · c) comment · esc cancel
+ ▸ notes for RCP03 F-01 · ⏎ record · esc cancel · the queue drops it on refresh
 ```
 
 **The console offers the chef's moves only.** *Dismiss* closes the note without fixing
@@ -326,7 +326,7 @@ A script pressing space for them is the chef's decision *mediated by a machine* 
 the journal says which, so a reader can tell a human's verdict from a driven one:
 
 ```
-31  comment  R01  chef  console-script
+31  comment  RCP01  chef  console-script
 ```
 
 `maitre --keys` writes under the `console-script` session. The interactive console

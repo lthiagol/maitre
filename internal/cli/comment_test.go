@@ -22,13 +22,13 @@ func TestACommentOnAMissingNoteIsRefused(t *testing.T) {
 		t.Fatalf("create failed:\n%s", create.Stderr)
 	}
 
-	comment := cli(t, dir, "recipe", "comment", "R01", "--finding", "F-99", "--body", "nobody sees this")
+	comment := cli(t, dir, "recipe", "comment", "RCP01", "--finding", "F-99", "--body", "nobody sees this")
 	if comment.Code == 0 {
 		t.Fatalf("a comment on a note that is not there should be refused:\n%s", comment.Stdout)
 	}
 
 	// And nothing was written.
-	show := cli(t, dir, "recipe", "show", "R01")
+	show := cli(t, dir, "recipe", "show", "RCP01")
 	if !show.ok(t) {
 		t.Fatalf("show failed:\n%s", show.Stderr)
 	}
@@ -53,12 +53,12 @@ func TestACommentHasAnAuthor(t *testing.T) {
 		t.Fatalf("create failed:\n%s", create.Stderr)
 	}
 
-	comment := cli(t, dir, "recipe", "comment", "R01", "--body", "a note about the recipe")
+	comment := cli(t, dir, "recipe", "comment", "RCP01", "--body", "a note about the recipe")
 	if !comment.ok(t) {
 		t.Fatalf("comment failed:\n%s", comment.Stderr)
 	}
 
-	show := cli(t, dir, "recipe", "show", "R01")
+	show := cli(t, dir, "recipe", "show", "RCP01")
 	if !show.ok(t) {
 		t.Fatalf("show failed:\n%s", show.Stderr)
 	}

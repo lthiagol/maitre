@@ -52,11 +52,11 @@ func TestTheFooterIsContextual(t *testing.T) {
 		t.Error("the footer should offer to sign off a ready recipe")
 	}
 
-	// Move to R04, which is approved. The chef has nothing to do with it — an
+	// Move to RCP04, which is approved. The chef has nothing to do with it — an
 	// agent claims the work, not the console.
 	for {
 		s, _ := m.currentSummary()
-		if s.ID == "R04" {
+		if s.ID == "RCP04" {
 			break
 		}
 		m.Update(tea.KeyPressMsg{Code: 'j'})
@@ -72,10 +72,10 @@ func TestTheConsoleDoesNotImpersonateAnAgent(t *testing.T) {
 	m := newModel(t)
 	m.height = 30
 
-	// R04 is approved. Space on it must not claim it.
+	// RCP04 is approved. Space on it must not claim it.
 	for {
 		s, _ := m.currentSummary()
-		if s.ID == "R04" {
+		if s.ID == "RCP04" {
 			break
 		}
 		m.Update(tea.KeyPressMsg{Code: 'j'})
@@ -83,7 +83,7 @@ func TestTheConsoleDoesNotImpersonateAnAgent(t *testing.T) {
 	m.Update(tea.KeyPressMsg{Code: ' '})
 
 	for _, r := range m.recipes {
-		if r.ID == "R04" {
+		if r.ID == "RCP04" {
 			if r.Lifecycle == core.LifecycleExecuting {
 				t.Fatal("the console must not claim a recipe — that is an agent's move")
 			}

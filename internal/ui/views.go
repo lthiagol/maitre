@@ -530,6 +530,12 @@ func (m *Model) servedCheckbox() string {
 	return m.styDim.Render(box + " show served")
 }
 
+// idColumn is the width of the id column in a recipe row.
+//
+// A recipe's id is `RCP01` — five characters — and the column leaves a space after it,
+// so the id and the lifecycle never run together.
+const idColumn = 6
+
 // recipeRow renders one recipe in the list, sized to fit its column.
 //
 // A row wider than its column overflows into the pane beside it, so the title is
@@ -539,10 +545,10 @@ func (m *Model) recipeRow(s core.Summary, selected bool, width int) string {
 	title := padCol(s.Title, titleColumn(width, lipgloss.Width(marks)))
 
 	if selected {
-		plain := "  " + padRight(s.ID, 5) + padRight(string(s.Lifecycle), 12) + title + marks
+		plain := "  " + padRight(s.ID, idColumn) + padRight(string(s.Lifecycle), 12) + title + marks
 		return m.stySelected.Render(padRight(plain, width))
 	}
-	return "  " + m.styFaint.Render(padRight(s.ID, 5)) +
+	return "  " + m.styFaint.Render(padRight(s.ID, idColumn)) +
 		m.lifecycleStyle(string(s.Lifecycle)).Render(padRight(string(s.Lifecycle), 12)) +
 		title + m.styFaint.Render(marks)
 }
@@ -552,7 +558,7 @@ func (m *Model) recipeRow(s core.Summary, selected bool, width int) string {
 // The title is capped so the marks after it do not drift to the far edge of a wide
 // terminal — a gap that big reads as two separate columns.
 func titleColumn(width, tail int) int {
-	w := width - 2 - 5 - 12 - tail - 1
+	w := width - 2 - idColumn - 12 - tail - 1
 	if w > 44 {
 		w = 44
 	}

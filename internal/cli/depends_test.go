@@ -22,15 +22,15 @@ func TestADependencyIsReachableFromTheCLI(t *testing.T) {
 		"--outcome", "o", "--problem", "p",
 		"--out-of-scope", "a", "--out-of-scope", "b")
 
-	res := cli(t, dir, "recipe", "update", "R01", "--depends-on", "R02")
+	res := cli(t, dir, "recipe", "update", "RCP01", "--depends-on", "RCP02")
 	if !res.ok(t) {
 		t.Fatalf("recipe update failed:\n%s", res.Stderr)
 	}
 
-	got := readRecipe(t, dir, "R01")
+	got := readRecipe(t, dir, "RCP01")
 	deps, _ := got["depends_on"].([]any)
-	if len(deps) != 1 || deps[0] != "R02" {
-		t.Fatalf("depends_on = %v, want [R02]", got["depends_on"])
+	if len(deps) != 1 || deps[0] != "RCP02" {
+		t.Fatalf("depends_on = %v, want [RCP02]", got["depends_on"])
 	}
 }
 
@@ -46,33 +46,33 @@ func TestTheDependencyGateIsReachable(t *testing.T) {
 	cli(t, dir, "recipe", "create", "--title", "The dependency",
 		"--outcome", "o", "--problem", "p",
 		"--out-of-scope", "a", "--out-of-scope", "b")
-	cli(t, dir, "recipe", "update", "R01", "--depends-on", "R02")
-	cli(t, dir, "ac", "add", "R01",
+	cli(t, dir, "recipe", "update", "RCP01", "--depends-on", "RCP02")
+	cli(t, dir, "ac", "add", "RCP01",
 		"--description", "the recipe waits for its dependency",
 		"--verification", "go test ./internal/cli")
-	cli(t, dir, "wp", "add", "R01", "--name", "core")
-	cli(t, dir, "step", "add", "R01",
-		"--action", "wait for R02", "--done-when", "R02 is closed", "--covers", "AC-01")
+	cli(t, dir, "wp", "add", "RCP01", "--name", "core")
+	cli(t, dir, "step", "add", "RCP01",
+		"--action", "wait for RCP02", "--done-when", "RCP02 is closed", "--covers", "AC-01")
 
-	// R01 waits for R02.
+	// RCP01 waits for RCP02.
 	path := cli(t, dir, "path")
 	if !path.ok(t) {
 		t.Fatalf("path failed:\n%s", path.Stderr)
 	}
-	if !strings.Contains(path.Stdout, "needs R02") {
-		t.Fatalf("the path does not show R01 waiting for R02:\n%s", path.Stdout)
+	if !strings.Contains(path.Stdout, "needs RCP02") {
+		t.Fatalf("the path does not show RCP01 waiting for RCP02:\n%s", path.Stdout)
 	}
 
-	// R01 cannot be claimed while R02 is open.
-	cli(t, dir, "recipe", "advance", "R01", "groom")
-	cli(t, dir, "recipe", "advance", "R01", "specify")
-	cli(t, dir, "--actor", "chef", "recipe", "approve", "R01", "--by", "chef")
-	res := cli(t, dir, "recipe", "claim", "R01", "--agent", "line-cook")
+	// RCP01 cannot be claimed while RCP02 is open.
+	cli(t, dir, "recipe", "advance", "RCP01", "groom")
+	cli(t, dir, "recipe", "advance", "RCP01", "specify")
+	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
+	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "line-cook")
 	if res.Code != ExitGate {
 		t.Fatalf("exit = %d, want %d — a recipe with an open dependency must not be claimed",
 			res.Code, ExitGate)
 	}
-	if !strings.Contains(res.Stderr, "R02") {
+	if !strings.Contains(res.Stderr, "RCP02") {
 		t.Fatalf("the refusal should name the dependency:\n%s", res.Stderr)
 	}
 }
@@ -86,9 +86,9 @@ func TestTheDependencyListIsReplaced(t *testing.T) {
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o", "--problem", "p")
 	cli(t, dir, "recipe", "create", "--title", "Another", "--outcome", "o", "--problem", "p")
 
-	cli(t, dir, "recipe", "update", "R01", "--depends-on", "R02")
-	cli(t, dir, "recipe", "update", "R01", "--depends-on", "R02", "--depends-on", "R03")
-	got := readRecipe(t, dir, "R01")
+	cli(t, dir, "recipe", "update", "RCP01", "--depends-on", "RCP02")
+	cli(t, dir, "recipe", "update", "RCP01", "--depends-on", "RCP02", "--depends-on", "RCP03")
+	got := readRecipe(t, dir, "RCP01")
 	deps, _ := got["depends_on"].([]any)
 	if len(deps) != 2 {
 		t.Fatalf("depends_on = %v, want two entries", got["depends_on"])
@@ -103,16 +103,16 @@ func TestTheDependencyFlagAloneChangesNothing(t *testing.T) {
 	dir := newPlan(t)
 	cli(t, dir, "recipe", "create", "--title", "A recipe", "--outcome", "o", "--problem", "p")
 	cli(t, dir, "recipe", "create", "--title", "Another", "--outcome", "o", "--problem", "p")
-	cli(t, dir, "recipe", "update", "R01", "--depends-on", "R02")
+	cli(t, dir, "recipe", "update", "RCP01", "--depends-on", "RCP02")
 
-	res := cli(t, dir, "recipe", "update", "R01", "--title", "Renamed")
+	res := cli(t, dir, "recipe", "update", "RCP01", "--title", "Renamed")
 	if !res.ok(t) {
 		t.Fatalf("recipe update failed:\n%s", res.Stderr)
 	}
-	got := readRecipe(t, dir, "R01")
+	got := readRecipe(t, dir, "RCP01")
 	deps, _ := got["depends_on"].([]any)
-	if len(deps) != 1 || deps[0] != "R02" {
-		t.Fatalf("depends_on = %v, want [R02] — an update without the flag leaves it alone",
+	if len(deps) != 1 || deps[0] != "RCP02" {
+		t.Fatalf("depends_on = %v, want [RCP02] — an update without the flag leaves it alone",
 			got["depends_on"])
 	}
 }

@@ -73,7 +73,7 @@ it composes, it does not own the kitchen. The chef decides and signs off.
 
 ```
 kitchen/
-  recipes/        R01-<slug>.json     ← the line
+  recipes/        RCP01-<slug>.json   ← the line
   courses/        C01-<slug>.json
   specials/       S01-<slug>.json     ← stock
   prep-notes/     N01-<slug>.json
