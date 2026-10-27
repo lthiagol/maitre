@@ -351,8 +351,11 @@ func (m *Model) summaryText() string {
 		}
 		return text
 	case TabBacklog:
-		return fmt.Sprintf("%d %s",
-			len(m.items), plural(len(m.items), "item", "items"))
+		text := fmt.Sprintf("%d %s", len(m.items), plural(len(m.items), "item", "items"))
+		if len(m.legacy) > 0 {
+			text += fmt.Sprintf(" · %d from the old plan", len(m.legacy))
+		}
+		return text
 	case TabPath:
 		ready, waiting := core.Path(m.recipes)
 		return fmt.Sprintf("the path · %d ready · %d waiting", len(ready), len(waiting))
@@ -459,7 +462,7 @@ func (m *Model) primaryActionLabel() string {
 		}
 		return core.ChefMoveOf(*rec).Label()
 	case TabBacklog:
-		if m.selBacklog < len(m.items) {
+		if _, ok := m.selectedBacklogItem(); ok {
 			return "promote to recipe"
 		}
 	}
@@ -599,23 +602,77 @@ func (m *Model) sectionHeader(name string, count, width int) string {
 }
 
 // backlogLines renders the Backlog tab.
+//
+// The two groups are **derived** from the item's kind — the kind is the only truth,
+// and a group is never stored. The legacy group holds the artifacts of the plan
+// format before the backlog became one artifact: the console shows them rather than
+// hiding half the plan.
 func (m *Model) backlogLines() []listLine {
 	var out []listLine
-	if len(m.items) == 0 {
-		return out
+	ideas, tasks := core.BacklogGroups(m.items)
+	kindWidth := m.backlogKindWidth()
+
+	section := func(name string, items []core.BacklogItem, offset int) {
+		if len(items) == 0 {
+			return
+		}
+		out = append(out, listLine{text: m.sectionHeader(name, len(items), m.listColumn()), itemIdx: -1})
+		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
+		for i, it := range items {
+			idx := offset + i
+			out = append(out, listLine{
+				text:    m.backlogRow(idx, it.ID, it.Title, it.Kind, it.Status, kindWidth, m.selBacklog == idx),
+				itemIdx: idx,
+			})
+		}
 	}
-	out = append(out, listLine{text: " " + m.stySec.Render("BACKLOG") + strings.Repeat(" ", max(1, m.listColumn()-9)) + m.styDim.Render(fmt.Sprint(len(m.items))), itemIdx: -1})
-	out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
-	for i, it := range m.items {
-		out = append(out, listLine{text: m.backlogRow(i, it.ID, it.Title, it.Status, m.selBacklog == i), itemIdx: i})
+	section("IDEAS", ideas, 0)
+	section("SMALL TASKS", tasks, len(ideas))
+
+	// The old plan's artifacts: shown, labelled, and not promotable. The console
+	// must not write the old format, so it offers no move for them.
+	if len(m.legacy) > 0 {
+		out = append(out, listLine{text: m.sectionHeader("FROM THE OLD PLAN", len(m.legacy), m.listColumn()), itemIdx: -1})
+		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
+		for i, it := range m.legacy {
+			idx := len(ideas) + len(tasks) + i
+			out = append(out, listLine{
+				text:    m.backlogRow(idx, it.ID, it.Title, it.Rung, it.Status, kindWidth, m.selBacklog == idx),
+				itemIdx: idx,
+			})
+		}
 	}
 	return out
 }
 
+// backlogKindWidth is the width of the kind column.
+//
+// It is the width of the widest kind the tab actually shows, so the column lines up
+// whether the tab holds ideas, small tasks, or the old plan's artifacts.
+func (m *Model) backlogKindWidth() int {
+	width := 0
+	for _, it := range m.items {
+		if w := lipgloss.Width(it.Kind); w > width {
+			width = w
+		}
+	}
+	for _, it := range m.legacy {
+		if w := lipgloss.Width(it.Rung); w > width {
+			width = w
+		}
+	}
+	return width
+}
+
 // backlogRow renders one backlog item.
-func (m *Model) backlogRow(index int, id, title, status string, selected bool) string {
+//
+// The row shows the item's kind: the kind is the only truth about the item's shape,
+// and the group it is filed under is derived from it.
+func (m *Model) backlogRow(index int, id, title, kind, status string, kindWidth int, selected bool) string {
 	width := m.listColumn()
-	row := "  " + padRight(id, 6) + padCol(title, titleColumn(width, lipgloss.Width(status))) + m.styFaint.Render(status)
+	tail := kindWidth + lipgloss.Width(status)
+	row := "  " + padRight(id, 6) + padCol(title, titleColumn(width, tail)) +
+		m.styFaint.Render(padRight(kind, kindWidth+1)) + m.styDim.Render(status)
 	if selected {
 		return m.stySelected.Render(padRight(row, width))
 	}

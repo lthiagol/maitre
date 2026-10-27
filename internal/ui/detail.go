@@ -32,35 +32,66 @@ func (m *Model) detailLines(width int) []string {
 }
 
 // backlogDetail renders the selected backlog item.
+//
+// The old plan's artifacts are rendered too, and they say where they came from: the
+// console shows what it found.
 func (m *Model) backlogDetail(width int) []string {
-	if m.selBacklog < 0 || m.selBacklog >= len(m.items) {
-		return []string{m.styDim.Render("  (nothing selected)")}
-	}
-	it := m.items[m.selBacklog]
-	out := []string{" " + m.styTitle.Render(it.ID+" · "+it.Title)}
-	out = append(out, " "+m.styDim.Render(it.Status))
-	out = append(out, "")
-	if it.Body != "" {
-		out = append(out, m.stySec.Render("Why"))
-		out = append(out, indent(renderMarkdown(it.Body, width-4), "  "))
+	ideas, tasks := core.BacklogGroups(m.items)
+	all := append(append([]core.BacklogItem{}, ideas...), tasks...)
+	if m.selBacklog >= 0 && m.selBacklog < len(all) {
+		it := all[m.selBacklog]
+		out := []string{" " + m.styTitle.Render(it.ID+" · "+it.Title)}
+		out = append(out, " "+m.styDim.Render(it.Kind+" · "+it.Status))
 		out = append(out, "")
-	}
-	if len(it.Scope) > 0 {
-		out = append(out, m.stySec.Render("Scope"))
-		for _, s := range it.Scope {
-			out = append(out, "  "+m.styGood.Render("in   ")+s)
+		if it.Body != "" {
+			out = append(out, m.stySec.Render("Why"))
+			out = append(out, indent(renderMarkdown(it.Body, width-4), "  "))
+			out = append(out, "")
 		}
+		if len(it.Scope) > 0 {
+			out = append(out, m.stySec.Render("Scope"))
+			for _, s := range it.Scope {
+				out = append(out, "  "+m.styGood.Render("in   ")+s)
+			}
+			out = append(out, "")
+		}
+		if len(it.Tags) > 0 {
+			out = append(out, m.stySec.Render("Tags"))
+			out = append(out, "  "+strings.Join(it.Tags, ", "))
+			out = append(out, "")
+		}
+		if it.PromotedTo != "" {
+			out = append(out, m.styAcc.Render("Promoted to "+it.PromotedTo))
+		}
+		return out
+	}
+	idx := m.selBacklog - len(all)
+	if idx >= 0 && idx < len(m.legacy) {
+		it := m.legacy[idx]
+		out := []string{" " + m.styTitle.Render(it.ID+" · "+it.Title)}
+		out = append(out, " "+m.styDim.Render(it.Rung+" · "+it.Status))
+		out = append(out, " "+m.styFaint.Render("from the old plan — read-only here"))
 		out = append(out, "")
+		if it.Text() != "" {
+			out = append(out, m.stySec.Render("Why"))
+			out = append(out, indent(renderMarkdown(it.Text(), width-4), "  "))
+			out = append(out, "")
+		}
+		if len(it.Scope) > 0 {
+			out = append(out, m.stySec.Render("Scope"))
+			for _, s := range it.Scope {
+				out = append(out, "  "+m.styGood.Render("in   ")+s)
+			}
+			out = append(out, "")
+		}
+		if len(it.Tags) > 0 {
+			out = append(out, m.stySec.Render("Tags"))
+			out = append(out, "  "+strings.Join(it.Tags, ", "))
+			out = append(out, "")
+		}
+		return out
 	}
-	if len(it.Tags) > 0 {
-		out = append(out, m.stySec.Render("Tags"))
-		out = append(out, "  "+strings.Join(it.Tags, ", "))
-		out = append(out, "")
-	}
-	if it.PromotedTo != "" {
-		out = append(out, m.styAcc.Render("Promoted to "+it.PromotedTo))
-	}
-	return out
+	return []string{m.styDim.Render("  (nothing selected)")}
 }
 
 // logDetail renders the selected journal entry.

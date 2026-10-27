@@ -61,6 +61,7 @@ const (
 type reloadMsg struct {
 	recipes []core.Recipe
 	items   []core.BacklogItem
+	legacy  []core.LegacyItem
 	journal core.Journal
 	// disk is the fingerprint of the plan as it was before it was read.
 	disk string
@@ -105,6 +106,12 @@ type Model struct {
 	sections []core.TriageSection
 
 	items []core.BacklogItem
+
+	// legacy are the artifacts of the plan format before the backlog became one
+	// artifact. The console shows them rather than hiding them: a plan written
+	// before the rename keeps what it had, and a tab that silently drops half the
+	// plan tells the chef a story the plan does not.
+	legacy []core.LegacyItem
 
 	journal core.Journal
 
@@ -235,14 +242,18 @@ func (m *Model) reload() tea.Cmd {
 		if err != nil {
 			return reloadMsg{err: err}
 		}
+		legacy, err := m.store.ListLegacyItems()
+		if err != nil {
+			return reloadMsg{err: err}
+		}
 		journal, err := m.store.LoadJournal()
 		if err != nil {
 			return reloadMsg{err: err}
 		}
 		// Everything here was written by an agent. Sanitise before it reaches the
 		// screen, so a newline in a title cannot corrupt the layout.
-		sanitizePlan(recipes, items, journal)
-		return reloadMsg{recipes: recipes, items: items, journal: journal, disk: disk}
+		sanitizePlan(recipes, items, legacy, journal)
+		return reloadMsg{recipes: recipes, items: items, legacy: legacy, journal: journal, disk: disk}
 	}
 }
 
@@ -466,7 +477,7 @@ func (m *Model) clampSelections() {
 		}
 	}
 	clamp(&m.selRecipes, len(m.visibleRows()))
-	clamp(&m.selBacklog, len(m.items))
+	clamp(&m.selBacklog, m.backlogCount())
 	clamp(&m.selPath, len(m.pathEntries()))
 	clamp(&m.selBoard, len(m.boardTree().recipe))
 	clamp(&m.selLog, len(m.logWindow()))
@@ -687,7 +698,7 @@ func (m *Model) listCount() int {
 	case TabRecipes:
 		return len(m.visibleRows())
 	case TabBacklog:
-		return len(m.items)
+		return m.backlogCount()
 	case TabPath:
 		return len(m.pathEntries())
 	case TabBoard:
@@ -755,20 +766,47 @@ func (m *Model) actOnRecipe() (tea.Model, tea.Cmd) {
 	return m, m.reload()
 }
 
+// backlogCount is the number of rows in the Backlog tab.
+//
+// It is the new items first — the ideas, then the small tasks — and then the old
+// plan's artifacts. The order is the order the tab draws them in, so the cursor
+// and the row always agree.
+func (m *Model) backlogCount() int {
+	ideas, tasks := core.BacklogGroups(m.items)
+	return len(ideas) + len(tasks) + len(m.legacy)
+}
+
+// selectedBacklogItem is the backlog item under the cursor.
+//
+// The second value says whether there is one: the old plan's artifacts are not
+// items — they have no kind, and the console does not write the old format — so
+// the cursor can sit on one and find nothing to promote.
+func (m *Model) selectedBacklogItem() (core.BacklogItem, bool) {
+	ideas, tasks := core.BacklogGroups(m.items)
+	all := append(append([]core.BacklogItem{}, ideas...), tasks...)
+	if m.selBacklog < 0 || m.selBacklog >= len(all) {
+		return core.BacklogItem{}, false
+	}
+	return all[m.selBacklog], true
+}
+
 // promoteSelected promotes the selected backlog item into a recipe.
 func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
-	if m.selBacklog < len(m.items) {
-		item := m.items[m.selBacklog]
-		recipe, err := m.ops.PromoteBacklogItem(item.ID)
-		if err != nil {
-			m.refusal = refusalText(err)
-			return m, nil
-		}
-		m.refusal = ""
-		m.status = fmt.Sprintf("promoted %s to recipe %s", item.ID, recipe.ID)
-		return m, m.reload()
+	item, ok := m.selectedBacklogItem()
+	if !ok {
+		// The old plan's artifacts: the console shows them, and it does not write
+		// the old format.
+		m.status = "this one is from the old plan — it is read-only here"
+		return m, nil
 	}
-	return m, nil
+	recipe, err := m.ops.PromoteBacklogItem(item.ID)
+	if err != nil {
+		m.refusal = refusalText(err)
+		return m, nil
+	}
+	m.refusal = ""
+	m.status = fmt.Sprintf("promoted %s to recipe %s", item.ID, recipe.ID)
+	return m, m.reload()
 }
 
 // refusalText turns a refused action into a banner.

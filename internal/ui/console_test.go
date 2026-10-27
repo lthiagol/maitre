@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -35,6 +36,7 @@ func loadModel(t *testing.T, store *core.Store) *Model {
 	}
 	m.recipes = loaded.recipes
 	m.items = loaded.items
+	m.legacy = loaded.legacy
 	m.journal = loaded.journal
 	m.sections = m.orderedSections()
 	m.clampSelections()
@@ -206,7 +208,7 @@ func TestBacklogTabListsTheItems(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
 	out := plain(m)
-	for _, want := range []string{"BACKLOG", "The board needs a way to show proofs", "Wire the review queue"} {
+	for _, want := range []string{"IDEAS", "SMALL TASKS", "The board needs a way to show proofs", "Wire the review queue", "idea", "feature"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the backlog is missing %q\n%s", want, out)
 		}
@@ -227,6 +229,76 @@ func TestPromotingAnItemFromTheBacklog(t *testing.T) {
 	}
 	if len(items) != 6 {
 		t.Fatalf("got %d items, want 6", len(items))
+	}
+}
+
+// TestTheBacklogGroupsAreDerivedFromTheKind covers the two groups.
+//
+// The group is never stored: the kind is the only truth, and the tab's groups are
+// read off it.
+func TestTheBacklogGroupsAreDerivedFromTheKind(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	out := plain(m)
+	ideas := strings.Index(out, "IDEAS")
+	tasks := strings.Index(out, "SMALL TASKS")
+	if ideas < 0 || tasks < 0 {
+		t.Fatalf("the backlog has no groups\n%s", out)
+	}
+	if ideas > tasks {
+		t.Fatalf("the ideas come before the small tasks\n%s", out)
+	}
+	// An idea is filed under the ideas, a small task under the small tasks.
+	ideaRow := strings.Index(out, "BL01")
+	taskRow := strings.Index(out, "BL05")
+	if ideaRow < ideas || ideaRow > tasks {
+		t.Fatalf("the idea is not under the ideas\n%s", out)
+	}
+	if taskRow < tasks {
+		t.Fatalf("the small task is not under the small tasks\n%s", out)
+	}
+}
+
+// TestAnOldPlanStillRenders covers the plan written before the rename.
+//
+// The backlog was two file types. A plan written before the rename keeps them, and
+// the console must not crash on them — and must not hide them either: a tab that
+// silently drops half the plan tells the chef a story the plan does not.
+func TestAnOldPlanStillRenders(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
+	store := core.Open(root)
+	if err := store.Init(); err != nil {
+		t.Fatal(err)
+	}
+	writeLegacy(t, root, "specials", "S01-a-hunch.json",
+		`{"id":"S01","title":"A hunch","body":"worth noticing","status":"open"}`)
+	writeLegacy(t, root, "prep-notes", "N01-a-note.json",
+		`{"id":"N01","title":"A note","intent":"the work","scope":["the queue lane"],"status":"open"}`)
+
+	m := loadModel(t, store)
+	m.tab = TabBacklog
+	out := plain(m)
+	for _, want := range []string{"FROM THE OLD PLAN", "S01", "N01", "special", "prep note"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the old plan's artifacts are missing %q\n%s", want, out)
+		}
+	}
+
+	// And the console does not write the old format: there is no move for them.
+	m.selBacklog = m.backlogCount() - 1
+	if label := m.primaryActionLabel(); label != "" {
+		t.Fatalf("the console offers %q on an old artifact — it must not write the old format", label)
+	}
+}
+
+// writeLegacy writes one file of the plan format before the rename.
+func writeLegacy(t *testing.T, root, dir, name, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, dir, name), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 

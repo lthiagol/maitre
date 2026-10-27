@@ -34,6 +34,7 @@ func snapshot(store *core.Store, width int, m *Model) (*Model, error) {
 	}
 	m.recipes = loaded.recipes
 	m.items = loaded.items
+	m.legacy = loaded.legacy
 	m.journal = loaded.journal
 	m.sections = m.orderedSections()
 	m.clampSelections()

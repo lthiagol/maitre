@@ -11,7 +11,7 @@ From [ADR-0003](decisions/0003-surface-split.md), the console owns:
 |---|---|
 | **View** | Read the plan well — the recipe as prose, the acceptance criteria with their proofs, the audit trail, findings anchored to code |
 | **Decide** | Sign off, triage tasting notes, accept or reject a scope, choose what is next |
-| **Manage the backlog** | Create, edit, promote, dismiss specials and prep notes |
+| **Manage the backlog** | Create, edit, shape, promote, dismiss backlog items |
 | **Run** | Start, pause, watch, steer execution |
 
 It does **not** author the recipe. An agent does that, in a conversation with the chef,
@@ -22,7 +22,7 @@ through `maitre-cli`.
 | Tab | Holds | Job |
 |---|---|---|
 | **Recipes** | every recipe, triage-ordered | view · decide |
-| **Backlog** | specials and prep notes | manage the backlog |
+| **Backlog** | backlog items — *Ideas* and *Small tasks*, derived from the kind | manage the backlog |
 | **Path** | the execution order, and what blocks what | run |
 | **Board** | the same plan as a dependency tree — what waits on what | run |
 | **Log** | the activity journal | see the audit trail |
@@ -36,7 +36,7 @@ Autopilot · Settings. Four are gone:
 |---|---|
 | Overview | the triage-ordered board *is* the overview; a second tab would restate it |
 | Milestones | → **Recipes**, our vocabulary |
-| Ideas | folded into **Backlog** — a special is our idea |
+| Ideas | folded into **Backlog** — an idea is a backlog item of kind `idea` |
 | Autopilot | v2 has no orchestration; the running recipes are a section of the board |
 
 ## Lanes — the board's organising axis
@@ -235,7 +235,7 @@ row N-1      up/down move - tab switch - space sign off - q quit
   items, so a header can disappear while its items stay selected.
 - The **footer is pinned** to the last row and is **contextual**: `space` means different
   things for a ready recipe (sign off), a self-reviewed one (review), a recipe with an
-  open tasting note (triage), a reviewed one (serve), a special (promote). It never
+  open tasting note (triage), a reviewed one (serve), a backlog item (promote). It never
   offers a move the gates would refuse.
 - A **resize** re-lays out.
 - At **160 columns and above** the detail pane appears beside the list; below that the
@@ -395,7 +395,7 @@ and the UI stays under its budget. Stat'ing twenty files is microseconds.
 | What is watched | Why |
 |---|---|
 | `project.json`, `activity.json`, `decisions.json` | the plan's metadata and its journal |
-| `recipes/*.json`, `prep-notes/*.json`, `specials/*.json`, `courses/*.json` | the artifacts themselves |
+| `recipes/*.json`, `backlog/*.json`, `courses/*.json` | the artifacts themselves |
 | the directories holding them | a directory's own time changes when a file is added or removed — but not when a file inside it is rewritten, so both are watched |
 
 The scan opens none of the files: it stats them and compares the result with the last
