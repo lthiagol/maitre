@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -1541,5 +1542,52 @@ func TestTheDocDoesNotOverstateTheDenyList(t *testing.T) {
 	}
 	if strings.Contains(doc, "cancel.reason_present") {
 		t.Error("the doc names cancel.reason_present as a gate — the reason is checked inline")
+	}
+}
+
+// checkDenyList checks the spec against the deny-list the code holds.
+//
+// It is a function of the doc, so the tripwire can be given a broken doc and be seen
+// to fail.
+func checkDenyList(doc string) error {
+	for _, role := range AgentRoles {
+		// The spec writes a role the way it is spoken: "sous chef", not "sous-chef".
+		spoken := strings.ReplaceAll(role, "-", " ")
+		if !strings.Contains(doc, role) && !strings.Contains(doc, spoken) {
+			return fmt.Errorf("the doc does not name %q — the code refuses it as an agent", role)
+		}
+	}
+	for name := range retiredAgentRoles {
+		if !strings.Contains(doc, "`"+name+"`") {
+			return fmt.Errorf("the doc does not name the retired role %q — a plan written before the rename still meets it", name)
+		}
+	}
+	return nil
+}
+
+// TestTheDocNamesTheRolesTheCodeRefuses keeps the deny-list and the spec together.
+//
+// The list is a deny-list of names, and the spec names them in prose. Nothing said
+// the two had to agree, so a role renamed in the code left the spec telling the
+// reader about a role the tool no longer refuses — and a reader who believes the
+// spec would sign off on the wrong name.
+func TestTheDocNamesTheRolesTheCodeRefuses(t *testing.T) {
+	if err := checkDenyList(readDoc(t, "03-domain-model.md")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestTheDenyListTripwireFailsOnRealDrift keeps the tripwire from being turned off.
+//
+// A tripwire that cannot fail is not a tripwire.
+func TestTheDenyListTripwireFailsOnRealDrift(t *testing.T) {
+	doc := readDoc(t, "03-domain-model.md")
+	// The spec without the runner: the code refuses it, the spec does not name it.
+	broken := strings.ReplaceAll(doc, "runner", "line cook")
+	if broken == doc {
+		t.Fatal("the doc does not hold the word the drift removes")
+	}
+	if err := checkDenyList(broken); err == nil {
+		t.Error("the tripwire should fail on a spec that does not name the runner")
 	}
 }
