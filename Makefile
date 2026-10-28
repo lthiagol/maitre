@@ -106,7 +106,9 @@ goldens-check: GOLDEN_CHECK := yes
 
 goldens goldens-check:
 	$(call header,$@)
+	@if [ "$(GOLDEN_CHECK)" = yes ]; then scripts/check-golden-claims.sh mark $(GOLDENS); fi
 	GO=$(GO) scripts/go-test.sh "$(GOLDEN_FLAGS)" "$(GOLDEN_PKG)"
+	@if [ "$(GOLDEN_CHECK)" = yes ]; then scripts/check-golden-claims.sh report $(GOLDENS); fi
 	@if [ "$(GOLDEN_CHECK)" = yes ]; then \
 		git diff --exit-code HEAD -- $(GOLDENS) || { \
 			echo "the goldens changed — read the diff before committing it." >&2; exit 1; \

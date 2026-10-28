@@ -86,6 +86,12 @@ A golden catches what unit tests miss: **a column that stops lining up.** When i
 read the diff before regenerating — a golden that changed because the design changed is
 fine; one that changed because a title grew is a bug.
 
+A golden file that no test writes is a layout nothing pins, and the check that says
+"the goldens are current" would pass without touching it. So `make goldens-check`
+derives the claim: it marks the goldens, runs the golden tests, and names the ones
+nobody wrote. The claim is derived at runtime — no manifest of test names, and no
+scan for a path in a test file, because the paths live in constants.
+
 ---
 
 ## The gate
@@ -97,7 +103,7 @@ fine; one that changed because a title grew is a bug.
 | `make lint` | `gofmt -l` must be empty, `go vet`, `staticcheck` |
 | `make test` | the tests — `PKG=…` and `RUN=…` narrow the run |
 | `make test-race` | `-race -shuffle=on -count=2` |
-| `make goldens-check` | regenerate the goldens; they must be unchanged |
+| `make goldens-check` | regenerate the goldens; they must be unchanged, and every one must be claimed by a test |
 | `make budget` | the dependency budget, checked against `AGENTS.md` |
 | `make tidy-check` | `go mod tidy` must produce no diff |
 | `make check` | the fast gate — all of the above |

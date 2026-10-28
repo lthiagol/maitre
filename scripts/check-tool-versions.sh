@@ -54,7 +54,10 @@ doc)
 	pin=${3:-}
 	want=${pin#v}
 	# Every mention that names a version is checked — not only the first.
-	versions=$(grep -F "$tool" "$doc" | grep -E 'v?[0-9]+\.[0-9]+\.[0-9]+' | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' || true)
+	# Only the pin's shape counts: the tool reports two versions (the
+	# release and the module), the pin is the module one, and a line that
+	# carries the other version must not fail the gate.
+	versions=$(grep -F "$tool" "$doc" | grep -E 'v[0-9]+\.[0-9]+\.[0-9]+' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' || true)
 	if [ -z "$versions" ]; then
 		echo "$doc names no version for $tool." >&2
 		echo "Change $doc to name $pin." >&2

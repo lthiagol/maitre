@@ -254,6 +254,8 @@ scripts/        console-shot.py — capture what the console actually shows
                 dep-budget.sh — the dependency budget, and the numbers it holds
                 go-test.sh — run the tests, and refuse a green that proves nothing
                 require-tool.sh — run a dev tool, or say how to get it
+                check-tool-versions.sh — the pins, against the tool and the doc
+                check-golden-claims.sh — every golden file is claimed by a test
                 hooks/ — the pre-push hook
 prototypes/     throwaway design sketches
 work/           the work in progress — briefs, transcripts, the state of the rename
@@ -329,7 +331,7 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 | `make test` | the tests — `PKG=…` and `RUN=…` narrow the run |
 | `make test-race` | `go test -race -shuffle=on -count=2` |
 | `make goldens` | regenerate the goldens |
-| `make goldens-check` | regenerate, then the goldens must be unchanged |
+| `make goldens-check` | regenerate, then the goldens must be unchanged and claimed by a test |
 | `make budget` | the dependency budget |
 | `make tidy-check` | `go mod tidy` must produce no diff |
 | `make check` | the fast gate — lint, versions-check, test, goldens-check, budget, tidy-check |
