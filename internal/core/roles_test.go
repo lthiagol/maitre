@@ -109,8 +109,12 @@ func TestARetiredNameIsNotTheRunner(t *testing.T) {
 // A retired name is refused wherever an actor names itself: the claim, the review,
 // the approval, the sign-off, the comment — and the actor every write is stamped
 // with. A name the tool does not accept cannot buy a gate.
+//
+// The name is refused **however it is spelled**: the case does not matter, and a
+// space or an underscore stands for a dash. "line_cook" is the same name as
+// "line-cook", and a spelling is not a way around the rule.
 func TestARetiredNameCannotNameItself(t *testing.T) {
-	retired := []string{"line-cook", "Line Cook", "taster", "expo", "coordinator"}
+	retired := []string{"line-cook", "line_cook", "Line Cook", "taster", "expo", "coordinator"}
 
 	for _, name := range retired {
 		t.Run(name, func(t *testing.T) {
@@ -167,6 +171,114 @@ func TestARetiredActorCannotWrite(t *testing.T) {
 	}
 }
 
+// TestARetiredRoleCannotWrite covers the audit role.
+//
+// The role lands in the journal's event, and a **new** event is a live record. The
+// check is at the write's entry — before anything is written — so a retired role
+// never leaves a half-written plan behind.
+func TestARetiredRoleCannotWrite(t *testing.T) {
+	for _, role := range []string{"line-cook", "line_cook", "taster"} {
+		t.Run(role, func(t *testing.T) {
+			store := Open(t.TempDir() + "/" + PlanDirName)
+			if err := store.Init(); err != nil {
+				t.Fatal(err)
+			}
+			ops := NewOperations(store, AuditContext{Actor: "chef", Session: "s-old", Role: role})
+
+			if _, err := ops.CreateRecipe(readySpec()); err == nil {
+				t.Fatalf("a retired role must not be able to write: %q", role)
+			}
+			// And nothing landed.
+			entries, err := os.ReadDir(store.RecipeDir())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(entries) != 0 {
+				t.Errorf("the refusal wrote %d files anyway", len(entries))
+			}
+		})
+	}
+}
+
+// TestARetiredNameCannotEnterARecord covers the rule the review found.
+//
+// **A retired name cannot enter a live record, by any path.** The rule is not one
+// check per operation: it is at the entry, where the name is recorded — the claim,
+// the review, the approval, the sign-off, the comment, the transition's context
+// and the audit role.
+//
+// The hole was the **second road to the approval**: `AdvanceWith` records the
+// approver the transition's context carries, and it did not check it. The approval
+// went in with `"by": "line-cook"`, and from then on the plan was refused by the
+// reader *and* by the writer: the tool bricked the plan it had just written.
+func TestARetiredNameCannotEnterARecord(t *testing.T) {
+	for _, name := range []string{"line-cook", "line_cook", "Line Cook", "taster", "expo", "coordinator"} {
+		t.Run(name, func(t *testing.T) {
+			ops, store := newOps(t)
+			r, err := ops.CreateRecipe(readySpec())
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, ev := range []Event{EventGroom, EventSpecify} {
+				if _, err := ops.Advance(r.ID, ev); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			// The second road to the approval: the transition's context.
+			if _, err := ops.AdvanceWith(r.ID, EventApprove, TransitionContext{
+				Approver: name, Actor: "chef",
+			}); err == nil {
+				t.Fatalf("a retired name must not be able to approve: %q", name)
+			}
+
+			// Nothing was written: the plan is not bricked, and it still reads.
+			read, err := store.LoadRecipe(r.ID)
+			if err != nil {
+				t.Fatalf("the plan must still read: %v", err)
+			}
+			if read.Approval != nil {
+				t.Error("the refusal wrote the approval anyway")
+			}
+			if read.Lifecycle != LifecycleReady {
+				t.Errorf("the refusal moved the recipe to %q", read.Lifecycle)
+			}
+		})
+	}
+}
+
+// TestARetiredNameCannotRequestChanges covers the other road.
+//
+// `RequestChanges` did not check the name it was given: the transition drops it —
+// the objection is recorded, not the name — but a name the tool does not accept is
+// refused wherever it is offered.
+func TestARetiredNameCannotRequestChanges(t *testing.T) {
+	ops, store := newOps(t)
+	r, err := ops.CreateRecipe(readySpec())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ev := range []Event{EventGroom, EventSpecify} {
+		if _, err := ops.Advance(r.ID, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := ops.RequestChanges(r.ID, "line-cook", "the scope is wrong"); err == nil {
+		t.Fatal("a retired name must not be able to request changes")
+	}
+	read, err := store.LoadRecipe(r.ID)
+	if err != nil {
+		t.Fatalf("the plan must still read: %v", err)
+	}
+	if read.Lifecycle != LifecycleApproved {
+		t.Errorf("the refusal moved the recipe to %q", read.Lifecycle)
+	}
+}
+
 // TestARetiredNameCannotBuyTheIndependenceGate covers the hole.
 //
 // The executor claims as `line-cook` and the runner reviews as `runner`: with the
@@ -194,25 +306,35 @@ func TestARetiredNameCannotBuyTheIndependenceGate(t *testing.T) {
 	}
 
 	// And the record that carries it: the reader refuses the plan.
+	//
+	// The record is written **by hand**: the writer refuses a name the tool does
+	// not accept, so the tool cannot write this record — and a reader meeting one
+	// must refuse it.
 	s := newStore(t)
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
 	}
-	claimed := &Recipe{
-		ID:        "RCP01",
-		Title:     "claimed under the old name",
-		Slug:      "claimed-under-the-old-name",
-		Lifecycle: LifecycleExecuting,
-		Execution: Execution{ClaimedBy: "line-cook", ClaimedAt: Now()},
-	}
-	if err := s.SaveRecipe(claimed); err != nil {
-		t.Fatal(err)
-	}
+	writeRecipeFile(t, s, "RCP01-claimed-under-the-old-name.json", `{"id":"RCP01",
+		"title":"claimed under the old name","slug":"claimed-under-the-old-name",
+		"lifecycle":"executing","execution":{"claimed_by":"line-cook","claimed_at":"2026-10-26T00:00:00Z"}}`)
 	if _, err := s.LoadRecipe("RCP01"); err == nil {
 		t.Fatal("a record carrying a retired name must not be read")
 	}
 	if _, err := s.ListRecipes(); err == nil {
 		t.Fatal("a plan carrying a record with a retired name must not be listed")
+	}
+
+	// And the writer refuses it too: the domain cannot write a plan it will not
+	// read.
+	claimed := &Recipe{
+		ID:        "RCP02",
+		Title:     "claimed under the old name",
+		Slug:      "claimed-under-the-old-name",
+		Lifecycle: LifecycleExecuting,
+		Execution: Execution{ClaimedBy: "line-cook", ClaimedAt: Now()},
+	}
+	if err := s.SaveRecipe(claimed); err == nil {
+		t.Fatal("the writer must refuse a record carrying a retired name")
 	}
 }
 
@@ -220,13 +342,16 @@ func TestARetiredNameCannotBuyTheIndependenceGate(t *testing.T) {
 //
 // The journal is append-only: a plan written before the rename keeps its old role
 // names, and a reader meeting one must not fail.
+//
+// The old event is written **by hand**: a **new** event may not carry a retired
+// name — it is a live record — so the tool will not write this one. The history is
+// the old tool's.
 func TestAnOldRoleNameStillReads(t *testing.T) {
 	_, store := newOps(t)
-	if _, err := store.AppendJournalEvent(JournalEntry{
+	writeJournalHistory(t, store, JournalEntry{
 		Seq: 1, At: Now(), Kind: "control", Actor: "line-cook", Session: "s-old", Role: "line-cook",
-	}); err != nil {
-		t.Fatal(err)
-	}
+		DomainVersion: DomainVersion,
+	})
 	if _, err := store.AppendJournalEvent(JournalEntry{
 		Seq: 2, At: Now(), Kind: "control", Actor: "runner", Session: "s-new", Role: "runner",
 	}); err != nil {
@@ -245,6 +370,35 @@ func TestAnOldRoleNameStillReads(t *testing.T) {
 	}
 	if j.Events[1].Role != "runner" {
 		t.Errorf("role = %q, want runner", j.Events[1].Role)
+	}
+}
+
+// TestANewEventMayNotCarryARetiredName covers the other side.
+//
+// The journal's **history** keeps its old names; a **new** event is a live record,
+// and a name the tool does not accept cannot be in one.
+func TestANewEventMayNotCarryARetiredName(t *testing.T) {
+	_, store := newOps(t)
+	for _, name := range []string{"line-cook", "line_cook", "Line Cook"} {
+		t.Run(name, func(t *testing.T) {
+			_, err := store.AppendJournalEvent(JournalEntry{
+				Seq: 1, At: Now(), Kind: "control", Actor: name, Session: "s-new", Role: "runner",
+			})
+			if err == nil {
+				t.Fatalf("a new event must not carry the retired name %q", name)
+			}
+			if !strings.Contains(err.Error(), "not a name this tool accepts") {
+				t.Errorf("the refusal should say what the rule is: %v", err)
+			}
+			// And nothing was written.
+			j, err := store.LoadJournal()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(j.Events) != 0 {
+				t.Errorf("the refusal wrote %d events anyway", len(j.Events))
+			}
+		})
 	}
 }
 

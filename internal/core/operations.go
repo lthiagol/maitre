@@ -814,8 +814,15 @@ func (o *Operations) ClaimRecipe(id, agent string) (*Recipe, error) {
 // Every write goes through here, so the rule holds everywhere: a name the tool does
 // not accept cannot be the actor that wrote the plan, and so it cannot appear in a
 // live record.
+//
+// The **role** is checked with the actor: it lands in the journal's event, and a new
+// event is a live record. The check is here — before anything is written — so a
+// retired role never leaves a half-written plan behind.
 func (o *Operations) lock() (func(), error) {
 	if err := checkName(o.context.Actor); err != nil {
+		return nil, err
+	}
+	if err := checkName(o.context.Role); err != nil {
 		return nil, err
 	}
 	return o.store.lock()
@@ -869,7 +876,15 @@ func (o *Operations) closedLookup(id string) (bool, error) {
 }
 
 // advance applies a lifecycle event under the lock.
+//
+// The **approver** is the name the event records — the approval's `by`, the
+// transition's `actor` — so it is checked here: this is the one place every
+// transition's approver passes through, whether the caller is `ApproveRecipe`,
+// `RequestChanges` or `AdvanceWith`.
 func (o *Operations) advance(id string, ev Event, approver, reason string) (*Recipe, error) {
+	if err := checkName(approver); err != nil {
+		return nil, err
+	}
 	unlock, err := o.lock()
 	if err != nil {
 		return nil, err

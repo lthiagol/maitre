@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -178,18 +179,20 @@ func TestTheRetiredBacklogIDFormIsRefused(t *testing.T) {
 // The journal is history: its events keep the names and the ids they were written
 // with, forever. The reader resolves what the journal names, and it does not refuse
 // a plan because its history is old.
+//
+// **A new event may not carry a retired name** — it is a live record — so the
+// history is written here by hand, the way the old tool wrote it.
 func TestTheJournalKeepsTheOldNames(t *testing.T) {
 	ops, store := newOps(t)
 	r, err := ops.CreateRecipe(readySpec())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.AppendJournalEvent(JournalEntry{
+	writeJournalHistory(t, store, JournalEntry{
 		Seq: 1, At: Now(), Kind: KindControl, Actor: "line-cook", Session: "s-old", Role: "line-cook",
-		Recipe: r.ID,
-	}); err != nil {
-		t.Fatal(err)
-	}
+		Recipe:        r.ID,
+		DomainVersion: DomainVersion,
+	})
 
 	j, err := store.LoadJournal()
 	if err != nil {
@@ -200,6 +203,27 @@ func TestTheJournalKeepsTheOldNames(t *testing.T) {
 	}
 	if j.Events[len(j.Events)-1].Role != "line-cook" {
 		t.Errorf("the old role should be kept as it was written: %q", j.Events[len(j.Events)-1].Role)
+	}
+}
+
+// writeJournalHistory puts events in the journal as history.
+//
+// The journal is append-only, and its history keeps the names it was written with.
+// The tool will not write a new event that carries a retired name, so the history
+// is written here — by hand, the way an older tool wrote it.
+func writeJournalHistory(t *testing.T, s *Store, entries ...JournalEntry) {
+	t.Helper()
+	j := Journal{Schema: JournalSchema}
+	for _, e := range entries {
+		j.Seq = e.Seq
+		j.Events = append(j.Events, e)
+	}
+	raw, err := json.MarshalIndent(j, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(s.Root, FileActivity), append(raw, '\n'), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 

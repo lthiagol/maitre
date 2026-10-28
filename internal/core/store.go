@@ -165,12 +165,20 @@ func (s *Store) ProjectRoot() string { return filepath.Dir(s.Root) }
 // (C2): one artifact, one file. So the write removes the copy the old name left
 // behind — and a removal that fails does not fail the write: the artifact landed,
 // and the next write cleans the leftover up.
+//
+// **The writer refuses what the reader refuses.** A record that carries a name the
+// tool does not accept is not a record this tool reads — so it is not a record this
+// tool writes. The rule does not depend on an operation remembering to check: the
+// domain's API cannot write a plan it will not read.
 func (s *Store) SaveRecipe(r *Recipe) error {
 	if r.ID == "" {
 		return fmt.Errorf("recipe has no id")
 	}
 	if r.Slug == "" {
 		r.Slug = Slugify(r.Title)
+	}
+	if err := checkRecordNames(r); err != nil {
+		return err
 	}
 	name := fmt.Sprintf("%s-%s.json", r.ID, r.Slug)
 	dir := s.RecipeDir()

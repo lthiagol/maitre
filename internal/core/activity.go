@@ -121,9 +121,19 @@ func (s *Store) AppendJournalEvent(e JournalEntry) (Journal, error) {
 }
 
 // appendJournalEventLocked adds an entry. The caller holds the plan lock.
+//
+// **A new event may not carry a retired name.** The journal's *history* keeps its
+// old names — it is append-only, and it is history — but a new event is a live
+// record, and a name the tool does not accept cannot be in one.
 func (s *Store) appendJournalEventLocked(e JournalEntry) (Journal, error) {
 	if !validKind(e.Kind) {
 		return Journal{}, fmt.Errorf("unknown journal kind %q", e.Kind)
+	}
+	if err := checkName(e.Actor); err != nil {
+		return Journal{}, err
+	}
+	if err := checkName(e.Role); err != nil {
+		return Journal{}, err
 	}
 	j, err := s.LoadJournal()
 	if err != nil {

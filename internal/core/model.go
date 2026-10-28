@@ -572,16 +572,23 @@ var RetiredNames = []string{
 }
 
 // normalizeAgentName puts a name in the form the domain compares: lower case,
-// trimmed, and with a space standing for a dash.
+// trimmed, and with a space or an underscore standing for a dash.
+//
+// **One comparison for every name.** The case does not matter, and the separator
+// does not either: "Line Cook", "line cook" and "line_cook" are one name. A
+// retired name is refused however it is spelled — a spelling is not a way around
+// the rule.
 func normalizeAgentName(name string) string {
 	n := strings.ToLower(strings.TrimSpace(name))
-	return strings.ReplaceAll(n, " ", "-")
+	n = strings.ReplaceAll(n, " ", "-")
+	return strings.ReplaceAll(n, "_", "-")
 }
 
 // IsRetiredName reports whether the name is one the rename retired.
 //
-// The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
-// and "line-cook" are the same name — and both are refused.
+// The comparison is the one the domain uses for every name: the case does not
+// matter, and a space or an underscore stands for a dash — so "Line Cook",
+// "line cook" and "line_cook" are the same name, and all of them are refused.
 func IsRetiredName(name string) bool {
 	n := normalizeAgentName(name)
 	for _, retired := range RetiredNames {
@@ -597,6 +604,10 @@ func IsRetiredName(name string) bool {
 // The rule, not a special case for the approval: a retired name is refused wherever
 // an actor names itself, so it cannot buy a gate and it cannot land in a live
 // record.
+//
+// This is the **one guard**: every place a name enters a record calls it, so there
+// is one answer to "is this a name the tool accepts?" — and the writer's fence
+// (`Store.checkWritable`) is the second line, not the first.
 func checkName(name string) error {
 	if IsRetiredName(name) {
 		return fmt.Errorf("%q is not a name this tool accepts: the rename retired it", strings.TrimSpace(name))
@@ -606,8 +617,9 @@ func checkName(name string) error {
 
 // IsAgentRole reports whether the name is one of the agent roles.
 //
-// The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
-// and "line-cook" are the same name — and both are refused.
+// The comparison is the one the domain uses for every name: the case does not
+// matter, and a space or an underscore stands for a dash — so "Line Cook",
+// "line cook" and "line_cook" are the same name, and all of them are refused.
 //
 // The retired names are refused as well: a name the tool does not accept may not
 // sign a recipe off, whatever it once stood for.

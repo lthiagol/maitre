@@ -271,6 +271,65 @@ func retiredInBacklog(raw []byte, id string) []string {
 	return found
 }
 
+// actorNames are the names a live record carries.
+//
+// The fields are the ones that name an actor: the claimant, the approver, the
+// reviewer, the comment's author, the record's author, the deviation's author and
+// the overlays' author.
+//
+// The **writer** reads them before it writes, and the **reader** reads them when
+// it reads: a name the tool does not accept cannot be in a live record, so the
+// tool cannot write a plan it will not read.
+func actorNames(r *Recipe) []string {
+	var out []string
+	out = append(out, r.Execution.ClaimedBy)
+	if r.Approval != nil {
+		out = append(out, r.Approval.By)
+	}
+	for _, round := range r.Review.Rounds {
+		out = append(out, round.Reviewer)
+	}
+	for _, c := range r.Review.Comments {
+		out = append(out, c.Author)
+	}
+	for _, c := range r.Acceptance {
+		for _, e := range c.Evidence {
+			out = append(out, e.By)
+		}
+	}
+	for _, d := range r.Audit.Deviations {
+		out = append(out, d.By)
+	}
+	if r.Overlays.Blocked != nil {
+		out = append(out, r.Overlays.Blocked.By)
+	}
+	if r.Overlays.Deferred != nil {
+		out = append(out, r.Overlays.Deferred.By)
+	}
+	if r.Overlays.Cancelled != nil {
+		out = append(out, r.Overlays.Cancelled.By)
+	}
+	return out
+}
+
+// checkRecordNames refuses a record that carries a name the tool does not accept.
+//
+// **A retired name cannot enter a live record, by any path.** The writer runs this
+// on every record it writes, so the rule does not depend on an operation
+// remembering to check: the domain's API cannot write a plan it will not read.
+//
+// The **journal** is the exception, and only for its **history**: the journal is
+// append-only, and its old events keep their old names forever. A **new** event is
+// a live record, and it is refused too.
+func checkRecordNames(r *Recipe) error {
+	for _, name := range actorNames(r) {
+		if err := checkName(name); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // retiredActorNames names the retired names a live record carries.
 //
 // A name the tool does not accept cannot appear in a live record: the writer refuses
