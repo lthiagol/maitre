@@ -93,11 +93,6 @@ The human. Owns the kitchen: decides what to cook next, signs off, and tastes ea
 dish before it goes out.
 _Avoid_: User, approver, owner, manager
 
-**Maitre**:
-The console — the chef's window on the kitchen. It greets the chef, takes the order,
-and checks on the tables. It **manages** the plan; it does not author the artifact.
-_Avoid_: maître d', TUI, dashboard, frontend, UI
-
 **Sous-chef**:
 The coordinator agent. Composes recipe cards, preps the line, and runs the tasting.
 _Avoid_: Coordinator, planner, scribe
@@ -152,6 +147,18 @@ _Avoid_: Steps, plan, guidance, instructions
 **Open question**:
 A question raised while shaping a recipe that must be resolved before it can be locked.
 _Avoid_: Blocker, issue, todo
+
+### The strings
+
+The console is a **surface**, not a job: [ADR-0003](docs/decisions/0003-surface-split.md)
+says it manages the plan and never authors the artifact, and the crew above is the
+people and the agents. What the console carries is a **string** — the window title,
+the tab bar and the CLI's help hold the name, and nothing more.
+
+**maitre**:
+The console — the chef's window on the kitchen. It greets the chef, takes the order,
+and checks on the tables.
+_Avoid_: maître d', TUI, dashboard, frontend, UI
 
 ---
 
