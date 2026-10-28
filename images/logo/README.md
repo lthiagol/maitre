@@ -35,8 +35,9 @@ media.
 - [`ascii/bow-tie-half.txt`](ascii/bow-tie-half.txt) — 14×5, the mid-size
 - **compact** — `⋈`, one glyph, for the console's header
 
-The art is 28 columns wide, so it fits the console's budget, and it **survives being
-halved**: at 14 columns it is still unmistakably a bow tie.
+The art is 28 columns wide **at its widest** — the first row is 26 — so it fits the
+console's budget, and it **survives being halved**: at 14 columns it is still
+unmistakably a bow tie.
 
 ## Archived
 
