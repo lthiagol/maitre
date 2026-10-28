@@ -9,8 +9,9 @@
 //
 //	go run ./scripts/stamp-plan <plan-dir> <old-form> <new-form>
 //
-// The forms are the id forms (`R01` → `RCP01`) or the shapes the plan's records
-// had (`specials+prep-notes` → `backlog`).
+// The forms are the id forms (`R01` → `RCP01`), the shapes the plan's records had
+// (`specials+prep-notes` → `backlog`), or the names a record's field had
+// (`proofs` → `evidence`).
 //
 // For this repository's own plan:
 //

@@ -489,6 +489,62 @@ func (r *Recipe) restampLegacyApproval() {
 	// The content changed, not the encoding. The gate will say so.
 }
 
+// legacyCriterion is the criterion as the version-5 build encoded it.
+//
+// The frozen criterion carries no records at all, so the field is always `null` — but
+// the *name* is part of the digest, and the rename changed it. This is the shape the
+// older build hashed.
+type legacyCriterion struct {
+	ID           string     `json:"id"`
+	Description  string     `json:"description"`
+	Verification string     `json:"verification"`
+	Proofs       []Evidence `json:"proofs"`
+}
+
+// legacyFingerprint is the digest of the recipe as the version-5 build encoded it:
+// the criterion's record was `proofs`.
+//
+// The digest hashes the JSON, and the JSON carries the field *name*. A rename is not
+// an edit — the content did not change, only the encoding — so a digest that cannot
+// tell the two apart reads a rename as tampering and refuses a recipe nobody touched.
+func (r Recipe) legacyFingerprint() (string, error) {
+	payload := struct {
+		Intent     Intent            `json:"intent"`
+		Scope      Scope             `json:"scope"`
+		Acceptance []legacyCriterion `json:"acceptance"`
+	}{
+		Intent:     r.Intent,
+		Scope:      r.Scope,
+		Acceptance: frozenLegacyCriteria(r.Acceptance),
+	}
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("fingerprint: %w", err)
+	}
+	sum := sha256.Sum256(raw)
+	return hex.EncodeToString(sum[:]), nil
+}
+
+// frozenLegacyCriteria strips a criterion the way the older build did, and names the
+// field the way it did.
+//
+// The nil and the empty list are kept apart, because the older build hashed them
+// apart: a criterion list that was `null` and one that was `[]` are two documents.
+func frozenLegacyCriteria(in []Criterion) []legacyCriterion {
+	if in == nil {
+		return nil
+	}
+	out := make([]legacyCriterion, 0, len(in))
+	for _, c := range frozenCriteria(in) {
+		out = append(out, legacyCriterion{
+			ID:           c.ID,
+			Description:  c.Description,
+			Verification: c.Verification,
+		})
+	}
+	return out
+}
+
 // legacyFingerprints are the digests an older build could have written.
 //
 // An older build hashed the file's own form, and in that form each **empty** list was
@@ -497,9 +553,17 @@ func (r *Recipe) restampLegacyApproval() {
 // empty ones vary. The candidates are the product of those choices: at most eight,
 // and four for a recipe whose scope is empty and whose criteria are not.
 //
-// The set is complete: the payload's only list-shaped parts are those three, and the
-// only thing an older build could write differently is whether an empty one was
-// `null` or `[]`. The canonical form — every list `[]` — is one of the candidates.
+// The rename added a second axis. The criterion's record was `proofs` before it and
+// is `evidence` now, and the name is part of the document the digest hashes — so a
+// build that wrote `proofs` hashed a different document, and its digest is a candidate
+// too. The candidates are the product of the two axes: the list forms and the field
+// name, at most sixteen.
+//
+// The set is complete: the payload's only list-shaped parts are those three, the only
+// thing an older build could write differently about them is whether an empty one was
+// `null` or `[]`, and the only thing the rename changed is the criterion's field name.
+// The canonical form — every list `[]`, the field named `evidence` — is one of the
+// candidates.
 //
 // A change of *content* changes the digest under every candidate, so a tampered
 // recipe matches none of them.
@@ -529,6 +593,13 @@ func (r Recipe) legacyFingerprints() []string {
 					continue
 				}
 				out = append(out, sum)
+				// The rename: the same content, the criterion's field under its
+				// older name.
+				legacy, err := candidate.legacyFingerprint()
+				if err != nil {
+					continue
+				}
+				out = append(out, legacy)
 			}
 		}
 	}
