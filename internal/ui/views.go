@@ -921,26 +921,64 @@ func (m *Model) logRow(e core.JournalEntry) string {
 
 // sousChefLines renders the Sous-Chef tab.
 //
-// The Sous-Chef is the orchestrator agent: it calls the tickets, routes them, and keeps the
-// line moving. It is not built yet, and this tab says so — a tab that is *waiting*
-// must not look like a tab that is failing.
-//
-// What it shows for now is the automation's vital signs: the rules the plan was last
-// written under, the rules this build speaks, and the last thing that happened. The
-// recipe counts, the triage and the tree are the other tabs' business.
+// The mark goes at the top, above the section — when there is room for it. The
+// decoration yields to the content, in both dimensions: the column chooses the
+// form, and the height decides whether there is a form at all.
 func (m *Model) sousChefLines() []listLine {
+	content := m.sousChefContent()
+	art := m.sousChefMark(len(content))
+	if len(art) == 0 {
+		return content
+	}
+
+	block := make([]listLine, 0, len(art)+1)
+	for _, line := range art {
+		block = append(block, listLine{text: " " + line, itemIdx: -1})
+	}
+	block = append(block, listLine{text: "", itemIdx: -1})
+
+	out := make([]listLine, 0, len(content)+len(block))
+	out = append(out, content[0])
+	out = append(out, block...)
+	out = append(out, content[1:]...)
+	return out
+}
+
+// sousChefMark is the mark for the tab, when the tab has room for it.
+//
+// The height rule is the content's rule. The tab's area is `height − 5` rows, the
+// content takes most of them, and the mark takes six more. When the content and
+// the mark do not both fit, the tab has **no mark** — a face is worthless if it
+// costs the chef the last thing that happened.
+func (m *Model) sousChefMark(contentRows int) []string {
+	art := markFor(m.listColumn())
+	if len(art) == 0 {
+		return nil
+	}
+	if contentRows+len(art)+1 > m.listAreaHeight() {
+		return nil
+	}
+	return art
+}
+
+// sousChefContent is the tab's content, without the mark.
+//
+// The Sous-Chef is the orchestrator agent: it calls the tickets, routes them, and
+// keeps the line moving. It is not built yet, and this tab says so — a tab that is
+// *waiting* must not look like a tab that is failing.
+//
+// What it shows for now is the automation's vital signs: the rules the plan was
+// last written under, the rules this build speaks, and the last thing that
+// happened. The recipe counts, the triage and the tree are the other tabs'
+// business.
+//
+// The mark is not part of it: the content is whole without the mark, and the mark
+// is only ever added to it.
+func (m *Model) sousChefContent() []listLine {
 	var out []listLine
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 
 	add("")
-	// The mark, at the top of the tab. The full form, or the half form when the
-	// column is too narrow for the full one.
-	if art := markFor(m.listColumn()); len(art) > 0 {
-		for _, line := range art {
-			add(" " + line)
-		}
-		add("")
-	}
 	add(" " + m.stySec.Render("SOUS-CHEF"))
 	add("  " + m.styDim.Render("The orchestrator agent. It calls the tickets, routes"))
 	add("  " + m.styDim.Render("them, and keeps the line moving."))

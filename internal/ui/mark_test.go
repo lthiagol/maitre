@@ -100,6 +100,46 @@ func TestTheSousChefArtFitsTheColumn(t *testing.T) {
 	}
 }
 
+// TestTheSousChefKeepsItsContentAtEveryHeight covers the height rule.
+//
+// The decoration yields to the content, in both dimensions. The tab's content must
+// be whole at every height — the last event is the last thing that happened, and a
+// face is worthless if it costs the chef that — and the mark is drawn only at the
+// heights where the content and the mark both fit.
+//
+// The measure is the chef's screen: 80 columns, the classic default. The mark
+// costs six rows, so a 24-row terminal has no room for it.
+func TestTheSousChefKeepsItsContentAtEveryHeight(t *testing.T) {
+	for _, c := range []struct {
+		height  int
+		wantArt bool
+	}{
+		{20, false},
+		{24, false},
+		{26, true},
+		{30, true},
+		{40, true},
+	} {
+		m := newModel(t)
+		m.width = 80
+		m.height = c.height
+		switchToTab(t, m, TabSousChef)
+		out := plain(m)
+
+		if !strings.Contains(out, "LAST EVENT") {
+			t.Errorf("height %d: the tab should show its last event:\n%s", c.height, out)
+		}
+		content := m.sousChefContent()
+		last := strings.TrimSpace(StripANSI(content[len(content)-1].text))
+		if !strings.Contains(out, last) {
+			t.Errorf("height %d: the tab's last line should be on the screen — %q is not:\n%s", c.height, last, out)
+		}
+		if hasArt := strings.Contains(out, brand.Full[0]); hasArt != c.wantArt {
+			t.Errorf("height %d: the mark is drawn: %v, want %v:\n%s", c.height, hasArt, c.wantArt, out)
+		}
+	}
+}
+
 // TestTheSousChefStillSaysItIsNotBuilt covers the face.
 //
 // The tab is a placeholder, and a placeholder that looks broken is worse than no
