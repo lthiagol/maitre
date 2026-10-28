@@ -318,6 +318,7 @@ var NonViews = []string{
 	"FindRoot",
 	"GateNames",
 	"IsAgentRole",
+	"IsRetiredName",
 	"KnownLane",
 	"LaneNames",
 	"NewOperations",

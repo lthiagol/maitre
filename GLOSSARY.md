@@ -94,7 +94,7 @@ dish before it goes out.
 _Avoid_: User, approver, owner, manager
 
 **Sous-chef**:
-The coordinator agent. Composes recipe cards, preps the line, and runs the tasting.
+The agent that composes recipe cards, preps the line, and runs the tasting.
 _Avoid_: Coordinator, planner, scribe
 
 **Runner**:

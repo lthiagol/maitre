@@ -116,7 +116,7 @@ func (o *Operations) GetJournal() (Journal, error) {
 
 // CreateRecipe authors a new recipe in the draft state.
 func (o *Operations) CreateRecipe(spec RecipeSpec) (*Recipe, error) {
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -353,9 +353,14 @@ func (o *Operations) verificationFor(id, acID string) (string, error) {
 // chef signs a criterion off, not an agent. Otherwise the exception to the zero-match
 // rule would be available to the very party the rule exists to constrain, and a
 // criterion could be `passed` with nothing behind it.
+//
+// The name that signs off is a name the tool accepts: a retired one is refused.
 func (o *Operations) SignOffCriterion(id, acID, by, note string) (*Recipe, error) {
 	if strings.TrimSpace(by) == "" {
 		return nil, errors.New("a sign-off needs an approver")
+	}
+	if err := checkName(by); err != nil {
+		return nil, err
 	}
 	if IsAgentRole(o.context.Actor) {
 		return nil, fmt.Errorf("%s is an agent role: only the chef signs a criterion off", o.context.Actor)
@@ -585,11 +590,17 @@ func (o *Operations) ResolveFinding(id, findingID, resolution string) (*Recipe, 
 //
 // Without this the `review.verdict_ok` gate could never be satisfied — the gate
 // existed but no verb could satisfy it.
+//
+// The reviewer's name is a name the tool accepts: a retired one is refused, so an
+// executor cannot hide behind the name it used before the rename.
 func (o *Operations) RecordReviewRound(id, reviewer, verdict, notes string) (*Recipe, error) {
 	switch verdict {
 	case "ok", "changes-needed":
 	default:
 		return nil, fmt.Errorf("unknown review verdict %q (want ok or changes-needed)", verdict)
+	}
+	if err := checkName(reviewer); err != nil {
+		return nil, err
 	}
 	if strings.TrimSpace(reviewer) == "" {
 		return nil, errors.New("a review round needs a reviewer")
@@ -612,7 +623,12 @@ func (o *Operations) RecordReviewRound(id, reviewer, verdict, notes string) (*Re
 // there is a bad request, not a refusal: the console groups the comments by the note
 // they belong to, so a comment on a note that does not exist would be in no thread at
 // all — in the artifact, in the journal, and on no screen.
+//
+// The author's name is a name the tool accepts: a retired one is refused.
 func (o *Operations) AddComment(id, author, body, findingID string) (*Recipe, error) {
+	if err := checkName(author); err != nil {
+		return nil, err
+	}
 	if strings.TrimSpace(body) == "" {
 		return nil, errors.New("a comment needs a body")
 	}
@@ -675,9 +691,14 @@ func (o *Operations) AdvanceWith(id string, ev Event, ctx TransitionContext) (*R
 
 // ApproveRecipe signs a recipe off. The approver is recorded, and the frozen sections
 // are sealed.
+//
+// The approver's name is a name the tool accepts: a retired one is refused.
 func (o *Operations) ApproveRecipe(id, by string) (*Recipe, error) {
 	if strings.TrimSpace(by) == "" {
 		return nil, errors.New("a sign-off needs an approver")
+	}
+	if err := checkName(by); err != nil {
+		return nil, err
 	}
 	return o.advance(id, EventApprove, by, "")
 }
@@ -736,11 +757,18 @@ func (o *Operations) CancelRecipe(id, reason string) (*Recipe, error) {
 //
 // A claim needs an agent. An anonymous claim made the independence gate vacuous: the
 // executor could sign off its own work by omitting a flag.
+//
+// The claimant's name is a name the tool accepts: a retired one is refused, so an
+// executor cannot claim under the name it used before the rename and be reviewed
+// under the current one.
 func (o *Operations) ClaimRecipe(id, agent string) (*Recipe, error) {
 	if strings.TrimSpace(agent) == "" {
 		return nil, errors.New("a claim needs an agent")
 	}
-	unlock, err := o.store.lock()
+	if err := checkName(agent); err != nil {
+		return nil, err
+	}
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -780,12 +808,25 @@ func (o *Operations) ClaimRecipe(id, agent string) (*Recipe, error) {
 // Internals
 // ---------------------------------------------------------------------------
 
+// lock takes the plan lock for a write, and refuses an actor the tool does not
+// accept.
+//
+// Every write goes through here, so the rule holds everywhere: a name the tool does
+// not accept cannot be the actor that wrote the plan, and so it cannot appear in a
+// live record.
+func (o *Operations) lock() (func(), error) {
+	if err := checkName(o.context.Actor); err != nil {
+		return nil, err
+	}
+	return o.store.lock()
+}
+
 // mutate loads a recipe, applies fn, saves it, and journals the change.
 //
 // The whole sequence happens under the plan's advisory lock, so two processes cannot
 // interleave.
 func (o *Operations) mutate(id, kind string, fn func(*Recipe) error) (*Recipe, error) {
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -829,7 +870,7 @@ func (o *Operations) closedLookup(id string) (bool, error) {
 
 // advance applies a lifecycle event under the lock.
 func (o *Operations) advance(id string, ev Event, approver, reason string) (*Recipe, error) {
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -876,7 +917,7 @@ func (o *Operations) advance(id string, ev Event, approver, reason string) (*Rec
 
 // journal appends an entry, taking the lock.
 func (o *Operations) journal(kind, recipeID string, data any) error {
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return err
 	}

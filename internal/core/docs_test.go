@@ -1547,8 +1547,10 @@ func TestTheDocDoesNotOverstateTheDenyList(t *testing.T) {
 
 // checkDenyList checks the spec against the deny-list the code holds.
 //
-// There is **one** list. The names the rename retired are on it, so the spec has to
-// name them too — and the wire reads the one list, not two.
+// There are **two** lists, and the spec has to name both: the roles the code refuses
+// to sign off with, and the names the tool does not accept at all. The retired names
+// are refused harder than the roles — a retired name cannot even be an actor — so
+// the spec has to say what they are.
 //
 // It is a function of the doc, so the tripwire can be given a broken doc and be seen
 // to fail.
@@ -1558,6 +1560,11 @@ func checkDenyList(doc string) error {
 		spoken := strings.ReplaceAll(role, "-", " ")
 		if !strings.Contains(doc, role) && !strings.Contains(doc, spoken) {
 			return fmt.Errorf("the doc does not name %q — the code refuses it as an agent", role)
+		}
+	}
+	for _, name := range RetiredNames {
+		if !strings.Contains(doc, "`"+name+"`") {
+			return fmt.Errorf("the doc does not name the retired name %q — the tool refuses it as a name", name)
 		}
 	}
 	return nil

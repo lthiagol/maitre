@@ -120,6 +120,59 @@ func retiredInBacklog(raw []byte, id string) []string {
 	return found
 }
 
+// retiredActorNames names the retired names a live record carries.
+//
+// A name the tool does not accept cannot appear in a live record: the writer refuses
+// it, and the reader refuses a record that carries one. The **journal** is the
+// exception, because the journal is history.
+//
+// The fields are the ones that name an actor: the claimant, the approver, the
+// reviewer, the comment's author, the record's author, the deviation's author and
+// the overlays' author.
+func retiredActorNames(r *Recipe) []string {
+	var found []string
+	seen := map[string]bool{}
+	note := func(what, name string) {
+		if !IsRetiredName(name) {
+			return
+		}
+		entry := fmt.Sprintf("%s (%q)", what, name)
+		if seen[entry] {
+			return
+		}
+		seen[entry] = true
+		found = append(found, entry)
+	}
+	note("the claimant", r.Execution.ClaimedBy)
+	if r.Approval != nil {
+		note("the approver", r.Approval.By)
+	}
+	for _, round := range r.Review.Rounds {
+		note("a review round's reviewer", round.Reviewer)
+	}
+	for _, c := range r.Review.Comments {
+		note("a comment's author", c.Author)
+	}
+	for _, c := range r.Acceptance {
+		for _, e := range c.Evidence {
+			note("a record's author", e.By)
+		}
+	}
+	for _, d := range r.Audit.Deviations {
+		note("a deviation's author", d.By)
+	}
+	if r.Overlays.Blocked != nil {
+		note("a block's author", r.Overlays.Blocked.By)
+	}
+	if r.Overlays.Deferred != nil {
+		note("a deferral's author", r.Overlays.Deferred.By)
+	}
+	if r.Overlays.Cancelled != nil {
+		note("a cancellation's author", r.Overlays.Cancelled.By)
+	}
+	return found
+}
+
 // canonicalRecipeID reports whether an id is in the current form: `RCP` and a number.
 func canonicalRecipeID(id string) bool { return idHasPrefix(id, recipeIDPrefix) }
 
@@ -154,7 +207,9 @@ func retiredPlanError(artifacts []string) error {
 
 // checkRetiredRecipe refuses a recipe file that carries a retired artifact.
 func checkRetiredRecipe(raw []byte, r *Recipe) error {
-	return retiredPlanError(retiredInRecipe(raw, r.ID))
+	found := retiredInRecipe(raw, r.ID)
+	found = append(found, retiredActorNames(r)...)
+	return retiredPlanError(found)
 }
 
 // checkRetiredBacklog refuses a backlog item file that carries a retired artifact.

@@ -527,17 +527,31 @@ func canonicalCriteria(in []Criterion) []approvalCriterion {
 // they like; what the list refuses is the identity performing the approval. See
 // ADR-0006, "the permission deny-list".
 //
-// The names the rename retired are **on the list too**: `line-cook`, `taster`,
-// `expo`, `coordinator`. They are names the list refuses, and nothing more — a
-// retired name is not the runner, it is a name. The mapping that resolved one to the
-// other was a migration affordance, and it is gone.
+// The names the rename retired are refused too — see `RetiredNames` — and refusing
+// them is stronger than this list: a retired name is not a name the tool accepts.
 var AgentRoles = []string{
 	"agent",
 	"sous-chef",
 	"runner",
 	"reviewer",
 	"orchestrator",
-	// The names the rename retired.
+}
+
+// RetiredNames are the names the rename retired.
+//
+// A retired name is **not a name the tool accepts**. It is refused wherever an actor
+// names itself — the claim, the review, the approval, the sign-off, the comment, and
+// every other write — and a name the tool does not accept cannot appear in a live
+// record either.
+//
+// There is no `line-cook` → `runner` mapping any more: there is simply no
+// `line-cook`. The mapping was a migration affordance, and it is gone.
+//
+// This is what closes the hole the mapping left open: with the mapping gone, two
+// names that stood for one role are two names, and an executor that claimed as
+// `line-cook` and was reviewed by `runner` would pass the independence gate. With
+// this list, the claim is refused at the door.
+var RetiredNames = []string{
 	"line-cook",
 	"taster",
 	"expo",
@@ -551,10 +565,39 @@ func normalizeAgentName(name string) string {
 	return strings.ReplaceAll(n, " ", "-")
 }
 
+// IsRetiredName reports whether the name is one the rename retired.
+//
+// The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
+// and "line-cook" are the same name — and both are refused.
+func IsRetiredName(name string) bool {
+	n := normalizeAgentName(name)
+	for _, retired := range RetiredNames {
+		if n == retired {
+			return true
+		}
+	}
+	return false
+}
+
+// checkName refuses a name the tool does not accept.
+//
+// The rule, not a special case for the approval: a retired name is refused wherever
+// an actor names itself, so it cannot buy a gate and it cannot land in a live
+// record.
+func checkName(name string) error {
+	if IsRetiredName(name) {
+		return fmt.Errorf("%q is not a name this tool accepts: the rename retired it", strings.TrimSpace(name))
+	}
+	return nil
+}
+
 // IsAgentRole reports whether the name is one of the agent roles.
 //
 // The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
 // and "line-cook" are the same name — and both are refused.
+//
+// The retired names are refused as well: a name the tool does not accept may not
+// sign a recipe off, whatever it once stood for.
 func IsAgentRole(name string) bool {
 	role := normalizeAgentName(name)
 	for _, agent := range AgentRoles {
@@ -562,7 +605,7 @@ func IsAgentRole(name string) bool {
 			return true
 		}
 	}
-	return false
+	return IsRetiredName(role)
 }
 
 // Slugify turns a title into a filesystem-safe slug.

@@ -346,10 +346,17 @@ written.
    matches the actor's **name**, so an agent that calls itself `chef` passes it: the
    deny-list is a speed bump against the accident, not a boundary against the lie. CPD
    principle 7 (*"Would I trust a capable agent with this prompt as it stands?"*) turned
-   into a machine check instead of a prose reminder (P2). The names the rename retired
-   — `line-cook`, `taster`, `expo`, `coordinator` — are **on the list**: they are
-   names the list refuses, and nothing more. A retired name is not the runner; the
-   mapping that resolved one to the other was a migration affordance, and it is gone.
+   into a machine check instead of a prose reminder (P2).
+
+   The names the rename retired — `line-cook`, `taster`, `expo`, `coordinator` — are
+   refused **harder**: a retired name is not a name the tool accepts. It is refused
+   **wherever an actor names itself** — the claim, the review, the approval, the
+   sign-off, the comment, and every write's actor — and a name the tool does not
+   accept cannot appear in a live record either. There is no `line-cook` → `runner`
+   mapping any more: there is simply no `line-cook`. That is what closes the hole the
+   mapping left open: with the mapping gone, two names that stood for one role are
+   two names, and an executor that claimed as `line-cook` and was reviewed by `runner`
+   would pass the independence gate.
 
 ### 3.3 Overlays
 

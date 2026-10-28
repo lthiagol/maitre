@@ -30,7 +30,7 @@
           "match_unit": "package",
           "match": "proven",
           "at": "2026-10-26T00:40:14Z",
-          "by": "line-cook"
+          "by": "runner"
         }
       ]
     },
@@ -47,7 +47,7 @@
           "match_unit": "package",
           "match": "proven",
           "at": "2026-10-26T00:40:14Z",
-          "by": "line-cook"
+          "by": "runner"
         }
       ]
     },
@@ -64,7 +64,7 @@
           "match_unit": "package",
           "match": "proven",
           "at": "2026-10-26T00:40:15Z",
-          "by": "line-cook"
+          "by": "runner"
         }
       ]
     }
@@ -117,7 +117,7 @@
   ],
   "questions": [],
   "execution": {
-    "claimed_by": "line-cook",
+    "claimed_by": "runner",
     "claimed_at": "2026-10-26T00:38:17Z"
   },
   "completion": {},
@@ -138,7 +138,7 @@
     "comments": [
       {
         "id": "C-01",
-        "author": "line-cook",
+        "author": "runner",
         "body": "found while running the self-review: review.verdict_ok accepted any round. Added review.reviewer_independent, which compares the round's reviewer against execution.claimed_by.",
         "at": "2026-10-26T00:43:10Z",
         "finding": "F-01"
@@ -147,7 +147,7 @@
     "rounds": [
       {
         "n": 1,
-        "reviewer": "line-cook",
+        "reviewer": "runner",
         "verdict": "ok",
         "at": "2026-10-26T00:43:10Z",
         "notes": "the three criteria are proven; the gate hole is fixed"

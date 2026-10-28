@@ -3,6 +3,7 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -86,9 +87,9 @@ func TestTheRunnerAndTheReviewerAreTwoAgents(t *testing.T) {
 
 // TestARetiredNameIsNotTheRunner covers the mapping that is gone.
 //
-// A retired name is a name the deny-list refuses — it is not resolved to the role it
-// stood for. So the domain cannot tell that `line-cook` and `runner` are one agent:
-// it compares the names it is given.
+// A retired name is a name the tool refuses — not the runner, and not any other
+// role. The refusal is not a special case for the approval: a retired name is
+// refused wherever an actor names itself.
 func TestARetiredNameIsNotTheRunner(t *testing.T) {
 	// Both names are refused: the retired names are on the deny-list.
 	if !IsAgentRole("runner") || !IsAgentRole("line-cook") {
@@ -100,6 +101,118 @@ func TestARetiredNameIsNotTheRunner(t *testing.T) {
 	}
 	if !sameAgent("Line Cook", "line-cook") {
 		t.Fatal("the same name written twice is one name")
+	}
+}
+
+// TestARetiredNameCannotNameItself covers the rule.
+//
+// A retired name is refused wherever an actor names itself: the claim, the review,
+// the approval, the sign-off, the comment — and the actor every write is stamped
+// with. A name the tool does not accept cannot buy a gate.
+func TestARetiredNameCannotNameItself(t *testing.T) {
+	retired := []string{"line-cook", "Line Cook", "taster", "expo", "coordinator"}
+
+	for _, name := range retired {
+		t.Run(name, func(t *testing.T) {
+			ops, _ := newOps(t)
+			r, err := ops.CreateRecipe(readySpec())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// The claim.
+			if _, err := ops.ClaimRecipe(r.ID, name); err == nil {
+				t.Errorf("a retired name must not be able to claim: %q", name)
+			}
+			// The review.
+			if _, err := ops.RecordReviewRound(r.ID, name, "ok", "looks good"); err == nil {
+				t.Errorf("a retired name must not be able to review: %q", name)
+			}
+			// The approval.
+			if _, err := ops.ApproveRecipe(r.ID, name); err == nil {
+				t.Errorf("a retired name must not be able to approve: %q", name)
+			}
+			// The sign-off.
+			if _, err := ops.SignOffCriterion(r.ID, "AC-01", name, "checked by hand"); err == nil {
+				t.Errorf("a retired name must not be able to sign off: %q", name)
+			}
+			// The comment.
+			if _, err := ops.AddComment(r.ID, name, "a note", ""); err == nil {
+				t.Errorf("a retired name must not be able to comment: %q", name)
+			}
+		})
+	}
+}
+
+// TestARetiredActorCannotWrite covers the actor.
+//
+// Every write is stamped with the actor, so the rule has to hold there too: a
+// caller that names itself with a retired name cannot write to the plan at all.
+func TestARetiredActorCannotWrite(t *testing.T) {
+	store := Open(t.TempDir() + "/" + PlanDirName)
+	if err := store.Init(); err != nil {
+		t.Fatal(err)
+	}
+	ops := NewOperations(store, AuditContext{Actor: "line-cook", Session: "s-old", Role: "runner"})
+
+	_, err := ops.CreateRecipe(readySpec())
+	if err == nil {
+		t.Fatal("a retired name must not be able to write")
+	}
+	if !strings.Contains(err.Error(), "line-cook") {
+		t.Fatalf("the refusal should name the actor: %v", err)
+	}
+	if !strings.Contains(err.Error(), "not a name this tool accepts") {
+		t.Fatalf("the refusal should say what the rule is: %v", err)
+	}
+}
+
+// TestARetiredNameCannotBuyTheIndependenceGate covers the hole.
+//
+// The executor claims as `line-cook` and the runner reviews as `runner`: with the
+// mapping gone, two names stood for one role, and the gate read the review as
+// independent. The claim is refused at the door — and a record that carries the
+// retired name is refused by the reader.
+func TestARetiredNameCannotBuyTheIndependenceGate(t *testing.T) {
+	ops, _ := newOps(t)
+	r, err := ops.CreateRecipe(readySpec())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ev := range []Event{EventGroom, EventSpecify} {
+		if _, err := ops.Advance(r.ID, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The claim, under the retired name: refused.
+	if _, err := ops.ClaimRecipe(r.ID, "line-cook"); err == nil {
+		t.Fatal("a retired name must not be able to claim")
+	}
+
+	// And the record that carries it: the reader refuses the plan.
+	s := newStore(t)
+	if err := s.Init(); err != nil {
+		t.Fatal(err)
+	}
+	claimed := &Recipe{
+		ID:        "RCP01",
+		Title:     "claimed under the old name",
+		Slug:      "claimed-under-the-old-name",
+		Lifecycle: LifecycleExecuting,
+		Execution: Execution{ClaimedBy: "line-cook", ClaimedAt: Now()},
+	}
+	if err := s.SaveRecipe(claimed); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.LoadRecipe("RCP01"); err == nil {
+		t.Fatal("a record carrying a retired name must not be read")
+	}
+	if _, err := s.ListRecipes(); err == nil {
+		t.Fatal("a plan carrying a record with a retired name must not be listed")
 	}
 }
 

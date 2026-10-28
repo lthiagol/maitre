@@ -214,7 +214,7 @@ func (o *Operations) CreateBacklogItem(title, body string, scope []string, kind 
 	if !isKnownKind(kind) {
 		return nil, fmt.Errorf("unknown kind %q (want one of %s)", kind, strings.Join(BacklogKinds, ", "))
 	}
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +252,7 @@ func (o *Operations) UpdateBacklogItem(id, title, body string, scope []string, k
 	if kind != "" && !isKnownKind(kind) {
 		return nil, fmt.Errorf("unknown kind %q (want one of %s)", kind, strings.Join(BacklogKinds, ", "))
 	}
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func emptyIfNil(list []string) []string {
 // can decide against, and the asymmetry of the old ladder — only one kind could be
 // dismissed — had no reason behind it.
 func (o *Operations) DismissBacklogItem(id, reason string) (*BacklogItem, error) {
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +362,7 @@ func (o *Operations) DismissBacklogItem(id, reason string) (*BacklogItem, error)
 // An *error* is different: if the target cannot be written, the source is rolled
 // back, so the failure leaves the plan as it was — no status, no pointer, no event.
 func (o *Operations) PromoteBacklogItem(id string) (*Recipe, error) {
-	unlock, err := o.store.lock()
+	unlock, err := o.lock()
 	if err != nil {
 		return nil, err
 	}
