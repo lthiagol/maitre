@@ -62,7 +62,7 @@ control character** — see `internal/ui/sanitize_test.go`.
 ## 3. Automatically
 
 ```bash
-go test ./internal/ui/          # the console's tests
+make test PKG=./internal/ui     # the console's tests
 make test                       # everything
 ```
 
@@ -79,12 +79,69 @@ grouping.
 `internal/ui/testdata/console-recipes.golden` pins the Recipes tab's layout.
 
 ```bash
-make regen-goldens             # after a deliberate design change
+make goldens                   # after a deliberate design change
 ```
 
 A golden catches what unit tests miss: **a column that stops lining up.** When it fails,
 read the diff before regenerating — a golden that changed because the design changed is
 fine; one that changed because a title grew is a bug.
+
+---
+
+## The gate
+
+**One command: `make check`.** The tools are not run by hand.
+
+| Target | What it does |
+|---|---|
+| `make lint` | `gofmt -l` must be empty, `go vet`, `staticcheck` |
+| `make test` | the tests — `PKG=…` and `RUN=…` narrow the run |
+| `make test-race` | `-race -shuffle=on -count=2` |
+| `make goldens-check` | regenerate the goldens; they must be unchanged |
+| `make budget` | the dependency budget, checked against `AGENTS.md` |
+| `make tidy-check` | `go mod tidy` must produce no diff |
+| `make check` | the fast gate — all of the above |
+| `make check-race` | the slow gate — the same, with `-race` |
+| `make ci` | what CI runs — `check-race` and `govulncheck` |
+
+A focused check, for one acceptance criterion:
+
+```bash
+make test PKG=./internal/core RUN='-run Role|SelfReview'
+```
+
+A filter that matches **no** test fails. `go test` alone calls that a pass; a
+green that proves nothing is not evidence.
+
+### The tools
+
+```bash
+make tools
+```
+
+installs two binaries, pinned:
+
+| Tool | Version | Why |
+|---|---|---|
+| `staticcheck` | `v0.8.2` | `go vet` is weak; staticcheck finds the `SA*`, `S1*` and `ST*` classes vet misses. One binary, no configuration, so it cannot become a project of its own. |
+| `govulncheck` | `v1.9.0` | it finds the vulnerabilities that reach the binaries we ship. Not a gate on the code — a gate on the supply chain. |
+
+They are **dev tools**, not module dependencies: `go install` does not touch
+`go.mod`, and the budget of 0 / 0 / ≤ 30 is untouched by them.
+
+A tool that is not installed **fails** the gate with the way to get it. A check
+that is quietly skipped is a check that has stopped seeing.
+
+### The hook, and CI
+
+`make install-hooks` copies `scripts/hooks/pre-push.sh` into `.git/hooks/`. It
+runs the fast gate, so a broken commit never lands. The slow gate stays in CI
+— it takes minutes, and that belongs in CI rather than in a push.
+
+`.github/workflows/ci.yml` runs on every push and every pull request, on the Go
+version `go.mod` declares (`go 1.26.0`) — the code must build on the version
+it claims. It installs the tools and runs `make ci`, so the list of checks
+lives in the `Makefile` and not in the workflow.
 
 ---
 
