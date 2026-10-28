@@ -346,10 +346,26 @@ that is not a migration path, that is a log.
 |--:|---|---|
 | **F** | the tolerance machinery comes out; the format is one format | ✅ **closed** — review `ok` after four rounds; F-87..F-93 closed | [briefs/slice-f.md](briefs/slice-f.md) |
 | **G** | the mark — a bow tie, drawn as a braille halftone | ✅ **closed** — review `ok` after three rounds; F-94..F-97 closed | [briefs/slice-g.md](briefs/slice-g.md) |
-| **H** | the quality gate — one interface: `make` | 🟡 **in flight** — the tools, the CI, and the paper that says why | [briefs/slice-h.md](briefs/slice-h.md) |
+| **H** | the quality gate — one interface: `make` | ✅ **closed** — review `ok` after five rounds; F-98 closed | [briefs/slice-h.md](briefs/slice-h.md) |
 
-**The rename is done.** 26 findings found and closed across slices B to G; the
-orchestrator found none of them. The ledger's open table holds only the chef's rows.
+**The rename is done**, and so is the gate. 27 findings found and closed across slices
+B to H; the orchestrator found none of them. The ledger's open table holds only the
+chef's rows.
+
+**The gate** — one interface, and it runs where the code lands:
+
+| | |
+|---|---|
+| **`make check`** | the fast gate — lint (fmt-check · vet · staticcheck · versions-check) · test · goldens-check · budget · tidy-check. **1m14s.** |
+| **`make check-race`** | the slow gate — the same with `-race -shuffle=on -count=2`. **3m13s.** In CI, not in a push. |
+| **`make test PKG=… RUN=…`** | a focused check — and a filter that matches nothing **fails**. |
+| **The tripwires the gate holds** | the dependency budget · the tool pins, against the tool the gate runs and the doc that names them · the goldens' claims (derived from the run, not declared) · the goldens' commit |
+| **CI** | on every push and PR, `contents: read`, the **declared floor** (`go.mod`'s `go 1.26.0`), the tools pinned and installed. |
+
+**And what the gate found on its first run**, which is the argument for having built it:
+`go vet` had never seen **7 real issues**, `go.mod` was **untidy**, and `govulncheck`
+found **2 reachable vulnerabilities** (`x/text`, `goldmark`) — fixed by a version bump,
+with the module count unmoved.
 
 ## The rules that keep this durable
 
