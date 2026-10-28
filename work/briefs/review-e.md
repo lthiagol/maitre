@@ -18,6 +18,48 @@ git diff <base>..HEAD --stat      # the base is the commit before slice E's firs
 no style, no LOW notes filed as rows. **Do not re-file F-56, F-59, F-60, F-61, P-8**
 (the chef's).
 
+### The two judgements the runner made — check them against the code, not against taste
+
+**(1) `core.DomainVersion` stayed at 6, while the format's *shape* moved**
+(`b84b230161f4ab03`). The runner's reason: the version fences the **writer**, and the
+writer did not change — the slice extended the *facts list* (the guard now covers the
+root files and the journal envelope), which is not a change in what the tool writes.
+
+**The orchestrator agrees, and the contract says so in the test's own message:**
+
+> *"the domain's rules changed: the shape is now %s, the recorded shape is %s. Update
+> this fingerprint. **If the change is in what the tool writes, bump DomainVersion as
+> well — the version fences the writer, and the shape alone fences nothing.**"*
+
+**Check three things:** that the shape really did move and the recorded fingerprint was
+updated; that **nothing the tool writes** changed (no plan field, no directory, no file
+name); and that the version guard still fences in its designed direction — a plan
+stamped **7** is refused, a plan stamped **6** is accepted.
+
+**(2) The glossary names each retired word exactly once, in its `_Avoid_` line** — the
+pattern slice D set with *Proof* → *evidence*. Check that the retired words are named
+**once each**, that the `_Avoid_` line is where they belong (it warns the reader off
+the word), and that no retired word is *also* named in prose that is not an `_Avoid_`
+line.
+
+### The sweep's remaining 78 lines — check the claim, not the count
+
+The runner reports that **78 lines in 19 files** still carry an old name, and that every
+one of them names something that still exists. **Verify that file by file.** The
+legitimate ones are the legacy reader (it must name the old directories and the old
+rungs), the retired-role aliases and their tests, the tests of the old ids and of the
+migration events, the dated version notes, and the tripwires' own mutations. **A line
+that names nothing that still exists is drift the sweep missed**, and it is a finding.
+
+### The mascot did not land
+
+The runner reports: the art is in `logo/` (untracked), the console header, the CLI's
+help, the README and the Sous-Chef tab carry no drawing, and **AC-01 moves to the
+drawing session**. **Check the tree was not touched by the mascot's absence** — the
+goldens moved with the sweep alone, and no file of `logo/` was committed.
+
+
+
 ### The mascot is not this slice's — and the tree is shared
 
 **Another session is drawing the mascot in this repository, in the same working tree.**
