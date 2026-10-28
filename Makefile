@@ -94,19 +94,27 @@ test test-race:
 	$(call header,$@)
 	GO=$(GO) scripts/go-test.sh "$(TEST_FLAGS) $(RUN)" "$(PKG)"
 
-goldens:
+# The goldens are a test invocation, so they go through the same script as
+# every other run: the zero-match refusal applies here too — a
+# goldens-check that regenerated nothing must fail, not pass with an empty
+# diff. One recipe, one spelling: the two targets differ in the diff, not
+# in the run.
+GOLDEN_FLAGS := -run Golden -update
+GOLDEN_PKG := ./internal/ui
+goldens: GOLDEN_CHECK :=
+goldens-check: GOLDEN_CHECK := yes
+
+goldens goldens-check:
 	$(call header,$@)
-	$(GO) test ./internal/ui -run Golden -update
+	GO=$(GO) scripts/go-test.sh "$(GOLDEN_FLAGS)" "$(GOLDEN_PKG)"
+	@if [ "$(GOLDEN_CHECK)" = yes ]; then \
+		git diff --exit-code HEAD -- $(GOLDENS) || { \
+			echo "the goldens changed — read the diff before committing it." >&2; exit 1; \
+		}; \
+	fi
 
 # The old name, kept because it was in the docs and in a habit.
 regen-goldens: goldens
-
-goldens-check:
-	$(call header,$@)
-	$(GO) test ./internal/ui -run Golden -update
-	@git diff --exit-code HEAD -- $(GOLDENS) || { \
-		echo "the goldens changed — read the diff before committing it." >&2; exit 1; \
-	}
 
 budget:
 	$(call header,$@)

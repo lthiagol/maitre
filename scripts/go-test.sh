@@ -17,9 +17,13 @@ trap 'rm -rf "$tmp"' EXIT
 
 # `set -f` keeps the flags from being globbed; the shell splits them into
 # words, and a `|` in a -run pattern stays a character.
+#
+# The package comes first: the flags that are not `go test`'s own — `-update`
+# for the goldens — belong to the test binary, and `go test` only passes
+# them on after the package list.
 set -f
 if [ -n "$run" ]; then
-	{ $go_bin test $run "$pkg" 2>&1; echo $? > "$tmp/status"; } | tee "$tmp/out"
+	{ $go_bin test "$pkg" $run 2>&1; echo $? > "$tmp/status"; } | tee "$tmp/out"
 else
 	{ $go_bin test "$pkg" 2>&1; echo $? > "$tmp/status"; } | tee "$tmp/out"
 fi

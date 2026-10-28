@@ -332,7 +332,7 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 | `make goldens-check` | regenerate, then the goldens must be unchanged |
 | `make budget` | the dependency budget |
 | `make tidy-check` | `go mod tidy` must produce no diff |
-| `make check` | the fast gate — lint, test, goldens-check, budget, tidy-check |
+| `make check` | the fast gate — lint, versions-check, test, goldens-check, budget, tidy-check |
 | `make check-race` | the slow gate — the same, with `-race` |
 | `make tools` | install the pinned dev tools |
 | `make vuln` | `govulncheck ./...` |

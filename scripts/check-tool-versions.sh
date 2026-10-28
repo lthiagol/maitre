@@ -12,10 +12,15 @@
 #
 # A gate that runs a tool it did not pin is a gate nobody knows what it
 # ran.
+#
+# The scripts call each other by a relative path: they are make's
+# implementation, and make runs its recipes from the repo root.
 set -u
 
 mode=${1:-}
 shift || true
+
+go_bin=${GO:-go}
 
 case "$mode" in
 tool)
@@ -35,8 +40,10 @@ tool)
 	want=${pin#v}
 	got=${got#v}
 	if [ "$got" != "$want" ]; then
+		gopath=$($go_bin env GOPATH)
 		echo "$tool is version '${got:-unknown}'; the pin is $pin." >&2
-		echo "Run 'make tools' to install the pinned version." >&2
+		echo "Run 'make tools' to install the pinned version — it lands in $gopath/bin." >&2
+		echo "Put $gopath/bin first on your PATH: an older $tool earlier there still fails." >&2
 		exit 1
 	fi
 	echo "  $tool $got matches the pin $pin"
@@ -45,21 +52,31 @@ doc)
 	doc=${1:-}
 	tool=${2:-}
 	pin=${3:-}
-	row=$(grep -F "\`$tool\`" "$doc" | grep -E 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-	if [ -z "$row" ]; then
+	want=${pin#v}
+	# Every mention that names a version is checked — not only the first.
+	versions=$(grep -F "$tool" "$doc" | grep -E 'v?[0-9]+\.[0-9]+\.[0-9]+' | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' || true)
+	if [ -z "$versions" ]; then
 		echo "$doc names no version for $tool." >&2
 		echo "Change $doc to name $pin." >&2
 		exit 1
 	fi
-	stated=$(printf '%s\n' "$row" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-	want=${pin#v}
-	stated=${stated#v}
-	if [ "$stated" != "$want" ]; then
-		echo "$doc names $tool $stated; the pin is $pin." >&2
+	bad=""
+	for v in $versions; do
+		v=${v#v}
+		if [ "$v" != "$want" ]; then
+			if [ -z "$bad" ]; then
+				bad="$v"
+			else
+				bad="$bad, $v"
+			fi
+		fi
+	done
+	if [ -n "$bad" ]; then
+		echo "$doc names $tool $bad; the pin is $pin." >&2
 		echo "Change $doc to name $pin." >&2
 		exit 1
 	fi
-	echo "  $doc names $tool $stated, as pinned"
+	echo "  $doc names $tool $want, as pinned"
 	;;
 *)
 	echo "usage: check-tool-versions.sh tool <tool> <pin> | doc <doc> <tool> <pin>" >&2
