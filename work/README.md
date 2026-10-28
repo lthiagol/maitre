@@ -263,6 +263,39 @@ the migration events, the dated version notes, the tripwires' own mutations.
 | **The records are not swept** | the ledger keeps the names as they were when each finding was filed; `research/` is about v1; the old ADRs keep their tables as the record of what they said; `docs/07` and ADR 0009 are the rename's own tables. |
 | **No script** | deliberately. The sweep is a **one-time act** over a tree that now has *legitimate* old names. A permanent tripwire would need a permanent exclusion list, and **a tripwire with a long exclusion list is a tripwire that has stopped seeing**. The live facts have their own instruments: the deny-list wire, the derived-views wire, the plan-format wire. |
 
+## The chef's ruling — 2026-10-28: **no migrations**
+
+> *"This project at this moment has no worry with brownfield — we're still making it,
+> even the tests files we create can be updated to our new env, no worry with
+> migrating from old to new. The idea of rewriting this project is exactly this: take
+> new decisions and architecture without worrying with migrations or previous
+> versions, taking into consideration the lessons learned previously."*
+
+**What it decides.** This is not brownfield. The retired formats are not *supported*;
+they are **gone**. There is no upgrade path, no compatibility layer, and no second
+writer for a retired format. The rename's **tolerance machinery is the thing to
+remove** — it was built to keep old plans working, and the chef says no plan needs
+keeping.
+
+**What it does not touch.** The **lessons** are the point of the sentence. Every
+tripwire, the append-only journal, one fact one answer, the docs-current rule, and
+the fingerprint's job all stay. And the **journal is history**: its events keep their
+old names and ids forever, and the reader still resolves what the journal names —
+that is not a migration path, that is a log.
+
+| | |
+|---|---|
+| **The old specials** | the question is **moot**: the retired directories are not read at all. A plan carrying them is not supported, and the tool says so. |
+| **The retired role names** | the *refusal* stays (a name like `line-cook` must never be able to sign off); the *resolution* goes (it is no longer "the runner"). |
+| **The old digests** | go — and the root cause is fixed instead: the approval digest hashes a **canonical payload with fixed field names**, so a rename never moves it. |
+| **The version fence** | one rule: a tool writes a plan only if the plan's version **is** the tool's version. No "a new tool may write an old plan". |
+
+### Slice F — the no-migration slice
+
+| Slice | What | State |
+|--:|---|---|
+| **F** | the tolerance machinery comes out; the format is one format | 🟡 **in flight** | [briefs/slice-f.md](briefs/slice-f.md) |
+
 ## The rules that keep this durable
 
 1. **A brief is written into `work/briefs/` before it is dispatched.** Not into `/tmp` —
