@@ -218,9 +218,11 @@ does not compute. Three things now hold it:
   deleting a word, and one that is judged twice fails.
 
 **The version guard is built.** The plan records the version of the rules it was last
-written under, in its journal, and any tool whose rules are older refuses to write —
-the console included. A stale `maitre-cli` on the `PATH` can read the plan but cannot apply
-weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
+written under, in its journal, and **a tool writes a plan only if the plan's version
+is the tool's version** — the console included. There is no upgrade path: a newer
+tool does not write an older plan, because it would apply rules the plan was not
+written under. A stale `maitre-cli` on the `PATH` can read the plan but cannot write
+to it. `core.DomainVersion` says which rules the tool speaks;
 `TestDomainShapeIsVersioned` fails when the rules change without a bump.
 
 ## Decisions

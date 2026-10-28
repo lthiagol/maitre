@@ -188,7 +188,7 @@ func (s *Store) SaveRecipe(r *Recipe) error {
 // twice, and the gates read whichever copy they found.
 //
 // The match is on the **whole id**, not the number behind it. The ids are numbered
-// per kind, so "C01" and "R01" share a number — and a file of another kind in this
+// per kind, so "C01" and "RCP01" share a number — and a file of another kind in this
 // directory is not a copy of this artifact. It is somebody else's.
 //
 // The write came first, so the artifact is there whatever happens here. A removal
@@ -236,8 +236,10 @@ func copiesNamed(dir, id string) ([]string, error) {
 
 // copiesWithID lists the files in dir that carry the given id.
 //
-// The reader is tolerant: "r1", "R01" and "1" all name the same artifact, so the
-// number behind the id is what is compared.
+// The **lookup** is tolerant: "rcp01", "RCP1" and "1" all name the same artifact,
+// so the number behind the id is what is compared. A lookup resolves a name, and a
+// name is not a record — the record on disk is in the current format, and a record
+// under a retired form is refused.
 func copiesWithID(dir, id string) ([]string, error) {
 	entries, err := readDirSafe(dir)
 	if err != nil {
@@ -622,19 +624,22 @@ func (s *Store) findRecipePath(id string) (string, error) {
 // stripKindPrefix takes the kind letters off an id.
 //
 // **Every** leading letter goes, not just the first: a recipe's id is `RCP01`, and a
-// stripper that stopped at one letter would leave `CP01` — which matches neither the
-// new id nor the `R01` the plans written before the rename carry.
+// stripper that stopped at one letter would leave `CP01` — which matches no id the
+// plan holds.
 func stripKindPrefix(id string) string {
 	return strings.TrimLeft(strings.ToUpper(strings.TrimSpace(id)), "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 }
 
 // normaliseID strips the kind prefix and the zero padding so "rcp1", "RCP01",
-// "R01", "r1" and "1" match.
+// "rcp01" and "1" match.
 //
-// The letters are stripped whatever they are — "RCP", "R", "BL", "B" — so every
-// artifact kind answers to the same forms, and a **two-letter** prefix is as good
-// as a three-letter one. The ids are unambiguous by directory, so the kind letters
-// carry no information once the number is known.
+// The letters are stripped whatever they are — "RCP", "BL" — so every artifact kind
+// answers to the same forms, and a **two-letter** prefix is as good as a three-letter
+// one. The ids are unambiguous by directory, so the kind letters carry no information
+// once the number is known.
+//
+// This is the **lookup's** tolerance: a name resolves to a record, and a name is not
+// a record. The record on disk is in the current format.
 func normaliseID(id string) string {
 	s := strings.TrimLeft(stripKindPrefix(id), "0")
 	if s == "" {
