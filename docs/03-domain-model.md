@@ -560,19 +560,24 @@ history predates a change says what the change was.
 
 Every entry also records the **version of the domain's rules** it was written under
 (`domain_version`). The journal is written on every mutation, so the newest entry is
-the plan's stamp: a tool whose rules are older than the plan's refuses to write, and a
-newer tool stamps its own version on the next write. Reading is always allowed. See
+the plan's stamp. **The rule is one rule: a tool writes a plan only if the plan's
+version is the tool's version.** A plan stamped with an older version is **not
+supported** — there is no upgrade path, because a newer tool would apply rules the
+plan was not written under — and a plan stamped with a newer version is not supported
+either: the tool does not know the rules it was written under. The refusal says what
+the chef can do, and it promises no migration. Reading is always allowed. See
 `core.DomainVersion`; the guard itself is `Store.checkDomainVersion` in
 `internal/core/lock.go`.
 
-**The version fences the writer; the fingerprint is the tripwire.** The fingerprint
-hashes the gates, the transitions, the lifecycles, the events, the chef's moves, the
-rules on a tasting note's outcome **and the facts of the plan's format** — the id
-prefixes, the directories, the root files and the field names on disk. A rule outside
-that list is a rule the tripwire cannot see — so a rule that changes has to be added
-to the list, or the plan cannot say which rules it was written under. It is the
-*shape* of the rules, not their behaviour: what a gate computes is not in the
-fingerprint either.
+**Two facts, two jobs.** The **version** is the **plan-side** fact: it says which
+rules the plan was written under, and it fences the writer. The **fingerprint** is the
+**code-side** tripwire: it hashes the gates, the transitions, the lifecycles, the
+events, the chef's moves, the rules on a tasting note's outcome **and the facts of
+the plan's format** — the id prefixes, the directories, the root files and the field
+names on disk. A rule outside that hash is a rule the tripwire cannot see — so a rule
+that changes has to be added to it, or the plan cannot say which rules it was written
+under. It is the *shape* of the rules, not their behaviour: what a gate computes is
+not in the fingerprint either.
 
 **The two move apart.** A change to the **facts list** — a guard that now covers one
 fact more — moves the fingerprint and leaves the version alone: the format on disk
@@ -580,9 +585,9 @@ did not change, so nothing a stale tool writes is wrong. A change to **what the 
 writes** moves both. The [decision of record](07-vocabulary.md) says the same, and it
 is where the choice was made.
 
-**The stamp protects the future, not the corpus.** The guard refuses only when the
-plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until
-a newer build writes it and re-stamps it.
+**The stamp protects the future, not the corpus.** The guard refuses every plan whose
+version is not the tool's version, so a plan stamped 1 is not written by a version-6
+tool at all: the corpus is not carried along, and nothing is migrated.
 
 **Version 6 is the plan format, and the rules about it.** Version 3 changed the
 *record* the gates apply to: a recipe's id is `RCP01` and its file is

@@ -89,7 +89,7 @@ func TestTheSousChefSaysWhenTheVersionsDisagree(t *testing.T) {
 	if !strings.Contains(out, "they do not agree") {
 		t.Errorf("the tab should say the versions disagree:\n%s", out)
 	}
-	if !strings.Contains(out, "different build of the tool") {
+	if !strings.Contains(out, "does not write plans written under another version") {
 		t.Errorf("the tab should say what a mismatch means:\n%s", out)
 	}
 }

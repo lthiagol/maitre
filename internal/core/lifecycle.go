@@ -136,23 +136,23 @@ const MinOutOfScope = 2
 // transition table, the lifecycles, the events, the chef's moves and the rules on a
 // tasting note's outcome.
 //
-// A plan records the version it was last written under, in its journal. A tool whose
-// rules are **older** than the plan's refuses to write, because it would apply weaker
-// rules than the plan was written under — a gate the newer tool refuses, the older one
-// lets through. Reading is still allowed: the chef can look at the plan.
+// A plan records the version it was last written under, in its journal. **A tool
+// writes a plan only if the plan's version is the tool's version.** A plan stamped
+// with an older version is not supported — there is no upgrade path, because a newer
+// tool would apply rules the plan was not written under. A plan stamped with a newer
+// version is not supported either: the tool does not know the rules it was written
+// under. Reading is always allowed: the chef can look at the plan.
 //
-// A tool **newer** than the plan proceeds, and its next write stamps the newer
-// version.
+// The **version** fences the **writer**. The **shape** is the **tripwire**: it hashes
+// the gates, the transitions, the lifecycles, the events, the chef's moves, the note's
+// outcome rules and the facts of the plan's format. A rule that is not in that hash
+// is a rule the tripwire cannot see — so a rule that changes has to be added to it,
+// or the plan cannot say which rules it was written under.
 //
-// The **version** fences the **writer**: a tool that speaks an older version must not
-// write a plan, because it does not know the rules the plan was written under — and
-// the plan's format is one of those rules.
-//
-// `domainShape()` is the **tripwire**: it hashes the gates, the transitions, the
-// lifecycles, the events, the chef's moves, the note's outcome rules and the facts of
-// the plan's format. A rule that is not in that hash is a rule the tripwire cannot
-// see — so a rule that changes has to be added to it, or the plan cannot say which
-// rules it was written under.
+// **Two facts, two jobs.** The shape is the code-side fact: it says the format's
+// facts changed, so the version must move with them. The version is the plan-side
+// fact: it says which rules the plan was written under. The version does not say that
+// the format changed — the shape does.
 //
 // So the two move apart. **Bump this when the rules the tool applies change** — a
 // gate added, renamed or dropped, a transition added, a lifecycle added, a chef's
@@ -160,13 +160,9 @@ const MinOutOfScope = 2
 // something the plan's rules do not allow, and the version is what fences it.
 // `TestDomainShapeIsVersioned` fails until the shape is updated.
 //
-// **The fingerprint also moves when the facts list grows** — a guard that now covers
-// one fact more — and that alone leaves this number alone: the format on disk did
-// not change, so nothing a stale tool writes is wrong.
-//
-// The bump protects the future, not the corpus: the guard refuses only when the plan
-// is newer than the tool, so a plan stamped 1 is still open to a version-1 tool until
-// a newer build writes it.
+// **The bump protects the future, not the corpus.** The guard refuses every plan
+// whose version is not the tool's version, so a plan stamped 1 is not written by a
+// version-6 tool at all: the corpus is not carried along, and nothing is migrated.
 //
 // **Version 6: the plan format's records were renamed.** The recipe's completion
 // stamp was `evidence`; it is `completion` now. A criterion's record was `proofs`;
@@ -178,10 +174,9 @@ const MinOutOfScope = 2
 // moved — but the **record** did: a version-5 tool would write `proofs` where the
 // version-6 writer writes `evidence`.
 //
-// The reader is tolerant on purpose: a plan written before the rename keeps the old
-// field names, and the reader reads them. But a stale tool keeps writing the old
-// format, and the version is what fences it. The version is bumped because the
-// **writer** changed.
+// The version is bumped because the **writer** changed. The version-6 reader does not
+// read `proofs` either: the format is one format, and a record under a retired name
+// is a record the current reader does not know.
 //
 // **Version 5: the plan format changed again — the backlog is one artifact.** The
 // backlog's two file types (`kitchen/specials/` and `kitchen/prep-notes/`) are one
@@ -189,12 +184,7 @@ const MinOutOfScope = 2
 // the gates apply did not change — no gate was weakened and no gate rule moved — but
 // the **record** did: a version-4 tool would write a special or a prep note into
 // `kitchen/specials/` and `kitchen/prep-notes/`, and the version-5 writer does not.
-// The reader still shows the old ones, read-only, in their own group; it never looks
-// for new ones.
-//
-// The reader is tolerant on purpose: `BL01`, `bl01`, `BL1`, `B01` and `1` all name
-// the same item, and a file named `B01-<slug>.json` is read as the item `BL01`. The
-// version is bumped because the **writer** changed.
+// The version is bumped because the **writer** changed.
 //
 // **Version 4: the stamp covers the plan's format.** The fingerprint now hashes the
 // facts of the format — the id prefixes, the directories, the root files and the field
@@ -208,11 +198,9 @@ const MinOutOfScope = 2
 // that reads a version-3 plan with the version-2 id machinery would not find the
 // recipes in it.
 //
-// The reader is tolerant on purpose (`RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
-// same recipe), so the older ids still resolve and a plan written before the change
-// is still readable. The version is bumped because the **writer** changed: a version-2
-// tool would write `R01` into a plan the version-3 reader expects to find `RCP01`.
-// See docs/07-vocabulary.md.
+// The version is bumped because the **writer** changed: a version-2 tool would write
+// `R01` into a plan the version-3 reader expects to find `RCP01`. See
+// docs/07-vocabulary.md.
 const DomainVersion = 6
 
 // gates is the single gate table. Every gate lives here and nowhere else.

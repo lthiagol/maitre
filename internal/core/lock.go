@@ -28,8 +28,8 @@ var staleLockAfter = 30 * time.Second
 // stop a hand edit — which the plan-zone rule already forbids.
 //
 // Every write takes this lock, so it is also where the version guard lives: a tool
-// whose rules are older than the plan's refuses to write, rather than applying weaker
-// rules than the plan was written under.
+// writes a plan only if the plan's version is the tool's version, rather than
+// applying rules the plan was not written under.
 func (s *Store) lock() (func(), error) {
 	path := filepath.Join(s.Root, LockName)
 	deadline := time.Now().Add(5 * time.Second)
@@ -62,19 +62,34 @@ func (s *Store) lock() (func(), error) {
 	}
 }
 
-// checkDomainVersion refuses a write to a plan written under newer rules.
+// checkDomainVersion refuses a write to a plan written under other rules.
 //
-// A tool whose rules are older than the plan's would let through a gate the newer tool
-// refuses: the plan was written under stronger rules, and the write would apply weaker
-// ones. Reading is allowed — the chef can still look at the plan.
+// **One rule:** a tool writes a plan only if the plan's version **is** the tool's
+// version. A plan stamped with an older version is not supported, and there is no
+// upgrade path — a newer tool does not write an older plan, because it would apply
+// rules the plan was not written under.
+//
+// The refusal says what the chef can do, and it promises no migration: a plan under
+// another version is read, and written by the tool that speaks its version.
+//
+// Reading is always allowed: the chef can still look at a plan.
+//
+// A plan with **no journal** is a plan that does not exist yet. There is nothing to
+// be incompatible with, and the first write creates it.
 func (s *Store) checkDomainVersion() error {
 	j, err := s.LoadJournal()
 	if err != nil {
 		return err
 	}
+	if len(j.Events) == 0 {
+		return nil
+	}
 	plan := PlanDomainVersion(j)
+	if plan == DomainVersion {
+		return nil
+	}
 	if plan > DomainVersion {
 		return fmt.Errorf("this plan was written under domain version %d and this tool speaks version %d: upgrade the tool, or read the plan without writing to it", plan, DomainVersion)
 	}
-	return nil
+	return fmt.Errorf("this plan was written under domain version %d and this tool speaks version %d: this tool does not write plans written under another version — read it without writing to it, or write the plan with the tool that speaks its version", plan, DomainVersion)
 }

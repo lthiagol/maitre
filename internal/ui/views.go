@@ -923,7 +923,7 @@ func (m *Model) sousChefLines() []listLine {
 		add("  " + m.styDim.Render("they agree"))
 	} else {
 		add("  " + m.styWarn.Render("they do not agree") +
-			m.styDim.Render(" — the plan was written by a different build of the tool"))
+			m.styDim.Render(" — this build does not write plans written under another version"))
 	}
 
 	add("")

@@ -190,28 +190,40 @@ func TestDomainVersionRefusesANewerPlan(t *testing.T) {
 	}
 }
 
-// TestDomainVersionStampsAnOlderPlan covers the upgrade.
+// TestDomainVersionRefusesAnOlderPlan covers the other side.
 //
-// A tool newer than the plan proceeds, and its next write stamps the newer version.
-func TestDomainVersionStampsAnOlderPlan(t *testing.T) {
+// There is no upgrade path: a newer tool does not write a plan written under older
+// rules either, because it would apply rules the plan was not written under. The
+// refusal says what the chef can do, and it promises no migration.
+func TestDomainVersionRefusesAnOlderPlan(t *testing.T) {
 	ops, store := newOps(t)
 	if _, err := ops.CreateRecipe(readySpec()); err != nil {
 		t.Fatal(err)
 	}
-	stampPlanVersion(t, store, DomainVersion-1)
+	older := DomainVersion - 1
+	stampPlanVersion(t, store, older)
 
-	if _, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil); err != nil {
-		t.Fatalf("a newer tool should write to an older plan: %v", err)
+	_, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	if err == nil {
+		t.Fatal("a newer tool must not write to a plan written under older rules")
 	}
-	j, err := store.LoadJournal()
+	if !strings.Contains(err.Error(), strconv.Itoa(older)) {
+		t.Fatalf("the refusal should name the plan's version: %v", err)
+	}
+	if !strings.Contains(err.Error(), strconv.Itoa(DomainVersion)) {
+		t.Fatalf("the refusal should name the tool's version: %v", err)
+	}
+	if strings.Contains(err.Error(), "migrat") {
+		t.Fatalf("the refusal should not promise a migration: %v", err)
+	}
+
+	// The plan is untouched.
+	items, err := store.ListBacklogItems()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(j.Events) == 0 {
-		t.Fatal("the journal is empty")
-	}
-	if got := j.Events[len(j.Events)-1].DomainVersion; got != DomainVersion {
-		t.Fatalf("the plan is stamped with version %d, want %d", got, DomainVersion)
+	if len(items) != 0 {
+		t.Fatalf("the refused write landed anyway: %+v", items)
 	}
 }
 
@@ -262,13 +274,13 @@ func stampPlanVersion(t *testing.T, store *Store, version int) {
 	}
 }
 
-// TestTheReposOwnPlanStaysWritable covers the repo's own plan.
+// TestTheRepoPlanIsWrittenUnderThisToolsVersion covers the repo's own plan.
 //
-// The version guard refuses a write when the plan is newer than the tool. The repo's
-// own plan was written under an older version, so this tool — a newer one — must be
-// able to write to it. The guard's direction is the whole point: a newer tool
-// proceeds and stamps its own version on its next write.
-func TestTheRepoPlanStaysWritableUnderANewerVersion(t *testing.T) {
+// The version guard refuses a write when the plan's version is not the tool's
+// version. The repo's own plan is stamped with the version this tool speaks, so it
+// stays writable — and the test says so, so a version bump that leaves the repo's
+// own plan behind fails here.
+func TestTheRepoPlanIsWrittenUnderThisToolsVersion(t *testing.T) {
 	root := filepath.Join("..", "..", PlanDirName)
 	if _, err := os.Stat(root); err != nil {
 		t.Skipf("the repo has no plan at %s", root)
@@ -282,8 +294,8 @@ func TestTheRepoPlanStaysWritableUnderANewerVersion(t *testing.T) {
 		t.Fatal("the repo's own journal is empty")
 	}
 	plan := PlanDomainVersion(j)
-	if plan > DomainVersion {
-		t.Fatalf("the repo's own plan is stamped %d and this tool speaks %d: the plan is newer than the tool", plan, DomainVersion)
+	if plan != DomainVersion {
+		t.Fatalf("the repo's own plan is stamped %d and this tool speaks %d: the plan is written under another version", plan, DomainVersion)
 	}
 	if err := s.checkDomainVersion(); err != nil {
 		t.Fatalf("the repo's own plan must stay writable: %v", err)
