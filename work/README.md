@@ -14,7 +14,7 @@ file, which becomes the ADR's history.
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | ✅ **closed** — review `ok` after one fix cycle; F-73..F-77 closed | [briefs/slice-c.md](briefs/slice-c.md) |
-| **D** | `Proof` → evidence, the recipe-level stamp → completion | queued · version → 6 | [briefs/slice-d.md](briefs/slice-d.md) |
+| **D** | `Proof` → evidence, the recipe-level stamp → completion | 🟡 **in review** — landed (5 commits, AC-01..AC-04); the review filed **F-78** (high) and two mediums; the fix cycle is with the runner | [briefs/slice-d.md](briefs/slice-d.md) |
 | **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | queued | [briefs/slice-e.md](briefs/slice-e.md) |
 
 > **The mascot (slice E's AC-01) is being made in another session**, on 2026-10-27.
@@ -49,10 +49,29 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 
 | | |
 |---|---|
-| **runner** | writes the code, one commit per acceptance criterion. The previous runner's slice-B turn ended without reporting; its work was green and uncommitted, captured at [state/slice-b-wip.patch](state/slice-b-wip.patch). **The current lane is `w1Z:p2`** — it wrote slice B, so the fix cycle stays with it. |
-| **reviewer** | reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation. **The current lane is `w1Z:p4`.** |
+| **runner** | writes the code, one commit per acceptance criterion. The previous runner's slice-B turn ended without reporting; its work was green and uncommitted, captured at [state/slice-b-wip.patch](state/slice-b-wip.patch). **The current lane is `w1Z:p8`** — it wrote slices D and the fix cycle, so the fix cycles stay with it. |
+| **reviewer** | reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation. **The current lane is `w1Z:p9`.** |
 | **verifier** | the reviewer's own second lane; it dispatched F-49 and F-50 |
 | **orchestrator** | dispatches, verifies, rules on the findings, writes the paper. **This one is `w1Z:p1`.** |
+
+### Slice D's findings
+
+| Finding | What | Where it goes |
+|---|---|---|
+| **F-78** (high) | **the approval digest did not travel with the rename.** The digest hashes the criterion's JSON, and the JSON carries the field *name* — so a plan approved before the rename keeps a digest the tool cannot reproduce, and `immutability.respected` reads the difference as **tampering**: every gated transition of a recipe nobody touched is refused. The repo's own RCP01 stored `8813a266…`, which is *exactly* the old encoding's digest, while the tool recomputed `4984098d…`. | fix cycle 1 → the runner → cycle 2 |
+| **F-79** (medium) | the glossary's **Evidence** entry said *"a verification result a machine produced"* — but a human **sign-off** is stored in the same field and `ac.all_proven` takes it as a pass. The single source of the vocabulary was narrower than the record, and the *"matched nothing is not evidence"* line was **false** for a sign-off. **The wording came from the orchestrator's brief.** | fix cycle 1 |
+| **F-80** (medium) | `docs/03` § 6 said the reader does not see the records a version-5 tool wrote, two paragraphs below saying it reads them. The version bump is right — the *writer* changed; the stated consequence is wrong. | fix cycle 1 |
+
+### The tree is shared — with the mascot's session
+
+Since 2026-10-27 evening, **another session is drawing the mascot in this same
+repository.** It has files in the tree (`logo/`) and it may write to the plan.
+
+| | |
+|---|---|
+| **Stage by name** | never `git add -A`, never `git add .` — a sweep takes the other session's work into your commit |
+| **Do not touch** | `logo/`, and anything you did not write. If a file you did not write has changed, **stop and report it** |
+| **The journal** | append-only. A command run against the plan writes an event — and an event nobody meant is noise in the record. *(The orchestrator found this the hard way: one `recipe claim` probe wrote a refusal event into the repo's own journal, and it was restored to its committed state.)* |
 
 ### Slice C's rulings — and two questions for the chef
 
