@@ -1547,6 +1547,9 @@ func TestTheDocDoesNotOverstateTheDenyList(t *testing.T) {
 
 // checkDenyList checks the spec against the deny-list the code holds.
 //
+// There is **one** list. The names the rename retired are on it, so the spec has to
+// name them too — and the wire reads the one list, not two.
+//
 // It is a function of the doc, so the tripwire can be given a broken doc and be seen
 // to fail.
 func checkDenyList(doc string) error {
@@ -1555,11 +1558,6 @@ func checkDenyList(doc string) error {
 		spoken := strings.ReplaceAll(role, "-", " ")
 		if !strings.Contains(doc, role) && !strings.Contains(doc, spoken) {
 			return fmt.Errorf("the doc does not name %q — the code refuses it as an agent", role)
-		}
-	}
-	for name := range retiredAgentRoles {
-		if !strings.Contains(doc, "`"+name+"`") {
-			return fmt.Errorf("the doc does not name the retired role %q — a plan written before the rename still meets it", name)
 		}
 	}
 	return nil
@@ -1589,5 +1587,15 @@ func TestTheDenyListTripwireFailsOnRealDrift(t *testing.T) {
 	}
 	if err := checkDenyList(broken); err == nil {
 		t.Error("the tripwire should fail on a spec that does not name the runner")
+	}
+
+	// The spec without a retired name: the list refuses it, so the spec has to
+	// name it too. The two sets are one set now.
+	withoutTaster := strings.ReplaceAll(doc, "`taster`", "the old name")
+	if withoutTaster == doc {
+		t.Fatal("the doc does not name the retired role")
+	}
+	if err := checkDenyList(withoutTaster); err == nil {
+		t.Error("the tripwire should fail on a spec that does not name a retired role")
 	}
 }

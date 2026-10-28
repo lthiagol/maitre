@@ -419,10 +419,9 @@ func (s ReviewState) Label() string {
 // claimant at all: nobody signed for the work, so there is no executor to be separate
 // from, and an anonymous claim cannot buy independence.
 //
-// The executor and the reviewer are compared as **agents**, not as strings. The
-// rename retired a name for each role, and an agent that wrote its old name before
-// the rename and its new name after is the same agent: comparing the strings alone
-// would let a recipe close on a review its own executor gave.
+// The executor and the reviewer are compared as **agents**, not as strings: an agent
+// that signs off its own work under a second spelling of its own name would close
+// its own recipe.
 //
 // One source of truth: the gate that blocks the transition and the triage that tells
 // the chef what to do both read this. v1's lesson was five implementations of one
@@ -441,14 +440,12 @@ func SelfReviewed(r Recipe) bool {
 
 // sameAgent reports whether two actor names can name the same agent.
 //
-// The names are compared as written and as roles: `line-cook` and `runner` are one
-// agent under two names, and `taster` and `reviewer` are one agent under two names.
+// The names are compared as written, in the form the domain compares: `Line Cook`
+// and `line-cook` are one name. The names the rename retired are **not** resolved to
+// the roles they stood for — a retired name is a name, and the domain does not know
+// that it was the runner.
 func sameAgent(a, b string) bool {
-	na, nb := normalizeAgentName(a), normalizeAgentName(b)
-	if na == nb {
-		return true
-	}
-	return agentRole(na) == agentRole(nb)
+	return normalizeAgentName(a) == normalizeAgentName(b)
 }
 
 // ReviewStateOf derives the review state.

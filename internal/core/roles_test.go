@@ -48,18 +48,19 @@ func recipeReviewedBy(t *testing.T, claimer, reviewer string) (*Operations, *Rec
 // TestTheRenamedRolesAreTheAgentRoles covers the deny-list after the rename.
 //
 // The crew's jobs are plain words now: the sous chef, the runner, the reviewer and
-// the orchestrator. The list is a deny list, so the retired names must stay on it —
-// a plan written before the rename is refused exactly like one written after it.
+// the orchestrator. The list is a deny list, and the names the rename retired are
+// **on it** — they are names the list refuses, and nothing more. A retired name is
+// not the runner any more; the mapping that said so was a migration affordance.
 func TestTheRenamedRolesAreTheAgentRoles(t *testing.T) {
 	for _, role := range []string{"agent", "sous-chef", "runner", "reviewer", "orchestrator"} {
 		if !IsAgentRole(role) {
 			t.Errorf("%q should be an agent role", role)
 		}
 	}
-	// The names the rename retired still name the role they stood for.
+	// The names the rename retired: the list refuses them as names.
 	for _, retired := range []string{"line-cook", "Line Cook", "taster", "expo", "coordinator"} {
 		if !IsAgentRole(retired) {
-			t.Errorf("%q should still be an agent role", retired)
+			t.Errorf("%q should be an agent role", retired)
 		}
 	}
 	for _, human := range []string{"chef", "maitre", "alice"} {
@@ -69,44 +70,36 @@ func TestTheRenamedRolesAreTheAgentRoles(t *testing.T) {
 	}
 }
 
-// TestASelfReviewSurvivesTheRename covers the invariant the rename had to keep.
+// TestTheRunnerAndTheReviewerAreTwoAgents covers the other side.
 //
-// The executor and the reviewer are compared as agents, not as strings. An agent that
-// wrote its old name before the rename and its new name after is the same agent, so
-// the recipe it reviewed itself cannot close.
-func TestASelfReviewSurvivesTheRename(t *testing.T) {
-	cases := []struct {
-		claimer  string
-		reviewer string
-	}{
-		{"line-cook", "line-cook"},
-		{"line-cook", "runner"},
-		{"runner", "line-cook"},
-		{"taster", "reviewer"},
-		{"expo", "orchestrator"},
-	}
-	for _, c := range cases {
-		ops, r := recipeReviewedBy(t, c.claimer, c.reviewer)
-		if !SelfReviewed(*r) {
-			t.Errorf("%q reviewed by %q should read as self-reviewed", c.claimer, c.reviewer)
-		}
-		if _, err := ops.Advance(r.ID, EventPassReview); err == nil {
-			t.Errorf("%q reviewed by %q should not pass the review gate", c.claimer, c.reviewer)
-		}
-	}
-}
-
-// TestTheRunnerAndTheReviewerAreTwoAgents is the other side of the rename.
-//
-// `line-cook` was the runner and `reviewer` is the reviewer: two jobs, two agents.
-// The rename must not make every review a self-review.
+// `runner` is the runner and `reviewer` is the reviewer: two jobs, two agents. The
+// rename must not make every review a self-review.
 func TestTheRunnerAndTheReviewerAreTwoAgents(t *testing.T) {
-	ops, r := recipeReviewedBy(t, "line-cook", "reviewer")
+	ops, r := recipeReviewedBy(t, "runner", "reviewer")
 	if SelfReviewed(*r) {
 		t.Fatal("the runner's work reviewed by the reviewer is not a self-review")
 	}
 	if _, err := ops.Advance(r.ID, EventPassReview); err != nil {
 		t.Fatalf("an independent review should pass: %v", err)
+	}
+}
+
+// TestARetiredNameIsNotTheRunner covers the mapping that is gone.
+//
+// A retired name is a name the deny-list refuses — it is not resolved to the role it
+// stood for. So the domain cannot tell that `line-cook` and `runner` are one agent:
+// it compares the names it is given.
+func TestARetiredNameIsNotTheRunner(t *testing.T) {
+	// Both names are refused: the retired names are on the deny-list.
+	if !IsAgentRole("runner") || !IsAgentRole("line-cook") {
+		t.Fatal("both the runner and the retired name are refused as agent roles")
+	}
+	// But they are not resolved to each other: a retired name is a name.
+	if sameAgent("line-cook", "runner") {
+		t.Fatal("a retired name must not resolve to the role it stood for")
+	}
+	if !sameAgent("Line Cook", "line-cook") {
+		t.Fatal("the same name written twice is one name")
 	}
 }
 

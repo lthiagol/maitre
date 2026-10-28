@@ -633,32 +633,22 @@ func frozenCriteria(in []Criterion) []Criterion {
 // The list is a **deny** list, not an allow list. A human may approve under any name
 // they like; what the list refuses is the identity performing the approval. See
 // ADR-0006, "the permission deny-list".
-var AgentRoles = []string{"agent", "sous-chef", "runner", "reviewer", "orchestrator"}
-
-// retiredAgentRoles maps the agent names the rename retired to the role that
-// replaced them.
 //
-// A plan written before the rename carries the old names, and the rename must not
-// loosen what the domain refuses: an agent that calls itself `line-cook` is the
-// runner, and a caller that still uses the old name is still an agent.
-var retiredAgentRoles = map[string]string{
-	"line-cook":   "runner",
-	"taster":      "reviewer",
-	"expo":        "orchestrator",
-	"coordinator": "sous-chef",
-}
-
-// agentRole resolves a name to the role it stands for, knowing the names the
-// rename retired.
-//
-// The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
-// and "line-cook" are the same name — and "line-cook" is the runner.
-func agentRole(name string) string {
-	n := normalizeAgentName(name)
-	if role, ok := retiredAgentRoles[n]; ok {
-		return role
-	}
-	return n
+// The names the rename retired are **on the list too**: `line-cook`, `taster`,
+// `expo`, `coordinator`. They are names the list refuses, and nothing more — a
+// retired name is not the runner, it is a name. The mapping that resolved one to the
+// other was a migration affordance, and it is gone.
+var AgentRoles = []string{
+	"agent",
+	"sous-chef",
+	"runner",
+	"reviewer",
+	"orchestrator",
+	// The names the rename retired.
+	"line-cook",
+	"taster",
+	"expo",
+	"coordinator",
 }
 
 // normalizeAgentName puts a name in the form the domain compares: lower case,
@@ -670,10 +660,10 @@ func normalizeAgentName(name string) string {
 
 // IsAgentRole reports whether the name is one of the agent roles.
 //
-// A name the rename retired still names the role it stood for, so a plan written
-// before the rename is refused exactly like one written after it.
+// The comparison is case-insensitive and treats a space as a dash, so "Line Cook"
+// and "line-cook" are the same name — and both are refused.
 func IsAgentRole(name string) bool {
-	role := agentRole(name)
+	role := normalizeAgentName(name)
 	for _, agent := range AgentRoles {
 		if role == agent {
 			return true

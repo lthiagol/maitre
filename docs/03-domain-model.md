@@ -341,8 +341,9 @@ written.
    deny-list is a speed bump against the accident, not a boundary against the lie. CPD
    principle 7 (*"Would I trust a capable agent with this prompt as it stands?"*) turned
    into a machine check instead of a prose reminder (P2). The names the rename retired
-   — `line-cook`, `taster`, `expo`, `coordinator` — still name the role they stood for,
-   so a plan written before the rename is refused exactly like one written after it.
+   — `line-cook`, `taster`, `expo`, `coordinator` — are **on the list**: they are
+   names the list refuses, and nothing more. A retired name is not the runner; the
+   mapping that resolved one to the other was a migration affordance, and it is gone.
 
 ### 3.3 Overlays
 
