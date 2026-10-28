@@ -15,7 +15,7 @@ file, which becomes the ADR's history.
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | ✅ **closed** — review `ok` after one fix cycle; F-73..F-77 closed | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | ✅ **closed** — review `ok`; F-78..F-80 closed; two comments tidied | [briefs/slice-d.md](briefs/slice-d.md) |
-| **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | queued | [briefs/slice-e.md](briefs/slice-e.md) |
+| **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | 🟡 **in review** — landed (6 commits, AC-02..AC-05); the review filed **F-81..F-85** | [briefs/slice-e.md](briefs/slice-e.md) |
 
 > **The mascot (slice E's AC-01) is being made in another session**, on 2026-10-27.
 > This tree is shared, so slice E's brief says plainly: do not draw it, do not touch
@@ -24,7 +24,7 @@ file, which becomes the ADR's history.
 > collision, and a collision in the mascot's files is a merge nobody wins. The runner
 > reports whether the mascot landed; the orchestrator closes the slice.
 
-The plan's format version is **4** (`core.DomainVersion`). It moves with the format:
+The plan's format version is **6** (`core.DomainVersion`). It moves with the format:
 each slice that changes the format bumps it, and `docs/03` § 6 says the same number.
 
 ## The rulings — do not re-litigate these
@@ -40,7 +40,7 @@ each slice that changes the format bumps it, and `docs/03` § 6 says the same nu
 | **The journal** | append-only, always. The 32 historical events keep their old `R01`; the migration is event **33**, a `control` event stamped 4. `KindControl` had no writer until then. |
 | **The env vars** | `MAITRE_CLI_ACTOR` / `MAITRE_CLI_SESSION` / `MAITRE_CLI_ROLE`. The old `SCALE_*` names still work **with a warning on stderr**; the new name wins when both are set. |
 | **The version guard** | the fingerprint now covers the **format facts**, so a format change fails `TestDomainShapeIsVersioned` until the number moves. The format is fenced by the number, not by hand. |
-| **The review** | the taster judges; the line cook writes; the orchestrator rules and dispatches. A fix is reviewed by someone who did not write it. |
+| **The review** | the reviewer judges; the runner writes; the orchestrator rules and dispatches. A fix is reviewed by someone who did not write it. |
 
 ## The lanes
 
@@ -225,7 +225,7 @@ stopped.
    produced the code. A brief in the repo is in the history next to the change it
    caused.
 2. **The lanes' scrollback is captured at every slice boundary**, into
-   `work/transcripts/`. The scrollback is bounded and rotates: the line cook's pane
+   `work/transcripts/`. The scrollback is bounded and rotates: the runner's pane
    held 85 lines of a much longer conversation when it was first captured. The ledger
    holds the findings; the transcript holds how they were found.
 3. **The ledger is the record of what was found** — [../docs/audit.md](../docs/audit.md),

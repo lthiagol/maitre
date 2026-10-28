@@ -99,11 +99,20 @@ one could say why.
 
 The version guard is what makes this safe: a plan written under the newer version
 refuses a stale tool that speaks the older one. The ids are version 3; **version 4**
-came when the fingerprint started covering the format's facts, so a format change
-moves the version on its own instead of by hand; **version 5** came with the backlog's
-collapse into one artifact; **version 6** came with the crossing of the two words —
-the per-criterion record became **evidence** and the recipe-level stamp became
-**completion**.
+came when the fingerprint started covering the format's facts; **version 5** came with
+the backlog's collapse into one artifact; **version 6** came with the crossing of the
+two words — the per-criterion record became **evidence** and the recipe-level stamp
+became **completion**.
+
+**The version and the fingerprint are two fences, and they fence different things.**
+The **version** fences the **writer**: a tool that speaks an older version must not
+write a plan, because it does not know the format the plan is in. The
+**fingerprint** is the tripwire that says *the format's facts changed* — it covers
+what the tool writes, and moving it means the facts moved, not that the writer moved.
+So a change to the **facts list** — a guard that now covers one fact more — moves the
+fingerprint and leaves the version alone, and a change to **what the tool writes** moves
+both. A stale tool is stopped by the version; the fingerprint is what makes sure the
+version is moved **by hand** when it should be.
 
 ## What is strings only
 
