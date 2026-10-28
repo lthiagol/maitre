@@ -241,6 +241,21 @@ turn **without reporting**, mid-work, with changes uncommitted.
 | **The rule** | **one write per file** — a scripted pass that applies a file's changes at once — and **commit as soon as the file is coherent**. A commit is a landing place. |
 | **The net** | `work/state/slice-b-wip.patch` and `work/state/slice-d-wip.patch` exist because of this. `git apply <patch>` restores the work in flight. |
 
+### How a lane's turn dies, and how to keep the work
+
+It happened **four times** on 2026-10-27 and 28 — slice B's runner, slice D's runner,
+and slice F's runner twice. Every one of them ended a turn **without reporting**,
+mid-work.
+
+| | |
+|---|---|
+| **What it looks like** | the lane goes **idle** — not blocked, not waiting for a keypress — with no error and no report |
+| **Why it happens** | every edit to a large file re-renders that file's **whole diff** into the terminal. A dozen small edits is a dozen full-file diffs, and the turn runs out in the rendering, not in the thinking. The second time, the turn produced **no tool call at all** — one long thought, then nothing. |
+| **The rule** | **one write per file** — a scripted pass that applies a file's changes at once — and **commit as soon as the file is coherent**. A commit is a landing place. |
+| **The receipt comes first** | the runner now writes its receipt **before** the work, and updates it when it finishes. A receipt written *before* the work is how the orchestrator knows where the lane stopped — and it is visible in the tree while the work is still in flight. |
+| **When a lane has failed twice, do not continue it** | a **fresh** lane took over slice F's last third, with a tight brief, and finished it. The failed lane was retired by name (`retired-runner-f`) so the role name was free. |
+| **The net** | `work/state/slice-b-wip.patch` and `work/state/slice-d-wip.patch` exist because of this. `git apply <patch>` restores the work in flight. |
+
 **The receipt protocol is the other half.** A turn that ends leaves a working tree and
 a pane's scrollback; the receipt in `work/inbox/` is what the orchestrator can always
 read. A lane that stops mid-work should still write its receipt, saying where it
@@ -315,7 +330,7 @@ that is not a migration path, that is a log.
 
 | Slice | What | State |
 |--:|---|---|
-| **F** | the tolerance machinery comes out; the format is one format | 🟡 **closing** — review `ok`; F-87..F-93 closed; a two-line prose round is with the runner | [briefs/slice-f.md](briefs/slice-f.md) |
+| **F** | the tolerance machinery comes out; the format is one format | ✅ **closed** — review `ok` after four rounds; F-87..F-93 closed | [briefs/slice-f.md](briefs/slice-f.md) |
 
 ## The rules that keep this durable
 
