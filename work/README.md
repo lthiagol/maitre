@@ -346,6 +346,7 @@ that is not a migration path, that is a log.
 |--:|---|---|
 | **F** | the tolerance machinery comes out; the format is one format | ✅ **closed** — review `ok` after four rounds; F-87..F-93 closed | [briefs/slice-f.md](briefs/slice-f.md) |
 | **G** | the mark — a bow tie, drawn as a braille halftone | ✅ **closed** — review `ok` after three rounds; F-94..F-97 closed | [briefs/slice-g.md](briefs/slice-g.md) |
+| **H** | the quality gate — one interface: `make` | 🟡 **in flight** — the tools, the CI, and the paper that says why | [briefs/slice-h.md](briefs/slice-h.md) |
 
 **The rename is done.** 26 findings found and closed across slices B to G; the
 orchestrator found none of them. The ledger's open table holds only the chef's rows.
