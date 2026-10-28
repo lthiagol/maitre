@@ -10,7 +10,7 @@ import (
 	"github.com/lthiagol/maitre/internal/core"
 )
 
-// update regenerates the golden. Run it with `make regen-goldens`.
+// update regenerates the golden. Run it with `make goldens`.
 var update = flag.Bool("update", false, "update the golden file")
 
 // goldenPath is the checked-in snapshot of the console's Recipes tab.

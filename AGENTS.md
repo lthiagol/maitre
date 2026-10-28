@@ -263,12 +263,19 @@ research/       reference material on CPD and v1
 
 ## Build commands
 
+| Command | What it does |
+|---|---|
+| `make build` | both binaries into `./bin` |
+| `make run` | `go run ./cmd/maitre-cli` |
+| `make test` | the tests — `PKG=…` and `RUN=…` narrow the run |
+| `make check` | **the gate** |
+| `make goldens` | regenerate the console's golden snapshot |
+| `make tools` | install the pinned dev tools |
+
+A focused check — one package, one filter:
+
 ```bash
-make build         # both binaries into ./bin
-make test          # go test ./...
-make lint          # gofmt check + go vet
-make run           # go run ./cmd/maitre-cli
-make regen-goldens # update the console's golden snapshot
+make test PKG=./internal/core RUN='-run Role|SelfReview'
 ```
 
 **Try the console:**
@@ -287,24 +294,76 @@ go get charm.land/bubbletea/v2 charm.land/lipgloss/v2 charm.land/bubbles/v2 char
 
 ## Dependency policy
 
-| Package | External deps |
-|---|---|
-| `internal/core` | **0** — stdlib only |
-| `internal/cli` | **0** — stdlib only |
-| `internal/ui` | ≤ 30 (currently 28) |
+| Package | External deps | Ceiling | Current |
+|---|---|---|---|
+| `internal/core` | stdlib only | 0 | 0 |
+| `internal/cli` | stdlib only | 0 | 0 |
+| `internal/ui` | external modules | 30 | 28 |
 
 A dependency needs a written reason. The core keeps its zero.
 
-Count them yourself, the way the table counts them — the external modules a package
-pulls in:
+`make budget` counts the external modules the way this table counts them, holds
+them against the ceilings, and checks this table against the gate — so the
+numbers here cannot drift from the gate.
 
 ```bash
 go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | sort -u | grep -v lthiagol/maitre | wc -l
 ```
 
+## The quality gate
+
+**One command: `make check`.** Every check is a target; nobody runs `go test`,
+`go vet` or `gofmt` by hand.
+
+| Target | What it does |
+|---|---|
+| `make fmt` | `gofmt -w .` |
+| `make fmt-check` | `gofmt -l .` must be empty |
+| `make vet` | `go vet ./...` |
+| `make staticcheck` | `staticcheck ./...` |
+| `make lint` | fmt-check + vet + staticcheck |
+| `make test` | the tests — `PKG=…` and `RUN=…` narrow the run |
+| `make test-race` | `go test -race -shuffle=on -count=2` |
+| `make goldens` | regenerate the goldens |
+| `make goldens-check` | regenerate, then the goldens must be unchanged |
+| `make budget` | the dependency budget |
+| `make tidy-check` | `go mod tidy` must produce no diff |
+| `make check` | the fast gate — lint, test, goldens-check, budget, tidy-check |
+| `make check-race` | the slow gate — the same, with `-race` |
+| `make tools` | install the pinned dev tools |
+| `make vuln` | `govulncheck ./...` |
+| `make ci` | what CI runs — `check-race` + `vuln` |
+| `make install-hooks` | copy the pre-push hook into `.git/hooks/` |
+
+`make regen-goldens` still works — it is an alias for `make goldens`.
+
+### Why each tool
+
+| Tool | Why |
+|---|---|
+| `staticcheck` | `go vet` is weak; staticcheck finds the `SA*`, `S1*` and `ST*` classes vet misses. One binary, no configuration, so it cannot become a project of its own and fight the house style. |
+| `govulncheck` | 28 external modules, some very new; it finds the vulnerabilities that reach the binaries we ship. Not a gate on the code — a gate on the supply chain. |
+| `-race` | the console is a concurrent program: the poll, the terminal, the reload. The race detector is the only check that finds a data race. |
+| `-shuffle=on` | a test that depends on another's order is a test that lies. |
+| `-count=2` | it catches state that leaks between runs: a cached global, a shared temp directory, a package-level var a test forgot to reset. |
+| `go mod tidy` | a diff after `tidy` is drift. |
+| CI | the gate runs where the code lands, not where a human remembers. |
+
+These are **dev tools**, not module dependencies: `make tools` installs them with
+`go install`, and `go.mod` does not move. The budget of 0 / 0 / ≤ 30 is
+untouched by them.
+
+A missing tool **fails** the gate — it is never skipped. `make tools` says where
+the binaries landed and whether that directory is on the `PATH`.
+
+The pre-push hook runs the fast gate; the slow gate stays in CI, because it
+takes minutes. `make install-hooks` copies the hook into `.git/hooks/`.
+
 ## Working rules
 
 - **Show the commit message, wait for the go-ahead, then commit.** Push when asked.
+- **The gate is `make check`.** A focused check is `make test PKG=… RUN=…`; the
+  tools are not run directly.
 - **Keep the docs current.** A doc that contradicts the code is a bug (v1's
   `stages.toml` vs `SKILL.md` drift: 7 of 12 cells, with the lint still green).
 - **Cite the lesson.** Design claims trace to a v1 lesson or a CPD principle. A claim
