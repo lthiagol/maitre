@@ -64,7 +64,7 @@ scope before criteria) — and two CLI verb groups. They became **one artifact**
 | Its groups in the console | **Ideas** (needs shaping) and **Small tasks** (ready to work) — **derived** from the kind, never stored |
 | Its fields | title, body, scope, kind, tags, status, created, updated, promoted_to |
 | The CLI | `maitre-cli backlog list · create · update · dismiss · promote` — **46 commands → 42** |
-| An older plan's specials | read **read-only**, in a third group under the tab — the tool reads an old plan; it does not rewrite it |
+| An older plan's specials | **not supported.** The retired directories are not read: the current format is one format, and a plan that carries a retired artifact is refused, plainly, rather than read as empty |
 
 One artifact because v1's lesson is that *N×N surfaces over one small domain* is where
 drift comes from: two file types for one list is two nouns for one thing, and the
@@ -97,22 +97,23 @@ one could say why.
 | The recipe-level stamp | `evidence` | `completion` |
 | Journal roles | `line-cook`, `taster`, `expo` | `runner`, `reviewer`, `orchestrator` |
 
-The version guard is what makes this safe: a plan written under the newer version
-refuses a stale tool that speaks the older one. The ids are version 3; **version 4**
-came when the fingerprint started covering the format's facts; **version 5** came with
-the backlog's collapse into one artifact; **version 6** came with the crossing of the
-two words — the per-criterion record became **evidence** and the recipe-level stamp
-became **completion**.
+The version guard is what makes this safe: **a tool writes a plan only if the plan's
+version is the tool's version.** There is no upgrade path — a newer tool does not write
+an older plan, because it would apply rules the plan was not written under, and an
+older tool does not write a newer plan, because it does not know the format. The ids
+are version 3; **version 4** came when the fingerprint started covering the format's
+facts; **version 5** came with the backlog's collapse into one artifact; **version 6**
+came with the crossing of the two words — the per-criterion record became
+**evidence** and the recipe-level stamp became **completion**.
 
 **The version and the fingerprint are two fences, and they fence different things.**
-The **version** fences the **writer**: a tool that speaks an older version must not
-write a plan, because it does not know the format the plan is in. The
-**fingerprint** is the tripwire that says *the format's facts changed* — it covers
-what the tool writes, and moving it means the facts moved, not that the writer moved.
-So a change to the **facts list** — a guard that now covers one fact more — moves the
-fingerprint and leaves the version alone, and a change to **what the tool writes** moves
-both. A stale tool is stopped by the version; the fingerprint is what makes sure the
-version is moved **by hand** when it should be.
+The **version** is the plan-side fact: the plan says which rules it was written under,
+and the tool writes it only under those same rules. The **fingerprint** is the
+code-side tripwire: it says *the format's facts changed* — it covers what the tool
+writes, and moving it means the facts moved, not that the writer moved. So a change to
+the **facts list** — a guard that now covers one fact more — moves the fingerprint and
+leaves the version alone, and a change to **what the tool writes** moves both. The
+fingerprint is what makes sure the version is moved **by hand** when it should be.
 
 ## What is strings only
 
