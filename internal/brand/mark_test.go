@@ -2,6 +2,9 @@ package brand
 
 import (
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -88,8 +91,8 @@ func TestTheHalfFormIsItsOwnDrawing(t *testing.T) {
 
 // TestTheDrawingsAreTheSizesTheSheetSays holds the widths.
 //
-// The brand sheet says the full form is 28 columns and the half form is 14, and
-// the console's rule is built on those numbers.
+// The brand sheet says the full form is 28 columns at its widest and the half form
+// is 14, and the console's rule is built on those numbers.
 func TestTheDrawingsAreTheSizesTheSheetSays(t *testing.T) {
 	if got := Width(Full); got != 28 {
 		t.Errorf("the full form is %d columns, want 28", got)
@@ -102,42 +105,193 @@ func TestTheDrawingsAreTheSizesTheSheetSays(t *testing.T) {
 	}
 }
 
-// TestTheArtIsDeclaredOnlyHere holds the art to one place.
+// TestTheArtIsDeclaredOnlyHere holds the mark to one place.
 //
-// The mark is declared once, in this package, and every consumer reads it from
-// here. A drawing pasted into the console or the CLI would be a second answer to
-// the same question — and the wire above would never see it, because it only reads
-// this package. So this wire looks for the mark's own characters anywhere else in
-// the tree.
+// **Two things are in play, and the rule for each is different.**
+//
+// | Thing | Rule |
+// |---|---|
+// | the drawings | long and unique: they may live in the source files and in the declaration, and **nowhere else** — in any file type |
+// | the compact glyph | one character: it may appear in rendered output and in the card's art, but it must not be **pasted into another code file** |
+//
+// The glyph's rule is narrower because the glyph is legitimate elsewhere: the
+// goldens carry it on the header line, and the wallpaper carries ninety copies of
+// it — that is the card's own drawing.
+//
+// **The exemption is per declaration, not per package.** A second copy pasted into
+// another file of the same package is still a second copy, and a per-package skip
+// is exactly where the copy hides.
 func TestTheArtIsDeclaredOnlyHere(t *testing.T) {
-	err := filepath.WalkDir(repoRoot, func(path string, d fs.DirEntry, err error) error {
+	if err := checkArtScope(repoRoot); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestTheArtScopeWireCanFail proves the wire is a wire.
+//
+// The reviewer's two mutations — a second copy in the brand package, and a copy in
+// a file that is not Go at all — and the glyph pasted into another code file. Each
+// one must fail the wire.
+func TestTheArtScopeWireCanFail(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		path string
+		body string
+	}{
+		{"a second copy in the brand package", filepath.Join("internal", "brand", "zz_probe.go"), Full[0]},
+		{"a copy in a file that is not Go", filepath.Join("internal", "ui", "testdata", "zz_probe.txt"), Full[0]},
+		{"the glyph in another code file", filepath.Join("internal", "ui", "zz_probe.go"), Compact},
+	} {
+		root := scratchTree(t)
+		write(t, filepath.Join(root, c.path), c.body+"\n")
+		if err := checkArtScope(root); err == nil {
+			t.Errorf("the wire should fail on %s", c.name)
+		}
+	}
+}
+
+// checkArtScope is the scope wire.
+//
+// The drawings may live in the source files and in the declaration, and nowhere
+// else — in any file type. The compact glyph may live in the declaration, in
+// rendered output and in the card's art, but it must not be pasted into another
+// code file.
+//
+// The directories that are not read are the ones that are not the code that ships:
+// the git objects, the built binaries (they carry the art as string literals), the
+// vendored skills, and the night's scratch (the transcripts capture what the
+// console shows, art and all).
+func checkArtScope(root string) error {
+	decl, err := declarationFile(root)
+	if err != nil {
+		return err
+	}
+	sources := map[string]bool{
+		filepath.Join(root, "images", "logo", "ascii", "bow-tie-full.txt"): true,
+		filepath.Join(root, "images", "logo", "ascii", "bow-tie-half.txt"): true,
+	}
+	lines := drawingLines()
+
+	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() {
 			switch d.Name() {
-			case ".git", "skills", "bin", "work", "kitchen", "images":
-				return filepath.SkipDir
-			}
-			if path == filepath.Join(repoRoot, "internal", "brand") {
+			case ".git", "skills", "bin", "work":
 				return filepath.SkipDir
 			}
 			return nil
 		}
-		if !strings.HasSuffix(path, ".go") {
+		if path == decl || sources[path] {
 			return nil
 		}
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		if line, ok := markCharacter(string(raw)); ok {
-			rel, _ := filepath.Rel(repoRoot, path)
-			return fmt.Errorf("%s: line %d carries the mark itself — the art is declared once, in internal/brand", rel, line)
+		text := string(raw)
+		for _, line := range lines {
+			if strings.Contains(text, line) {
+				rel, _ := filepath.Rel(root, path)
+				return fmt.Errorf("%s: carries a line of the drawing — the drawings are declared once, in internal/brand", rel)
+			}
+		}
+		if strings.HasSuffix(path, ".go") && strings.Contains(text, Compact) {
+			rel, _ := filepath.Rel(root, path)
+			return fmt.Errorf("%s: carries the compact glyph — it is declared in internal/brand", rel)
 		}
 		return nil
 	})
+}
+
+// declarationFile is the file that declares the drawings.
+//
+// The scope's exemption is **per declaration**: the file that actually declares
+// `Full` and `Half`. It is found by parsing, so a file that does not parse — a
+// pasted copy, say — is never mistaken for the declaration, and a rename of the
+// declaration does not silently widen the exemption.
+func declarationFile(root string) (string, error) {
+	dir := filepath.Join(root, "internal", "brand")
+	entries, err := os.ReadDir(dir)
 	if err != nil {
+		return "", err
+	}
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".go") || strings.HasSuffix(e.Name(), "_test.go") {
+			continue
+		}
+		path := filepath.Join(dir, e.Name())
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, path, nil, parser.SkipObjectResolution)
+		if err != nil {
+			continue
+		}
+		if declares(f, "Full") && declares(f, "Half") {
+			return path, nil
+		}
+	}
+	return "", fmt.Errorf("no file under %s declares the drawings", dir)
+}
+
+// declares reports whether the file declares a package-level variable of that name.
+func declares(f *ast.File, name string) bool {
+	for _, d := range f.Decls {
+		gd, ok := d.(*ast.GenDecl)
+		if !ok || gd.Tok != token.VAR {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			vs, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			for _, n := range vs.Names {
+				if n.Name == name {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// drawingLines are the lines of the drawings — the full form and the half form.
+//
+// A line is long and unique, so a file that carries one of them carries a copy of
+// the drawing.
+func drawingLines() []string {
+	out := make([]string, 0, len(Full)+len(Half))
+	out = append(out, Full...)
+	out = append(out, Half...)
+	return out
+}
+
+// scratchTree is a copy of the parts of the tree the scope wire reads.
+func scratchTree(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	for _, c := range []struct{ from, to string }{
+		{filepath.Join(repoRoot, "internal", "brand", "mark.go"), filepath.Join("internal", "brand", "mark.go")},
+		{filepath.Join(artDir, "bow-tie-full.txt"), filepath.Join("images", "logo", "ascii", "bow-tie-full.txt")},
+		{filepath.Join(artDir, "bow-tie-half.txt"), filepath.Join("images", "logo", "ascii", "bow-tie-half.txt")},
+	} {
+		raw, err := os.ReadFile(c.from)
+		if err != nil {
+			t.Fatal(err)
+		}
+		write(t, filepath.Join(root, c.to), string(raw))
+	}
+	return root
+}
+
+// write puts a file on the disk, making its directory.
+func write(t *testing.T, path, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -216,15 +370,18 @@ func checkDrawing(file, code []string) error {
 }
 
 // editFirstRune changes the first character of a line.
+//
+// The change is an ordinary letter, so the test file carries none of the mark's own
+// characters.
 func editFirstRune(line string) string {
 	r := []rune(line)
 	if len(r) == 0 {
-		return "⣿"
+		return "X"
 	}
-	if r[0] == '⣿' {
-		r[0] = '⠀'
+	if r[0] == 'X' {
+		r[0] = 'Y'
 	} else {
-		r[0] = '⣿'
+		r[0] = 'X'
 	}
 	return string(r)
 }
@@ -243,19 +400,4 @@ func cropRunes(line string, off, n int) string {
 		end = len(r)
 	}
 	return string(r[off:end])
-}
-
-// markCharacter finds the mark's own characters in a source file.
-//
-// The braille block is the drawing, and `⋈` is the compact form. A file that
-// carries one of them has the art pasted into it.
-func markCharacter(src string) (int, bool) {
-	for i, line := range strings.Split(src, "\n") {
-		for _, r := range line {
-			if (r >= '⠀' && r <= '⣿') || r == '⋈' {
-				return i + 1, true
-			}
-		}
-	}
-	return 0, false
 }
