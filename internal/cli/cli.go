@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lthiagol/maitre/internal/brand"
 	"github.com/lthiagol/maitre/internal/core"
 )
 
@@ -187,6 +188,11 @@ func sortStrings(s []string) {
 }
 
 func (r *Runner) usage() {
+	// The mark, above the title. The help is text, and the art is the first of it.
+	for _, line := range brand.Full {
+		fmt.Fprintln(r.Stdout, line)
+	}
+	fmt.Fprint(r.Stdout, "\n")
 	fmt.Fprint(r.Stdout, `maitre-cli — the maitre agent CLI
 
 Usage:

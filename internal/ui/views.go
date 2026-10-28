@@ -10,6 +10,7 @@ import (
 	"charm.land/glamour/v2/styles"
 	"charm.land/lipgloss/v2"
 
+	"github.com/lthiagol/maitre/internal/brand"
 	"github.com/lthiagol/maitre/internal/core"
 )
 
@@ -201,12 +202,37 @@ func (m *Model) scrollToSelection(lines []listLine) {
 }
 
 // header is the title line.
+//
+// The mark's compact form sits before the product name — one cell, so the header
+// stays one line. The header is the one place the console has no room to draw.
 func (m *Model) header() string {
 	name := m.store.Root
 	if p, err := m.ops.GetProject(); err == nil && p.Name != "" {
 		name = p.Name
 	}
-	return m.styTitle.Render(" maitre") + m.styFaint.Render(" · "+name)
+	return m.styTitle.Render(" "+brand.Compact+" maitre") + m.styFaint.Render(" · "+name)
+}
+
+// markFor is the drawing that fits a column of the given width.
+//
+// A drawing that does not fit **wraps**, and a wrapped row breaks the layout — so
+// the column chooses the form:
+//
+//	column fits 28 → the full form
+//	column fits 14 → the half form
+//	column fits neither → no art, and the tab is as it is now
+//
+// The one-space indent counts: the drawing is drawn one column in, like the rest of
+// the tab.
+func markFor(column int) []string {
+	switch {
+	case column >= brand.Width(brand.Full)+1:
+		return brand.Full
+	case column >= brand.Width(brand.Half)+1:
+		return brand.Half
+	default:
+		return nil
+	}
 }
 
 // ruleLine is the rule under the header.
@@ -907,6 +933,14 @@ func (m *Model) sousChefLines() []listLine {
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 
 	add("")
+	// The mark, at the top of the tab. The full form, or the half form when the
+	// column is too narrow for the full one.
+	if art := markFor(m.listColumn()); len(art) > 0 {
+		for _, line := range art {
+			add(" " + line)
+		}
+		add("")
+	}
 	add(" " + m.stySec.Render("SOUS-CHEF"))
 	add("  " + m.styDim.Render("The orchestrator agent. It calls the tickets, routes"))
 	add("  " + m.styDim.Render("them, and keeps the line moving."))
