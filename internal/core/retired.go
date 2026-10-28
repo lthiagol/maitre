@@ -314,10 +314,9 @@ type retiredNameField struct {
 // The walk covers **every** string field of the record, so a new name-carrying field
 // is caught without anybody adding it to a list.
 //
-// **Maps are not walked.** A map's values are the record's business, not the name's:
-// the journal's migration events carry retired *field names* in their data, and that
-// is history, which keeps its old names. A map is not a string field, and the walk
-// stops at one.
+// **Maps are not walked.** A map's values are not a field's value: a retired name
+// inside a document is the document's business, not a name in a record. A map is not
+// a string field, and the walk stops at one.
 //
 // **Byte slices are not walked either.** `json.RawMessage` is one, and it holds the
 // bytes of a document — not a name.
@@ -362,8 +361,8 @@ func walkNameFields(v reflect.Value, path string, out *[]retiredNameField) {
 			walkNameFields(v.Index(i), fmt.Sprintf("%s[%d]", path, i), out)
 		}
 	case reflect.Map:
-		// A map is not a string field: the journal's data carries retired field
-		// names, and that is history.
+		// A map's values are not a field's value: a retired name inside a
+		// document is the document's business, not a name in a record.
 		return
 	}
 }

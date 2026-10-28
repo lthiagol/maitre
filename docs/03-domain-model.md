@@ -399,9 +399,8 @@ written.
    The walk covers **every** string field of the record, so a new name-carrying field
    is caught without anybody adding it to a list, and the writer and the reader run the
    same check: one answer to "does this record carry a retired name?". **Maps are not
-   walked** — a map's values are the record's business, and the journal's migration
-   events carry retired *field names* in their data, which is history and keeps its old
-   names.
+   walked** — a map's values are not a field's value, and a retired name inside a
+   document is the document's business, not a name in a record.
 
 ### 3.3 Overlays
 
