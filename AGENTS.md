@@ -336,6 +336,7 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 | `make check-race` | the slow gate — the same, with `-race` |
 | `make tools` | install the pinned dev tools |
 | `make vuln` | `govulncheck ./...` |
+| `make versions-check` | the pins against the tool the gate runs and the doc that names them |
 | `make ci` | what CI runs — `check-race` + `vuln` |
 | `make install-hooks` | copy the pre-push hook into `.git/hooks/` |
 
@@ -358,7 +359,9 @@ These are **dev tools**, not module dependencies: `make tools` installs them wit
 untouched by them.
 
 A missing tool **fails** the gate — it is never skipped. `make tools` says where
-the binaries landed and whether that directory is on the `PATH`.
+the binaries landed and whether that directory is on the `PATH`. So does a tool
+that is the wrong version: the gate checks the version it runs against the pin
+and says to run `make tools`.
 
 The pre-push hook runs the fast gate; the slow gate stays in CI, because it
 takes minutes. `make install-hooks` copies the hook into `.git/hooks/`.

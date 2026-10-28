@@ -20,6 +20,7 @@ cd "$ROOT" || exit 1
 DOC=AGENTS.md
 MODULE=lthiagol/maitre
 LIST_TEMPLATE='{{if not .Standard}}{{.Module.Path}}{{end}}'
+go_bin=${GO:-go}
 
 # package, expected count, ceiling
 BUDGET='internal/core 0 0
@@ -47,7 +48,7 @@ fi
 while read -r pkg expected ceiling; do
 	[ -n "$pkg" ] || continue
 
-	live=$(go list -deps -f "$LIST_TEMPLATE" "./$pkg" | sort -u | grep -v "$MODULE" | wc -l | tr -d ' ')
+	live=$($go_bin list -deps -f "$LIST_TEMPLATE" "./$pkg" | sort -u | grep -v "$MODULE" | wc -l | tr -d ' ')
 
 	row=$(grep -F "| \`$pkg\` |" "$DOC" | head -1)
 	if [ -z "$row" ]; then

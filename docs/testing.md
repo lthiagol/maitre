@@ -102,6 +102,7 @@ fine; one that changed because a title grew is a bug.
 | `make tidy-check` | `go mod tidy` must produce no diff |
 | `make check` | the fast gate — all of the above |
 | `make check-race` | the slow gate — the same, with `-race` |
+| `make versions-check` | the pins against the tool the gate runs and the doc that names them |
 | `make ci` | what CI runs — `check-race` and `govulncheck` |
 
 A focused check, for one acceptance criterion:
@@ -128,6 +129,12 @@ installs two binaries, pinned:
 
 They are **dev tools**, not module dependencies: `go install` does not touch
 `go.mod`, and the budget of 0 / 0 / ≤ 30 is untouched by them.
+
+The pins live in the `Makefile`; the versions named above are the *checked*
+copy — `make versions-check` fails when the doc and the pin disagree, the
+same shape as the dependency budget. The gate also checks the version of the
+tool it runs, so a stale `staticcheck` on the `PATH` fails with `make tools`
+rather than quietly running.
 
 A tool that is not installed **fails** the gate with the way to get it. A check
 that is quietly skipped is a check that has stopped seeing.

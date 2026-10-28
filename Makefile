@@ -7,6 +7,11 @@
 # them with `go install`, and `go.mod` does not move. See AGENTS.md §
 # "The quality gate".
 
+# The gate's targets touch the same files — the goldens, `go.mod`, `go.sum` —
+# so a parallel `make -j` would have two of them writing at once. The gate
+# takes minutes anyway; it does not need to be parallel.
+.NOTPARALLEL:
+
 GO ?= go
 BIN := bin
 PKG ?= ./...
@@ -14,6 +19,7 @@ RUN ?=
 GOLDENS := internal/ui/testdata
 STATICCHECK_VERSION := v0.8.2
 GOVULNCHECK_VERSION := v1.9.0
+TOOL_DOC := docs/testing.md
 
 .PHONY: build run clean \
 	fmt fmt-check vet staticcheck lint \
@@ -21,7 +27,7 @@ GOVULNCHECK_VERSION := v1.9.0
 	goldens regen-goldens goldens-check \
 	budget tidy tidy-check \
 	check check-race \
-	tools vuln ci install-hooks
+	tools vuln ci install-hooks versions-check
 
 define header
 @echo ""
@@ -62,7 +68,8 @@ vet:
 
 staticcheck:
 	$(call header,$@)
-	scripts/require-tool.sh staticcheck ./...
+	GO=$(GO) scripts/check-tool-versions.sh tool staticcheck $(STATICCHECK_VERSION)
+	GO=$(GO) scripts/require-tool.sh staticcheck ./...
 
 lint:
 	$(call header,$@)
@@ -103,7 +110,7 @@ goldens-check:
 
 budget:
 	$(call header,$@)
-	scripts/dep-budget.sh
+	GO=$(GO) scripts/dep-budget.sh
 
 tidy:
 	$(call header,$@)
@@ -112,7 +119,11 @@ tidy:
 tidy-check:
 	$(call header,$@)
 	@tmp="$$(mktemp -d)"; cp go.mod go.sum "$$tmp/"; \
-	$(GO) mod tidy; \
+	if ! $(GO) mod tidy; then \
+		cp "$$tmp/go.mod" "$$tmp/go.sum" .; \
+		echo "go mod tidy failed — go.mod and go.sum were put back." >&2; \
+		rm -rf "$$tmp"; exit 1; \
+	fi; \
 	if ! git diff --quiet HEAD -- go.mod go.sum; then \
 		cp "$$tmp/go.mod" "$$tmp/go.sum" .; \
 		echo "go.mod or go.sum is not tidy — run 'make tidy' and commit the result." >&2; \
@@ -125,6 +136,7 @@ tidy-check:
 check:
 	$(call header,$@)
 	$(MAKE) lint
+	$(MAKE) versions-check
 	$(MAKE) test
 	$(MAKE) goldens-check
 	$(MAKE) budget
@@ -133,6 +145,7 @@ check:
 check-race:
 	$(call header,$@)
 	$(MAKE) lint
+	$(MAKE) versions-check
 	$(MAKE) test-race
 	$(MAKE) goldens-check
 	$(MAKE) budget
@@ -154,7 +167,15 @@ tools:
 
 vuln:
 	$(call header,$@)
-	scripts/require-tool.sh govulncheck ./...
+	GO=$(GO) scripts/check-tool-versions.sh tool govulncheck $(GOVULNCHECK_VERSION)
+	GO=$(GO) scripts/require-tool.sh govulncheck ./...
+
+# The pins live here; the doc's copy is checked against them, so the doc
+# cannot drift from the gate — the same shape as the dependency budget.
+versions-check:
+	$(call header,$@)
+	scripts/check-tool-versions.sh doc $(TOOL_DOC) staticcheck $(STATICCHECK_VERSION)
+	scripts/check-tool-versions.sh doc $(TOOL_DOC) govulncheck $(GOVULNCHECK_VERSION)
 
 # What CI runs. Each check prints its own header, so the log names the one
 # that failed.
@@ -166,6 +187,10 @@ ci:
 install-hooks:
 	$(call header,$@)
 	@mkdir -p .git/hooks
+	@if [ -e .git/hooks/pre-push ]; then \
+		echo "replacing the hook that was there:"; \
+		echo "---"; cat .git/hooks/pre-push; echo "---"; \
+	fi
 	cp scripts/hooks/pre-push.sh .git/hooks/pre-push
 	chmod +x .git/hooks/pre-push
 	@echo "installed .git/hooks/pre-push — it runs 'make check' before every push."
