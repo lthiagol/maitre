@@ -91,7 +91,7 @@ is never the session that tastes.
 | ✅ `RequestChanges(id, by, notes)` | a refusal | the chef signs off |
 | ✅ `DismissFinding(id, findingID, reason)` | a dismissed tasting note | the chef triages |
 | ⏳ `TriageFinding(id, findingID, action)` | a finding's fate | the chef triages |
-| ✅ `SignOffCriterion(id, acID, by, note)` | a human evidence for an unproven AC | the chef |
+| ✅ `SignOffCriterion(id, acID, by, note)` | the chef's evidence for an unproven AC | the chef |
 | ✅ `CreateBacklogItem` · `UpdateBacklogItem` · `DismissBacklogItem` · `PromoteBacklogItem` | the backlog | the chef |
 | ✅ `BlockRecipe` · `UnblockRecipe` · `DeferRecipe` · `ResumeRecipe` | overlays | the chef |
 | ✅ `CancelRecipe(id, reason)` | terminal states | the chef |
@@ -299,9 +299,9 @@ notices. See [ADR-0008](decisions/0008-artifact-is-the-channel.md).
 
 ## Open questions
 
-- **`SignOffCriterion`** — a human signing off an unproven criterion is an *evidence
-  without a command*. Is it an evidence with a different match state, or a separate
-  field on the criterion? The criterion status must stay derivable.
+- **`SignOffCriterion`** — a human signing off an unproven criterion is *evidence
+  without a command*. Is it evidence with a different match state, or a separate field
+  on the criterion? The criterion status must stay derivable.
 - **The backlog operations** — answered: the special and the prep note are one
   artifact with a kind, and one verb group.
 - **Whether `Advance` should be one operation or a set.** Today it is one, taking an

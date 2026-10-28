@@ -145,7 +145,7 @@ func TestTheDefaultActorIsAnAgentRole(t *testing.T) {
 // TestASignOffIsNotAMachineEvidence covers the sign-off's own state.
 //
 // The zero-match rule is the project's answer to v1's worst bug. A sign-off is a human
-// judgement, not a machine evidence, and it claims no match.
+// judgement, not machine evidence, and it claims no match.
 func TestASignOffIsNotAMachineEvidence(t *testing.T) {
 	ops, _ := newOps(t)
 	r, err := ops.CreateRecipe(readySpec())

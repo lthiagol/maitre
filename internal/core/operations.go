@@ -294,7 +294,7 @@ func (o *Operations) SetStepStatus(id, stepID, status string) (*Recipe, error) {
 
 // VerifyCriterion runs the criterion's verification and records the evidence.
 //
-// The tool runs the command. The evidence is append-only. An evidence that matched
+// The tool runs the command. The evidence is append-only. A result that matched
 // nothing is rejected; one the tool could not attribute is unproven. See ADR-0006.
 //
 // The command runs **outside** the plan lock: a verification can run for minutes, and
@@ -344,7 +344,7 @@ func (o *Operations) verificationFor(id, acID string) (string, error) {
 
 // SignOffCriterion records a human sign-off for an unproven criterion.
 //
-// The sign-off is an evidence without a command: the human vouches for a procedure
+// The sign-off is evidence without a command: the human vouches for a procedure
 // the tool could not check. It is marked as a sign-off so the console can say who
 // vouched — and it claims no match. The zero-match rule stands for machine evidence;
 // a sign-off is the one explicit exception, and it has its own state.

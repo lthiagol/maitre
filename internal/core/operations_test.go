@@ -23,7 +23,7 @@ func newOps(t *testing.T) (*Operations, *Store) {
 func spec() RecipeSpec {
 	return RecipeSpec{
 		Title:      "Sharpen the AC gate",
-		Outcome:    "a zero-match evidence never satisfies a gate",
+		Outcome:    "a zero-match result never satisfies a gate",
 		Problem:    "v1 manufactured confidence",
 		InScope:    []string{"the gate table"},
 		OutOfScope: []string{"web shell", "orchestration"},
@@ -32,7 +32,7 @@ func spec() RecipeSpec {
 		},
 		WorkPackages: []string{"core"},
 		Steps: []StepSpec{{
-			Action: "add the gate", DoneWhen: "a rejected evidence blocks", Covers: []string{"AC-01"},
+			Action: "add the gate", DoneWhen: "a rejected result blocks", Covers: []string{"AC-01"},
 		}},
 	}
 }

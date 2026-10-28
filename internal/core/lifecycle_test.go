@@ -32,7 +32,7 @@ func groomable() *Recipe {
 func readySpec() RecipeSpec {
 	return RecipeSpec{
 		Title:      "Sharpen the AC gate",
-		Outcome:    "a zero-match evidence never satisfies a gate",
+		Outcome:    "a zero-match result never satisfies a gate",
 		Problem:    "v1 manufactured confidence",
 		OutOfScope: []string{"web shell", "orchestration"},
 		Criteria: []CriterionSpec{
@@ -40,7 +40,7 @@ func readySpec() RecipeSpec {
 		},
 		WorkPackages: []string{"core"},
 		Steps: []StepSpec{{
-			Action: "add the gate", DoneWhen: "a rejected evidence blocks", Covers: []string{"AC-01"},
+			Action: "add the gate", DoneWhen: "a rejected result blocks", Covers: []string{"AC-01"},
 		}},
 	}
 }
@@ -182,22 +182,22 @@ func TestFinishRequiresProvenCriteria(t *testing.T) {
 
 	// No evidence yet: the criterion is pending, so finish must be blocked.
 	if err := Transition(r, EventFinish, TransitionContext{}); err == nil {
-		t.Fatal("expected finish without an evidence to be rejected")
+		t.Fatal("expected finish without evidence to be rejected")
 	}
 
-	// An evidence that matched nothing is not evidence.
+	// A result that matched nothing is rejected.
 	r.Acceptance[0].Evidence = []Evidence{{Command: "go test", ExitCode: 0, Matched: 0, Match: MatchRejected}}
 	if err := Transition(r, EventFinish, TransitionContext{}); err == nil {
-		t.Fatal("expected finish with a zero-match evidence to be rejected")
+		t.Fatal("expected finish with a zero-match result to be rejected")
 	}
 
-	// An evidence the tool could not attribute is not evidence either.
+	// Evidence the tool could not attribute is unproven.
 	r.Acceptance[0].Evidence = []Evidence{{Command: "make check", ExitCode: 0, Match: MatchUnknown}}
 	if err := Transition(r, EventFinish, TransitionContext{}); err == nil {
 		t.Fatal("expected finish with an unproven criterion to be rejected")
 	}
 
-	// An evidence that matched something passes.
+	// Evidence that matched something passes.
 	r.Acceptance[0].Evidence = []Evidence{{Command: "go test", ExitCode: 0, Matched: 3, Match: MatchProven}}
 	if err := Transition(r, EventFinish, TransitionContext{}); err != nil {
 		t.Fatalf("expected finish to succeed: %v", err)

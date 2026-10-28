@@ -232,7 +232,7 @@ weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
 | [0003](docs/decisions/0003-surface-split.md) | Who writes what: artifact vs. management |
 | [0004](docs/decisions/0004-naming.md) | Naming — superseded in part by 0009 |
 | [0005](docs/decisions/0005-vocabulary.md) | Vocabulary: generic methodology, specific product |
-| [0006](docs/decisions/0006-verification.md) | Verification — who runs it, and what an evidence is |
+| [0006](docs/decisions/0006-verification.md) | Verification — who runs it, and what evidence is |
 | [0007](docs/decisions/0007-operation-layer.md) | The operation layer |
 | [0008](docs/decisions/0008-artifact-is-the-channel.md) | The artifact is the channel — no agent-to-agent messaging |
 | **0009** | **Naming: maitre · `maitre-cli` · `maitre` · the ladder** — written in a later slice; until then [docs/07-vocabulary.md](docs/07-vocabulary.md) is the decision of record |

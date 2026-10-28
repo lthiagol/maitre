@@ -68,7 +68,7 @@ Premise 2: **no TDD, no spec-driven development.**
 | ~~The plan as a second source of truth~~ | The artifact *is* the artifact; it carries the audit trail |
 | ~~Gates as blockers before work starts~~ | Gates as *claims about state*, checked on write |
 
-What we keep: **executable verification** (an evidence is a command a machine ran), the **audit
+What we keep: **executable verification** (evidence is a command a machine ran), the **audit
 trail**, **independent review** (the reviewer is never the author), **size-aware routing**
 (ceremony scales with risk), and **intent front-loaded, implementation not**.
 

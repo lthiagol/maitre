@@ -308,10 +308,10 @@ func TestASignedOffCriterionIsPassedButNotProven(t *testing.T) {
 	}
 	evidence := c.Evidence[0]
 	if evidence.Match != MatchSignedOff {
-		t.Fatalf("match = %q, want %q — a sign-off is not a machine evidence", evidence.Match, MatchSignedOff)
+		t.Fatalf("match = %q, want %q — a sign-off is not machine evidence", evidence.Match, MatchSignedOff)
 	}
 	if evidence.Match == MatchProven {
-		t.Fatal("a sign-off must never claim a machine evidence")
+		t.Fatal("a sign-off must never claim machine evidence")
 	}
 	if evidence.Matched != 0 {
 		t.Fatalf("matched = %d, want 0", evidence.Matched)

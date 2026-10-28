@@ -11,12 +11,12 @@ import (
 	"time"
 )
 
-// MatchState says whether an evidence matched anything, and whether the tool could
+// MatchState says whether the evidence matched anything, and whether the tool could
 // tell.
 //
 //	proven   — the count is known and greater than zero
 //	rejected — the count is known and zero: the filter matched nothing
-//	unproven — the count could not be determined; not a machine evidence
+//	unproven — the count could not be determined; not machine evidence
 //
 // Only proven satisfies a gate. See docs/decisions/0006-verification.md.
 type MatchState string
@@ -26,7 +26,7 @@ const (
 	MatchRejected MatchState = "rejected"
 	MatchUnknown  MatchState = "unknown"
 	// MatchSignedOff is a human vouching for a procedure the tool could not
-	// check. It is not a machine evidence and it claims no match — the one
+	// check. It is not machine evidence and it claims no match — the one
 	// exception to the zero-match rule, and it is explicit.
 	MatchSignedOff MatchState = "signed-off"
 )

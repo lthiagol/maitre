@@ -173,7 +173,7 @@ does the recipe's `intent.outcome` mean when the code already exists?
 
 | What | Where |
 |---|---|
-| The verifier's rule: an evidence is a command **that matched something**. Evidence that matched nothing is rejected — "a green gate that proves nothing" is the project's first v1 lesson. | `internal/core/verifier.go:170`, [../AGENTS.md](../AGENTS.md) |
+| The verifier's rule: evidence is a command **that matched something**. A result that matched nothing is rejected — "a green gate that proves nothing" is the project's first v1 lesson. | `internal/core/verifier.go:170`, [../AGENTS.md](../AGENTS.md) |
 | `ac.falsifiable` accepts only a command the tool can count matches from, or a `manual:` procedure. A brownfield criterion is verifiable in a way a greenfield one is not: **the suite already exists.** | `internal/core/lifecycle.go:397` |
 | The domain's own shape: an intent, a problem, a scope, criteria, and a method. A brownfield job has all of these — the *problem* is "this behaviour is wrong or missing" and the *outcome* is "this behaviour is right". | [docs/03 §2](03-domain-model.md) |
 | A finding already carries an anchor to code: `{file, line, side}`. | `internal/core/model.go` |

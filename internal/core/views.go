@@ -522,8 +522,8 @@ func ReadinessOf(r Recipe) Readiness {
 
 // EvidenceSummary counts the evidence attached to a recipe.
 //
-// Rejected and unproven are separate: a rejected evidence matched nothing (a spec
-// defect), an unproven one could not be attributed (not a machine evidence).
+// Rejected and unproven are separate: a rejected record matched nothing (a spec
+// defect), an unproven one could not be attributed (not machine evidence).
 // Different remedies.
 type EvidenceSummary struct {
 	Criteria int

@@ -83,8 +83,8 @@ func (c Criterion) Status() CriterionStatus {
 	case last.ExitCode != 0:
 		return CriterionFailed
 	case last.Match == MatchProven, last.Match == MatchSignedOff:
-		// A machine evidence that matched something, or a human who vouched for a
-		// procedure the tool could not check.
+		// Evidence that matched something, or a human who vouched for a procedure
+		// the tool could not check.
 		return CriterionPassed
 	case last.Match == MatchRejected:
 		return CriterionRejected

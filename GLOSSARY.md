@@ -78,8 +78,9 @@ tasting notes send it back for remediation.
 _Avoid_: Review, code review
 
 **Evidence**:
-A verification result a machine produced — the command, its exit code, what it matched,
-and when. An evidence that matched nothing is not evidence.
+One verification result — a machine's, or the chef's: the command, its exit code, what
+it matched, and when. A result that matched nothing does not count; the chef's sign-off
+is the one exception, and it claims no match.
 _Avoid_: Proof, test result, verification
 
 **Completion**:

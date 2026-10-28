@@ -36,8 +36,8 @@ func (r *Runner) cmdACAdd(args []string) int {
 
 // cmdACVerify runs the criterion's verification and records the evidence.
 //
-// The tool runs the command. An evidence that matched nothing is rejected; one the
-// tool could not attribute is unproven. Neither satisfies a gate.
+// The tool runs the command. A result that matched nothing is rejected; one the tool
+// could not attribute is unproven. Neither satisfies a gate.
 func (r *Runner) cmdACVerify(args []string) int {
 	fs := newFlagSet("ac verify")
 	if err := fs.parse(args); err != nil {

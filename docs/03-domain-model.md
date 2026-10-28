@@ -15,7 +15,7 @@ Every rule traces to a v1 failure. This is the checklist the model must satisfy.
 | C4 | **Gates and transitions are one step.** | v1's `TransitionContext::default()` was `gates_satisfied: true` → the guard was **dead code** |
 | C5 | **Every state is reachable and producible.** | v1's `LIFECYCLE_STATES` had 9 strings, `RecipePhase` had 7; two were never produced |
 | C6 | **One closed enum per concept, one source of truth.** | v1's step status had three answers in three places |
-| C7 | **Evidence, not assertion.** An evidence that matched nothing is not evidence. | v1 marked an AC `passed` on a zero-match filter |
+| C7 | **Evidence, not assertion.** A result that matched nothing does not count; the chef's sign-off is the one exception, and it claims no match. | v1 marked an AC `passed` on a zero-match filter |
 | C8 | **Evidence is append-only.** | v1's close-out ceremony overwrote per-AC evidence (3 recipes) |
 | C9 | **The domain is UI-free.** | v1's `raul` shelled out to `mp` → version skew |
 | C10 | **Every field is reachable from a surface.** | v1's `list recipes` omitted `priority` → the TUI's sort could not work |
@@ -375,7 +375,7 @@ and had two that didn't exist (`B2`, `B3` documented but never implemented).
 | `changes.recorded` | a reason is recorded for the change | `request_changes` |
 | `dependencies.satisfied` | every `depends_on` recipe is `closed` | `start` |
 | `steps.settled` | every step is `done` or `skipped` | `finish` |
-| `ac.all_proven` | every AC is `passed` — an evidence that matched something **or a human sign-off** — or **deferred** (re-filed as a follow-up) | `finish` |
+| `ac.all_proven` | every AC is `passed` — evidence that matched something **or a human sign-off** — or **deferred** (re-filed as a follow-up) | `finish` |
 | `review.findings_exist` | ≥1 open external finding | `enter_remediation` |
 | `review.findings_closed` | no open external finding | `exit_remediation` |
 | `review.verdict_ok` | the last review round says `ok` | `pass_review`, `close` |
@@ -424,10 +424,10 @@ actually hold.
 
 | Rule | Detail |
 |---|---|
-| **An evidence is machine-attached** | `{command, exit_code, output_digest, matched, at, by}` — never prose |
+| **Evidence is attached, never prose** | `{command, exit_code, output_digest, matched, at, by}` — a machine's, or the chef's |
 | **Append-only** (C8) | Re-running appends. It never overwrites. `status` derives from the latest evidence |
-| **Zero-match is not evidence** | `matched == 0` ⇒ rejected, recorded as a failure |
-| **A sign-off is not machine evidence** | it is its own state (`signed-off`) — **the chef** vouching for a procedure the tool could not check. It claims no match, and it is the one exception to the zero-match rule |
+| **Zero-match does not count** | `matched == 0` ⇒ rejected, recorded as a failure |
+| **A sign-off is evidence too** | it is its own state (`signed-off`) — **the chef** vouching for a procedure the tool could not check. It claims no match, and it is the one exception to the zero-match rule |
 | **Exit code is the truth** | `exit 0` is a pass; anything else is a fail |
 | **Bypass is debt** | A forced transition is stamped `[forced]` and shows in the UI as debt, never as success (CPD principle 9) |
 | **Timeouts are distinguishable** | v1's timeout message (*"verification command did not run"*) was indistinguishable from a real failure. A timeout is its own outcome, and the default deadline must fit a realistic full-suite run |

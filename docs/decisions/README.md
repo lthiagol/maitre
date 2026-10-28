@@ -60,6 +60,6 @@ points at it rather than repeating it.
 | [0003](0003-surface-split.md) | Who writes what — artifact vs. management | 🔄 proposed |
 | [0004](0004-naming.md) | Naming — project, binaries, plan directory, ladder, roles | ✅ accepted |
 | [0005](0005-vocabulary.md) | Vocabulary — generic methodology, specific product | ✅ accepted |
-| [0006](0006-verification.md) | Verification — who runs it, and what an evidence is | ✅ accepted |
+| [0006](0006-verification.md) | Verification — who runs it, and what evidence is | ✅ accepted |
 | [0007](0007-operation-layer.md) | The operation layer | ✅ accepted |
 | [0008](0008-artifact-is-the-channel.md) | The artifact is the channel — no agent-to-agent messaging | ✅ accepted |

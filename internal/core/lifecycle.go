@@ -320,7 +320,7 @@ var gates = []gate{
 		for _, c := range r.Acceptance {
 			switch st := c.Status(); st {
 			case CriterionPassed:
-				// An evidence that matched something, or a human sign-off.
+				// Evidence that matched something, or a human sign-off.
 			case CriterionDeferred:
 				// A deferred criterion is re-filed as a follow-up. It does not
 				// keep the recipe open: CPD's rule is that a recipe is done when

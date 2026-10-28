@@ -1,4 +1,4 @@
-# 0006. Verification — who runs it, and what an evidence is
+# 0006. Verification — who runs it, and what evidence is
 
 - **Status:** ✅ accepted
 - **Date:** 2026-10-25
@@ -28,12 +28,12 @@ an agent authored.
 code and an output digest, derives a match count where it can, and records the evidence.
 
 The trust boundary is the **sign-off gate**: the human approves the recipe — *which
-contains the verification commands* — before anything executes. By the time an evidence is
+contains the verification commands* — before anything executes. By the time the evidence is
 recorded, the human has read the command. This is CPD's structure doing the work, and it
 is why "the tool executes the plan" is safe here in a way it was not in v1 (whose
 approval gate was an alias and ran nothing).
 
-### 2. An evidence has one of three match states
+### 2. Evidence has one of three match states
 
 | State | Meaning | Remedy |
 |---|---|---|
@@ -41,7 +41,7 @@ approval gate was an alias and ran nothing).
 | **rejected** | Match count known, and == 0 — **the filter matched nothing** | Fix the spec. This is not a test failure. |
 | **unproven** | Match count unknown — the tool cannot tell | Make the verification machine-checkable, or get a human sign-off |
 
-Only **proven** satisfies the `ac.all_proven` gate. A rejected or unproven evidence is
+Only **proven** satisfies the `ac.all_proven` gate. A rejected or unproven result is
 recorded, visible, and blocks — each with a different remedy, which is why they are
 distinct states.
 

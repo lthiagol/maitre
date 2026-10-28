@@ -86,8 +86,9 @@ derivable from the model. A field that can't be set or read is a bug in one of t
 matching 0 tests is a silent pass that masked 14+ failures. A verification that greps
 `--help` output "verified" a flag existed without exercising the parser.
 
-**Principle.** An evidence must be attributable: what it ran, what it matched, what
-the result was. An evidence that matched nothing is not evidence.
+**Principle.** Evidence must be attributable: what it ran, what it matched, what the
+result was. A result that matched nothing does not count — the chef's sign-off is the
+one exception, and it claims no match.
 
 **Consequence.** The verifier reports match counts and rejects zero-match evidence.
 Evidence payloads are structured, not free-text prose.
