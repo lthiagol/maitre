@@ -384,13 +384,24 @@ written.
    **The check on a record is by value.** The code does not need to know *which* fields
    carry a name — it needs to know whether *any* field carries a retired name. A
    **name field**'s value **is** the name (`claimed_by: "line-cook"`), and a **prose
-   field**'s value *mentions* one (*"the line-cook wrote this"*) — and prose is longer
-   than the name, so it is not refused. The walk covers **every** string field of the
-   record, so a new name-carrying field is caught without anybody adding it to a list,
-   and the writer and the reader run the same check: one answer to "does this record
-   carry a retired name?". **Maps are not walked** — a map's values are the record's
-   business, and the journal's migration events carry retired *field names* in their
-   data, which is history and keeps its old names.
+   field**'s value *mentions* one (*"the line-cook wrote this"*) — and prose is usually
+   longer than the name, so it is not refused.
+
+   **The trade: the refusal is about the *value*, not about the field's kind.** A prose
+   field whose whole value *is* a retired name is refused too — a recipe titled
+   exactly *"Line Cook"* is refused at creation, and the refusal names the title and
+   the slug it would have written. The record never lands: the writer checks before the
+   write, so the plan stays readable and writable, and a later title change to that
+   value is refused and does not land either. Only a hand edit could put such a record
+   in a plan — and there the reader refuses it loudly and the writer refuses it as
+   well: **the tool never writes a record it will not read.**
+
+   The walk covers **every** string field of the record, so a new name-carrying field
+   is caught without anybody adding it to a list, and the writer and the reader run the
+   same check: one answer to "does this record carry a retired name?". **Maps are not
+   walked** — a map's values are the record's business, and the journal's migration
+   events carry retired *field names* in their data, which is history and keeps its old
+   names.
 
 ### 3.3 Overlays
 
