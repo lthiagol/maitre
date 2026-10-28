@@ -293,43 +293,147 @@ func retiredInBacklog(raw []byte, id string) []string {
 	return found
 }
 
-// actorNames are the names a live record carries.
+// nameField is one field of a record that carries a name.
 //
-// The fields are the ones that name an actor: the claimant, the approver, the
-// reviewer, the comment's author, the record's author, the deviation's author and
-// the overlays' author.
+// The list of them is **one list**: the writer's view and the reader's view are
+// both derived from it, so a field cannot be known by one and forgotten by the
+// other.
+type nameField struct {
+	// what names the field, for the reader's message: "the claimant".
+	what string
+	// read returns the names the field carries.
+	read func(*Recipe) []string
+}
+
+// nameFields are the fields of a record that carry a name.
 //
-// The **writer** reads them before it writes, and the **reader** reads them when
-// it reads: a name the tool does not accept cannot be in a live record, so the
-// tool cannot write a plan it will not read.
-func actorNames(r *Recipe) []string {
-	var out []string
-	out = append(out, r.Execution.ClaimedBy)
-	if r.Approval != nil {
-		out = append(out, r.Approval.By)
-	}
-	for _, round := range r.Review.Rounds {
-		out = append(out, round.Reviewer)
-	}
-	for _, c := range r.Review.Comments {
-		out = append(out, c.Author)
-	}
-	for _, c := range r.Acceptance {
-		for _, e := range c.Evidence {
-			out = append(out, e.By)
+// The claimant, the approver, the reviewer, the comment's author, the record's
+// author, the deviation's author and the overlays' author.
+//
+// **One list, two views.** The writer's view (`recordNames`) checks every name the
+// list yields before a write; the reader's view (`retiredNames`) reports the retired
+// ones when a record is read. Both read this list and nothing else, so they cannot
+// disagree about which fields carry a name — and a field known by only one of them
+// was F-91's hole, one list apart: the writer accepted the name, the reader refused
+// the plan, and the tool bricked the plan it had just written.
+var nameFields = []nameField{
+	{
+		what: "the claimant",
+		read: func(r *Recipe) []string { return []string{r.Execution.ClaimedBy} },
+	},
+	{
+		what: "the approver",
+		read: func(r *Recipe) []string {
+			if r.Approval == nil {
+				return nil
+			}
+			return []string{r.Approval.By}
+		},
+	},
+	{
+		what: "a review round's reviewer",
+		read: func(r *Recipe) []string {
+			var out []string
+			for _, round := range r.Review.Rounds {
+				out = append(out, round.Reviewer)
+			}
+			return out
+		},
+	},
+	{
+		what: "a comment's author",
+		read: func(r *Recipe) []string {
+			var out []string
+			for _, c := range r.Review.Comments {
+				out = append(out, c.Author)
+			}
+			return out
+		},
+	},
+	{
+		what: "a record's author",
+		read: func(r *Recipe) []string {
+			var out []string
+			for _, c := range r.Acceptance {
+				for _, e := range c.Evidence {
+					out = append(out, e.By)
+				}
+			}
+			return out
+		},
+	},
+	{
+		what: "a deviation's author",
+		read: func(r *Recipe) []string {
+			var out []string
+			for _, d := range r.Audit.Deviations {
+				out = append(out, d.By)
+			}
+			return out
+		},
+	},
+	{
+		what: "a block's author",
+		read: func(r *Recipe) []string {
+			if r.Overlays.Blocked == nil {
+				return nil
+			}
+			return []string{r.Overlays.Blocked.By}
+		},
+	},
+	{
+		what: "a deferral's author",
+		read: func(r *Recipe) []string {
+			if r.Overlays.Deferred == nil {
+				return nil
+			}
+			return []string{r.Overlays.Deferred.By}
+		},
+	},
+	{
+		what: "a cancellation's author",
+		read: func(r *Recipe) []string {
+			if r.Overlays.Cancelled == nil {
+				return nil
+			}
+			return []string{r.Overlays.Cancelled.By}
+		},
+	},
+}
+
+// namedName is one name a record carries, and the field it came from.
+type namedName struct {
+	// what names the field the name came from.
+	what string
+	// name is the name itself.
+	name string
+}
+
+// recordNames is the writer's view: every name the record carries, with the field
+// it came from.
+//
+// It reads the one list and nothing else — which fields carry a name is the list's
+// business, and the wire checks that this view keeps it that way.
+func recordNames(r *Recipe) []namedName {
+	var out []namedName
+	for _, f := range nameFields {
+		for _, name := range f.read(r) {
+			out = append(out, namedName{what: f.what, name: name})
 		}
 	}
-	for _, d := range r.Audit.Deviations {
-		out = append(out, d.By)
-	}
-	if r.Overlays.Blocked != nil {
-		out = append(out, r.Overlays.Blocked.By)
-	}
-	if r.Overlays.Deferred != nil {
-		out = append(out, r.Overlays.Deferred.By)
-	}
-	if r.Overlays.Cancelled != nil {
-		out = append(out, r.Overlays.Cancelled.By)
+	return out
+}
+
+// retiredNames is the reader's view: the retired names among the record's.
+//
+// It is the writer's view, filtered — the reader knows the same fields, because
+// both read the one list.
+func retiredNames(r *Recipe) []namedName {
+	var out []namedName
+	for _, n := range recordNames(r) {
+		if IsRetiredName(n.name) {
+			out = append(out, n)
+		}
 	}
 	return out
 }
@@ -344,8 +448,8 @@ func actorNames(r *Recipe) []string {
 // append-only, and its old events keep their old names forever. A **new** event is
 // a live record, and it is refused too.
 func checkRecordNames(r *Recipe) error {
-	for _, name := range actorNames(r) {
-		if err := checkName(name); err != nil {
+	for _, n := range recordNames(r) {
+		if err := checkName(n.name); err != nil {
 			return err
 		}
 	}
@@ -358,49 +462,19 @@ func checkRecordNames(r *Recipe) error {
 // it, and the reader refuses a record that carries one. The **journal** is the
 // exception, because the journal is history.
 //
-// The fields are the ones that name an actor: the claimant, the approver, the
+// The fields are the one list's (`nameFields`): the claimant, the approver, the
 // reviewer, the comment's author, the record's author, the deviation's author and
 // the overlays' author.
 func retiredActorNames(r *Recipe) []string {
 	var found []string
 	seen := map[string]bool{}
-	note := func(what, name string) {
-		if !IsRetiredName(name) {
-			return
-		}
-		entry := fmt.Sprintf("%s (%q)", what, name)
+	for _, n := range retiredNames(r) {
+		entry := fmt.Sprintf("%s (%q)", n.what, n.name)
 		if seen[entry] {
-			return
+			continue
 		}
 		seen[entry] = true
 		found = append(found, entry)
-	}
-	note("the claimant", r.Execution.ClaimedBy)
-	if r.Approval != nil {
-		note("the approver", r.Approval.By)
-	}
-	for _, round := range r.Review.Rounds {
-		note("a review round's reviewer", round.Reviewer)
-	}
-	for _, c := range r.Review.Comments {
-		note("a comment's author", c.Author)
-	}
-	for _, c := range r.Acceptance {
-		for _, e := range c.Evidence {
-			note("a record's author", e.By)
-		}
-	}
-	for _, d := range r.Audit.Deviations {
-		note("a deviation's author", d.By)
-	}
-	if r.Overlays.Blocked != nil {
-		note("a block's author", r.Overlays.Blocked.By)
-	}
-	if r.Overlays.Deferred != nil {
-		note("a deferral's author", r.Overlays.Deferred.By)
-	}
-	if r.Overlays.Cancelled != nil {
-		note("a cancellation's author", r.Overlays.Cancelled.By)
 	}
 	return found
 }
