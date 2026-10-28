@@ -18,6 +18,9 @@ const artDir = "../../images/logo/ascii"
 // repoRoot is the repository, two levels up from this package.
 const repoRoot = "../.."
 
+// modulePath is the module of this repository.
+const modulePath = "github.com/lthiagol/maitre/"
+
 // TestTheDrawingsMatchTheSource holds the code to the art.
 //
 // **The comparison runs from the file to the code.** The drawing in
@@ -300,19 +303,50 @@ func write(t *testing.T, path, body string) {
 //
 // The art is not the domain: this package imports nothing of ours, and the domain
 // does not import it. The domain is the model, and a bow tie is UI.
+//
+// **The rule is about the code that ships**, so the wire reads the **non-test**
+// files of `internal/core` — a test file may import what it likes in order to
+// check it.
 func TestTheMarkIsNotTheDomain(t *testing.T) {
-	if got := oursIn(t, "."); len(got) > 0 {
+	if got := importsIn(t, "."); len(got) > 0 {
 		t.Errorf("the mark should import nothing of ours, but it imports %v", got)
 	}
-	if got := oursIn(t, filepath.Join(repoRoot, "internal", "core")); len(got) > 0 {
+	if got := importsIn(t, filepath.Join(repoRoot, "internal", "core")); len(got) > 0 {
 		t.Errorf("the domain should not import the mark, but it imports %v", got)
 	}
 }
 
-// oursIn are the packages of this repository that a directory's code imports.
+// TestTheBoundaryWireCanFail proves the wire is a wire.
+//
+// **Every spelling of an import must be caught** — single-line, grouped, blank —
+// because a wire that catches one spelling is a wire that waits for the other
+// spelling to arrive.
+func TestTheBoundaryWireCanFail(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		src  string
+	}{
+		{"a single-line import", "package core\n\nimport \"github.com/lthiagol/maitre/internal/brand\"\n"},
+		{"a grouped import", "package core\n\nimport (\n\t\"github.com/lthiagol/maitre/internal/brand\"\n)\n"},
+		{"a blank import", "package core\n\nimport (\n\t_ \"github.com/lthiagol/maitre/internal/brand\"\n)\n"},
+	} {
+		dir := t.TempDir()
+		write(t, filepath.Join(dir, "zz_probe.go"), c.src)
+		if got := importsIn(t, dir); len(got) == 0 {
+			t.Errorf("the wire should catch %s", c.name)
+		}
+	}
+}
+
+// importsIn are the packages of this repository that a directory's shipped code
+// imports.
+//
+// **The imports are parsed, not read.** A line that starts with the module path is
+// one spelling of an import; a grouped import and a blank import are other
+// spellings, and a wire that reads lines waits for the other spellings to arrive.
 //
 // The tests are left out: the rule is about the code that ships.
-func oursIn(t *testing.T, dir string) []string {
+func importsIn(t *testing.T, dir string) []string {
 	t.Helper()
 	var out []string
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
@@ -322,17 +356,16 @@ func oursIn(t *testing.T, dir string) []string {
 		if d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 			return nil
 		}
-		raw, err := os.ReadFile(path)
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
 		if err != nil {
-			return err
+			return fmt.Errorf("parse %s: %w", path, err)
 		}
-		for _, line := range strings.Split(string(raw), "\n") {
-			line = strings.TrimSpace(line)
-			if !strings.HasPrefix(line, `"github.com/lthiagol/maitre/`) {
-				continue
+		for _, imp := range file.Imports {
+			pkg := strings.Trim(imp.Path.Value, `"`)
+			if strings.HasPrefix(pkg, modulePath) {
+				out = append(out, pkg)
 			}
-			pkg := strings.Trim(line, `"`)
-			out = append(out, pkg)
 		}
 		return nil
 	})
