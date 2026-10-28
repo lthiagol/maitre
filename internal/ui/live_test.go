@@ -236,10 +236,12 @@ func TestTheSnapshotPathDoesNotPoll(t *testing.T) {
 //
 // The poll message produces exactly one follow-up poll: not two, not none.
 func TestTheInteractiveModelPolls(t *testing.T) {
-	m, _ := liveModel(t)
+	model, _ := liveModel(t)
 
-	updated, cmd := m.Update(pollMsg{})
-	m = updated.(*Model)
+	updated, cmd := model.Update(pollMsg{})
+	if _, ok := updated.(*Model); !ok {
+		t.Fatalf("the poll should keep the model, got %T", updated)
+	}
 	if cmd == nil {
 		t.Fatal("the poll produced no follow-up")
 	}

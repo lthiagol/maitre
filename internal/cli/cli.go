@@ -423,9 +423,7 @@ func (r *Runner) failOp(err error) int {
 	var ge *core.GateError
 	if errorsAs(err, &ge) {
 		gates := make([]string, 0, len(ge.Gates))
-		for _, g := range ge.Gates {
-			gates = append(gates, g)
-		}
+		gates = append(gates, ge.Gates...)
 		payload := map[string]any{
 			"ok":    false,
 			"error": err.Error(),

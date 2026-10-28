@@ -1219,23 +1219,6 @@ func unmarkFunction(t *testing.T, dir, file, decl string) {
 	}
 }
 
-// exemptFunction adds a name to the exemption list.
-func exemptFunction(t *testing.T, dir, file, name string) {
-	t.Helper()
-	path := filepath.Join(dir, file)
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	patched := strings.Replace(string(raw), "var NonViews = []string{", "var NonViews = []string{\n\t\""+name+"\",", 1)
-	if patched == string(raw) {
-		t.Fatal("the exemption list was not found")
-	}
-	if err := os.WriteFile(path, []byte(patched), 0o644); err != nil {
-		t.Fatal(err)
-	}
-}
-
 // TestTheDocListsTheJournalKinds keeps the closed enum honest.
 func TestTheDocListsTheJournalKinds(t *testing.T) {
 	if err := checkJournalKinds(readDoc(t, "03-domain-model.md")); err != nil {
@@ -1490,17 +1473,18 @@ func TestTheSpecAgreesWithTheCodeAboutReopen(t *testing.T) {
 // diagramGates reads the gates on an event's edge in the lifecycle diagram.
 func diagramGates(doc, event string) []string {
 	edge := regexp.MustCompile(`--> \w+ : ` + regexp.QuoteMeta(event) + `(<br/>(.*))?`)
-	for _, m := range edge.FindAllStringSubmatch(sectionOf(doc, "### 3.2 Transitions"), -1) {
-		var gates []string
-		for _, g := range strings.Split(strings.ReplaceAll(m[2], "<br/>", " · "), " · ") {
-			g = strings.TrimSpace(g)
-			if g != "" {
-				gates = append(gates, g)
-			}
-		}
-		return gates
+	m := edge.FindStringSubmatch(sectionOf(doc, "### 3.2 Transitions"))
+	if m == nil {
+		return nil
 	}
-	return nil
+	var gates []string
+	for _, g := range strings.Split(strings.ReplaceAll(m[2], "<br/>", " · "), " · ") {
+		g = strings.TrimSpace(g)
+		if g != "" {
+			gates = append(gates, g)
+		}
+	}
+	return gates
 }
 
 // appliesTo reads the gate's "Applies to" column from the doc's gate table.

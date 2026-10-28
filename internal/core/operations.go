@@ -930,16 +930,6 @@ func (o *Operations) advance(id string, ev Event, approver, reason string) (*Rec
 	return r, nil
 }
 
-// journal appends an entry, taking the lock.
-func (o *Operations) journal(kind, recipeID string, data any) error {
-	unlock, err := o.lock()
-	if err != nil {
-		return err
-	}
-	defer unlock()
-	return o.journalLocked(kind, recipeID, data)
-}
-
 // refuseLocked turns an action away and writes it down.
 //
 // The caller holds the lock. A refusal the plan produced is evidence: somebody asked,

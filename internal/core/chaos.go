@@ -54,7 +54,7 @@ func seedStress(ops *Operations) error {
 
 	// A title that is not ASCII: emoji, combining marks, and a right-to-left run.
 	if _, err := chef.CreateRecipe(RecipeSpec{
-		Title:      "STRESS: 日本語のタイトル 🎉 and a RTL run ‮abc",
+		Title:      "STRESS: 日本語のタイトル 🎉 and a RTL run \u202eabc",
 		Outcome:    "Widths are measured, not guessed",
 		Problem:    "A wide character is two cells wide",
 		OutOfScope: []string{"web shell", "orchestration"},

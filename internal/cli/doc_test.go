@@ -138,12 +138,6 @@ func readOwnSource(t *testing.T, name string) string {
 	return readOwnFile(t, name)
 }
 
-// readOwnDoc reads one of the project's design docs.
-func readOwnDoc(t *testing.T, name string) string {
-	t.Helper()
-	return readOwnFile(t, filepath.Join("..", "..", "docs", name))
-}
-
 // readOwnFile reads a file and fails the test if it cannot.
 func readOwnFile(t *testing.T, path string) string {
 	t.Helper()
