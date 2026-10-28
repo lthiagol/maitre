@@ -196,3 +196,82 @@ func TestTheJournalKeepsTheOldNames(t *testing.T) {
 		t.Errorf("the old role should be kept as it was written: %q", j.Events[len(j.Events)-1].Role)
 	}
 }
+
+// TestTheRetiredNamesAreOnlyWhereTheyBelong is the wire for "one format".
+//
+// The retired names may live in exactly two places: the detection that refuses them
+// (`retired.go`) and the deny-list that refuses them as names (`model.go`). A third
+// place is a second answer to a question the plan has already answered — and the
+// tolerance would come back one reader at a time, which is how it came the first
+// time.
+//
+// The scan reads the **code**, not the prose: the history is written down in the
+// comments, and the comments are not a reader.
+func TestTheRetiredNamesAreOnlyWhereTheyBelong(t *testing.T) {
+	allowed := map[string]bool{
+		"retired.go": true, // the detection that refuses them
+		"model.go":   true, // the deny-list that refuses them as names
+	}
+	tokens := []string{
+		"proofs",
+		"specials",
+		"prep-notes",
+		"ListLegacyItems",
+		"LegacyItem",
+		"legacyFingerprint",
+		"restampLegacy",
+	}
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range entries {
+		name := e.Name()
+		if e.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		if allowed[name] {
+			continue
+		}
+		raw, err := os.ReadFile(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		code := stripComments(string(raw))
+		for _, token := range tokens {
+			if strings.Contains(code, token) {
+				t.Errorf("%s reads the retired %q — the format is one format", name, token)
+			}
+		}
+	}
+}
+
+// stripComments takes the prose out of a Go file, so a scan of the code does not
+// trip on the history the comments tell.
+func stripComments(src string) string {
+	var out []string
+	inBlock := false
+	for _, line := range strings.Split(src, "\n") {
+		trimmed := strings.TrimSpace(line)
+		switch {
+		case inBlock:
+			if i := strings.Index(trimmed, "*/"); i >= 0 {
+				inBlock = false
+				line = trimmed[i+2:]
+			} else {
+				continue
+			}
+		case strings.HasPrefix(trimmed, "/*"):
+			if i := strings.Index(trimmed, "*/"); i >= 0 {
+				line = trimmed[i+2:]
+			} else {
+				inBlock = true
+				continue
+			}
+		case strings.HasPrefix(trimmed, "//"):
+			continue
+		}
+		out = append(out, line)
+	}
+	return strings.Join(out, "\n")
+}
