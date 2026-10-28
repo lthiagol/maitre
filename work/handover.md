@@ -1,5 +1,13 @@
 # Handover — you are the new orchestrator
 
+> **This document is the takeover note, and it is history.** The rename it describes
+> is **finished** — slices A to E, with the mascot carried to the session that draws
+> it. **[work/README.md](README.md) is the state of record**: what the work stands at,
+> the rulings, the lanes, the findings and where each one landed.
+>
+> Read that file instead of this one. The sections below are kept because they record
+> how the work was run, and the rules in them still hold.
+
 **Paste this whole file as your first prompt.** It is written to be self-contained:
 you can run the whole rename from it and the repo.
 
