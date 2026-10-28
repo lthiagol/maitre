@@ -11,17 +11,29 @@ import (
 	"testing"
 )
 
-// recordedDomainShape is the shape of the domain's rules when DomainVersion was
-// last bumped.
+// recordedDomainShape is the shape of the domain's rules: the fingerprint of the
+// gates, the transitions, the lifecycles, the events, the chef's moves, the rules on
+// a tasting note's outcome, and the facts of the **plan's format**.
 //
 // It changes when a gate is added, renamed or dropped, when a transition changes,
 // when a lifecycle is added, when an event is added, when the chef gains a move,
 // when the rules on a tasting note's outcome change, and when a fact of the
-// **plan's format** changes — the id prefixes, the directories, the field names
-// on disk. Any of those means the rules changed, and a plan written under the old
-// rules must not be written under the new ones by a tool that does not know the
-// difference.
-const recordedDomainShape = "cff4269d589690ce"
+// **plan's format** changes — the id prefixes, the directories, the root file
+// names, the field names on disk, and the journal envelope's own fields.
+//
+// The shape and the **version** are not the same thing, and the difference matters:
+//
+//   - The **version** fences the **writer**. A tool whose rules are older than the
+//     plan's must not write to it, because it would write something weaker than the
+//     plan was written under. So a change in *what the tool writes* moves
+//     `DomainVersion`.
+//   - The **shape** is what the version stamp can see. Learning to see a fact it
+//     could not see before changes the shape without changing the writer — the plan
+//     on disk is the same — and that is not a version bump.
+//
+// So a format change moves both, and only the shape moves when the fingerprint
+// learns to see a fact it could not see before.
+const recordedDomainShape = "b84b230161f4ab03"
 
 // domainShape is a fingerprint of the domain's rules: the gates, the transitions, the
 // lifecycles, the events, the chef's moves, the rules on a tasting note's outcome,
@@ -33,8 +45,23 @@ const recordedDomainShape = "cff4269d589690ce"
 //
 // The format is in it because the format is a rule: a tool that writes the old
 // ids, or a record under a field name the reader does not know, writes a plan the
-// reader cannot read — and the reader cannot tell that the plan is broken.
+// reader cannot read — and the reader cannot tell that the plan is broken. The root
+// file names and the journal envelope's own fields are in it for the same reason:
+// the journal's name is the silent one, because a missing journal reads as an empty
+// one.
 func domainShape() string {
+	return shapeOfFacts(planFormatFacts())
+}
+
+// shapeOfFacts is the fingerprint of the domain's rules, given the facts of the
+// plan's format.
+//
+// The format's facts are an argument so the wire can be tested: a fact that is in
+// the list must change the fingerprint, and a fact that is not in it cannot. The
+// hole F-71 was filed to close is exactly a fact that was not in the list — the
+// root file names and the journal envelope's own fields — so a change to one of
+// them left the fingerprint untouched and the version had to be moved by hand.
+func shapeOfFacts(formatFacts []string) string {
 	var b strings.Builder
 	for _, g := range GateNames() {
 		b.WriteString("gate " + g + "\n")
@@ -64,7 +91,7 @@ func domainShape() string {
 		}
 		b.WriteString(" to " + o.To + "\n")
 	}
-	for _, f := range planFormatFacts() {
+	for _, f := range formatFacts {
 		b.WriteString("format " + f + "\n")
 	}
 	sum := sha256.Sum256([]byte(b.String()))
@@ -78,7 +105,52 @@ func domainShape() string {
 func TestDomainShapeIsVersioned(t *testing.T) {
 	got := domainShape()
 	if got != recordedDomainShape {
-		t.Fatalf("the domain's rules changed: the shape is now %s, the recorded shape is %s. The rules changed, bump DomainVersion and update this fingerprint.", got, recordedDomainShape)
+		t.Fatalf("the domain's rules changed: the shape is now %s, the recorded shape is %s. Update this fingerprint. If the change is in what the tool writes, bump DomainVersion as well — the version fences the writer, and the shape alone fences nothing.", got, recordedDomainShape)
+	}
+}
+
+// TestTheFormatFactsCoverTheRootFilesAndTheJournalEnvelope holds the facts the
+// fingerprint was missing.
+//
+// The journal's file name is the silent one: a missing journal reads as an empty
+// one. And the envelope's own fields are the format too — a journal that carries a
+// different `schema` is a journal a reader cannot read. A fact that is not in the
+// list is a fact the version stamp cannot see, so a change to it would have to move
+// the version by hand.
+func TestTheFormatFactsCoverTheRootFilesAndTheJournalEnvelope(t *testing.T) {
+	facts := strings.Join(planFormatFacts(), "\n")
+	for _, want := range []string{
+		"file " + FileProject,
+		"file " + FileActivity,
+		"file " + FileDecisions,
+		"field Journal.schema",
+		"field Journal.seq",
+		"field Journal.events",
+	} {
+		if !strings.Contains(facts, want) {
+			t.Errorf("the format's facts should name %q", want)
+		}
+	}
+}
+
+// TestEveryFormatFactMovesTheFingerprint keeps the facts honest.
+//
+// A fact in the list that the fingerprint cannot see is a dead fact: it reads like
+// the format is covered, and a change to it would leave the version where it is.
+// Every fact must move the fingerprint, or it is not a fact.
+func TestEveryFormatFactMovesTheFingerprint(t *testing.T) {
+	facts := planFormatFacts()
+	base := shapeOfFacts(facts)
+	for _, fact := range facts {
+		without := make([]string, 0, len(facts))
+		for _, f := range facts {
+			if f != fact {
+				without = append(without, f)
+			}
+		}
+		if shapeOfFacts(without) == base {
+			t.Errorf("the fingerprint does not see the fact %q", fact)
+		}
 	}
 }
 

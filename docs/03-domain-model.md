@@ -448,9 +448,10 @@ it otherwise.
 
 **The plan format is version 6.** The number is `core.DomainVersion` — the version of
 the rules the plan is written under, which now includes the format itself. A format
-change moves the number: the id prefixes, the directories and the field names on disk
-are hashed into the fingerprint, so a tool that writes the old format is fenced off
-from a plan written under the new one. See [the version guard](#the-version-guard).
+change moves the number: the id prefixes, the directories, the root files and the
+field names on disk are hashed into the fingerprint, so a tool that writes the old
+format is fenced off from a plan written under the new one. See
+[the version guard](#the-version-guard).
 
 ```
 kitchen/

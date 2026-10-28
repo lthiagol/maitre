@@ -25,6 +25,9 @@ func planFormatFacts() []string {
 	for _, dir := range []string{DirRecipes, DirCourses, DirBacklog} {
 		out = append(out, "directory "+dir)
 	}
+	for _, file := range []string{FileProject, FileActivity, FileDecisions} {
+		out = append(out, "file "+file)
+	}
 	for _, field := range planRecordFields() {
 		out = append(out, "field "+field)
 	}
@@ -37,12 +40,14 @@ func planFormatFacts() []string {
 // written: a field renamed on disk is a field renamed here.
 //
 // The walk follows the records the plan holds — a recipe and everything inside it,
-// a backlog item, a journal entry — because a rename anywhere in them changes what a
-// file on disk says.
+// a backlog item, a journal entry and the journal's envelope — because a rename
+// anywhere in them changes what a file on disk says. The envelope is in the walk
+// because the journal's own fields are the format too: a journal that carries a
+// different `schema` is a journal a reader cannot read.
 func planRecordFields() []string {
 	var out []string
 	seen := map[reflect.Type]bool{}
-	for _, record := range []any{Recipe{}, BacklogItem{}, JournalEntry{}, projectFile{}} {
+	for _, record := range []any{Recipe{}, BacklogItem{}, JournalEntry{}, Journal{}, projectFile{}} {
 		out = append(out, jsonFieldNames(reflect.TypeOf(record), seen)...)
 	}
 	sort.Strings(out)
