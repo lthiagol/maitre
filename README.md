@@ -1,5 +1,9 @@
 # maitre
 
+put your work in its place
+
+![the mark](images/logo/9-plan-behind.svg)
+
 > A ground-up rewrite of [`master-plan`](https://github.com/lthiagol/master-plan) v1
 > (v1.0.0-rc6), built on
 > [CPD](https://github.com/lthiagol/crafted-prompt-development) as its foundation.
