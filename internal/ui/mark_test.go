@@ -37,20 +37,23 @@ func TestTheHeaderCarriesTheMarkAndStaysOneLine(t *testing.T) {
 // A drawing that does not fit wraps, and a wrapped row breaks the layout. So the
 // column chooses the form: the full form when it fits, the half form when only it
 // fits, and no art when neither does.
+//
+// **Both boundaries are pinned.** The full form is 28 columns wide and is drawn one
+// column in, so it needs 29: a column of exactly 29 takes the full form and a
+// column of 28 does not. The half form is 14 and needs 15: 15 takes the half form
+// and 14 and 13 do not.
 func TestTheSousChefDrawsTheMarkThatFits(t *testing.T) {
-	full := brand.Width(brand.Full)
-	half := brand.Width(brand.Half)
-
 	for _, c := range []struct {
 		name   string
 		column int
 		want   []string
 	}{
-		{"the column fits the full form", full + 1, brand.Full},
-		{"the column fits the half form only", half + 1, brand.Half},
-		{"the column fits the full form at the wide end", 200, brand.Full},
-		{"the column fits neither", half, nil},
-		{"a very narrow column", 4, nil},
+		{"a column of exactly the full form's width", 29, brand.Full},
+		{"a column one short of the full form", 28, brand.Half},
+		{"a column of exactly the half form's width", 15, brand.Half},
+		{"a column one short of the half form", 14, nil},
+		{"a column of thirteen", 13, nil},
+		{"a wide column", 200, brand.Full},
 	} {
 		got := markFor(c.column)
 		if len(got) != len(c.want) {
