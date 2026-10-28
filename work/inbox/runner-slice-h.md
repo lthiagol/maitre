@@ -1,0 +1,18 @@
+Runner: slice H done. Commits: 6. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. The numbers live in: `scripts/dep-budget.sh` (expected count + ceiling per package) — the gate holds them and checks `AGENTS.md`'s table against them, because a ceiling that lives in prose can be edited to fit the code; `AGENTS.md` is the checked copy, not a second source. The slow gate takes: `make check-race` 3m06s; `make ci` 3m08s (adds govulncheck, 2.7s). Tools: staticcheck v0.8.2, govulncheck v1.9.0.
+
+Notes:
+
+- **AC-01** — every target exists and runs alone: fmt, fmt-check, vet, staticcheck, lint, test, test-race, goldens, goldens-check, budget, tidy-check, check, check-race, tools, vuln, ci. `make regen-goldens` is kept as an alias for `make goldens`. A **missing tool fails** the gate: `scripts/require-tool.sh` says "<tool> is not installed. / Install it with: make tools / The binaries land in <GOPATH>/bin — put that directory on your PATH." It also finds the binary in `GOPATH/bin` when the PATH lacks it, so the gate works on this machine even though `GOPATH/bin` is not on the PATH.
+- **AC-02** — `make test PKG=./internal/core RUN='-run Role|SelfReview'` runs the eight matching tests (the `|` survives as a regex alternation). `make test PKG=./internal/core RUN='-run NoSuchTest'` **fails**: `scripts/go-test.sh` reads `go test`'s "[no tests to run]" and refuses the green.
+- **AC-03** — the counts are 0 / 0 / **28** (ceilings 0 / 0 / 30). Proved both directions: a temporary `golang.org/x/exp` import in `internal/ui` (reverted) gave *"internal/ui: live count 29, expected 28 (ceiling 30) — revert the dependency, or update scripts/dep-budget.sh and AGENTS.md"*; a doctored `AGENTS.md` cell gave *"AGENTS.md's dependency table states 29 external modules for internal/ui; the gate holds 28."*
+- **AC-04** — `make tools` installs the two pins and says where they went. `.github/workflows/ci.yml`: push + pull_request, `permissions: contents: read`, Go **1.26.0** (the floor `go.mod` declares), module cache, `make tools`, then `make ci`. The pre-push hook is committed at `scripts/hooks/pre-push.sh` and **installed** in `.git/hooks/` — a push now runs the fast gate (~75s); `git push --no-verify` skips it.
+- **AC-05** — `AGENTS.md` gained the targets, the "The quality gate" section (each tool's reason) and the working rule; `docs/testing.md` gained the gate, the tools and the CI story. `work/briefs/slice-h.md` already used `make test PKG=… RUN=…` — nothing to change, and `work/` was not touched.
+- **AC-06** — `make ci` green, tree clean.
+
+**Three things outside the slice's letter — the reviewer should look at them:**
+
+1. **The code changed** (commit 1). `staticcheck` found seven issues on today's tree, and the gate had to be green to be a gate: a loop that copies a slice, two dead test helpers, an unused method, a right-to-left literal written as an escape, a loop that always returned on its first pass, and a value that was never read. No behaviour changed; the goldens did not move.
+2. **`go.mod` was untidy** (commit 2) — `go mod tidy` moved the three direct requirements out of the indirect block and dropped `charm.land/bubbles/v2`, which nothing imports. `make tidy-check` fails without it.
+3. **`govulncheck` found two reachable vulnerabilities** (commit 6) — `golang.org/x/text` GO-2026-5970 and `github.com/yuin/goldmark` GO-2026-5320. Fixed by a version bump (x/text v0.39.0, goldmark v1.7.17); the goldens did not move and the suite is green. Without this, `make ci` — the gate I was asked to build — would have been red on its first run.
+
+The count did not move (28): the tools are dev tools, `go install` did not touch `go.mod`, and `core.DomainVersion` is still 7.
