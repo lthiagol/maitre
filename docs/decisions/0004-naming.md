@@ -1,11 +1,12 @@
 # 0004. Naming
 
-- **Status:** ✅ accepted — **superseded in part** on 2026-10-27 by **ADR 0009**
-  (`docs/decisions/0009-naming.md`), which carries the naming. 0009 is written in a
-  later slice; until it is, the decision of record is
-  [docs/07-vocabulary.md](../07-vocabulary.md).
+- **Status:** ✅ accepted — **superseded by [ADR 0009](0009-vocabulary.md)** on
+  2026-10-27.
 - **Date:** 2026-10-25
 - **Deciders:** TBD
+
+The names below are **the record of what this ADR chose**. ADR 0009 replaces them, and
+the decision of record is [docs/07-vocabulary.md](../07-vocabulary.md).
 
 ## What 0009 supersedes
 
@@ -74,7 +75,7 @@ goes in*; `scope.out_of_scope` → *what doesn't*.
 ### The cast
 
 Chef · maître d' · sous chef · line cook · taster · expo — defined in
-[GLOSSARY.md](../../GLOSSARY.md#the-brigade).
+[GLOSSARY.md](../../GLOSSARY.md#the-crew).
 
 The human-as-chef mapping is the load-bearing one: CPD's coordinator is the *sous chef* —
 it composes, it does not own the kitchen. The chef decides and signs off.

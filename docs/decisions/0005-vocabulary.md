@@ -1,6 +1,8 @@
 # 0005. Vocabulary — generic methodology, specific product
 
-- **Status:** ✅ accepted
+- **Status:** ✅ accepted — **superseded in part** by [ADR 0009](0009-vocabulary.md),
+  which states the rule as it now stands. The tables below are the record of what this
+  ADR said.
 - **Date:** 2026-10-25
 - **Deciders:** TBD
 

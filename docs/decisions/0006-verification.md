@@ -33,17 +33,24 @@ recorded, the human has read the command. This is CPD's structure doing the work
 is why "the tool executes the plan" is safe here in a way it was not in v1 (whose
 approval gate was an alias and ran nothing).
 
-### 2. Evidence has one of three match states
+### 2. Evidence has one of four match states
 
 | State | Meaning | Remedy |
 |---|---|---|
 | **proven** | Match count known, and > 0 | — |
 | **rejected** | Match count known, and == 0 — **the filter matched nothing** | Fix the spec. This is not a test failure. |
-| **unproven** | Match count unknown — the tool cannot tell | Make the verification machine-checkable, or get a human sign-off |
+| **unknown** | Match count unknown — the tool cannot tell | Make the verification machine-checkable, or get a human sign-off |
+| **signed-off** | The chef vouched for a procedure the tool could not check — **it claims no match** | — it is already the remedy for `unknown` |
 
-Only **proven** satisfies the `ac.all_proven` gate. A rejected or unproven result is
+Only **proven** is machine evidence. A rejected, unknown or signed-off result is
 recorded, visible, and blocks — each with a different remedy, which is why they are
-distinct states.
+distinct states. A **sign-off** is the one exception to the zero-match rule, and it is
+explicit: the criterion's status becomes `passed` on the chef's word, and the
+`ac.all_proven` gate reads the criterion's status, not the match state.
+
+> Corrected on 2026-10-27, when the rename's slice touched this ADR: the table listed
+> three states, under a name the code does not use (`unproven` for `unknown`), and left
+> out the sign-off — the one this section is about. The states above are the code's.
 
 > v1's runner skill had this right and the tool did not: *"the runner does NOT silently
 > fix bad verifications — that is a spec defect, not a runner defect."*
@@ -55,7 +62,7 @@ trust.
 
 - `go test …` → the count is known. `--- PASS:` lines, or `ok <pkg>` lines without
   `-v`. `[no tests to run]` → zero matched.
-- Any other command → the count is unknown, so the evidence is **unproven**.
+- Any other command → the count is unknown, so the evidence is in the **unknown** state.
 
 A command the tool cannot interpret is honestly labelled, rather than silently passed.
 
@@ -84,7 +91,7 @@ ceremony overwrote per-criterion evidence on three separate milestones.
   mitigation, which means it must actually work — if approval is ever bypassed, this
   becomes arbitrary execution. (Tracked: the permission deny-list, below.)
 - Only `go test` gives a known match count today. Other verification shapes are
-  *unproven* and need a human sign-off until a resolver is written for them.
+  **unknown** and need a human sign-off until a resolver is written for them.
 - Running a verification takes as long as the command. The default timeout must
   accommodate a realistic full suite, and a timeout must be **distinguishable from a
   failure** — v1's timeout message was identical to a real failure, which cost three
@@ -95,7 +102,7 @@ ceremony overwrote per-criterion evidence on three separate milestones.
   The mechanism is a permission boundary that makes the runner physically unable to
   perform a human action. Unbuilt; it is the enforcement half of CPD's L5 law.
 - **More resolvers.** Each command shape we want machine-checkable evidence for needs a
-  counter. Until then it is unproven, which is honest.
-- **Human sign-off for unproven criteria.** Lives in the console
+  counter. Until then it is unknown, which is honest.
+- **Human sign-off for a criterion the tool could not check.** Lives in the console
   ([`docs/05-human-interface.md`](../05-human-interface.md)), not the CLI — a human
   signing off is a human action.

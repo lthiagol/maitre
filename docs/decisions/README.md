@@ -58,8 +58,9 @@ points at it rather than repeating it.
 | [0001](0001-stack.md) | Implementation stack — Go + Charm | 🔄 proposed |
 | [0002](0002-human-interface-first.md) | Human interface first — the build order | 🔄 proposed |
 | [0003](0003-surface-split.md) | Who writes what — artifact vs. management | 🔄 proposed |
-| [0004](0004-naming.md) | Naming — project, binaries, plan directory, ladder, roles | ✅ accepted |
-| [0005](0005-vocabulary.md) | Vocabulary — generic methodology, specific product | ✅ accepted |
+| [0004](0004-naming.md) | Naming — project, binaries, plan directory, ladder, roles | ⛔ superseded by [0009](0009-vocabulary.md) |
+| [0005](0005-vocabulary.md) | Vocabulary — generic methodology, specific product | ⛔ superseded in part by [0009](0009-vocabulary.md) |
 | [0006](0006-verification.md) | Verification — who runs it, and what evidence is | ✅ accepted |
 | [0007](0007-operation-layer.md) | The operation layer | ✅ accepted |
 | [0008](0008-artifact-is-the-channel.md) | The artifact is the channel — no agent-to-agent messaging | ✅ accepted |
+| [0009](0009-vocabulary.md) | Vocabulary — the kitchen, the crew, and the machine's records | ✅ accepted |

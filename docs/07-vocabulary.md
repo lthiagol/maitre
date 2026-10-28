@@ -4,6 +4,10 @@ Decided by the chef on 2026-10-27, after the audit ledger closed. This doc is th
 paper the rename is built from; `GLOSSARY.md` is rewritten to match it, and where the
 two differ this doc wins.
 
+The **choice** and its reasoning are recorded in
+[ADR 0009](decisions/0009-vocabulary.md). This doc is the chef's decision of record;
+the ADR is why the choice was made.
+
 ## The rule
 
 **The kitchen names the artifact and the place. Plain words name the machine's records
