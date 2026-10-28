@@ -338,54 +338,83 @@ func TestTheFileNameMustBeInTheCurrentFormat(t *testing.T) {
 // The wire for "one format"
 // ---------------------------------------------------------------------------
 
-// retiredToken is one retired name the code must not carry.
+// retiredRule is how a retired token is matched.
+type retiredRule int
+
+const (
+	// ruleWord: the text is a word — it must stand alone. "R01" must not hide
+	// inside "RCP01", and "expo" must not hide inside "exported": the token names a
+	// retired thing, not a part of a word.
+	ruleWord retiredRule = iota
+	// ruleStem: the text is a stem — the case does not matter, and it may be a part
+	// of a longer name. "legacy" catches "LegacyThing" alike.
+	ruleStem
+	// ruleAccess: the text is how a retired name is **read** — a document key read
+	// by its literal.
+	ruleAccess
+	// ruleSpelling: the text is a name — the case does not matter, and the
+	// separator may be a dash, an underscore or a space. "line-cook" catches
+	// "line_cook" and "Line Cook".
+	ruleSpelling
+	// ruleIDPrefix: the text is an id prefix — it must be followed by a digit, so
+	// "R" catches "R01" and the retired forms the code could name.
+	ruleIDPrefix
+)
+
+// retiredToken is one thing the code must not carry, and how it is matched.
 type retiredToken struct {
 	// text is the text the token names.
 	text string
-	// word is true when the text is a word: it must stand alone.
-	//
-	// "R01" must not hide inside "RCP01", and "expo" must not hide inside
-	// "exported": the token names a retired thing, not a part of a word.
-	word bool
-	// fold is true when the case does not matter.
-	//
-	// A family is folded: `legacy` catches `LegacyThing` and `legacyFingerprint`
-	// alike, so a retired name cannot grow back under a spelling the list did not
-	// think of.
-	fold bool
+	// rule says how the text is matched.
+	rule retiredRule
 }
 
-// retiredTokens are every retired name the code could grow back.
+// retiredTokens reads the code's canonical lists.
 //
-// The list is complete on purpose. A token that is missing is a name the code may
-// carry without the wire noticing — and the wire is the only thing that says the
-// format is one format.
+// **The wire does not restate the retired names.** They live in the code — the
+// deny-list (`RetiredNames`), the directories, the field names, the id forms and
+// the families — and the wire reads them from there. A wire that carries its own
+// copy of the list is a second answer to "what is retired".
 //
-// The retired **id literals** are in it (`R01`, `S01`, `N01`): the code never needs
-// to write them, and a list that names them is the affordance the ruling removed.
+// The recipe's retired completion stamp is **not** looked for by its word:
+// `evidence` is a **current** word — the criterion's record — and the bare word
+// cannot tell the retired stamp from the current one. Its token is the **access**
+// instead: the retired stamp is read from a document by its literal key, and the
+// current format never reads a document key by literal.
+func retiredTokens() []retiredToken {
+	var out []retiredToken
+	// The crew's retired names: the deny-list.
+	for _, name := range RetiredNames {
+		out = append(out, retiredToken{text: name, rule: ruleSpelling})
+	}
+	// The plan's retired directories: the name, and the stem it belongs to.
+	for _, dir := range retiredDirectories {
+		out = append(out, retiredToken{text: dir, rule: ruleWord})
+		out = append(out, retiredToken{text: stem(dir), rule: ruleStem})
+	}
+	// The criterion's retired record: the name, and the stem.
+	out = append(out, retiredToken{text: retiredProofsField, rule: ruleWord})
+	out = append(out, retiredToken{text: stem(retiredProofsField), rule: ruleStem})
+	// The recipe's retired stamp: the access, not the word.
+	out = append(out, retiredToken{text: `["` + retiredStampField + `"]`, rule: ruleAccess})
+	// The retired id forms: the prefix, and a digit after it.
+	for _, form := range retiredIDForms {
+		out = append(out, retiredToken{text: form.retired, rule: ruleIDPrefix})
+	}
+	// The retired families: the stems whose own names are gone.
+	for _, family := range retiredFamilies {
+		out = append(out, retiredToken{text: family, rule: ruleStem})
+	}
+	return out
+}
+
+// stem is the family a retired name belongs to: the name without its plural "s".
 //
-// The retired **families** are in it too (`legacy`, `special`, `prep-note`,
-// `proof`): a name the list spells out is a name that grows back the moment
-// somebody spells it differently.
-//
-// The recipe's retired completion stamp is **not** in the list as the word
-// `evidence`: `evidence` is a **current** word — the criterion's record — and the
-// bare word cannot tell the retired stamp from the current one. Its token is the
-// **access** instead: the retired stamp is read from a document by its literal key,
-// and the current format never reads a document key by literal.
-var retiredTokens = []retiredToken{
-	{`["evidence"]`, false, false},
-	{"proof", false, true},
-	{"special", false, true},
-	{"prep-note", false, true},
-	{"R01", true, false},
-	{"S01", true, false},
-	{"N01", true, false},
-	{"legacy", false, true},
-	{"line-cook", true, false},
-	{"taster", true, false},
-	{"expo", true, false},
-	{"coordinator", true, false},
+// "specials" is the directory and "special" is the file type it held; "proofs" is
+// the record and "proof" is what it was called before. A retired name comes back
+// under a spelling the list did not think of, and the stem catches it.
+func stem(name string) string {
+	return strings.TrimSuffix(name, "s")
 }
 
 // retiredPlace is one place a retired token may live.
@@ -413,8 +442,16 @@ type retiredPlace struct {
 // The places are declarations, not files. `model.go` may hold the retired names in
 // `RetiredNames` and nowhere else, so a retired name cannot hide in it behind the
 // exemption.
+//
+// The detection's places are the **canonical lists** the wire reads: the
+// directories, the field names, the id forms and the families, and the detection
+// that uses them.
 var retiredPlaces = []retiredPlace{
 	{"internal/core/retired.go", "retiredDirectories"},
+	{"internal/core/retired.go", "retiredFamilies"},
+	{"internal/core/retired.go", "retiredIDForms"},
+	{"internal/core/retired.go", "retiredProofsField"},
+	{"internal/core/retired.go", "retiredStampField"},
 	{"internal/core/retired.go", "retiredInRecipe"},
 	{"internal/core/retired.go", "retiredInBacklog"},
 	{"internal/core/model.go", "RetiredNames"},
@@ -487,7 +524,7 @@ func TestTheOneFormatWireCanFail(t *testing.T) {
 			if err == nil {
 				t.Fatalf("the wire should fail on a retired token in %s", c.pkg)
 			}
-			if !strings.Contains(err.Error(), c.reported) {
+			if !strings.Contains(strings.ToLower(err.Error()), strings.ToLower(c.reported)) {
 				t.Errorf("the failure should name the retired %q: %v", c.reported, err)
 			}
 		})
@@ -589,15 +626,65 @@ func retiredTokensIn(rel, path string) ([]string, error) {
 		return nil, err
 	}
 	var found []string
-	for _, tok := range retiredTokens {
-		for _, at := range findToken(code, tok) {
-			if inAllowed(at, allowed) {
+	seen := map[string]bool{}
+	for _, tok := range retiredTokens() {
+		for _, m := range tok.matches(code) {
+			if inAllowed(m[0], allowed) {
 				continue
 			}
-			found = append(found, tok.text)
+			// The text that was found, not the token's own: the failure names
+			// what the code carries.
+			text := code[m[0]:m[1]]
+			if seen[text] {
+				continue
+			}
+			seen[text] = true
+			found = append(found, text)
 		}
 	}
 	return found, nil
+}
+
+// matches finds every place the token is in the code.
+func (t retiredToken) matches(code string) [][]int {
+	return t.pattern().FindAllStringIndex(code, -1)
+}
+
+// pattern is the pattern the token is matched by.
+func (t retiredToken) pattern() *regexp.Regexp {
+	switch t.rule {
+	case ruleAccess:
+		// The literal key the retired name is read by.
+		return regexp.MustCompile(regexp.QuoteMeta(t.text))
+	case ruleStem:
+		// The family: the case does not matter, and the name may be a part of a
+		// longer one.
+		return regexp.MustCompile(`(?i)` + regexp.QuoteMeta(t.text))
+	case ruleSpelling:
+		// The name: the case does not matter, and the separator may be a dash, an
+		// underscore or a space.
+		return regexp.MustCompile(`(?i)\b` + spellingPattern(t.text) + `\b`)
+	case ruleIDPrefix:
+		// The id prefix: it must be followed by a digit, so "R" catches "R01".
+		return regexp.MustCompile(`\b` + regexp.QuoteMeta(t.text) + `[0-9]+`)
+	default:
+		// The word: it must stand alone.
+		return regexp.MustCompile(`\b` + regexp.QuoteMeta(t.text) + `\b`)
+	}
+}
+
+// spellingPattern is the pattern a name is matched by: the separator may be a
+// dash, an underscore or a space.
+//
+// It is the code's own comparison — `normalizeAgentName` puts a name in the form
+// the domain compares — so the wire and the code answer "is this the same name?"
+// the same way.
+func spellingPattern(name string) string {
+	parts := strings.Split(name, "-")
+	for i, p := range parts {
+		parts[i] = regexp.QuoteMeta(p)
+	}
+	return strings.Join(parts, `[-_ ]`)
 }
 
 // scanSource parses a Go file, takes the prose out of it, and finds the places in it
@@ -724,38 +811,6 @@ func inAllowed(at int, ranges [][2]int) bool {
 		}
 	}
 	return false
-}
-
-// findToken finds every place the token is in the code.
-func findToken(code string, tok retiredToken) []int {
-	if tok.fold {
-		// A family: the case does not matter, and the name may be a part of a
-		// longer one.
-		re := regexp.MustCompile(`(?i)` + regexp.QuoteMeta(tok.text))
-		var out []int
-		for _, m := range re.FindAllStringIndex(code, -1) {
-			out = append(out, m[0])
-		}
-		return out
-	}
-	if !tok.word {
-		var out []int
-		for i := 0; i+len(tok.text) <= len(code); {
-			j := strings.Index(code[i:], tok.text)
-			if j < 0 {
-				break
-			}
-			out = append(out, i+j)
-			i = i + j + len(tok.text)
-		}
-		return out
-	}
-	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(tok.text) + `\b`)
-	var out []int
-	for _, m := range re.FindAllStringIndex(code, -1) {
-		out = append(out, m[0])
-	}
-	return out
 }
 
 // scratchTree copies the packages the wire scans into a scratch directory.

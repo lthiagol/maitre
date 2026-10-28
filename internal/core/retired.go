@@ -34,6 +34,28 @@ import (
 // it is one artifact in one directory now.
 var retiredDirectories = []string{"specials", "prep-notes"}
 
+// retiredStampField is the recipe's retired completion stamp.
+//
+// The stamp was `evidence`; it is `completion` now. The word is a **current** word
+// too — the criterion's record is `evidence` — so the wire cannot look for the
+// word. It looks for the **access**: the literal key the retired stamp is read by,
+// which the current format never does.
+const retiredStampField = "evidence"
+
+// retiredProofsField is the criterion's retired record name.
+//
+// The record was `proofs`; it is `evidence` now.
+const retiredProofsField = "proofs"
+
+// retiredFamilies are the stems of the retired names whose own names are gone.
+//
+// The retired reader's functions were named `legacy*` — `ListLegacyItems`,
+// `LegacyItem`, `legacyFingerprint`, `restampLegacy` — and the code that named
+// them is gone. The stem is what is left of them, and it is what a new one would
+// be called: a name the list spells out is a name that comes back the moment
+// somebody spells it differently.
+var retiredFamilies = []string{"legacy"}
+
 // retiredIDPrefix is one retired id prefix and the one that replaced it.
 type retiredIDPrefix struct {
 	// retired is the prefix the rename retired.
@@ -233,14 +255,14 @@ func retiredInRecipe(raw []byte, id string) []string {
 		// A file that does not parse is the reader's business, not this one's.
 		return nil
 	}
-	if _, ok := doc["evidence"]; ok {
+	if _, ok := doc[retiredStampField]; ok {
 		found = append(found, "a recipe's `evidence` stamp (it is `completion` now)")
 	}
 	if acceptance, ok := doc["acceptance"]; ok {
 		var criteria []map[string]json.RawMessage
 		if err := json.Unmarshal(acceptance, &criteria); err == nil {
 			for i, c := range criteria {
-				if _, ok := c["proofs"]; ok {
+				if _, ok := c[retiredProofsField]; ok {
 					found = append(found, fmt.Sprintf("criterion %d's `proofs` (it is `evidence` now)", i+1))
 				}
 			}

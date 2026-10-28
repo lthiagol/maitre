@@ -194,7 +194,10 @@ under another version is refused by the **version guard** — with the honest me
 "this plan was written under domain version 6 and this tool speaks version 7" — and it
 never reaches the digest. The digest's encoding is a **format fact**: the payload's
 shape and the encoding's name are hashed into the fingerprint, so a change to the
-payload moves the shape, and the shape moves the version. A plan whose digest was
+payload moves the shape — and a change to the **encoding** moves the version. A plan
+stamped under the old version carries a digest in the old encoding, and the two are
+not comparable: version 6 covered **two** encodings, and the version is the only
+thing that says which one a plan's digest is in. A plan whose digest was
 written under another encoding is therefore not a tampered plan: it is a plan of
 another version, and the version guard is what says so.
 
@@ -476,7 +479,8 @@ root files, the field names on disk and the approval's digest encoding are hashe
 the fingerprint, so a tool that writes the old format is fenced off from a plan
 written under the new one. A change to the **facts list** — a guard that now covers one
 fact more — moves the fingerprint and leaves the number alone, because the format on
-disk did not change. See [the version guard](#62-the-version-guard).
+disk did not change — **unless the fact is one a plan carries**, and the digest's
+encoding is that one. See [the version guard](#62-the-version-guard).
 
 ```
 kitchen/
@@ -610,6 +614,15 @@ did not change, so nothing a stale tool writes is wrong. A change to **what the 
 writes** moves both. The [decision of record](07-vocabulary.md) says the same, and it
 is where the choice was made.
 
+**One fact is the exception, and the digest's encoding is it.** A fact about *what
+the tool writes* is not the same as a fact about *what a plan carries*: a plan
+stamped under the old version carries what the old version wrote, and the two are
+not comparable. Version 6 covered **two digest encodings**, so a plan stamped 6
+could carry a digest the version-7 tool cannot compare with its own — and the
+version is the only thing that says which encoding a plan's digest is in. So the
+encoding is in the facts list **and** the version moved: the version is what fences
+the writer, and the fingerprint cannot fence anything on its own.
+
 **The stamp protects the future, not the corpus.** The guard refuses every plan whose
 version is not the tool's version, so a plan stamped 1 is not written by a version-7
 tool at all: the corpus is not carried along, and nothing is migrated.
@@ -628,10 +641,11 @@ and a digest written under another shape cannot be compared with this one's. Bef
 this, the payload was not in the facts list, so the tripwire could not see it: the
 encoding changed under the same version number, and a plan approved by the previous
 build passed the version guard and was then refused by the immutability gate — the
-tool called a plan nobody touched **tampered**. Now the shape moves the shape, and the
-shape moves the version: a plan under another version is refused by the **version**
-guard, with the honest message. The rules the gates apply did not change; the
-version is bumped because the **writer** changed.
+tool called a plan nobody touched **tampered**. Now the facts list grows **and** the
+version moves: a plan under another version is refused by the **version** guard, with
+the honest message. The rules the gates apply did not change; the version is bumped
+because the **digest's encoding** did — and the encoding was the fact the version
+could not see.
 
 **Version 6 is the plan format, and the rules about it.** Version 3 changed the
 *record* the gates apply to: a recipe's id is `RCP01` and its file is
