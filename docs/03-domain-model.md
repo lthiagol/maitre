@@ -119,15 +119,26 @@ from a **scan of what exists**, never from a count. (v1's `len()+1` produced
 `[AC-01, AC-03, AC-03]` after a removal.)
 
 **The reader strips every leading letter.** `RCP01`, `rcp01`, `RCP1`, `R01`, `r1` and `1`
-all name the same recipe, and a file named `R01-<slug>.json` is read as readily as one
-named `RCP01-<slug>.json`. The ids changed when the vocabulary was decided; the plans
-and journals written before it carry the old forms, and a reader that cannot resolve
-them cannot read the past. One letter would not be enough: `RCP01` reduced by a single
+all name the same recipe. One letter would not be enough: `RCP01` reduced by a single
 letter is `CP01`, which matches neither the new id nor the old one.
 
+**A name is not a file.** Three things, and they are not the same:
+
+| | |
+|---|---|
+| A **name typed by a human** | a **lookup**, and the lookup is tolerant — every form above names the recipe the plan holds |
+| A **file's name on disk** | the **format**, and the format is one format: a file named `R01-<slug>.json` carries a retired id form, and the plan is **not supported** — the reader refuses it and says what the name should be |
+| The **journal** | **history**: it is append-only, its old ids are kept, and the reader still resolves what it names |
+
+A reader that cannot resolve the journal's old ids cannot read the past. A reader that
+meets a plan whose files carry the retired form has no plan to read: the ids changed
+when the vocabulary was decided, and the plans written before it carry the old forms in
+their file names.
+
 The backlog's prefix is **two** letters — `BL01` — and the normaliser answers to both
-lengths: `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same item, and a file named
-`B01-<slug>.json` is read as the item `BL01`.
+lengths: `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same item. A file named
+`B01-<slug>.json` is read as the item `BL01`: `B01` is a **name**, not a retired form —
+the retired forms are `R01`, `S01` and `N01`.
 
 ---
 
@@ -479,8 +490,9 @@ root files, the field names on disk and the approval's digest encoding are hashe
 the fingerprint, so a tool that writes the old format is fenced off from a plan
 written under the new one. A change to the **facts list** — a guard that now covers one
 fact more — moves the fingerprint and leaves the number alone, because the format on
-disk did not change — **unless the fact is one a plan carries**, and the digest's
-encoding is that one. See [the version guard](#62-the-version-guard).
+disk did not change. **A fact added to the list that the format already had is not a
+format change; a fact the format *changed* is** — and the digest's encoding is the
+second kind. See [the version guard](#62-the-version-guard).
 
 ```
 kitchen/
@@ -614,14 +626,13 @@ did not change, so nothing a stale tool writes is wrong. A change to **what the 
 writes** moves both. The [decision of record](07-vocabulary.md) says the same, and it
 is where the choice was made.
 
-**One fact is the exception, and the digest's encoding is it.** A fact about *what
-the tool writes* is not the same as a fact about *what a plan carries*: a plan
-stamped under the old version carries what the old version wrote, and the two are
-not comparable. Version 6 covered **two digest encodings**, so a plan stamped 6
-could carry a digest the version-7 tool cannot compare with its own — and the
-version is the only thing that says which encoding a plan's digest is in. So the
-encoding is in the facts list **and** the version moved: the version is what fences
-the writer, and the fingerprint cannot fence anything on its own.
+**One fact is the exception, and the digest's encoding is it.** **A fact added to the
+list that the format already had is not a format change; a fact the format *changed*
+is.** The digest's encoding is the second kind: version 6 covered **two** encodings,
+so a plan stamped 6 could carry a digest the version-7 tool cannot compare with its
+own — and the version is the only thing that says which encoding a plan's digest is in.
+So the encoding is in the facts list **and** the version moved: the version is what
+fences the writer, and the fingerprint cannot fence anything on its own.
 
 **The stamp protects the future, not the corpus.** The guard refuses every plan whose
 version is not the tool's version, so a plan stamped 1 is not written by a version-7
