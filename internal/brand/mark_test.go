@@ -110,20 +110,23 @@ func TestTheDrawingsAreTheSizesTheSheetSays(t *testing.T) {
 
 // TestTheArtIsDeclaredOnlyHere holds the mark to one place.
 //
-// **Two things are in play, and the rule for each is different.**
+// **The rules are per form and per category**, and a category is what a file *is*,
+// not what its name ends with:
 //
-// | Thing | Rule |
-// |---|---|
-// | the drawings | long and unique: they may live in the source files and in the declaration, and **nowhere else** — in any file type |
-// | the compact glyph | one character: it may appear in rendered output and in the card's art, but it must not be **pasted into another code file** |
+//	| Form | code | rendered output | art | prose |
+//	|---|---|---|---|---|
+//	| the drawings | the canonical declaration, and nowhere else | — | — | — |
+//	| the compact glyph | the canonical declaration, and nowhere else | may ride along | may ride along | may be quoted |
 //
-// The glyph's rule is narrower because the glyph is legitimate elsewhere: the
-// goldens carry it on the header line, and the wallpaper carries ninety copies of
-// it — that is the card's own drawing.
+// The drawings are long and unique, so a second copy of one is a second
+// declaration, wherever it sits. The glyph is one character, and it legitimately
+// rides the rendered output — the goldens carry it on the header line — and the
+// card's art — the wallpaper carries ninety copies of it. Prose may quote it: the
+// brand sheet and the ledger name it.
 //
-// **The exemption is per declaration, not per package.** A second copy pasted into
-// another file of the same package is still a second copy, and a per-package skip
-// is exactly where the copy hides.
+// **The exemption is the declaration, not the file.** A copy pasted into the file
+// that declares the drawing is a second declaration — the same defect the wire
+// exists to catch, one file closer to home.
 func TestTheArtIsDeclaredOnlyHere(t *testing.T) {
 	if err := checkArtScope(repoRoot); err != nil {
 		t.Fatal(err)
@@ -132,9 +135,9 @@ func TestTheArtIsDeclaredOnlyHere(t *testing.T) {
 
 // TestTheArtScopeWireCanFail proves the wire is a wire.
 //
-// The reviewer's two mutations — a second copy in the brand package, and a copy in
-// a file that is not Go at all — and the glyph pasted into another code file. Each
-// one must fail the wire.
+// Each way a copy can hide: in the brand package, in the rendered output, in the
+// art, in a doc, in a file that is not code at all — and the glyph, in code and in
+// a script.
 func TestTheArtScopeWireCanFail(t *testing.T) {
 	for _, c := range []struct {
 		name string
@@ -142,8 +145,12 @@ func TestTheArtScopeWireCanFail(t *testing.T) {
 		body string
 	}{
 		{"a second copy in the brand package", filepath.Join("internal", "brand", "zz_probe.go"), Full[0]},
-		{"a copy in a file that is not Go", filepath.Join("internal", "ui", "testdata", "zz_probe.txt"), Full[0]},
+		{"a copy in the rendered output", filepath.Join("internal", "ui", "testdata", "zz_probe.golden"), Full[0]},
+		{"a copy in the art", filepath.Join("images", "logo", "zz_probe.svg"), Full[0]},
+		{"a copy in a doc", filepath.Join("docs", "zz_probe.md"), Full[0]},
+		{"a copy in a file that is not code", filepath.Join("internal", "ui", "testdata", "zz_probe.txt"), Full[0]},
 		{"the glyph in another code file", filepath.Join("internal", "ui", "zz_probe.go"), Compact},
+		{"the glyph in a script", filepath.Join("scripts", "zz_probe.py"), Compact},
 	} {
 		root := scratchTree(t)
 		write(t, filepath.Join(root, c.path), c.body+"\n")
@@ -153,19 +160,43 @@ func TestTheArtScopeWireCanFail(t *testing.T) {
 	}
 }
 
+// TestTheDrawingBesideTheDeclarationFails covers the last hiding place.
+//
+// The wire's exemption is the **declaration**, not the file: a second copy in the
+// file that declares the drawing is a second declaration, and it is the same
+// defect the wire exists to catch — one file closer to home.
+func TestTheDrawingBesideTheDeclarationFails(t *testing.T) {
+	root := scratchTree(t)
+	path := filepath.Join(root, "internal", "brand", "mark.go")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pasted := string(raw) + "\nvar second = []string{\n\t\"" + Full[1] + "\",\n}\n"
+	if err := os.WriteFile(path, []byte(pasted), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkArtScope(root); err == nil {
+		t.Fatal("the wire should fail when a copy of the drawing sits beside the declaration")
+	}
+}
+
 // checkArtScope is the scope wire.
 //
-// The drawings may live in the source files and in the declaration, and nowhere
-// else — in any file type. The compact glyph may live in the declaration, in
-// rendered output and in the card's art, but it must not be pasted into another
-// code file.
+// The drawings may live in the source files and in the canonical declaration, and
+// nowhere else — in any category, in any file type. The compact glyph may live in
+// the canonical declaration, in the rendered output, in the art and in prose, but
+// it may not be pasted into another **code** file.
 //
-// The directories that are not read are the ones that are not the code that ships:
-// the git objects, the built binaries (they carry the art as string literals), the
-// vendored skills, and the night's scratch (the transcripts capture what the
-// console shows, art and all).
+// The directories that are not read are **records**, not holes:
+//
+//	.git    the repository's own objects
+//	bin    build output — the binaries carry the art as string literals
+//	skills vendored third-party
+//	work   the night's scratch — the briefs, the transcripts and the receipts quote
+//	       what the console shows, art and all
 func checkArtScope(root string) error {
-	decl, err := declarationFile(root)
+	decl, err := findCanonicalDeclaration(root)
 	if err != nil {
 		return err
 	}
@@ -173,8 +204,6 @@ func checkArtScope(root string) error {
 		filepath.Join(root, "images", "logo", "ascii", "bow-tie-full.txt"): true,
 		filepath.Join(root, "images", "logo", "ascii", "bow-tie-half.txt"): true,
 	}
-	lines := drawingLines()
-
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -186,39 +215,103 @@ func checkArtScope(root string) error {
 			}
 			return nil
 		}
-		if path == decl || sources[path] {
+		if sources[path] {
 			return nil
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
 		}
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		text := string(raw)
-		for _, line := range lines {
-			if strings.Contains(text, line) {
-				rel, _ := filepath.Rel(root, path)
-				return fmt.Errorf("%s: carries a line of the drawing — the drawings are declared once, in internal/brand", rel)
-			}
+		rel = filepath.ToSlash(rel)
+		if err := drawingDrift(rel, raw, decl); err != nil {
+			return err
 		}
-		if strings.HasSuffix(path, ".go") && strings.Contains(text, Compact) {
-			rel, _ := filepath.Rel(root, path)
-			return fmt.Errorf("%s: carries the compact glyph — it is declared in internal/brand", rel)
-		}
-		return nil
+		return glyphDrift(rel, raw, decl)
 	})
 }
 
-// declarationFile is the file that declares the drawings.
+// category is what a file in the tree is.
 //
-// The scope's exemption is **per declaration**: the file that actually declares
-// `Full` and `Half`. It is found by parsing, so a file that does not parse — a
-// pasted copy, say — is never mistaken for the declaration, and a rename of the
-// declaration does not silently widen the exemption.
-func declarationFile(root string) (string, error) {
+// The rules are per category. A rule that names an extension names a spelling; a
+// rule that names a category names the thing.
+type category int
+
+const (
+	// code is a file that ships code.
+	code category = iota
+	// output is rendered output — the goldens, which carry the mark because the
+	// console draws it.
+	output
+	// art is the card's own drawing — the banner, the wallpaper, the sheets.
+	art
+	// prose is everything else: the docs, the ledger, the notes.
+	prose
+)
+
+// codeExtensions are the extensions of the files that are code.
+//
+// The glyph's rule is about **code**, not about Go: a script is code too.
+var codeExtensions = map[string]bool{
+	".go": true, ".py": true, ".sh": true, ".bash": true,
+	".js": true, ".ts": true, ".rb": true, ".pl": true, ".mk": true,
+}
+
+// codeNames are the files that are code and have no extension.
+var codeNames = map[string]bool{"Makefile": true}
+
+// categoryOf is what the file is.
+func categoryOf(rel string) category {
+	base := filepath.Base(rel)
+	switch {
+	case codeExtensions[filepath.Ext(base)] || codeNames[base]:
+		return code
+	case strings.HasSuffix(base, ".golden"):
+		return output
+	case isUnder(rel, "images"):
+		return art
+	default:
+		return prose
+	}
+}
+
+// isUnder reports whether the path is inside a directory of that name.
+func isUnder(rel, dir string) bool {
+	for _, part := range strings.Split(rel, "/") {
+		if part == dir {
+			return true
+		}
+	}
+	return false
+}
+
+// canonicalDeclaration is the one declaration that holds the drawings.
+//
+// The wire's exemption is the **declaration**, not the file: the drawing may be in
+// the one `var` that holds it — and nowhere else, not in another file and not in
+// another corner of the declaring file.
+type canonicalDeclaration struct {
+	// file is the file that declares them, relative to the tree's root.
+	file string
+	// full is the byte range of the literal that holds the full drawing.
+	full [2]int
+	// half is the byte range of the literal that holds the half drawing.
+	half [2]int
+}
+
+// findCanonicalDeclaration finds the one declaration that holds the drawings.
+//
+// It is found by parsing, so a file that does not parse — a pasted copy, say — is
+// never mistaken for the declaration, and a rename of the declaration does not
+// silently widen the exemption.
+func findCanonicalDeclaration(root string) (*canonicalDeclaration, error) {
 	dir := filepath.Join(root, "internal", "brand")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	for _, e := range entries {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".go") || strings.HasSuffix(e.Name(), "_test.go") {
@@ -230,44 +323,101 @@ func declarationFile(root string) (string, error) {
 		if err != nil {
 			continue
 		}
-		if declares(f, "Full") && declares(f, "Half") {
-			return path, nil
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return nil, err
 		}
-	}
-	return "", fmt.Errorf("no file under %s declares the drawings", dir)
-}
-
-// declares reports whether the file declares a package-level variable of that name.
-func declares(f *ast.File, name string) bool {
-	for _, d := range f.Decls {
-		gd, ok := d.(*ast.GenDecl)
-		if !ok || gd.Tok != token.VAR {
-			continue
-		}
-		for _, spec := range gd.Specs {
-			vs, ok := spec.(*ast.ValueSpec)
-			if !ok {
+		decl := &canonicalDeclaration{file: filepath.ToSlash(rel)}
+		for _, d := range f.Decls {
+			gd, ok := d.(*ast.GenDecl)
+			if !ok || gd.Tok != token.VAR {
 				continue
 			}
-			for _, n := range vs.Names {
-				if n.Name == name {
-					return true
+			for _, spec := range gd.Specs {
+				vs, ok := spec.(*ast.ValueSpec)
+				if !ok {
+					continue
+				}
+				for i, n := range vs.Names {
+					if i >= len(vs.Values) {
+						continue
+					}
+					span := [2]int{
+						fset.Position(vs.Values[i].Pos()).Offset,
+						fset.Position(vs.Values[i].End()).Offset,
+					}
+					switch n.Name {
+					case "Full":
+						decl.full = span
+					case "Half":
+						decl.half = span
+					}
 				}
 			}
 		}
+		if decl.full[1] > decl.full[0] && decl.half[1] > decl.half[0] {
+			return decl, nil
+		}
 	}
-	return false
+	return nil, fmt.Errorf("no file under %s declares the drawings", dir)
 }
 
-// drawingLines are the lines of the drawings — the full form and the half form.
+// drawingDrift says whether the file carries a copy of a drawing.
 //
-// A line is long and unique, so a file that carries one of them carries a copy of
-// the drawing.
-func drawingLines() []string {
-	out := make([]string, 0, len(Full)+len(Half))
-	out = append(out, Full...)
-	out = append(out, Half...)
-	return out
+// The exemption is the **declaration**: the full drawing may be in the literal
+// that holds it, and the half drawing in the literal that holds it. Anywhere else
+// — in another file, or in another corner of the declaring file — is a second
+// copy.
+func drawingDrift(rel string, raw []byte, decl *canonicalDeclaration) error {
+	text := string(raw)
+	full, half := text, text
+	if rel == decl.file {
+		full = maskSpan(text, decl.full)
+		half = maskSpan(text, decl.half)
+	}
+	for _, line := range Full {
+		if strings.Contains(full, line) {
+			return fmt.Errorf("%s: carries a line of the full drawing — the drawing is declared once, in internal/brand", rel)
+		}
+	}
+	for _, line := range Half {
+		if strings.Contains(half, line) {
+			return fmt.Errorf("%s: carries a line of the half drawing — the drawing is declared once, in internal/brand", rel)
+		}
+	}
+	return nil
+}
+
+// glyphDrift says whether the file pastes the glyph into code.
+//
+// The glyph is one character: the rendered output carries it on the header line,
+// and the card's art carries ninety copies of it. It may not be pasted into
+// another **code** file — whatever language the code is written in.
+func glyphDrift(rel string, raw []byte, decl *canonicalDeclaration) error {
+	if rel == decl.file || categoryOf(rel) != code {
+		return nil
+	}
+	if strings.Contains(string(raw), Compact) {
+		return fmt.Errorf("%s: pastes the compact glyph into a code file — it is declared in internal/brand", rel)
+	}
+	return nil
+}
+
+// maskSpan takes the bytes of a range out of the text, leaving spaces behind.
+//
+// The offsets do not move, so a message about the file still points at the right
+// place.
+func maskSpan(text string, span [2]int) string {
+	if span[0] < 0 || span[1] > len(text) || span[0] >= span[1] {
+		return text
+	}
+	b := []byte(text)
+	for i := span[0]; i < span[1]; i++ {
+		if b[i] != '\n' {
+			b[i] = ' '
+		}
+	}
+	return string(b)
 }
 
 // scratchTree is a copy of the parts of the tree the scope wire reads.
