@@ -550,14 +550,15 @@ func frozenLegacyCriteria(in []Criterion) []legacyCriterion {
 // An older build hashed the file's own form, and in that form each **empty** list was
 // either `null` or `[]`. The frozen payload holds three lists — the scope's two and
 // the criteria — and a list that is not empty hashes the same either way, so only the
-// empty ones vary. The candidates are the product of those choices: at most eight,
-// and four for a recipe whose scope is empty and whose criteria are not.
+// empty ones vary. That axis alone yields at most eight candidates, and four for a
+// recipe whose scope is empty and whose criteria are not.
 //
 // The rename added a second axis. The criterion's record was `proofs` before it and
 // is `evidence` now, and the name is part of the document the digest hashes — so a
 // build that wrote `proofs` hashed a different document, and its digest is a candidate
 // too. The candidates are the product of the two axes: the list forms and the field
-// name, at most sixteen.
+// name — at most sixteen, and eight for a recipe whose scope is empty and whose
+// criteria are not.
 //
 // The set is complete: the payload's only list-shaped parts are those three, the only
 // thing an older build could write differently about them is whether an empty one was

@@ -187,9 +187,9 @@ func TestASignOffIsNotAMachineEvidence(t *testing.T) {
 
 // TestAFalsifiableVerificationIsOneTheToolCanCount covers the narrowed gate.
 //
-// A verification the tool cannot attribute a count from would produce an unproven
-// evidence, and unproven evidence never satisfies a gate — so the criterion could never
-// be finished. The gate says so at grooming time.
+// A verification the tool cannot attribute a count from would produce evidence in the
+// `unknown` state, and evidence in that state never satisfies a gate — so the
+// criterion could never be finished. The gate says so at grooming time.
 func TestAFalsifiableVerificationIsOneTheToolCanCount(t *testing.T) {
 	// The shape the tool can count from.
 	if !isGoTest("go test ./internal/core -run Board") {
