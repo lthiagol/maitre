@@ -15,7 +15,7 @@ file, which becomes the ADR's history.
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | ✅ **closed** — review `ok` after one fix cycle; F-73..F-77 closed | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | ✅ **closed** — review `ok`; F-78..F-80 closed; two comments tidied | [briefs/slice-d.md](briefs/slice-d.md) |
-| **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | ✅ **closed** — review `ok` after three rounds; F-81..F-86 closed. **AC-01, the mascot, is carried to the drawing session** | [briefs/slice-e.md](briefs/slice-e.md) |
+| **E** | the glossary, ADR 0009, the sweep, two LOW notes | ✅ **closed** — review `ok` after three rounds; F-81..F-86 closed. **AC-01, the mascot, was carried to slice G** | [briefs/slice-e.md](briefs/slice-e.md) |
 
 > **The mascot (slice E's AC-01) is being made in another session**, on 2026-10-27.
 > This tree is shared, so slice E's brief says plainly: do not draw it, do not touch
@@ -89,6 +89,20 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 enforced per *operation* instead of per *entry*; a digest's *encoding* the version
 could not see; a list of *fields* written out twice. The remedy is always the same:
 **one answer, and the one that is asked.**
+
+### Slice G's findings — the mark, and the rule it taught
+
+| Finding | What | State |
+|---|---|---|
+| **F-94** | the art's six rows pushed the Sous-Chef tab's **last event** off the bottom of any terminal under 26 rows — and the tab **cannot scroll**, so at 80×24 the chef simply lost the last thing that happened to the plan. | **closed** — the **decoration yields to the content, in both dimensions**: the width rule and now the height rule. |
+| **F-95** | the wire that says "the art is declared only here" read only `.go` files and **skipped the brand package itself** — so a second copy passed, and the runner's claim that the mark's characters appear nowhere else was **false**. | **closed** — the drawings may live only in the canonical declaration; the glyph's scope is a **category** (code, rendered output, art, prose), not an extension. |
+| **F-96** | the wire that keeps the mark out of the domain read raw lines, so it was defeated by the import spelling **`gofmt` itself writes** — a single-line import put the brand inside `internal/core` and the wire passed. | **closed** — the wire **parses the imports**, so every spelling is caught. |
+| **F-97** | the scope wire exempted the declaration **file**, so a copy pasted *beside* the declaration in `internal/brand/mark.go` passed. | **closed** — the exemption is the **declaration**. |
+
+**The rule slice G taught, which is the one worth keeping: the decoration yields to
+the content.** A mark is worth nothing if it costs the chef a line of what happened —
+so the mark is drawn only when it fits, in both dimensions, and at 80×24 the tab is
+byte-for-byte what it was before the mark.
 
 ### The tree is shared — with the mascot's session
 
@@ -331,6 +345,10 @@ that is not a migration path, that is a log.
 | Slice | What | State |
 |--:|---|---|
 | **F** | the tolerance machinery comes out; the format is one format | ✅ **closed** — review `ok` after four rounds; F-87..F-93 closed | [briefs/slice-f.md](briefs/slice-f.md) |
+| **G** | the mark — a bow tie, drawn as a braille halftone | ✅ **closed** — review `ok` after three rounds; F-94..F-97 closed | [briefs/slice-g.md](briefs/slice-g.md) |
+
+**The rename is done.** 26 findings found and closed across slices B to G; the
+orchestrator found none of them. The ledger's open table holds only the chef's rows.
 
 ## The rules that keep this durable
 
