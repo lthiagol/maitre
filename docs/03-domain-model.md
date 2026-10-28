@@ -476,6 +476,14 @@ The backlog is **one artifact with a kind**. It was two — a *special* (a hunch
 The item's id is `BL01`, and it is **kind-neutral**: an idea that is shaped into a
 small task keeps its id, so the trail survives the shaping.
 
+**There is one format.** The retired shapes are not supported, and there is no
+second reader for them: a plan that carries `kitchen/specials/`,
+`kitchen/prep-notes/`, a record under a retired field name, or a live record under a
+retired id form is **not supported**, and the tool says so plainly instead of
+pretending the plan is empty. The **journal** is the one thing that keeps the old
+names: it is history, it is append-only, and the reader still resolves what the
+journal names.
+
 | Field | |
 |---|---|
 | `id` | `BL01` — kind-neutral |
@@ -578,8 +586,8 @@ again**: the backlog's two file types became one (`kitchen/backlog/`), the item
 carries a `kind`, and its id is `BL01`. No gate was weakened and no gate rule
 moved — the *record* changed, so the writer changed, and the version moved with it.
 A version-4 tool would write a special into `kitchen/specials/`, and the version-5
-writer does not — the reader still shows the old ones, read-only, in their own group,
-and it never looks for new ones.
+writer does not. There is no reader for the old ones either: the plan format is one
+format, and a plan that carries the old directories is not supported.
 
 **Version 6 renamed the records.** The recipe's completion stamp was `evidence`; it
 is `completion` now. A criterion's record was `proofs`; it is `evidence` now — the
@@ -587,15 +595,17 @@ name the journal's event kind already carried, so the code ends up agreeing with
 own journal. The stamp says when the recipe was done; the records say what was
 verified, and they live on the criterion. No gate was weakened: the **record**
 changed, so the writer changed, and the version moved with it. A version-5 tool
-would write `proofs` where the version-6 writer writes `evidence` — the version-6
-reader reads the old name too, because a plan written before the rename keeps it,
-but a stale tool keeps writing the old format, and the version is what fences it.
+would write `proofs` where the version-6 writer writes `evidence` — and the version-6
+reader does not read `proofs` either: there is one format, and a record under the
+old name is a record the current reader does not know.
 
-The reader is tolerant on purpose: `RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
-same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog item
-— so a plan written before the change is still readable. The same is true of the
-renamed fields: a plan written before the rename keeps `proofs` and `evidence`, and
-the reader reads them. See [07-vocabulary.md](07-vocabulary.md).
+**A lookup is tolerant; a record is not.** `RCP01`, `RCP1`, `rcp01` and `1` all
+name the same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same
+backlog item: a name resolves to a record, and a name is not a record. The **record**
+on disk is in the current format — `RCP01`, `BL01`, `evidence`, `completion` — and a
+record under a retired form is refused. The **journal** keeps the old names and the
+old ids, because the journal is history: it is append-only, and the reader still
+resolves what it names. See [07-vocabulary.md](07-vocabulary.md).
 
 ---
 

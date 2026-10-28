@@ -61,7 +61,6 @@ const (
 type reloadMsg struct {
 	recipes []core.Recipe
 	items   []core.BacklogItem
-	legacy  []core.LegacyItem
 	journal core.Journal
 	// disk is the fingerprint of the plan as it was before it was read.
 	disk string
@@ -106,12 +105,6 @@ type Model struct {
 	sections []core.TriageSection
 
 	items []core.BacklogItem
-
-	// legacy are the artifacts of the plan format before the backlog became one
-	// artifact. The console shows them rather than hiding them: a plan written
-	// before the rename keeps what it had, and a tab that silently drops half the
-	// plan tells the chef a story the plan does not.
-	legacy []core.LegacyItem
 
 	journal core.Journal
 
@@ -242,18 +235,14 @@ func (m *Model) reload() tea.Cmd {
 		if err != nil {
 			return reloadMsg{err: err}
 		}
-		legacy, err := m.store.ListLegacyItems()
-		if err != nil {
-			return reloadMsg{err: err}
-		}
 		journal, err := m.store.LoadJournal()
 		if err != nil {
 			return reloadMsg{err: err}
 		}
 		// Everything here was written by an agent. Sanitise before it reaches the
 		// screen, so a newline in a title cannot corrupt the layout.
-		sanitizePlan(recipes, items, legacy, journal)
-		return reloadMsg{recipes: recipes, items: items, legacy: legacy, journal: journal, disk: disk}
+		sanitizePlan(recipes, items, journal)
+		return reloadMsg{recipes: recipes, items: items, journal: journal, disk: disk}
 	}
 }
 
@@ -295,7 +284,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) applyReload(msg reloadMsg) {
 	m.recipes = msg.recipes
 	m.items = msg.items
-	m.legacy = msg.legacy
 	m.journal = msg.journal
 	m.sections = m.orderedSections()
 	m.clampSelections()
@@ -779,19 +767,17 @@ func (m *Model) actOnRecipe() (tea.Model, tea.Cmd) {
 
 // backlogCount is the number of rows in the Backlog tab.
 //
-// It is the new items first — the ideas, then the small tasks — and then the old
-// plan's artifacts. The order is the order the tab draws them in, so the cursor
-// and the row always agree.
+// It is the ideas first, then the small tasks. The order is the order the tab draws
+// them in, so the cursor and the row always agree.
 func (m *Model) backlogCount() int {
 	ideas, tasks := core.BacklogGroups(m.items)
-	return len(ideas) + len(tasks) + len(m.legacy)
+	return len(ideas) + len(tasks)
 }
 
 // selectedBacklogItem is the backlog item under the cursor.
 //
-// The second value says whether there is one: the old plan's artifacts are not
-// items — they have no kind, and the console does not write the old format — so
-// the cursor can sit on one and find nothing to promote.
+// The second value says whether there is one: the cursor can sit past the last row,
+// and then there is nothing under it.
 func (m *Model) selectedBacklogItem() (core.BacklogItem, bool) {
 	ideas, tasks := core.BacklogGroups(m.items)
 	all := append(append([]core.BacklogItem{}, ideas...), tasks...)
@@ -805,9 +791,7 @@ func (m *Model) selectedBacklogItem() (core.BacklogItem, bool) {
 func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
 	item, ok := m.selectedBacklogItem()
 	if !ok {
-		// The old plan's artifacts: the console shows them, and it does not write
-		// the old format.
-		m.status = "this one is from the old plan — it is read-only here"
+		m.status = "nothing to promote here"
 		return m, nil
 	}
 	recipe, err := m.ops.PromoteBacklogItem(item.ID)

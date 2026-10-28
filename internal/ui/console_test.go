@@ -259,52 +259,18 @@ func TestTheBacklogGroupsAreDerivedFromTheKind(t *testing.T) {
 	}
 }
 
-// TestAnOldPlanStillRenders covers the plan written before the rename.
+// TestAPlanWithRetiredArtifactsIsNotSupported covers the reader's answer.
 //
-// The backlog was two file types. A plan written before the rename keeps them, and
-// the console must not crash on them — and must not hide them either: a tab that
-// silently drops half the plan tells the chef a story the plan does not.
-func TestAnOldPlanStillRenders(t *testing.T) {
+// The plan format is one format. A plan that carries an artifact of a retired one —
+// the old backlog directories — is not supported, and the console says so plainly
+// instead of showing the chef an empty backlog and calling it the truth.
+func TestAPlanWithRetiredArtifactsIsNotSupported(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
 	store := core.Open(root)
 	if err := store.Init(); err != nil {
 		t.Fatal(err)
 	}
-	writeLegacy(t, root, "specials", "S01-a-hunch.json",
-		`{"id":"S01","title":"A hunch","body":"worth noticing","status":"open"}`)
-	writeLegacy(t, root, "prep-notes", "N01-a-note.json",
-		`{"id":"N01","title":"A note","intent":"the work","scope":["the queue lane"],"status":"open"}`)
-
-	m := loadModel(t, store)
-	m.tab = TabBacklog
-	out := plain(m)
-	for _, want := range []string{"FROM THE OLD PLAN", "S01", "N01", "special", "prep note"} {
-		if !strings.Contains(out, want) {
-			t.Errorf("the old plan's artifacts are missing %q\n%s", want, out)
-		}
-	}
-
-	// And the console does not write the old format: there is no move for them.
-	m.selBacklog = m.backlogCount() - 1
-	if label := m.primaryActionLabel(); label != "" {
-		t.Fatalf("the console offers %q on an old artifact — it must not write the old format", label)
-	}
-}
-
-// TestTheLiveConsoleCarriesTheLegacyGroup covers the live path.
-//
-// The console reloads the plan on its own — the chef presses nothing — and the old
-// plan's artifacts must come with it. The reload message carries them, and the
-// model must take them: the live path and the render path are one path, and a
-// console that shows the chef a plan it is not looking at is worse than a console
-// that crashes.
-func TestTheLiveConsoleCarriesTheLegacyGroup(t *testing.T) {
-	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
-	store := core.Open(root)
-	if err := store.Init(); err != nil {
-		t.Fatal(err)
-	}
-	writeLegacy(t, root, "specials", "S01-a-hunch.json",
+	writeRetired(t, root, "specials", "S01-a-hunch.json",
 		`{"id":"S01","title":"A hunch","body":"worth noticing","status":"open"}`)
 
 	m := New(store)
@@ -313,27 +279,25 @@ func TestTheLiveConsoleCarriesTheLegacyGroup(t *testing.T) {
 	if !ok {
 		t.Fatal("unexpected reload result")
 	}
-	if loaded.err != nil {
-		t.Fatal(loaded.err)
+	if loaded.err == nil {
+		t.Fatal("the console should not read a plan that carries retired artifacts")
 	}
-	if len(loaded.legacy) != 1 {
-		t.Fatalf("the reload message carries %d legacy artifacts, want 1", len(loaded.legacy))
-	}
-
-	// The live path: the message goes through the model's own Update.
 	m.Update(loaded)
-	if len(m.legacy) != 1 {
-		t.Fatalf("the console holds %d legacy artifacts, want 1 — the live path dropped them", len(m.legacy))
-	}
 	m.width, m.height, m.ready = 100, 40, true
-	m.tab = TabBacklog
-	if out := plain(m); !strings.Contains(out, "FROM THE OLD PLAN") {
-		t.Fatalf("the backlog tab does not show the old plan's artifacts\n%s", out)
+	if m.err == nil {
+		t.Fatal("the console should hold the error")
+	}
+	if !strings.Contains(m.err.Error(), "not supported") {
+		t.Fatalf("the console should say the plan is not supported: %v", m.err)
+	}
+	out := plain(m)
+	if !strings.Contains(out, "not supported") {
+		t.Fatalf("the console should say the plan is not supported\n%s", out)
 	}
 }
 
-// writeLegacy writes one file of the plan format before the rename.
-func writeLegacy(t *testing.T, root, dir, name, body string) {
+// writeRetired writes one file of the plan format before the rename.
+func writeRetired(t *testing.T, root, dir, name, body string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
 		t.Fatal(err)

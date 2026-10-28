@@ -352,9 +352,6 @@ func (m *Model) summaryText() string {
 		return text
 	case TabBacklog:
 		text := fmt.Sprintf("%d %s", len(m.items), plural(len(m.items), "item", "items"))
-		if len(m.legacy) > 0 {
-			text += fmt.Sprintf(" · %d from the old plan", len(m.legacy))
-		}
 		return text
 	case TabPath:
 		ready, waiting := core.Path(m.recipes)
@@ -604,9 +601,7 @@ func (m *Model) sectionHeader(name string, count, width int) string {
 // backlogLines renders the Backlog tab.
 //
 // The two groups are **derived** from the item's kind — the kind is the only truth,
-// and a group is never stored. The legacy group holds the artifacts of the plan
-// format before the backlog became one artifact: the console shows them rather than
-// hiding half the plan.
+// and a group is never stored.
 func (m *Model) backlogLines() []listLine {
 	var out []listLine
 	ideas, tasks := core.BacklogGroups(m.items)
@@ -628,36 +623,17 @@ func (m *Model) backlogLines() []listLine {
 	}
 	section("IDEAS", ideas, 0)
 	section("SMALL TASKS", tasks, len(ideas))
-
-	// The old plan's artifacts: shown, labelled, and not promotable. The console
-	// must not write the old format, so it offers no move for them.
-	if len(m.legacy) > 0 {
-		out = append(out, listLine{text: m.sectionHeader("FROM THE OLD PLAN", len(m.legacy), m.listColumn()), itemIdx: -1})
-		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
-		for i, it := range m.legacy {
-			idx := len(ideas) + len(tasks) + i
-			out = append(out, listLine{
-				text:    m.backlogRow(idx, it.ID, it.Title, it.Rung, it.Status, kindWidth, m.selBacklog == idx),
-				itemIdx: idx,
-			})
-		}
-	}
 	return out
 }
 
 // backlogKindWidth is the width of the kind column.
 //
 // It is the width of the widest kind the tab actually shows, so the column lines up
-// whether the tab holds ideas, small tasks, or the old plan's artifacts.
+// whether the tab holds ideas or small tasks.
 func (m *Model) backlogKindWidth() int {
 	width := 0
 	for _, it := range m.items {
 		if w := lipgloss.Width(it.Kind); w > width {
-			width = w
-		}
-	}
-	for _, it := range m.legacy {
-		if w := lipgloss.Width(it.Rung); w > width {
 			width = w
 		}
 	}

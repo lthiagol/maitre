@@ -65,35 +65,6 @@ func (m *Model) backlogDetail(width int) []string {
 		}
 		return out
 	}
-	idx := m.selBacklog - len(all)
-	if idx >= 0 && idx < len(m.legacy) {
-		it := m.legacy[idx]
-		out := []string{" " + m.styTitle.Render(it.ID+" · "+it.Title)}
-		out = append(out, " "+m.styDim.Render(it.Rung+" · "+it.Status))
-		out = append(out, " "+m.styFaint.Render("from the old plan — read-only here"))
-		out = append(out, "")
-		if it.Text() != "" {
-			out = append(out, m.stySec.Render("Why"))
-			out = append(out, indent(renderMarkdown(it.Text(), width-4), "  "))
-			out = append(out, "")
-		}
-		if len(it.Scope) > 0 {
-			out = append(out, m.stySec.Render("Scope"))
-			for _, s := range it.Scope {
-				out = append(out, "  "+m.styGood.Render("in   ")+s)
-			}
-			out = append(out, "")
-		}
-		if len(it.Tags) > 0 {
-			out = append(out, m.stySec.Render("Tags"))
-			out = append(out, "  "+strings.Join(it.Tags, ", "))
-			out = append(out, "")
-		}
-		if it.PromotedTo != "" {
-			out = append(out, m.styAcc.Render("Promoted to "+it.PromotedTo))
-		}
-		return out
-	}
 	return []string{m.styDim.Render("  (nothing selected)")}
 }
 

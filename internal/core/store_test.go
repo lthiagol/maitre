@@ -45,13 +45,12 @@ func TestInitIsIdempotent(t *testing.T) {
 func TestNextRecipeIDScanRatherThanCount(t *testing.T) {
 	s := newStore(t)
 
-	// Create R01 and R03 by hand, leaving a gap. The next id must be RCP04 — not
-	// RCP03 (a count) and not RCP02 (a len).
+	// Create RCP01 and RCP03 by hand, leaving a gap. The next id must be RCP04 —
+	// not RCP03 (a count) and not RCP02 (a len).
 	//
-	// The two on disk carry the ids the plans written before the rename carry, on
-	// purpose: the number is what must not be handed out twice, so a plan whose
-	// files are still called R01 must not get RCP01 handed out again.
-	for _, id := range []string{"R01", "R03"} {
+	// The number is what must not be handed out twice, so a plan whose files skip a
+	// number must not get that number handed out again.
+	for _, id := range []string{"RCP01", "RCP03"} {
 		r := &Recipe{ID: id, Title: "t " + id, Slug: "t-" + id, Lifecycle: LifecycleDraft}
 		if err := s.SaveRecipe(r); err != nil {
 			t.Fatal(err)
@@ -69,7 +68,7 @@ func TestNextRecipeIDScanRatherThanCount(t *testing.T) {
 func TestSaveAndLoadRoundTrip(t *testing.T) {
 	s := newStore(t)
 	in := &Recipe{
-		ID:        "R01",
+		ID:        "RCP01",
 		Title:     "Ship the board",
 		Lifecycle: LifecycleDraft,
 		Intent:    Intent{Outcome: "o", Problem: "p"},
@@ -81,7 +80,7 @@ func TestSaveAndLoadRoundTrip(t *testing.T) {
 	if err := s.SaveRecipe(in); err != nil {
 		t.Fatal(err)
 	}
-	out, err := s.LoadRecipe("R01")
+	out, err := s.LoadRecipe("RCP01")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,13 +92,19 @@ func TestSaveAndLoadRoundTrip(t *testing.T) {
 	}
 }
 
+// TestLoadRecipeTolerantOfIDForm covers the lookup.
+//
+// The **record** is in the current format — `RCP07` — and the **lookup** is
+// tolerant: a name resolves to the record whatever form it is written in, because a
+// name is not a record. The journal's old ids resolve the same way, and that is the
+// history, not a migration.
 func TestLoadRecipeTolerantOfIDForm(t *testing.T) {
 	s := newStore(t)
-	r := &Recipe{ID: "R07", Title: "t", Slug: "t", Lifecycle: LifecycleDraft}
+	r := &Recipe{ID: "RCP07", Title: "t", Slug: "t", Lifecycle: LifecycleDraft}
 	if err := s.SaveRecipe(r); err != nil {
 		t.Fatal(err)
 	}
-	for _, id := range []string{"R07", "R7", "r07", "7"} {
+	for _, id := range []string{"RCP07", "RCP7", "rcp07", "7"} {
 		if _, err := s.LoadRecipe(id); err != nil {
 			t.Errorf("load %q: %v", id, err)
 		}
@@ -115,7 +120,7 @@ func TestLoadMissingRecipe(t *testing.T) {
 
 func TestListRecipesSortsNumerically(t *testing.T) {
 	s := newStore(t)
-	for _, id := range []string{"R10", "R2", "R1"} {
+	for _, id := range []string{"RCP10", "RCP2", "RCP1"} {
 		if err := s.SaveRecipe(&Recipe{ID: id, Title: "t" + id, Slug: "t" + id}); err != nil {
 			t.Fatal(err)
 		}
@@ -124,7 +129,7 @@ func TestListRecipesSortsNumerically(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"R1", "R2", "R10"}
+	want := []string{"RCP1", "RCP2", "RCP10"}
 	if len(got) != len(want) {
 		t.Fatalf("got %d recipes, want %d", len(got), len(want))
 	}
@@ -137,7 +142,7 @@ func TestListRecipesSortsNumerically(t *testing.T) {
 
 func TestWriteIsAtomic(t *testing.T) {
 	s := newStore(t)
-	r := &Recipe{ID: "R01", Title: "t", Slug: "t"}
+	r := &Recipe{ID: "RCP01", Title: "t", Slug: "t"}
 	if err := s.SaveRecipe(r); err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +151,7 @@ func TestWriteIsAtomic(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, e := range entries {
-		if e.Name() != "R01-t.json" {
+		if e.Name() != "RCP01-t.json" {
 			t.Fatalf("unexpected file left behind: %s", e.Name())
 		}
 	}

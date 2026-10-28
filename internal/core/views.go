@@ -304,7 +304,6 @@ var NonViews = []string{
 	"Recipe.Fingerprint",
 	"Journal.Since",
 	"Journal.Recent",
-	"LegacyItem.Text",
 	"Lifecycle.Valid",
 	"Lifecycle.Terminal",
 	"NoteOutcome.AppliesTo",

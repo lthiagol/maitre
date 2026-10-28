@@ -47,15 +47,12 @@ func sanitize(s string) string {
 //
 // The walk is reflective so that a field added to the model later is covered without
 // anyone remembering to add it here.
-func sanitizePlan(recipes []core.Recipe, items []core.BacklogItem, legacy []core.LegacyItem, journal core.Journal) {
+func sanitizePlan(recipes []core.Recipe, items []core.BacklogItem, journal core.Journal) {
 	for i := range recipes {
 		sanitizeValue(reflect.ValueOf(&recipes[i]).Elem())
 	}
 	for i := range items {
 		sanitizeValue(reflect.ValueOf(&items[i]).Elem())
-	}
-	for i := range legacy {
-		sanitizeValue(reflect.ValueOf(&legacy[i]).Elem())
 	}
 	for i := range journal.Events {
 		sanitizeValue(reflect.ValueOf(&journal.Events[i]).Elem())

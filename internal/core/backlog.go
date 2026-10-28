@@ -121,8 +121,15 @@ func (v *BacklogItem) Slug() string { return Slugify(v.Title) }
 
 // LoadBacklogItem reads one backlog item.
 //
-// The id is tolerant: `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same item.
+// The id is tolerant: `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same item —
+// a lookup resolves a name, and a name is not a record.
+//
+// The record itself is current-format only: an item without a `kind`, or with a
+// retired id form, is refused.
 func (s *Store) LoadBacklogItem(id string) (*BacklogItem, error) {
+	if err := s.checkRetiredDirectories(); err != nil {
+		return nil, err
+	}
 	raw, path, err := s.readArtifact(filepathJoin(s.Root, DirBacklog), id)
 	if err != nil {
 		return nil, err
@@ -130,6 +137,9 @@ func (s *Store) LoadBacklogItem(id string) (*BacklogItem, error) {
 	var v BacklogItem
 	if err := unmarshal(raw, &v); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
+	}
+	if err := checkRetiredBacklog(raw, &v); err != nil {
+		return nil, err
 	}
 	return &v, nil
 }
@@ -139,6 +149,9 @@ func (s *Store) LoadBacklogItem(id string) (*BacklogItem, error) {
 // The list is never nil: an empty plan is an empty list, and the CLI marshals an
 // empty list as `[]` and a nil slice as `null`. A client cannot iterate `null`.
 func (s *Store) ListBacklogItems() ([]BacklogItem, error) {
+	if err := s.checkRetiredDirectories(); err != nil {
+		return nil, err
+	}
 	entries, err := readDirSafe(filepathJoin(s.Root, DirBacklog))
 	if err != nil {
 		return nil, err
@@ -155,6 +168,9 @@ func (s *Store) ListBacklogItems() ([]BacklogItem, error) {
 		var v BacklogItem
 		if err := unmarshal(raw, &v); err != nil {
 			return nil, fmt.Errorf("parse %s: %w", e.Name(), err)
+		}
+		if err := checkRetiredBacklog(raw, &v); err != nil {
+			return nil, err
 		}
 		out = append(out, v)
 	}

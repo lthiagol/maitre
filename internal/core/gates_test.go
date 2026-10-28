@@ -226,7 +226,7 @@ func TestAFalsifiableVerificationIsOneTheToolCanCount(t *testing.T) {
 // wrote the file — `null` and `[]` are the same list.
 func TestTheFingerprintIsAFunctionOfTheContent(t *testing.T) {
 	base := Recipe{
-		ID:        "R01",
+		ID:        "RCP01",
 		Lifecycle: LifecycleApproved,
 		Scope:     Scope{InScope: []string{"the gate table"}, OutOfScope: []string{"web shell"}},
 	}
@@ -258,7 +258,7 @@ func TestTheFingerprintIsAFunctionOfTheContent(t *testing.T) {
 		if err := store.SaveRecipe(&r); err != nil {
 			t.Fatal(err)
 		}
-		loaded, err := store.LoadRecipe("R01")
+		loaded, err := store.LoadRecipe("RCP01")
 		if err != nil {
 			t.Fatal(err)
 		}

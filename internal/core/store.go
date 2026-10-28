@@ -396,7 +396,13 @@ func (s *Store) DiskFingerprint() (string, error) {
 }
 
 // LoadRecipe reads one recipe by id.
+//
+// The plan is read in the current format only: a file that carries a retired field
+// name or a retired id form is refused, not half-read.
 func (s *Store) LoadRecipe(id string) (*Recipe, error) {
+	if err := s.checkRetiredDirectories(); err != nil {
+		return nil, err
+	}
 	path, err := s.findRecipePath(id)
 	if err != nil {
 		return nil, err
@@ -409,7 +415,9 @@ func (s *Store) LoadRecipe(id string) (*Recipe, error) {
 	if err := json.Unmarshal(raw, &r); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
-	readLegacyFields(raw, &r)
+	if err := checkRetiredRecipe(raw, &r); err != nil {
+		return nil, err
+	}
 	// Before the normalisation, so the legacy digest can still be read.
 	r.restampLegacyApproval()
 	r.normaliseLists()
@@ -421,6 +429,9 @@ func (s *Store) LoadRecipe(id string) (*Recipe, error) {
 // The list is never nil: an empty plan is an empty list, and the CLI marshals an
 // empty list as `[]` and a nil slice as `null`. A client cannot iterate `null`.
 func (s *Store) ListRecipes() ([]Recipe, error) {
+	if err := s.checkRetiredDirectories(); err != nil {
+		return nil, err
+	}
 	entries, err := os.ReadDir(s.RecipeDir())
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -441,7 +452,9 @@ func (s *Store) ListRecipes() ([]Recipe, error) {
 		if err := json.Unmarshal(raw, &r); err != nil {
 			return nil, fmt.Errorf("parse %s: %w", e.Name(), err)
 		}
-		readLegacyFields(raw, &r)
+		if err := checkRetiredRecipe(raw, &r); err != nil {
+			return nil, err
+		}
 		r.restampLegacyApproval()
 		r.normaliseLists()
 		out = append(out, r)
@@ -473,9 +486,8 @@ func (s *Store) NextRecipeID() (string, error) {
 
 // reservedRecipeIDs are the recipe ids a backlog item points at.
 //
-// The old plan's artifacts carry pointers too, and a pointer the reader drops is a
-// promise broken: the id it names would be handed to a stranger, and the trail
-// would resolve to the wrong recipe.
+// The pointer is a promise: it says an id was taken. A plan that is read but never
+// written still has to honour it — the id must not be handed to a stranger.
 func (s *Store) reservedRecipeIDs() ([]string, error) {
 	items, err := s.ListBacklogItems()
 	if err != nil {
@@ -483,13 +495,6 @@ func (s *Store) reservedRecipeIDs() ([]string, error) {
 	}
 	promoted := make([]string, 0, len(items))
 	for _, n := range items {
-		promoted = append(promoted, n.PromotedTo)
-	}
-	legacy, err := s.ListLegacyItems()
-	if err != nil {
-		return nil, err
-	}
-	for _, n := range legacy {
 		promoted = append(promoted, n.PromotedTo)
 	}
 	return referencedIDs(promoted, "R"), nil
