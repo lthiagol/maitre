@@ -99,7 +99,8 @@ test test-race:
 # goldens-check that regenerated nothing must fail, not pass with an empty
 # diff. One recipe, one spelling: the two targets differ in the diff, not
 # in the run.
-GOLDEN_FLAGS := -run Golden -update
+GOLDEN_FILTER := Golden
+GOLDEN_FLAGS := -run $(GOLDEN_FILTER) -update
 GOLDEN_PKG := ./internal/ui
 goldens: GOLDEN_CHECK :=
 goldens-check: GOLDEN_CHECK := yes
@@ -108,12 +109,8 @@ goldens goldens-check:
 	$(call header,$@)
 	@if [ "$(GOLDEN_CHECK)" = yes ]; then scripts/check-golden-claims.sh mark $(GOLDENS); fi
 	GO=$(GO) scripts/go-test.sh "$(GOLDEN_FLAGS)" "$(GOLDEN_PKG)"
-	@if [ "$(GOLDEN_CHECK)" = yes ]; then scripts/check-golden-claims.sh report $(GOLDENS); fi
-	@if [ "$(GOLDEN_CHECK)" = yes ]; then \
-		git diff --exit-code HEAD -- $(GOLDENS) || { \
-			echo "the goldens changed — read the diff before committing it." >&2; exit 1; \
-		}; \
-	fi
+	@if [ "$(GOLDEN_CHECK)" = yes ]; then scripts/check-golden-claims.sh report $(GOLDENS) "$(GOLDEN_FILTER)"; fi
+	@if [ "$(GOLDEN_CHECK)" = yes ]; then scripts/check-golden-commit.sh $(GOLDENS); fi
 
 # The old name, kept because it was in the docs and in a habit.
 regen-goldens: goldens

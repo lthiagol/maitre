@@ -92,6 +92,11 @@ derives the claim: it marks the goldens, runs the golden tests, and names the on
 nobody wrote. The claim is derived at runtime — no manifest of test names, and no
 scan for a path in a test file, because the paths live in constants.
 
+A golden nobody committed is not in the commit, and `git diff` does not see an
+untracked file — so the check would pass on a golden it never looked at. The files
+are intent-to-add before the diff, so a new one shows up in it as a change. The
+index is put back as it was afterwards: the tree stays clean.
+
 ---
 
 ## The gate
@@ -103,7 +108,7 @@ scan for a path in a test file, because the paths live in constants.
 | `make lint` | `gofmt -l` must be empty, `go vet`, `staticcheck` |
 | `make test` | the tests — `PKG=…` and `RUN=…` narrow the run |
 | `make test-race` | `-race -shuffle=on -count=2` |
-| `make goldens-check` | regenerate the goldens; they must be unchanged, and every one must be claimed by a test |
+| `make goldens-check` | regenerate the goldens; they must be unchanged, claimed by a test, and in the commit |
 | `make budget` | the dependency budget, checked against `AGENTS.md` |
 | `make tidy-check` | `go mod tidy` must produce no diff |
 | `make check` | the fast gate — all of the above |
