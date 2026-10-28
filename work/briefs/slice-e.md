@@ -78,7 +78,16 @@ what you changed.
 
 ### AC-04 — the sweep
 
-Every remaining mention of an old name is gone from the docs and the code: `Kitchen Brigade`, `scale` (the binary), `line-cook`, `taster`, `expo` (the role), `Chopboard`, `special`, `prep note`, `Proof` (where it means the record — and the record is called **evidence** now, so a leftover *proof* that means the record is drift too), `R01`-style ids, `github.com/lthiagol/kitchen-brigade`.
+Every remaining mention of an old name is gone from the docs and the code: `Kitchen Brigade`, `scale` (the binary), `line-cook`, `taster`, `expo` (the role), `maître d'` (the console's old themed name), `Chopboard`, `special`, `prep note`, `Proof` (where it means the record — and the record is called **evidence** now, so a leftover *proof* that means the record is drift too), `R01`-style ids, `github.com/lthiagol/kitchen-brigade`.
+
+**The command must carry every one of them**, and it must know the difference between a
+retired word and a **warning about** a retired word: the glossary's `_Avoid_` lines
+name them on purpose. So the sweep excludes those lines, and a retired name outside
+one is drift.
+
+> The orchestrator's first list of names omitted *maître d'*, and the review found it
+> (F-86): the tree was clean and the **instrument** was blind. An instrument that
+> cannot see a name is not a check.
 
 - `grep` the tree and prove it. Report the exact commands and their output in the commit message.
 - **`docs/audit.md` is the ledger of the night — do not sweep it.** Its rows record the names as they were when the finding was filed; rewriting them would rewrite the record. Leave them, and say so in your report.
