@@ -1,57 +1,64 @@
-Runner: slice G done. Commits: 5. Per-AC evidence: AC-01..AC-05 stamped. Pre-notify gate: pass. The tab's width rule: the column chooses the form — the full form when the column holds its 28 columns plus the one-space indent (29), the half form when it holds 14 plus the indent (15), and no art when it holds neither. Notes: the reviewer should know these.
+Runner: slice G fix 1 done. Commits: 4. Fixed: F-94, F-95, F-96 and the boundary. The tree is free of the drawings; the glyph is in the brand package, in the rendered output and in the card's art. Notes: the reviewer should know these.
 
-| Commit | AC |
+| Commit | Fix |
 |---|---|
-| `045411e` feat: the mark, declared once, in internal/brand | AC-01 |
-| `ff151b0` feat: the mark, in the header, in the help and in the tab | AC-02 |
-| `657d4f0` test: the wire that holds the code to the drawing | AC-03 |
-| `d3c6a22` test: the layout the mark must not break | AC-04 |
-| `d47be09` test: the whole tree, verified | AC-05 |
+| `a919d7f` fix: the mark yields to the content, in the height too | F-94 |
+| `f39af35` fix: the wire that says where the mark may be, and that can fail | F-95 |
+| `659e14a` fix: the boundary wire parses the imports, whatever the spelling | F-96 |
+| `a6065b3` test: both boundaries of the width rule are pinned | the boundary |
 
-**The width rule, and why that threshold.** The rule is the **column**, not the
-terminal: `m.listColumn()`. The drawing is drawn one column in, like the rest of
-the tab, so the column must hold the drawing **plus that one space** — 29 for the
-full form, 15 for the half. A drawing that does not fit wraps, and a wrapped row
-breaks the layout, so the column picks the form and the tab is never broken by the
-mark.
+**F-94 — the height rule.** The tab's area is `height − 5` rows; the mark costs
+**six** (five lines and the blank under them); the content is 15. So the mark is
+drawn only when the content and the mark both fit, and otherwise the tab has **no
+mark** — the content is whole. The wire renders the tab at 80 columns and at 20,
+24, 26, 30 and 40 rows, and asserts that the content is whole at every one of them
+(the `LAST EVENT` section and the event row are on the screen) and that the mark is
+drawn only at 26 and above. At 80×24 the tab is byte-for-byte what it was before
+the mark.
 
-| Column | Form | Terminal width (below the split) |
-|--:|---|---|
-| ≥ 29 | the full form | ≥ 31 |
-| 15–28 | the half form | 17–30 |
-| < 15 | no art | unreachable today |
+**F-95 — the scope wire, and the truth about the tree.** Two rules, because there
+are two things:
 
-**The third case is unreachable through the console today**: `listColumn()` floors
-at 20 (`rowWidth()`'s floor), and the half form needs 15. The branch is there
-because the rule says it, and the test checks the rule where it lives
-(`markFor`), not through the model.
+| Thing | Rule | Where it is, today |
+|---|---|---|
+| the drawings | in the source files and in the declaration, and **nowhere else** — any file type | the two `.txt` sources and `internal/brand/mark.go` |
+| the compact glyph | must not be **pasted into another code file** | `internal/brand/mark.go`, the two goldens (rendered output), the wallpaper SVG (ninety copies — the card's own art), and prose: the brand sheet, the ledger, the briefs |
 
-**The comparison runs from the file to the code.** The drawing in
-`images/logo/ascii/` is the source, so the file is what the code must match: the
-wire reads the file and compares it to the declaration. Changed a character in the
-`.txt` and the wire fails and names the line — verified by hand during the slice,
-and the file was restored. The wire covers **both** drawings, and it can fail: the
-drawing is edited in memory and the wire says no.
+**The earlier claim was false and is withdrawn**: *"the mark's characters appear in
+no other file in the tree"* — the goldens carry the glyph on the header line, and
+so do the wallpaper, the brand sheet and the ledger. What is true: **the drawings
+appear nowhere else in the tree**; the glyph is declared in the brand package and
+appears in the rendered output and in the card's art.
 
-**Two more wires hold the mark to one place**: the half form is a second drawing,
-not a crop — no window cut out of the full form is the half form, and the wire
-walks every window; and the mark's own characters (the braille block and `⋈`)
-appear in no other file in the tree, so the art cannot be pasted a second time.
-The boundary holds too: the mark imports nothing of ours, and the domain does not
-import the mark.
+**The exemption is per declaration, not per package.** The declaration is found by
+parsing the package, so a pasted copy is never mistaken for it and a rename does
+not widen the exemption. The wire can fail: the reviewer's two mutations (a copy
+in `internal/brand/zz_probe.go`, a copy in `internal/ui/testdata/zz_probe.txt`), the
+glyph in another code file, and each of them fails it — proven in a scratch tree
+and by hand in this tree.
+
+**The directories the wire does not read**: `.git`, `bin`, `skills` and `work`. The
+binaries carry the art as string literals, and the transcripts capture what the
+console shows — art and all. Everything else is read: `docs`, `images`, `kitchen`,
+every file, any type. If the reviewer wants `work/` scanned too, that is one line.
+
+**F-96 — the boundary wire parses the imports.** Every spelling is caught —
+single-line, grouped, blank — because a wire that catches one spelling waits for
+the other. Proven by hand in this tree: a blank import and a single-line import of
+`internal/brand` in `internal/core` both fail the wire, and both compile. The
+scope is in the comment: the rule is about the code that **ships**, so the wire
+reads the **non-test** files of `internal/core`.
+
+**The boundary is pinned.** The full form is 28 columns and is drawn one column in,
+so it needs **29**: 29 takes the full form, 28 does not. The half form needs
+**15**: 15 takes it, 14 and 13 do not. Changing the threshold to
+`brand.Width(Full)` now fails the suite — it passed before.
 
 **The tree.** `make lint && gofmt -l . && make test && make regen-goldens &&
-git status --short` is clean; the goldens' diff is the header's one glyph and
-nothing else. The budgets: `internal/core` 0, `internal/cli` 0, `internal/ui` 28,
+git status --short` is clean; the goldens did not move (the header did not move).
+The budgets: `internal/core` 0, `internal/cli` 0, `internal/ui` 28,
 `internal/brand` 0. The tripwires hold — the derived-views table, the gate table,
 the plan format, the command count (42). `core.DomainVersion` is still 7.
 
-**The card's copy was not installed in the terminal.** The slots are the ones in
-the brief and nothing else: the header carries the compact glyph, the help carries
-the full form above the title, the tab carries the drawing above the section. The
-card's title, tagline, stamp and contact line stayed in the card — the card is an
-image. If the orchestrator wants the tagline in the console header, that is a new
-slot and it is the orchestrator's call.
-
-**Nothing outside the code was touched**: `README.md`, `images/`, `docs/`,
-`GLOSSARY.md` and `AGENTS.md` are as they were.
+**Not touched**: `docs/audit.md`, `docs/07-vocabulary.md`, `work/` (except this
+receipt), `images/`, `README.md`, and the card's copy.
