@@ -237,21 +237,25 @@ next reader has to dig for — so it is written down here.
 
 ```bash
 grep -rnE --exclude-dir=.git --exclude-dir=work --exclude-dir=logo --exclude-dir=bin --exclude-dir=kitchen \
-  --include="*.go" --include="*.md" --include="*.py" -i \
+  --include="*.md" -i \
   "kitchen brigade|kitchen-brigade|chopboard|\bexpo\b|\btaster\b|line-cook|line cook|maître d'|\bR01\b|\bS01\b|\bN01\b" . \
   | grep -v "^./docs/audit" | grep -v "^./docs/audits/" | grep -v "^./research/" \
   | grep -v "^./docs/decisions/000[45]-" | grep -v "^./docs/decisions/0009-" \
   | grep -v "^./docs/07-vocabulary.md" | grep -v "^./prototypes/" \
-  | grep -v "^./GLOSSARY.md:[0-9]*:_Avoid_:" \
-  | grep -v "_test.go"
+  | grep -v "^./GLOSSARY.md:[0-9]*:_Avoid_:"
 ```
 
-**What it returns: nothing that is a live value.** Every hit is a place that
-*explains* the refusal or records the history — the code's own detection
-(`internal/core/retired.go`), the deny-list that refuses the retired names
-(`internal/core/model.go`), the comments that say why a retired id is refused, and the
-docs' two sections that say the names are refused. The names survive **where the tool
-refuses them**, and nowhere else.
+**The code is not in this command's reach, and that is deliberate.** The code's
+instrument is the **one-format wire** — it reads the code's own canonical lists, so a
+name added to `RetiredNames` is caught in any package without touching the wire. A
+grep over the code would only report the two places where the retired names
+*legitimately* live: the detection that refuses them and the deny-list that refuses
+them as names.
+
+**What it returns: the places that *explain* the refusal, and nothing else.** The
+docs' two sections that say the retired names are refused, and one dated line of
+version history. **No live value carries a retired name** — the code refuses them
+where they enter a record, and the docs say so where a reader meets them.
 
 **The rules the command encodes, and one it cannot:**
 
