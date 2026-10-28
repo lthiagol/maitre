@@ -239,14 +239,20 @@ make the audit vacuous.
 
 **Only the chef may approve, or sign off.** The chef is the human; the sous chef, the
 runner, the reviewer and the orchestrator are agents, and so is the default actor `agent`.
-The names the rename retired — `line-cook`, `taster`, `expo`, `coordinator` — still name
-the role they stood for, so a plan written before the rename is refused exactly like one
-written after it. The approval gate refuses an approval whose actor is one of them, so
-the human says who they are: `maitre-cli --actor chef recipe approve RCP01 --by chef`. A
+The approval gate refuses an approval whose actor is one of them, so the human says who
+they are: `maitre-cli --actor chef recipe approve RCP01 --by chef`. A
 **sign-off** — the one exception to the zero-match rule — is a human act too, and takes
 the same deny-list: `maitre-cli --actor chef ac signoff RCP01 AC-01 --by chef`. The list
 is a deny-list — a human may approve under any name — but an agent cannot sign a recipe
 or a criterion off.
+
+**A retired name is not a name the tool accepts.** The names the rename retired —
+`line-cook`, `taster`, `expo`, `coordinator` — are refused **wherever an actor names
+itself**: the claim, the review, the approval, the sign-off, the comment, and the actor
+every write is stamped with. There is no `line-cook` → `runner` mapping any more: there
+is simply no `line-cook`. The refusal is the tool's answer to a name it does not accept,
+not a rule about signing off — so the retired names are refused harder than the crew's
+jobs are, and a name the tool does not accept cannot appear in a live record either.
 
 ### The agent's loop
 
