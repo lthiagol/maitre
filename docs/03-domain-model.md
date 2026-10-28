@@ -453,7 +453,7 @@ root files and the field names on disk are hashed into the fingerprint, so a too
 that writes the old format is fenced off from a plan written under the new one. A
 change to the **facts list** — a guard that now covers one fact more — moves the
 fingerprint and leaves the number alone, because the format on disk did not change.
-See [the version guard](#the-version-guard).
+See [the version guard](#62-the-version-guard).
 
 ```
 kitchen/
@@ -541,11 +541,14 @@ A `control` records a fact about the plan itself rather than about one recipe: t
 form it was migrated to, for instance. It names no recipe, and it is how a plan whose
 history predates a change says what the change was.
 
+### 6.2 The version guard
+
 Every entry also records the **version of the domain's rules** it was written under
 (`domain_version`). The journal is written on every mutation, so the newest entry is
 the plan's stamp: a tool whose rules are older than the plan's refuses to write, and a
 newer tool stamps its own version on the next write. Reading is always allowed. See
-`core.DomainVersion`.
+`core.DomainVersion`; the guard itself is `Store.checkDomainVersion` in
+`internal/core/lock.go`.
 
 **The version fences the writer; the fingerprint is the tripwire.** The fingerprint
 hashes the gates, the transitions, the lifecycles, the events, the chef's moves, the

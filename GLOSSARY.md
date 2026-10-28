@@ -148,7 +148,7 @@ _Avoid_: Steps, plan, guidance, instructions
 A question raised while shaping a recipe that must be resolved before it can be locked.
 _Avoid_: Blocker, issue, todo
 
-### The strings
+### The surfaces
 
 The console is a **surface**, not a job: [ADR-0003](docs/decisions/0003-surface-split.md)
 says it manages the plan and never authors the artifact, and the crew above is the
