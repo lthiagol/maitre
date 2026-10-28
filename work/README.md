@@ -15,7 +15,7 @@ file, which becomes the ADR's history.
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | ✅ **closed** — review `ok` after one fix cycle; F-73..F-77 closed | [briefs/slice-c.md](briefs/slice-c.md) |
 | **D** | `Proof` → evidence, the recipe-level stamp → completion | ✅ **closed** — review `ok`; F-78..F-80 closed; two comments tidied | [briefs/slice-d.md](briefs/slice-d.md) |
-| **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | 🟡 **in review** — landed (6 commits, AC-02..AC-05); the review filed **F-81..F-85** | [briefs/slice-e.md](briefs/slice-e.md) |
+| **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | ✅ **closed** — review `ok` after three rounds; F-81..F-86 closed. **AC-01, the mascot, is carried to the drawing session** | [briefs/slice-e.md](briefs/slice-e.md) |
 
 > **The mascot (slice E's AC-01) is being made in another session**, on 2026-10-27.
 > This tree is shared, so slice E's brief says plainly: do not draw it, do not touch
@@ -61,6 +61,17 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **F-78** (high) | **the approval digest did not travel with the rename.** The digest hashes the criterion's JSON, and the JSON carries the field *name* — so a plan approved before the rename keeps a digest the tool cannot reproduce, and `immutability.respected` reads the difference as **tampering**: every gated transition of a recipe nobody touched is refused. The repo's own RCP01 stored `8813a266…`, which is *exactly* the old encoding's digest, while the tool recomputed `4984098d…`. | **closed** — the candidate set is the product of the two axes (list forms × field name), the repo's own plan is migrated, and a test holds the standing discipline. |
 | **F-79** (medium) | the glossary's **Evidence** entry said *"a verification result a machine produced"* — but a human **sign-off** is stored in the same field and `ac.all_proven` takes it as a pass. The single source of the vocabulary was narrower than the record, and the *"matched nothing is not evidence"* line was **false** for a sign-off. **The wording came from the orchestrator's brief.** | **closed** — the entry names the sign-off exception, and `docs/03` § 5 says the same thing. |
 | **F-80** (medium) | `docs/03` § 6 said the reader does not see the records a version-5 tool wrote, two paragraphs below saying it reads them. The version bump is right — the *writer* changed; the stated consequence is wrong. | **closed** — the paragraph says what the reader does. |
+
+### Slice E's findings — the paper, and the best one of the rename
+
+| Finding | What | State |
+|---|---|---|
+| **F-81** | the console's retired name (*maître d'*) was in **no** line of the glossary, while every other retired word carried it once in an `_Avoid_` line — and the commit's proof command returned **0** for all four words it claimed to check, so it proved nothing. | **closed** — the name is carried, and the proof reproduces: seven names, seven hits, every one an `_Avoid_` line, **0 outside**. |
+| **F-82** | the glossary filed the console under **"### The crew"** — six entries, the sixth being the console — while its own new tables said the jobs were five, and ADR-0003 says *"the console is not an agent"*. The heading also spelled it `**Maitre**`, which the vocabulary does not use. | **closed** — the console has its own section, **"### The surfaces"**, spelled `maitre`. |
+| **F-83** | *special* and *prep note* were named **twice** — in prose and in the `_Avoid_` line. The prose is where a reader meets a retired word with nothing warning them. | **closed** — the prose names no retired word and points at ADR 0009 § 3. |
+| **F-84** | `docs/03` listed the fingerprint's facts **twice** and the two lists **disagreed** — one mentioned the root files, the other did not. The slice's own commit updated one and not the other, and nothing checks prose. | **closed** — both lists agree, and so does the third, in the `DomainVersion` comment. |
+| **F-85** | the spec, the decision of record and the `DomainVersion` comment all still said *"a format change moves the version on its own"* — **the coupling this slice split**. The runner's judgement was right; the prose still taught the opposite. | **closed** — the version fences the **writer**, the fingerprint is the **tripwire** that says the facts moved. |
+| **F-86** | **the sweep's instrument was blind, not the tree.** The command and the brief's list omitted *maître d'*, so one of the seven renamed terms was outside its reach — the sweep would have passed whatever the tree said about it, because **it never asked**. | **closed** — the command carries all seven names and excludes the glossary's `_Avoid_` lines. **The command is written down below**, because an instrument that lives only in a commit message is one the next reader has to dig for. |
 
 ### The tree is shared — with the mascot's session
 
@@ -217,6 +228,40 @@ turn **without reporting**, mid-work, with changes uncommitted.
 a pane's scrollback; the receipt in `work/inbox/` is what the orchestrator can always
 read. A lane that stops mid-work should still write its receipt, saying where it
 stopped.
+
+### The sweep — the command, so the next reader need not dig for it
+
+The rename's last slice swept the tree of every old name. The **command** is the
+instrument, and an instrument that lives only in a commit message is an instrument
+the next reader has to dig for — so it is written down here.
+
+```bash
+grep -rnE --exclude-dir=.git --exclude-dir=work --exclude-dir=logo --exclude-dir=bin --exclude-dir=kitchen \
+  --include="*.go" --include="*.md" --include="*.py" -i \
+  "kitchen brigade|kitchen-brigade|chopboard|\bexpo\b|\btaster\b|line-cook|line cook|\bspecials?\b|prep[ -]note|\bproofs?\b|maître d'" . \
+  | grep -v "^./docs/audit" \
+  | grep -v "^./docs/audits/" \
+  | grep -v "^./research/" \
+  | grep -v "^./docs/decisions/0004-naming.md" \
+  | grep -v "^./docs/decisions/0005-vocabulary.md" \
+  | grep -v "^./docs/decisions/0009-vocabulary.md" \
+  | grep -v "^./docs/07-vocabulary.md" \
+  | grep -v "^./prototypes/tab-" \
+  | grep -v "^./GLOSSARY.md:[0-9]*:_Avoid_:"
+```
+
+**It returns 72 lines in 18 files**, and every one names something that still
+exists: the legacy reader, the retired-role aliases, the tests of the old ids and
+the migration events, the dated version notes, the tripwires' own mutations.
+
+**The rules the command encodes:**
+
+| | |
+|---|---|
+| **Carry every name** | all seven retired names, *maître d'* among them. A command that cannot see a name is not a check — that was **F-86**. |
+| **A warning is not drift** | the glossary's `_Avoid_` lines name retired words **on purpose**, so they are excluded. A retired word outside one is drift. |
+| **The records are not swept** | the ledger keeps the names as they were when each finding was filed; `research/` is about v1; the old ADRs keep their tables as the record of what they said; `docs/07` and ADR 0009 are the rename's own tables. |
+| **No script** | deliberately. The sweep is a **one-time act** over a tree that now has *legitimate* old names. A permanent tripwire would need a permanent exclusion list, and **a tripwire with a long exclusion list is a tripwire that has stopped seeing**. The live facts have their own instruments: the deny-list wire, the derived-views wire, the plan-format wire. |
 
 ## The rules that keep this durable
 
