@@ -531,85 +531,126 @@ func TestTheOneFormatWireCanFail(t *testing.T) {
 	}
 }
 
-// TestTheTwoViewsAgreeOnARecord covers the two views.
+// TestARetiredNameIsRefusedByValue covers the rule.
 //
-// The writer's view and the reader's view read the **one list**, so they know the
-// same fields: a record that carries a retired name is refused by the writer and
-// reported by the reader, field by field.
-func TestTheTwoViewsAgreeOnARecord(t *testing.T) {
+// **The check is by value.** The code does not need to know which fields carry a
+// name: it needs to know whether *any* field carries a retired name. A name field's
+// value **is** the name, and the writer refuses it — and the reader refuses the plan
+// that carries it, with the same check.
+func TestARetiredNameIsRefusedByValue(t *testing.T) {
 	r := &Recipe{
 		ID:        "RCP01",
 		Execution: Execution{ClaimedBy: "line-cook"},
-		Approval:  &Approval{By: "line-cook"},
+		Approval:  &Approval{By: "Line Cook"},
 		Review: Review{
-			Rounds:   []Round{{Reviewer: "line-cook"}},
-			Comments: []Comment{{Author: "line-cook"}},
+			Rounds:   []Round{{Reviewer: "line_cook"}},
+			Comments: []Comment{{Author: "coordinator"}},
 		},
-		Acceptance: []Criterion{{Evidence: []Evidence{{By: "line-cook"}}}},
-		Audit:      Audit{Deviations: []Deviation{{By: "line-cook"}}},
+		Acceptance: []Criterion{{Evidence: []Evidence{{By: "taster"}}}},
+		Audit:      Audit{Deviations: []Deviation{{By: "expo"}}},
 		Overlays:   Overlays{Blocked: &Overlay{By: "line-cook"}},
 	}
 
 	// The writer refuses it: a retired name cannot enter a live record.
-	if err := checkRecordNames(r); err == nil {
+	err := checkRecordNames(r)
+	if err == nil {
 		t.Fatal("the writer must refuse a record carrying a retired name")
 	}
+	if !strings.Contains(err.Error(), "claimed_by") {
+		t.Errorf("the refusal should name the field: %v", err)
+	}
 
-	// And the reader reports every field it knows.
-	got := retiredActorNames(r)
+	// And the reader reports every field it carries — the same check, so the two
+	// cannot disagree.
+	got := retiredNames(r)
 	want := []string{
-		`the claimant ("line-cook")`,
-		`the approver ("line-cook")`,
-		`a review round's reviewer ("line-cook")`,
-		`a comment's author ("line-cook")`,
-		`a record's author ("line-cook")`,
-		`a deviation's author ("line-cook")`,
-		`a block's author ("line-cook")`,
+		"execution.claimed_by",
+		"approval.by",
+		"review.rounds[0].reviewer",
+		"review.comments[0].author",
+		"acceptance[0].evidence[0].by",
+		"audit.deviations[0].by",
+		"overlays.blocked.by",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("the reader reported %d fields, want %d: %v", len(got), len(want), got)
 	}
 	for _, w := range want {
-		if !containsString(got, w) {
+		found := false
+		for _, g := range got {
+			if strings.Contains(g, w) {
+				found = true
+			}
+		}
+		if !found {
 			t.Errorf("the reader should report %s — it reported %v", w, got)
 		}
 	}
-	if len(got) != len(want) {
-		t.Errorf("the reader reported %d fields, want %d: %v", len(got), len(want), got)
+}
+
+// TestProseThatMentionsARetiredNameIsNotRefused covers the other side.
+//
+// A prose field's value *mentions* a retired name, and it is **longer than the
+// name** — so it is not refused. That is the line the check draws, and it is the
+// difference between a name and a sentence about one.
+func TestProseThatMentionsARetiredNameIsNotRefused(t *testing.T) {
+	r := &Recipe{
+		ID:     "RCP01",
+		Title:  "The line-cook wrote this",
+		Intent: Intent{Outcome: "a line-cook's recipe", Problem: "the expo never worked"},
+		Audit:  Audit{Deviations: []Deviation{{Note: "the taster asked for proof"}}},
+		Review: Review{Comments: []Comment{{Body: "a coordinator's note"}}},
+	}
+
+	if err := checkRecordNames(r); err != nil {
+		t.Fatalf("prose that mentions a retired name is not a retired name: %v", err)
+	}
+	if got := retiredNames(r); len(got) != 0 {
+		t.Fatalf("the reader should report nothing: %v", got)
 	}
 }
 
-// TestTheOneFormatWireFailsOnAViewThatReachesIntoTheRecord proves the wire can
-// fail.
+// TestTheScanSkipsMapsAndBytes covers the two things the walk does not reach.
 //
-// The wire compares the two views of the one list. A view that reaches into the
-// record knows a field the other view may not — and that is F-91's hole, one list
-// apart: the writer accepts the name, the reader refuses the plan, and the tool
-// bricks the plan it just wrote.
-func TestTheOneFormatWireFailsOnAViewThatReachesIntoTheRecord(t *testing.T) {
-	scratch := scratchTree(t)
-	if err := checkRetiredNames(scratch); err != nil {
-		t.Fatalf("the scratch copy should be clean: %v", err)
+// A map's values are the record's business, not the name's: the journal's migration
+// events carry retired *field names* in their data, and that is history. A byte
+// slice holds a document, not a name.
+func TestTheScanSkipsMapsAndBytes(t *testing.T) {
+	type withMap struct {
+		Name string            `json:"name"`
+		Data map[string]string `json:"data"`
 	}
-	path := filepath.Join(scratch, "internal/core/retired.go")
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
+	got := retiredNameFields(withMap{
+		Name: "line-cook",
+		Data: map[string]string{"from": "line-cook"},
+	})
+	if len(got) != 1 {
+		t.Fatalf("the scan should catch the string field and skip the map: %v", got)
 	}
-	// The reader's view, reaching into the record instead of reading the list.
-	patched := strings.Replace(string(raw),
-		"func retiredNames(r *Recipe) []namedName {\n\tvar out []namedName",
-		"func retiredNames(r *Recipe) []namedName {\n\tvar out = []namedName{{what: \"the claimant\", name: r.Execution.ClaimedBy}}",
-		1)
-	if patched == string(raw) {
-		t.Fatal("the view was not found")
+	if got[0].path != "name" {
+		t.Errorf("the scan should name the field: %v", got)
 	}
-	if err := os.WriteFile(path, []byte(patched), 0o644); err != nil {
-		t.Fatal(err)
+}
+
+// TestTheScanFindsANameInEveryFieldShape covers the walk.
+//
+// The check is by value, so it reaches every string field of the record — in a
+// struct, behind a pointer, in a slice — and a new name-carrying field is caught
+// without anybody adding it to a list.
+func TestTheScanFindsANameInEveryFieldShape(t *testing.T) {
+	r := &Recipe{
+		ID:        "RCP01",
+		Execution: Execution{ClaimedBy: "line-cook"},
+		Approval:  &Approval{By: "line-cook"},
 	}
-	err = checkRetiredNames(scratch)
-	if err == nil {
-		t.Fatal("the wire should fail when a view reaches into the record")
+	got := retiredNameFields(r)
+	if len(got) != 2 {
+		t.Fatalf("the scan should find the two names: %v", got)
 	}
-	if !strings.Contains(err.Error(), "the one list") {
-		t.Errorf("the failure should say what the rule is: %v", err)
+	for _, f := range got {
+		if f.name != "line-cook" {
+			t.Errorf("the scan should carry the name: %v", f)
+		}
 	}
 }
 
@@ -703,12 +744,8 @@ func retiredTokensIn(rel, path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	code, allowed, file, err := scanSource(rel, string(raw))
+	code, allowed, err := scanSource(rel, string(raw))
 	if err != nil {
-		return nil, err
-	}
-	// The two views of the one list must read the list and nothing else.
-	if err := checkNameViews(rel, file); err != nil {
 		return nil, err
 	}
 	var found []string
@@ -729,103 +766,6 @@ func retiredTokensIn(rel, path string) ([]string, error) {
 		}
 	}
 	return found, nil
-}
-
-// nameViewFunctions are the functions that read the one list of name fields.
-//
-// The wire checks that they read it and do not reach into the record: a view that
-// knows a field the other view does not is F-91's hole, one list apart.
-var nameViewFunctions = []string{"recordNames", "retiredNames", "checkRecordNames"}
-
-// checkNameViews checks that the two views read the one list.
-//
-// **One list, two views.** The writer's view and the reader's view must know the
-// same fields: a field known by only one of them is F-91's hole one list apart —
-// the writer accepts the name, the reader refuses the plan, and the tool bricks the
-// plan it just wrote.
-//
-// The check is that the views do not reach into the record themselves. Which fields
-// carry a name is the **list's** business, and a view that names a field on its own
-// is a second answer to "which fields carry a name?".
-func checkNameViews(rel string, file *ast.File) error {
-	for _, decl := range file.Decls {
-		fn, ok := decl.(*ast.FuncDecl)
-		if !ok {
-			continue
-		}
-		if !containsString(nameViewFunctions, fn.Name.Name) {
-			continue
-		}
-		rec := recipeParam(fn)
-		if rec == "" {
-			continue
-		}
-		if field := directFieldAccess(fn.Body, rec); field != "" {
-			return fmt.Errorf("%s: %s reaches into the record (%s) — the name fields live in the one list",
-				rel, fn.Name.Name, field)
-		}
-	}
-	return nil
-}
-
-// recipeParam is the name of the function's record parameter, if it has one.
-func recipeParam(fn *ast.FuncDecl) string {
-	if fn.Type.Params == nil {
-		return ""
-	}
-	for _, field := range fn.Type.Params.List {
-		star, ok := field.Type.(*ast.StarExpr)
-		if !ok {
-			continue
-		}
-		ident, ok := star.X.(*ast.Ident)
-		if !ok || ident.Name != "Recipe" {
-			continue
-		}
-		if len(field.Names) == 0 {
-			return ""
-		}
-		return field.Names[0].Name
-	}
-	return ""
-}
-
-// directFieldAccess is the first field of the record the body reaches for.
-func directFieldAccess(body *ast.BlockStmt, rec string) string {
-	if body == nil {
-		return ""
-	}
-	found := ""
-	ast.Inspect(body, func(n ast.Node) bool {
-		if found != "" {
-			return false
-		}
-		sel, ok := n.(*ast.SelectorExpr)
-		if !ok {
-			return true
-		}
-		if !rootedAt(sel, rec) {
-			return true
-		}
-		found = sel.Sel.Name
-		return false
-	})
-	return found
-}
-
-// rootedAt reports whether the selector's chain starts at the given identifier.
-func rootedAt(sel *ast.SelectorExpr, name string) bool {
-	x := sel.X
-	for {
-		switch v := x.(type) {
-		case *ast.SelectorExpr:
-			x = v.X
-		case *ast.Ident:
-			return v.Name == name
-		default:
-			return false
-		}
-	}
 }
 
 // matches finds every place the token is in the code.
@@ -876,11 +816,11 @@ func spellingPattern(name string) string {
 // The comments are **masked**, not removed: every byte of a comment becomes a space,
 // so an offset in the masked source is the offset it had in the file — and the scan
 // of the code does not trip on the history the comments tell.
-func scanSource(rel, src string) (string, [][2]int, *ast.File, error) {
+func scanSource(rel, src string) (string, [][2]int, error) {
 	fset := token.NewFileSet()
 	file, err := parser.ParseFile(fset, rel, src, parser.ParseComments)
 	if err != nil {
-		return "", nil, nil, fmt.Errorf("parse %s: %w", rel, err)
+		return "", nil, fmt.Errorf("parse %s: %w", rel, err)
 	}
 	var b strings.Builder
 	prev := 0
@@ -894,7 +834,7 @@ func scanSource(rel, src string) (string, [][2]int, *ast.File, error) {
 		}
 	}
 	b.WriteString(src[prev:])
-	return b.String(), allowedRanges(rel, file, fset), file, nil
+	return b.String(), allowedRanges(rel, file, fset), nil
 }
 
 // mask takes the prose out of a piece of text without moving the code.

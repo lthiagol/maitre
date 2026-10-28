@@ -381,6 +381,17 @@ written.
    two names, and an executor that claimed as `line-cook` and was reviewed by `runner`
    would pass the independence gate.
 
+   **The check on a record is by value.** The code does not need to know *which* fields
+   carry a name — it needs to know whether *any* field carries a retired name. A
+   **name field**'s value **is** the name (`claimed_by: "line-cook"`), and a **prose
+   field**'s value *mentions* one (*"the line-cook wrote this"*) — and prose is longer
+   than the name, so it is not refused. The walk covers **every** string field of the
+   record, so a new name-carrying field is caught without anybody adding it to a list,
+   and the writer and the reader run the same check: one answer to "does this record
+   carry a retired name?". **Maps are not walked** — a map's values are the record's
+   business, and the journal's migration events carry retired *field names* in their
+   data, which is history and keeps its old names.
+
 ### 3.3 Overlays
 
 | Overlay | Fields | Notes |

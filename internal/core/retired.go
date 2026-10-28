@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -219,7 +220,7 @@ func (s *Store) retiredInPlan() []string {
 				continue
 			}
 			found = append(found, retiredInRecipe(raw, r.ID)...)
-			found = append(found, retiredActorNames(&r)...)
+			found = append(found, retiredNames(&r)...)
 		}
 	}
 	return found
@@ -293,188 +294,134 @@ func retiredInBacklog(raw []byte, id string) []string {
 	return found
 }
 
-// nameField is one field of a record that carries a name.
-//
-// The list of them is **one list**: the writer's view and the reader's view are
-// both derived from it, so a field cannot be known by one and forgotten by the
-// other.
-type nameField struct {
-	// what names the field, for the reader's message: "the claimant".
-	what string
-	// read returns the names the field carries.
-	read func(*Recipe) []string
-}
-
-// nameFields are the fields of a record that carry a name.
-//
-// The claimant, the approver, the reviewer, the comment's author, the record's
-// author, the deviation's author and the overlays' author.
-//
-// **One list, two views.** The writer's view (`recordNames`) checks every name the
-// list yields before a write; the reader's view (`retiredNames`) reports the retired
-// ones when a record is read. Both read this list and nothing else, so they cannot
-// disagree about which fields carry a name — and a field known by only one of them
-// was F-91's hole, one list apart: the writer accepted the name, the reader refused
-// the plan, and the tool bricked the plan it had just written.
-var nameFields = []nameField{
-	{
-		what: "the claimant",
-		read: func(r *Recipe) []string { return []string{r.Execution.ClaimedBy} },
-	},
-	{
-		what: "the approver",
-		read: func(r *Recipe) []string {
-			if r.Approval == nil {
-				return nil
-			}
-			return []string{r.Approval.By}
-		},
-	},
-	{
-		what: "a review round's reviewer",
-		read: func(r *Recipe) []string {
-			var out []string
-			for _, round := range r.Review.Rounds {
-				out = append(out, round.Reviewer)
-			}
-			return out
-		},
-	},
-	{
-		what: "a comment's author",
-		read: func(r *Recipe) []string {
-			var out []string
-			for _, c := range r.Review.Comments {
-				out = append(out, c.Author)
-			}
-			return out
-		},
-	},
-	{
-		what: "a record's author",
-		read: func(r *Recipe) []string {
-			var out []string
-			for _, c := range r.Acceptance {
-				for _, e := range c.Evidence {
-					out = append(out, e.By)
-				}
-			}
-			return out
-		},
-	},
-	{
-		what: "a deviation's author",
-		read: func(r *Recipe) []string {
-			var out []string
-			for _, d := range r.Audit.Deviations {
-				out = append(out, d.By)
-			}
-			return out
-		},
-	},
-	{
-		what: "a block's author",
-		read: func(r *Recipe) []string {
-			if r.Overlays.Blocked == nil {
-				return nil
-			}
-			return []string{r.Overlays.Blocked.By}
-		},
-	},
-	{
-		what: "a deferral's author",
-		read: func(r *Recipe) []string {
-			if r.Overlays.Deferred == nil {
-				return nil
-			}
-			return []string{r.Overlays.Deferred.By}
-		},
-	},
-	{
-		what: "a cancellation's author",
-		read: func(r *Recipe) []string {
-			if r.Overlays.Cancelled == nil {
-				return nil
-			}
-			return []string{r.Overlays.Cancelled.By}
-		},
-	},
-}
-
-// namedName is one name a record carries, and the field it came from.
-type namedName struct {
-	// what names the field the name came from.
-	what string
-	// name is the name itself.
+// retiredNameField is a field whose whole value is a retired name.
+type retiredNameField struct {
+	// path is where the field sits: `execution.claimed_by`.
+	path string
+	// name is the retired name the field carries.
 	name string
 }
 
-// recordNames is the writer's view: every name the record carries, with the field
-// it came from.
+// retiredNameFields walks a value and names the fields whose whole value is a
+// retired name.
 //
-// It reads the one list and nothing else — which fields carry a name is the list's
-// business, and the wire checks that this view keeps it that way.
-func recordNames(r *Recipe) []namedName {
-	var out []namedName
-	for _, f := range nameFields {
-		for _, name := range f.read(r) {
-			out = append(out, namedName{what: f.what, name: name})
-		}
-	}
+// **The check is by value, not by field.** The code does not need to know *which*
+// fields carry a name — it needs to know whether *any* field carries a retired
+// name. A **name field**'s value **is** the name (`claimed_by: "line-cook"`), and a
+// **prose field**'s value *mentions* one ("the line-cook wrote this") — and prose is
+// longer than the name, so it is not refused.
+//
+// The walk covers **every** string field of the record, so a new name-carrying field
+// is caught without anybody adding it to a list.
+//
+// **Maps are not walked.** A map's values are the record's business, not the name's:
+// the journal's migration events carry retired *field names* in their data, and that
+// is history, which keeps its old names. A map is not a string field, and the walk
+// stops at one.
+//
+// **Byte slices are not walked either.** `json.RawMessage` is one, and it holds the
+// bytes of a document — not a name.
+func retiredNameFields(v any) []retiredNameField {
+	var out []retiredNameField
+	walkNameFields(reflect.ValueOf(v), "", &out)
 	return out
 }
 
-// retiredNames is the reader's view: the retired names among the record's.
-//
-// It is the writer's view, filtered — the reader knows the same fields, because
-// both read the one list.
-func retiredNames(r *Recipe) []namedName {
-	var out []namedName
-	for _, n := range recordNames(r) {
-		if IsRetiredName(n.name) {
-			out = append(out, n)
-		}
+// walkNameFields walks a value and collects the string fields whose whole value is
+// a retired name.
+func walkNameFields(v reflect.Value, path string, out *[]retiredNameField) {
+	if !v.IsValid() {
+		return
 	}
-	return out
+	switch v.Kind() {
+	case reflect.String:
+		if IsRetiredName(v.String()) {
+			*out = append(*out, retiredNameField{path: path, name: v.String()})
+		}
+	case reflect.Pointer, reflect.Interface:
+		if v.IsNil() {
+			return
+		}
+		walkNameFields(v.Elem(), path, out)
+	case reflect.Struct:
+		t := v.Type()
+		for i := 0; i < t.NumField(); i++ {
+			field := t.Field(i)
+			if !field.IsExported() {
+				continue
+			}
+			walkNameFields(v.Field(i), joinPath(path, fieldName(field)), out)
+		}
+	case reflect.Slice, reflect.Array:
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			// Bytes are bytes: `json.RawMessage` lives here, and it holds a
+			// document, not a name.
+			return
+		}
+		for i := 0; i < v.Len(); i++ {
+			walkNameFields(v.Index(i), fmt.Sprintf("%s[%d]", path, i), out)
+		}
+	case reflect.Map:
+		// A map is not a string field: the journal's data carries retired field
+		// names, and that is history.
+		return
+	}
 }
 
-// checkRecordNames refuses a record that carries a name the tool does not accept.
+// fieldName is the name a field has on disk: the JSON name, when it has one.
+func fieldName(field reflect.StructField) string {
+	name := strings.Split(field.Tag.Get("json"), ",")[0]
+	if name == "" || name == "-" {
+		return field.Name
+	}
+	return name
+}
+
+// joinPath puts a field's name on the path of the field that holds it.
+func joinPath(path, name string) string {
+	if path == "" {
+		return name
+	}
+	return path + "." + name
+}
+
+// checkRecordNames refuses a record that carries a retired name.
 //
 // **A retired name cannot enter a live record, by any path.** The writer runs this
 // on every record it writes, so the rule does not depend on an operation
 // remembering to check: the domain's API cannot write a plan it will not read.
 //
+// The check is **by value**: a string field whose whole value is a retired name.
+// Prose that mentions one is longer than the name, and it is not refused.
+//
 // The **journal** is the exception, and only for its **history**: the journal is
 // append-only, and its old events keep their old names forever. A **new** event is
 // a live record, and it is refused too.
 func checkRecordNames(r *Recipe) error {
-	for _, n := range recordNames(r) {
-		if err := checkName(n.name); err != nil {
-			return err
-		}
+	fields := retiredNameFields(r)
+	if len(fields) == 0 {
+		return nil
 	}
-	return nil
+	parts := make([]string, 0, len(fields))
+	for _, f := range fields {
+		parts = append(parts, fmt.Sprintf("%s (%q)", f.path, f.name))
+	}
+	return fmt.Errorf("the record carries a retired name: %s — a retired name is not a name this tool accepts",
+		strings.Join(parts, ", "))
 }
 
-// retiredActorNames names the retired names a live record carries.
+// retiredNames names the retired names a live record carries.
 //
 // A name the tool does not accept cannot appear in a live record: the writer refuses
 // it, and the reader refuses a record that carries one. The **journal** is the
 // exception, because the journal is history.
 //
-// The fields are the one list's (`nameFields`): the claimant, the approver, the
-// reviewer, the comment's author, the record's author, the deviation's author and
-// the overlays' author.
-func retiredActorNames(r *Recipe) []string {
+// The check is **by value** — the same check the writer runs, so the two cannot
+// disagree: there is one answer to "does this record carry a retired name?".
+func retiredNames(r *Recipe) []string {
 	var found []string
-	seen := map[string]bool{}
-	for _, n := range retiredNames(r) {
-		entry := fmt.Sprintf("%s (%q)", n.what, n.name)
-		if seen[entry] {
-			continue
-		}
-		seen[entry] = true
-		found = append(found, entry)
+	for _, f := range retiredNameFields(r) {
+		found = append(found, fmt.Sprintf("the record's %s carries a retired name (%q)", f.path, f.name))
 	}
 	return found
 }
@@ -514,7 +461,7 @@ func retiredPlanError(artifacts []string) error {
 // checkRetiredRecipe refuses a recipe file that carries a retired artifact.
 func checkRetiredRecipe(raw []byte, r *Recipe) error {
 	found := retiredInRecipe(raw, r.ID)
-	found = append(found, retiredActorNames(r)...)
+	found = append(found, retiredNames(r)...)
 	return retiredPlanError(found)
 }
 
