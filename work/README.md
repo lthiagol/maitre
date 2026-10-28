@@ -14,7 +14,7 @@ file, which becomes the ADR's history.
 | **A** | the project (`maitre`), the binaries (`maitre`, `maitre-cli`), the ids (`RCP01`), the version | ✅ **closed** — review `ok`, 0 blockers | [briefs/slice-a.md](briefs/slice-a.md) |
 | **B** | the roles (`runner`, `reviewer`, `orchestrator`), the tabs (`Board`, `Sous-Chef`) | ✅ **closed** — review `ok` after two fix cycles; F-72 closed | [briefs/slice-b-resume.md](briefs/slice-b-resume.md) |
 | **C** | the backlog — one item, `kind: idea \| feature \| bug` | ✅ **closed** — review `ok` after one fix cycle; F-73..F-77 closed | [briefs/slice-c.md](briefs/slice-c.md) |
-| **D** | `Proof` → evidence, the recipe-level stamp → completion | 🟡 **closing** — review `ok`; F-78..F-80 closed; a two-comment tidy is with the runner | [briefs/slice-d.md](briefs/slice-d.md) |
+| **D** | `Proof` → evidence, the recipe-level stamp → completion | ✅ **closed** — review `ok`; F-78..F-80 closed; two comments tidied | [briefs/slice-d.md](briefs/slice-d.md) |
 | **E** | the glossary, ADR 0009, the sweep, two LOW notes — **the mascot is another session's** | queued | [briefs/slice-e.md](briefs/slice-e.md) |
 
 > **The mascot (slice E's AC-01) is being made in another session**, on 2026-10-27.
