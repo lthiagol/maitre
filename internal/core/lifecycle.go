@@ -144,16 +144,25 @@ const MinOutOfScope = 2
 // A tool **newer** than the plan proceeds, and its next write stamps the newer
 // version.
 //
-// What the stamp covers is exactly what `domainShape()` hashes: the gates, the
-// transitions, the lifecycles, the events, the chef's moves and the note's outcome
-// rules. A rule that is not in that list is a rule the stamp cannot see — so a rule
-// that changes has to be added to it, or the plan cannot say which rules it was
-// written under.
+// The **version** fences the **writer**: a tool that speaks an older version must not
+// write a plan, because it does not know the rules the plan was written under — and
+// the plan's format is one of those rules.
 //
-// Bump this whenever the rules change — a gate added, renamed or dropped, a
-// transition added, a lifecycle added, a chef's move added, a note's outcome rule
-// changed. `TestDomainShapeIsVersioned` fails until you do: the rules changed, so say
-// so with a version.
+// `domainShape()` is the **tripwire**: it hashes the gates, the transitions, the
+// lifecycles, the events, the chef's moves, the note's outcome rules and the facts of
+// the plan's format. A rule that is not in that hash is a rule the tripwire cannot
+// see — so a rule that changes has to be added to it, or the plan cannot say which
+// rules it was written under.
+//
+// So the two move apart. **Bump this when the rules the tool applies change** — a
+// gate added, renamed or dropped, a transition added, a lifecycle added, a chef's
+// move added, a note's outcome rule changed, a record renamed: the tool would write
+// something the plan's rules do not allow, and the version is what fences it.
+// `TestDomainShapeIsVersioned` fails until the shape is updated.
+//
+// **The fingerprint also moves when the facts list grows** — a guard that now covers
+// one fact more — and that alone leaves this number alone: the format on disk did
+// not change, so nothing a stale tool writes is wrong.
 //
 // The bump protects the future, not the corpus: the guard refuses only when the plan
 // is newer than the tool, so a plan stamped 1 is still open to a version-1 tool until
@@ -189,9 +198,9 @@ const MinOutOfScope = 2
 //
 // **Version 4: the stamp covers the plan's format.** The fingerprint now hashes the
 // facts of the format — the id prefixes, the directories, the root files and the field
-// names on disk — so a format change moves the version on its own. Before this, the
-// format was versioned by hand: a tool could write old-format records into a
-// new-format plan and nothing noticed.
+// names on disk — so a format change is caught by the tripwire instead of by hand.
+// Before this, the format was versioned by hand: a tool could write old-format
+// records into a new-format plan and nothing noticed.
 //
 // **Version 3: the plan format changed.** A recipe's id is `RCP01` and its file is
 // named `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. The

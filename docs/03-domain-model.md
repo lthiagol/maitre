@@ -447,11 +447,13 @@ it otherwise.
 ## 6. Plan format
 
 **The plan format is version 6.** The number is `core.DomainVersion` — the version of
-the rules the plan is written under, which now includes the format itself. A format
-change moves the number: the id prefixes, the directories, the root files and the
-field names on disk are hashed into the fingerprint, so a tool that writes the old
-format is fenced off from a plan written under the new one. See
-[the version guard](#the-version-guard).
+the rules the plan is written under, which now includes the format itself. A change
+in **what the tool writes** moves the number: the id prefixes, the directories, the
+root files and the field names on disk are hashed into the fingerprint, so a tool
+that writes the old format is fenced off from a plan written under the new one. A
+change to the **facts list** — a guard that now covers one fact more — moves the
+fingerprint and leaves the number alone, because the format on disk did not change.
+See [the version guard](#the-version-guard).
 
 ```
 kitchen/
@@ -545,13 +547,20 @@ the plan's stamp: a tool whose rules are older than the plan's refuses to write,
 newer tool stamps its own version on the next write. Reading is always allowed. See
 `core.DomainVersion`.
 
-**What the stamp covers is exactly what the fingerprint hashes**: the gates, the
-transitions, the lifecycles, the events, the chef's moves, the rules on a tasting
-note's outcome **and the facts of the plan's format** — the id prefixes, the
-directories, the root files and the field names on disk. A rule outside that list is
-a rule the stamp cannot see — so a rule that changes has to be added to the list, or
-the plan cannot say which rules it was written under. It is the *shape* of the rules,
-not their behaviour: what a gate computes is not in the fingerprint either.
+**The version fences the writer; the fingerprint is the tripwire.** The fingerprint
+hashes the gates, the transitions, the lifecycles, the events, the chef's moves, the
+rules on a tasting note's outcome **and the facts of the plan's format** — the id
+prefixes, the directories, the root files and the field names on disk. A rule outside
+that list is a rule the tripwire cannot see — so a rule that changes has to be added
+to the list, or the plan cannot say which rules it was written under. It is the
+*shape* of the rules, not their behaviour: what a gate computes is not in the
+fingerprint either.
+
+**The two move apart.** A change to the **facts list** — a guard that now covers one
+fact more — moves the fingerprint and leaves the version alone: the format on disk
+did not change, so nothing a stale tool writes is wrong. A change to **what the tool
+writes** moves both. The [decision of record](07-vocabulary.md) says the same, and it
+is where the choice was made.
 
 **The stamp protects the future, not the corpus.** The guard refuses only when the
 plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until
@@ -561,7 +570,7 @@ a newer build writes it and re-stamps it.
 *record* the gates apply to: a recipe's id is `RCP01` and its file is
 `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. Version 4
 changed the *rules about the format*: the fingerprint hashes it, so a format change
-moves the version on its own instead of by hand. **Version 5 changed the format
+is caught by the tripwire instead of by hand. **Version 5 changed the format
 again**: the backlog's two file types became one (`kitchen/backlog/`), the item
 carries a `kind`, and its id is `BL01`. No gate was weakened and no gate rule
 moved — the *record* changed, so the writer changed, and the version moved with it.
