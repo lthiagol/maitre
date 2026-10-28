@@ -31,6 +31,29 @@ func planFormatFacts() []string {
 	for _, field := range planRecordFields() {
 		out = append(out, "field "+field)
 	}
+	// The approval's digest. The digest is what the writer puts on disk, and its
+	// encoding is a format fact: a change to the payload changes what a stored
+	// digest means, and a stored digest from another encoding is not comparable.
+	// So the payload's shape is a fact, and so is the encoding's name — the one
+	// that says which encoding this is.
+	out = append(out, "digest "+digestEncoding)
+	for _, field := range approvalPayloadFields() {
+		out = append(out, "digest "+field)
+	}
+	return out
+}
+
+// approvalPayloadFields are the names of the canonical payload's fields.
+//
+// The payload's shape is a format fact, and the shape moves the tripwire — and the
+// tripwire moves the version. A digest written under another shape cannot be
+// compared with this one's, so a plan carrying one is not a plan this tool may
+// write.
+func approvalPayloadFields() []string {
+	var out []string
+	seen := map[reflect.Type]bool{}
+	out = append(out, jsonFieldNames(reflect.TypeOf(approvalPayload{}), seen)...)
+	sort.Strings(out)
 	return out
 }
 

@@ -28,6 +28,12 @@ import (
 // speaks, so the next stale tool is refused.
 //
 // The event names no recipe: the migration is about the plan, not about one recipe.
+//
+// **The declaration crosses the version fence.** It is the one write that does, and
+// it is deliberate: the plan's owner says which rules the plan lives under. It
+// changes no record — it appends one event to the journal — and it may only move
+// the plan **forward**, so a stale tool cannot use it to unlock a plan it does not
+// understand. It is not reachable from the CLI.
 func (o *Operations) RecordMigration(from, to string) error {
 	if strings.TrimSpace(from) == "" {
 		return errors.New("a migration needs the id form it came from")
@@ -38,7 +44,12 @@ func (o *Operations) RecordMigration(from, to string) error {
 	if from == to {
 		return errors.New("a migration must change the id form")
 	}
-	return o.journal(KindControl, "", map[string]any{
+	unlock, err := o.store.lockUnder(o.store.checkDeclarationForward)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+	return o.journalLocked(KindControl, "", map[string]any{
 		"kind": "migration",
 		"from": from,
 		"to":   to,

@@ -164,6 +164,27 @@ const MinOutOfScope = 2
 // whose version is not the tool's version, so a plan stamped 1 is not written by a
 // version-6 tool at all: the corpus is not carried along, and nothing is migrated.
 //
+// **Version 7: the digest's encoding is a format fact.** The approval's digest is
+// taken over a canonical payload — a shape the code owns, with fixed field names —
+// and that payload's shape is part of the plan's format: the digest is what the
+// writer puts on disk, and a digest written under another shape cannot be compared
+// with this one's.
+//
+// Before this, the payload was not in the facts list, so the tripwire could not see
+// it: the encoding changed under the same version number, and a plan approved by
+// the previous build passed the version guard and was then refused by the
+// immutability gate — the tool called a plan nobody touched **tampered**. That is a
+// lie: nothing was tampered with, the encoding moved.
+//
+// Now the encoding is a fact, so the shape moves, and the shape moves the version.
+// A plan under another version is refused by the **version** guard, with the honest
+// message — "this plan was written under domain version 6 and this tool speaks
+// version 7" — and it never reaches the digest. The digest's tamper message means
+// **content**, and only content.
+//
+// The rules the gates apply did not change. The version is bumped because the
+// **writer** changed: the digest it writes is under another encoding.
+//
 // **Version 6: the plan format's records were renamed.** The recipe's completion
 // stamp was `evidence`; it is `completion` now. A criterion's record was `proofs`;
 // it is `evidence` now — the name the journal's event kind already carried, so the
@@ -201,7 +222,7 @@ const MinOutOfScope = 2
 // The version is bumped because the **writer** changed: a version-2 tool would write
 // `R01` into a plan the version-3 reader expects to find `RCP01`. See
 // docs/07-vocabulary.md.
-const DomainVersion = 6
+const DomainVersion = 7
 
 // gates is the single gate table. Every gate lives here and nowhere else.
 var gates = []gate{

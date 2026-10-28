@@ -33,7 +33,7 @@ import (
 //
 // So a format change moves both, and only the shape moves when the fingerprint
 // learns to see a fact it could not see before.
-const recordedDomainShape = "b84b230161f4ab03"
+const recordedDomainShape = "5122e8d362aab226"
 
 // domainShape is a fingerprint of the domain's rules: the gates, the transitions, the
 // lifecycles, the events, the chef's moves, the rules on a tasting note's outcome,
@@ -195,6 +195,11 @@ func TestDomainVersionRefusesANewerPlan(t *testing.T) {
 // There is no upgrade path: a newer tool does not write a plan written under older
 // rules either, because it would apply rules the plan was not written under. The
 // refusal says what the chef can do, and it promises no migration.
+//
+// The refusal is the **version's** answer, not the digest's: the plan is written
+// under another version, and the tool says so. It never reaches the immutability
+// gate, which would call the plan tampered — nothing was tampered with, the
+// encoding moved.
 func TestDomainVersionRefusesAnOlderPlan(t *testing.T) {
 	ops, store := newOps(t)
 	if _, err := ops.CreateRecipe(readySpec()); err != nil {
@@ -216,6 +221,9 @@ func TestDomainVersionRefusesAnOlderPlan(t *testing.T) {
 	if strings.Contains(err.Error(), "migrat") {
 		t.Fatalf("the refusal should not promise a migration: %v", err)
 	}
+	if strings.Contains(err.Error(), "tamper") {
+		t.Fatalf("the refusal should be the version's, not the digest's: %v", err)
+	}
 
 	// The plan is untouched.
 	items, err := store.ListBacklogItems()
@@ -224,6 +232,87 @@ func TestDomainVersionRefusesAnOlderPlan(t *testing.T) {
 	}
 	if len(items) != 0 {
 		t.Fatalf("the refused write landed anyway: %+v", items)
+	}
+}
+
+// TestDomainVersionWritesThisVersion covers the plan the tool speaks for.
+//
+// A plan stamped with the tool's own version is written, and its next write stamps
+// the same version.
+func TestDomainVersionWritesThisVersion(t *testing.T) {
+	ops, store := newOps(t)
+	if _, err := ops.CreateRecipe(readySpec()); err != nil {
+		t.Fatal(err)
+	}
+	stampPlanVersion(t, store, DomainVersion)
+
+	if _, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil); err != nil {
+		t.Fatalf("a plan under this tool's version must be writable: %v", err)
+	}
+	j, err := store.LoadJournal()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := j.Events[len(j.Events)-1].DomainVersion; got != DomainVersion {
+		t.Fatalf("the plan is stamped with version %d, want %d", got, DomainVersion)
+	}
+}
+
+// TestTheDeclarationMovesThePlanForwardOnly covers the one write that crosses the
+// fence.
+//
+// The declaration is the plan's owner saying which rules the plan lives under. It
+// may move the plan forward — that is what it is for — and never backwards: a stale
+// tool must not be able to stamp a plan it does not understand.
+func TestTheDeclarationMovesThePlanForwardOnly(t *testing.T) {
+	s := newStore(t)
+	if err := s.Init(); err != nil {
+		t.Fatal(err)
+	}
+	ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-decl", Role: "runner"})
+
+	// A plan under an older version: the declaration moves it forward.
+	if _, err := ops.CreateRecipe(readySpec()); err != nil {
+		t.Fatal(err)
+	}
+	stampPlanVersion(t, s, DomainVersion-1)
+	if err := ops.RecordMigration("domain-version:"+strconv.Itoa(DomainVersion-1), "domain-version:"+strconv.Itoa(DomainVersion)); err != nil {
+		t.Fatalf("the declaration should move the plan forward: %v", err)
+	}
+	j, err := s.LoadJournal()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := PlanDomainVersion(j); got != DomainVersion {
+		t.Fatalf("the plan reads as version %d, want %d", got, DomainVersion)
+	}
+
+	// A plan under a newer version: the declaration refuses to move it back.
+	stampPlanVersion(t, s, DomainVersion+1)
+	if err := ops.RecordMigration("domain-version:back", "domain-version:down"); err == nil {
+		t.Fatal("a declaration must not move a plan backwards")
+	}
+}
+
+// TestTheDigestEncodingIsAFormatFact covers the fact that moved the version.
+//
+// The digest is what the writer puts on disk, and its encoding is part of the
+// format: a digest written under another shape cannot be compared with this one's.
+// So the payload's shape is in the facts list — a fact the version stamp can see.
+func TestTheDigestEncodingIsAFormatFact(t *testing.T) {
+	facts := strings.Join(planFormatFacts(), "\n")
+	for _, want := range []string{
+		"digest " + digestEncoding,
+		"digest approvalPayload.intent",
+		"digest approvalPayload.scope",
+		"digest approvalPayload.acceptance",
+		"digest approvalCriterion.id",
+		"digest approvalCriterion.description",
+		"digest approvalCriterion.verification",
+	} {
+		if !strings.Contains(facts, want) {
+			t.Errorf("the format's facts should name %q", want)
+		}
 	}
 }
 

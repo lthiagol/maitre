@@ -189,6 +189,15 @@ The payload covers exactly the frozen sections: the intent, the scope, and each
 criterion's declared shape. A criterion's **evidence** is excluded — the records grow
 after the approval, and a digest that moved with them would refuse the work.
 
+**The digest's tamper message means content, and only content.** A plan written
+under another version is refused by the **version guard** — with the honest message,
+"this plan was written under domain version 6 and this tool speaks version 7" — and it
+never reaches the digest. The digest's encoding is a **format fact**: the payload's
+shape and the encoding's name are hashed into the fingerprint, so a change to the
+payload moves the shape, and the shape moves the version. A plan whose digest was
+written under another encoding is therefore not a tampered plan: it is a plan of
+another version, and the version guard is what says so.
+
 ### 2.2 Acceptance criterion
 
 | Field | Notes |
@@ -460,14 +469,14 @@ it otherwise.
 
 ## 6. Plan format
 
-**The plan format is version 6.** The number is `core.DomainVersion` — the version of
+**The plan format is version 7.** The number is `core.DomainVersion` — the version of
 the rules the plan is written under, which now includes the format itself. A change
 in **what the tool writes** moves the number: the id prefixes, the directories, the
-root files and the field names on disk are hashed into the fingerprint, so a tool
-that writes the old format is fenced off from a plan written under the new one. A
-change to the **facts list** — a guard that now covers one fact more — moves the
-fingerprint and leaves the number alone, because the format on disk did not change.
-See [the version guard](#62-the-version-guard).
+root files, the field names on disk and the approval's digest encoding are hashed into
+the fingerprint, so a tool that writes the old format is fenced off from a plan
+written under the new one. A change to the **facts list** — a guard that now covers one
+fact more — moves the fingerprint and leaves the number alone, because the format on
+disk did not change. See [the version guard](#62-the-version-guard).
 
 ```
 kitchen/
@@ -580,11 +589,11 @@ the chef can do, and it promises no migration. Reading is always allowed. See
 rules the plan was written under, and it fences the writer. The **fingerprint** is the
 **code-side** tripwire: it hashes the gates, the transitions, the lifecycles, the
 events, the chef's moves, the rules on a tasting note's outcome **and the facts of
-the plan's format** — the id prefixes, the directories, the root files and the field
-names on disk. A rule outside that hash is a rule the tripwire cannot see — so a rule
-that changes has to be added to it, or the plan cannot say which rules it was written
-under. It is the *shape* of the rules, not their behaviour: what a gate computes is
-not in the fingerprint either.
+the plan's format** — the id prefixes, the directories, the root files, the field
+names on disk and the approval's digest encoding. A rule outside that hash is a rule
+the tripwire cannot see — so a rule that changes has to be added to it, or the plan
+cannot say which rules it was written under. It is the *shape* of the rules, not
+their behaviour: what a gate computes is not in the fingerprint either.
 
 **The two move apart.** A change to the **facts list** — a guard that now covers one
 fact more — moves the fingerprint and leaves the version alone: the format on disk
@@ -593,8 +602,27 @@ writes** moves both. The [decision of record](07-vocabulary.md) says the same, a
 is where the choice was made.
 
 **The stamp protects the future, not the corpus.** The guard refuses every plan whose
-version is not the tool's version, so a plan stamped 1 is not written by a version-6
+version is not the tool's version, so a plan stamped 1 is not written by a version-7
 tool at all: the corpus is not carried along, and nothing is migrated.
+
+**The declaration is the one write that crosses the fence.** The plan's owner can
+say which rules the plan lives under — `RecordMigration`, which `scripts/stamp-plan`
+runs. It changes no record: it appends one event to the journal, and that event
+carries the tool's version. It may only move the plan **forward**, so a stale tool
+cannot use it to unlock a plan it does not understand, and it is not reachable from
+the CLI.
+
+**Version 7 made the digest's encoding a format fact.** The approval's digest is
+taken over a canonical payload — a shape the code owns, with fixed field names — and
+that shape is part of the plan's format: the digest is what the writer puts on disk,
+and a digest written under another shape cannot be compared with this one's. Before
+this, the payload was not in the facts list, so the tripwire could not see it: the
+encoding changed under the same version number, and a plan approved by the previous
+build passed the version guard and was then refused by the immutability gate — the
+tool called a plan nobody touched **tampered**. Now the shape moves the shape, and the
+shape moves the version: a plan under another version is refused by the **version**
+guard, with the honest message. The rules the gates apply did not change; the
+version is bumped because the **writer** changed.
 
 **Version 6 is the plan format, and the rules about it.** Version 3 changed the
 *record* the gates apply to: a recipe's id is `RCP01` and its file is

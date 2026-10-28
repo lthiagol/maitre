@@ -30,7 +30,16 @@ var staleLockAfter = 30 * time.Second
 // Every write takes this lock, so it is also where the version guard lives: a tool
 // writes a plan only if the plan's version is the tool's version, rather than
 // applying rules the plan was not written under.
+// lock takes the plan lock and refuses a plan written under other rules.
 func (s *Store) lock() (func(), error) {
+	return s.lockUnder(s.checkDomainVersion)
+}
+
+// lockUnder takes the plan lock, with the given guard.
+//
+// The guard runs once the lock is held: the plan's version cannot change under the
+// lock, so the check and the write see the same plan.
+func (s *Store) lockUnder(guard func() error) (func(), error) {
 	path := filepath.Join(s.Root, LockName)
 	deadline := time.Now().Add(5 * time.Second)
 
@@ -40,9 +49,11 @@ func (s *Store) lock() (func(), error) {
 			fmt.Fprintf(f, "%d\n", os.Getpid())
 			f.Close()
 			unlock := func() { os.Remove(path) }
-			if err := s.checkDomainVersion(); err != nil {
-				unlock()
-				return nil, err
+			if guard != nil {
+				if err := guard(); err != nil {
+					unlock()
+					return nil, err
+				}
 			}
 			return unlock, nil
 		}
@@ -92,4 +103,21 @@ func (s *Store) checkDomainVersion() error {
 		return fmt.Errorf("this plan was written under domain version %d and this tool speaks version %d: upgrade the tool, or read the plan without writing to it", plan, DomainVersion)
 	}
 	return fmt.Errorf("this plan was written under domain version %d and this tool speaks version %d: this tool does not write plans written under another version — read it without writing to it, or write the plan with the tool that speaks its version", plan, DomainVersion)
+}
+
+// checkDeclarationForward refuses a declaration that would move a plan backwards.
+//
+// The declaration is the one write that crosses the version fence, and it may only
+// move the plan **forward**: a tool may not stamp a plan with a version it does not
+// speak, and a plan under a newer version is not this tool's to move.
+func (s *Store) checkDeclarationForward() error {
+	j, err := s.LoadJournal()
+	if err != nil {
+		return err
+	}
+	plan := PlanDomainVersion(j)
+	if plan > DomainVersion {
+		return fmt.Errorf("this plan is under domain version %d and this tool speaks %d: a declaration only moves a plan forward", plan, DomainVersion)
+	}
+	return nil
 }

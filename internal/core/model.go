@@ -436,6 +436,19 @@ func (r Recipe) Fingerprint() (string, error) {
 	return hex.EncodeToString(sum[:]), nil
 }
 
+// digestEncoding names the approval's digest encoding.
+//
+// The digest is what the writer puts on disk, and its encoding is a **format fact**:
+// a change to the canonical payload changes what a stored digest means, and a
+// stored digest from another encoding cannot be compared with this one's.
+//
+// So the encoding is named here, and the name is hashed into the tripwire: a change
+// to the payload moves the shape, and the shape moves the version. A plan stamped
+// with another version is refused by the version guard — with the honest message —
+// and never reaches the digest, which would call it tampered when nothing was
+// tampered with.
+const digestEncoding = "canonical-payload-v1"
+
 // approvalPayload is the canonical payload the digest is taken over.
 //
 // It is the **code's** shape, not the recipe's: every field name below is fixed

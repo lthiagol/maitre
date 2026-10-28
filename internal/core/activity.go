@@ -77,8 +77,11 @@ const JournalSchema = 1
 // PlanDomainVersion is the version of the rules the plan was last written under.
 //
 // The journal is written on every mutation, so the newest entry carries the version.
-// A plan with no journal, or a journal written before the stamp existed, is version
-// zero — an older plan, which a newer tool may write to.
+// A plan with no journal is a plan that does not exist yet, and it reads as version
+// zero — as does a journal written before the stamp existed. **Neither is writable
+// by a tool that speaks another version**: the guard refuses every plan whose version
+// is not the tool's version, and only a plan with no journal at all is a plan the
+// tool may create.
 func PlanDomainVersion(j Journal) int {
 	if len(j.Events) == 0 {
 		return 0
