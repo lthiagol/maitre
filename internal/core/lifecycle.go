@@ -167,19 +167,21 @@ const MinOutOfScope = 2
 //
 // The rules the gates apply did not change — no gate was weakened and no gate rule
 // moved — but the **record** did: a version-5 tool would write `proofs` where the
-// version-6 reader looks for `evidence`, and the records it wrote would be records
-// the reader does not see.
+// version-6 writer writes `evidence`.
 //
 // The reader is tolerant on purpose: a plan written before the rename keeps the old
-// field names, and the reader reads them. The version is bumped because the
+// field names, and the reader reads them. But a stale tool keeps writing the old
+// format, and the version is what fences it. The version is bumped because the
 // **writer** changed.
 //
 // **Version 5: the plan format changed again — the backlog is one artifact.** The
 // backlog's two file types (`kitchen/specials/` and `kitchen/prep-notes/`) are one
 // (`kitchen/backlog/`), the item carries a `kind`, and its id is `BL01`. The rules
 // the gates apply did not change — no gate was weakened and no gate rule moved — but
-// the **record** did: a version-4 tool would write a special or a prep note into a
-// plan the version-5 reader does not look in, and it would find no backlog there.
+// the **record** did: a version-4 tool would write a special or a prep note into
+// `kitchen/specials/` and `kitchen/prep-notes/`, and the version-5 writer does not.
+// The reader still shows the old ones, read-only, in their own group; it never looks
+// for new ones.
 //
 // The reader is tolerant on purpose: `BL01`, `bl01`, `BL1`, `B01` and `1` all name
 // the same item, and a file named `B01-<slug>.json` is read as the item `BL01`. The

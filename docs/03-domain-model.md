@@ -566,7 +566,8 @@ again**: the backlog's two file types became one (`kitchen/backlog/`), the item
 carries a `kind`, and its id is `BL01`. No gate was weakened and no gate rule
 moved — the *record* changed, so the writer changed, and the version moved with it.
 A version-4 tool would write a special into `kitchen/specials/`, and the version-5
-reader does not look there.
+writer does not — the reader still shows the old ones, read-only, in their own group,
+and it never looks for new ones.
 
 **Version 6 renamed the records.** The recipe's completion stamp was `evidence`; it
 is `completion` now. A criterion's record was `proofs`; it is `evidence` now — the
@@ -574,8 +575,9 @@ name the journal's event kind already carried, so the code ends up agreeing with
 own journal. The stamp says when the recipe was done; the records say what was
 verified, and they live on the criterion. No gate was weakened: the **record**
 changed, so the writer changed, and the version moved with it. A version-5 tool
-would write `proofs` where the version-6 reader looks for `evidence`, and the records
-it wrote would be records the reader does not see.
+would write `proofs` where the version-6 writer writes `evidence` — the version-6
+reader reads the old name too, because a plan written before the rename keeps it,
+but a stale tool keeps writing the old format, and the version is what fences it.
 
 The reader is tolerant on purpose: `RCP01`, `RCP1`, `R01`, `r1` and `1` all name the
 same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same backlog item
