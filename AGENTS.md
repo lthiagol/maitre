@@ -251,6 +251,10 @@ skills/         vendored third-party skills, pinned to an upstream commit
 templates/      our own skills (to come)
 scripts/        console-shot.py — capture what the console actually shows
                 stamp-plan/ — record a plan's id migration in its journal
+                dep-budget.sh — the dependency budget, and the numbers it holds
+                go-test.sh — run the tests, and refuse a green that proves nothing
+                require-tool.sh — run a dev tool, or say how to get it
+                hooks/ — the pre-push hook
 prototypes/     throwaway design sketches
 work/           the work in progress — briefs, transcripts, the state of the rename
   briefs/       the dispatch contracts, one per slice
