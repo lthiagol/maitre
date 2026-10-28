@@ -29,134 +29,81 @@ func rawRecipe(t *testing.T, store *Store, id string) *Recipe {
 	return &r
 }
 
-// TestANormalisedLegacyApprovalIsRestamped covers the older build's digest.
-//
-// An intermediate build loaded the plan and re-saved it: the normalisation rewrote
-// the lists to `[]` and left the approval's older digest in place. From then on the
-// file's own form *is* the canonical one, so the store must recognise the older
-// digest among the candidate encodings — not by recomputing the file's current form.
-func TestANormalisedLegacyApprovalIsRestamped(t *testing.T) {
-	ops, store := newOps(t)
-	r, err := ops.CreateRecipe(readySpec())
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, ev := range []Event{EventGroom, EventSpecify} {
-		if _, err := ops.Advance(r.ID, ev); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
-		t.Fatal(err)
-	}
-
-	// The older encoding: the file's lists were null when the recipe was signed off.
-	raw := rawRecipe(t, store, r.ID)
-	raw.Scope.InScope = nil
-	legacy, err := raw.fingerprint()
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw.Approval.Fingerprint = legacy
-	if err := store.SaveRecipe(raw); err != nil {
-		t.Fatal(err)
-	}
-
-	// The intermediate build: it loaded the file and re-saved it, so the lists are
-	// normalised and the older digest is still in place.
-	intermediate := rawRecipe(t, store, r.ID)
-	intermediate.Scope.InScope = []string{}
-	if err := store.SaveRecipe(intermediate); err != nil {
-		t.Fatal(err)
-	}
-	onDisk := rawRecipe(t, store, r.ID)
-	if onDisk.Approval.Fingerprint != legacy {
-		t.Fatal("the test needs the older digest still in place")
-	}
-	if len(onDisk.Scope.InScope) != 0 {
-		t.Fatal("the test needs the lists normalised")
-	}
-
-	// The store re-stamps it.
-	loaded, err := store.LoadRecipe(r.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	canonical, err := loaded.Fingerprint()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if loaded.Approval.Fingerprint == legacy {
-		t.Fatal("the approval should be re-stamped canonically")
-	}
-	if loaded.Approval.Fingerprint != canonical {
-		t.Fatalf("the approval carries %q, want the canonical %q", loaded.Approval.Fingerprint, canonical)
-	}
-
-	// And the gate does not fire on a recipe nobody touched.
-	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
-		t.Fatalf("the claim should not be refused: %v", err)
-	}
-}
-
 // TestARenamedFieldIsNotATamper covers the rename.
 //
-// The digest hashes the criterion's JSON, and the JSON carries the field **name**: the
-// version-5 build hashed `{"id", "description", "verification", "proofs"}` and the
-// version-6 build hashes the same with `evidence`. A rename is not an edit — the
-// content did not change, only the encoding — so a digest that cannot tell the two
-// apart reads the rename as tampering and refuses every gated transition of a recipe
-// nobody touched.
+// The digest hashes a **canonical payload** — a shape the code owns, with fixed field
+// names — so the name of a record's field is not part of the digest. A rename is not
+// an edit: the content did not change, only the encoding. A digest that cannot tell
+// the two apart reads the rename as tampering and refuses every gated transition of a
+// recipe nobody touched.
 //
-// So the old name is a recognised encoding, the way the old list forms are.
+// So the payload is the code's, and the recipe's own field names are not in it. The
+// wire is the golden digest below: it pins the payload's shape, so a payload that
+// starts carrying a record's name fails the test.
 func TestARenamedFieldIsNotATamper(t *testing.T) {
-	ops, store := newOps(t)
-	r, err := ops.CreateRecipe(readySpec())
+	r := Recipe{
+		ID:    "RCP01",
+		Title: "A recipe",
+		Intent: Intent{
+			Outcome: "the board renders",
+			Problem: "the board does not render",
+		},
+		Scope: Scope{
+			InScope:    []string{"the board"},
+			OutOfScope: []string{"the web shell"},
+		},
+		Acceptance: []Criterion{{
+			ID:           "AC-01",
+			Description:  "the board renders",
+			Verification: "go test ./internal/core -run Board",
+		}},
+	}
+	got, err := r.Fingerprint()
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, ev := range []Event{EventGroom, EventSpecify} {
-		if _, err := ops.Advance(r.ID, ev); err != nil {
-			t.Fatal(err)
+	if got != canonicalDigestGolden {
+		t.Fatalf("the digest is %q, want %q — the payload's shape moved", got, canonicalDigestGolden)
+	}
+
+	// The payload names the frozen sections and nothing else: a criterion's records
+	// are not in it, so they cannot move the digest when they grow.
+	raw, err := json.Marshal(r.approvalPayload())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"evidence", "proofs", "deferral", "title", "guidance"} {
+		if strings.Contains(string(raw), `"`+name+`"`) {
+			t.Errorf("the payload names %q — it must cover the frozen sections only:\n%s", name, raw)
 		}
 	}
-	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
-		t.Fatal(err)
-	}
 
-	// The digest the version-5 build wrote: the same content, the criterion's record
-	// under its older name.
-	raw := rawRecipe(t, store, r.ID)
-	legacy, err := raw.legacyFingerprint()
+	// The records grow after the approval, and the digest does not move.
+	grown := r
+	grown.Acceptance = []Criterion{{
+		ID:           "AC-01",
+		Description:  "the board renders",
+		Verification: "go test ./internal/core -run Board",
+		Evidence: []Evidence{{
+			Command: "go test ./internal/core -run Board", ExitCode: 0, Match: MatchProven,
+		}},
+	}}
+	after, err := grown.Fingerprint()
 	if err != nil {
 		t.Fatal(err)
 	}
-	raw.Approval.Fingerprint = legacy
-	if err := store.SaveRecipe(raw); err != nil {
-		t.Fatal(err)
-	}
-
-	// The store re-stamps it: the digest it holds is the canonical one.
-	loaded, err := store.LoadRecipe(r.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	canonical, err := loaded.Fingerprint()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if loaded.Approval.Fingerprint == legacy {
-		t.Fatal("the approval should be re-stamped canonically")
-	}
-	if loaded.Approval.Fingerprint != canonical {
-		t.Fatalf("the approval carries %q, want the canonical %q", loaded.Approval.Fingerprint, canonical)
-	}
-
-	// And the gate does not fire on a recipe nobody touched.
-	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
-		t.Fatalf("the claim should not be refused: %v", err)
+	if after != got {
+		t.Fatalf("the digest moved with the records: %q vs %q", after, got)
 	}
 }
+
+// canonicalDigestGolden is the digest of the recipe in
+// `TestARenamedFieldIsNotATamper`.
+//
+// It pins the canonical payload: the field names it uses and the shape it hashes. A
+// payload that starts carrying a record's name moves this digest, and the test says
+// so — which is how the root cause stays fixed.
+const canonicalDigestGolden = "49701528b23aec009a608b4803738247bfa43ef95c41d16a4629d1aae33b6d6f"
 
 // TestTheRepoPlansApprovalDigestMatchesItsContent holds the standing discipline.
 //
@@ -180,8 +127,8 @@ func TestTheRepoPlansApprovalDigestMatchesItsContent(t *testing.T) {
 		if r.Approval == nil {
 			continue
 		}
-		// The file's own digest, not the store's: the store re-stamps on load, and
-		// the question is what the plan carries on disk.
+		// The file's own digest, not the store's: the question is what the plan
+		// carries on disk.
 		stored := rawRecipe(t, store, r.ID)
 		want, err := stored.Fingerprint()
 		if err != nil {
@@ -213,21 +160,9 @@ func TestAFormChangeIsNotATamper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The older digest, over the file's own null lists.
-	raw := rawRecipe(t, store, r.ID)
-	raw.Scope.InScope = nil
-	legacy, err := raw.fingerprint()
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw.Approval.Fingerprint = legacy
-	if err := store.SaveRecipe(raw); err != nil {
-		t.Fatal(err)
-	}
-
 	// A hand edit: the same content, the other encoding of the same empty list.
 	edited := rawRecipe(t, store, r.ID)
-	edited.Scope.InScope = []string{}
+	edited.Scope.InScope = nil
 	if err := store.SaveRecipe(edited); err != nil {
 		t.Fatal(err)
 	}

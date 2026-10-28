@@ -423,35 +423,12 @@ func (r *Recipe) normaliseLists() {
 // acceptance criteria. A change after approval changes the fingerprint, which is how
 // the immutability gate detects a material edit (constraint C12).
 //
-// The digest is a pure function of the content: the copy is normalised before it is
-// hashed, so `null` and `[]` — the same list, written by different builds — hash the
-// same way. A digest that depends on the load path is not a digest of the recipe.
+// The digest is a pure function of the content: the payload is canonical, so the same
+// recipe hashes the same way whatever the load path and whatever build wrote the
+// file. A digest that depended on how the file happened to be written would refuse
+// every transition of a plan nobody touched.
 func (r Recipe) Fingerprint() (string, error) {
-	canonical := r
-	canonical.normaliseLists()
-	return canonical.fingerprint()
-}
-
-// fingerprint hashes the recipe as it stands, lists and all.
-//
-// This is the encoding a build before the canonical one used: the lists hash as the
-// file happened to hold them. The store compares a stored digest against this to tell
-// "written by an older build" from "tampered with".
-func (r Recipe) fingerprint() (string, error) {
-	payload := struct {
-		Intent     Intent      `json:"intent"`
-		Scope      Scope       `json:"scope"`
-		Acceptance []Criterion `json:"acceptance"`
-	}{
-		Intent:     r.Intent,
-		Scope:      r.Scope,
-		Acceptance: r.Acceptance,
-	}
-	// Only the frozen fields participate. The evidence is excluded because it grows
-	// after approval; only the criterion's declared shape is frozen.
-	payload.Acceptance = frozenCriteria(r.Acceptance)
-
-	raw, err := json.Marshal(payload)
+	raw, err := json.Marshal(r.approvalPayload())
 	if err != nil {
 		return "", fmt.Errorf("fingerprint: %w", err)
 	}
@@ -459,163 +436,79 @@ func (r Recipe) fingerprint() (string, error) {
 	return hex.EncodeToString(sum[:]), nil
 }
 
-// restampLegacyApproval re-stamps an approval written by an older build.
+// approvalPayload is the canonical payload the digest is taken over.
 //
-// The fingerprint used to hash the lists as the file happened to hold them, so a plan
-// approved before the normalisation carries a digest the canonical one does not match.
-// The content did not change; only the encoding did — and a gate that reads that as
-// tampering would refuse every transition of a recipe nobody touched.
+// It is the **code's** shape, not the recipe's: every field name below is fixed
+// here, so renaming a record's field does not move the digest at all. The digest
+// fences on content and only on content — a rename is not an edit, and a plan
+// approved before a rename must not be read as tampered.
 //
-// The older digest is recognised among the candidate encodings, not by recomputing
-// the file's current form: an intermediate build may have rewritten the lists since,
-// and the file's form is exactly what changed.
+// It covers exactly the frozen sections: the **intent**, the **scope**, and each
+// criterion's **declared shape**. A criterion's evidence is excluded — the records
+// grow after the approval, and a digest that moved with them would refuse the work
+// — and so is the criterion's deferral, which the work may file.
 //
-// The recipe must not be normalised yet: the candidates are read from the file's own
-// shape.
-func (r *Recipe) restampLegacyApproval() {
-	if r.Approval == nil {
-		return
-	}
-	canonical, err := r.Fingerprint()
-	if err != nil || canonical == r.Approval.Fingerprint {
-		return
-	}
-	for _, candidate := range r.legacyFingerprints() {
-		if candidate == r.Approval.Fingerprint {
-			r.Approval.Fingerprint = canonical
-			return
-		}
-	}
-	// The content changed, not the encoding. The gate will say so.
+// There is one encoding, so there is no candidate set: the digest is taken over
+// this payload and nothing else.
+type approvalPayload struct {
+	Intent     approvalIntent      `json:"intent"`
+	Scope      approvalScope       `json:"scope"`
+	Acceptance []approvalCriterion `json:"acceptance"`
 }
 
-// legacyCriterion is the criterion as the version-5 build encoded it.
-//
-// The frozen criterion carries no records at all, so the field is always `null` — but
-// the *name* is part of the digest, and the rename changed it. This is the shape the
-// older build hashed.
-type legacyCriterion struct {
-	ID           string     `json:"id"`
-	Description  string     `json:"description"`
-	Verification string     `json:"verification"`
-	Proofs       []Evidence `json:"proofs"`
+// approvalIntent is the intent, as the digest sees it.
+type approvalIntent struct {
+	Outcome string `json:"outcome"`
+	Problem string `json:"problem"`
 }
 
-// legacyFingerprint is the digest of the recipe as the version-5 build encoded it:
-// the criterion's record was `proofs`.
-//
-// The digest hashes the JSON, and the JSON carries the field *name*. A rename is not
-// an edit — the content did not change, only the encoding — so a digest that cannot
-// tell the two apart reads a rename as tampering and refuses a recipe nobody touched.
-func (r Recipe) legacyFingerprint() (string, error) {
-	payload := struct {
-		Intent     Intent            `json:"intent"`
-		Scope      Scope             `json:"scope"`
-		Acceptance []legacyCriterion `json:"acceptance"`
-	}{
-		Intent:     r.Intent,
-		Scope:      r.Scope,
-		Acceptance: frozenLegacyCriteria(r.Acceptance),
-	}
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		return "", fmt.Errorf("fingerprint: %w", err)
-	}
-	sum := sha256.Sum256(raw)
-	return hex.EncodeToString(sum[:]), nil
+// approvalScope is the scope, as the digest sees it.
+type approvalScope struct {
+	InScope    []string `json:"in_scope"`
+	OutOfScope []string `json:"out_of_scope"`
 }
 
-// frozenLegacyCriteria strips a criterion the way the older build did, and names the
-// field the way it did.
+// approvalCriterion is a criterion's declared shape, as the digest sees it.
 //
-// The nil and the empty list are kept apart, because the older build hashed them
-// apart: a criterion list that was `null` and one that was `[]` are two documents.
-func frozenLegacyCriteria(in []Criterion) []legacyCriterion {
+// The records are not here. The criterion's evidence is excluded on purpose — it
+// grows after the approval — and the deferral with it.
+type approvalCriterion struct {
+	ID           string `json:"id"`
+	Description  string `json:"description"`
+	Verification string `json:"verification"`
+}
+
+// approvalPayload builds the canonical payload from the recipe.
+//
+// The lists are canonicalised here: `null` and `[]` are the same empty list, and a
+// list that is not empty hashes the same either way.
+func (r Recipe) approvalPayload() approvalPayload {
+	return approvalPayload{
+		Intent: approvalIntent{
+			Outcome: r.Intent.Outcome,
+			Problem: r.Intent.Problem,
+		},
+		Scope: approvalScope{
+			InScope:    canonicalList(r.Scope.InScope),
+			OutOfScope: canonicalList(r.Scope.OutOfScope),
+		},
+		Acceptance: canonicalCriteria(r.Acceptance),
+	}
+}
+
+// canonicalList is a list, always: an empty list is `[]`, never `null`.
+func canonicalList(in []string) []string {
 	if in == nil {
-		return nil
+		return []string{}
 	}
-	out := make([]legacyCriterion, 0, len(in))
-	for _, c := range frozenCriteria(in) {
-		out = append(out, legacyCriterion{
-			ID:           c.ID,
-			Description:  c.Description,
-			Verification: c.Verification,
-		})
-	}
-	return out
+	return in
 }
 
-// legacyFingerprints are the digests an older build could have written.
-//
-// An older build hashed the file's own form, and in that form each **empty** list was
-// either `null` or `[]`. The frozen payload holds three lists — the scope's two and
-// the criteria — and a list that is not empty hashes the same either way, so only the
-// empty ones vary. That axis alone yields at most eight candidates, and four for a
-// recipe whose scope is empty and whose criteria are not.
-//
-// The rename added a second axis. The criterion's record was `proofs` before it and
-// is `evidence` now, and the name is part of the document the digest hashes — so a
-// build that wrote `proofs` hashed a different document, and its digest is a candidate
-// too. The candidates are the product of the two axes: the list forms and the field
-// name — at most sixteen, and eight for a recipe whose scope is empty and whose
-// criteria are not.
-//
-// The set is complete: the payload's only list-shaped parts are those three, the only
-// thing an older build could write differently about them is whether an empty one was
-// `null` or `[]`, and the only thing the rename changed is the criterion's field name.
-// The canonical form — every list `[]`, the field named `evidence` — is one of the
-// candidates.
-//
-// A change of *content* changes the digest under every candidate, so a tampered
-// recipe matches none of them.
-func (r Recipe) legacyFingerprints() []string {
-	stringForms := func(l []string) [][]string {
-		if len(l) > 0 {
-			return [][]string{l}
-		}
-		return [][]string{nil, {}}
-	}
-	criterionForms := func(l []Criterion) [][]Criterion {
-		if len(l) > 0 {
-			return [][]Criterion{l}
-		}
-		return [][]Criterion{nil, {}}
-	}
-	var out []string
-	for _, inScope := range stringForms(r.Scope.InScope) {
-		for _, outOfScope := range stringForms(r.Scope.OutOfScope) {
-			for _, acceptance := range criterionForms(r.Acceptance) {
-				candidate := r
-				candidate.Scope.InScope = inScope
-				candidate.Scope.OutOfScope = outOfScope
-				candidate.Acceptance = acceptance
-				sum, err := candidate.fingerprint()
-				if err != nil {
-					continue
-				}
-				out = append(out, sum)
-				// The rename: the same content, the criterion's field under its
-				// older name.
-				legacy, err := candidate.legacyFingerprint()
-				if err != nil {
-					continue
-				}
-				out = append(out, legacy)
-			}
-		}
-	}
-	return out
-}
-
-// frozenCriteria strips the parts of a criterion that legitimately change after
-// approval, keeping the declared intent and its verification.
-func frozenCriteria(in []Criterion) []Criterion {
-	if in == nil {
-		return nil
-	}
-	out := make([]Criterion, 0, len(in))
+// canonicalCriteria are the criteria's declared shapes, always a list.
+func canonicalCriteria(in []Criterion) []approvalCriterion {
+	out := make([]approvalCriterion, 0, len(in))
 	for _, c := range in {
-		out = append(out, Criterion{
+		out = append(out, approvalCriterion{
 			ID:           c.ID,
 			Description:  c.Description,
 			Verification: c.Verification,

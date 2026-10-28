@@ -115,7 +115,7 @@
       "rollback": "revert the pane rendering"
     }
   ],
-  "questions": null,
+  "questions": [],
   "execution": {
     "claimed_by": "line-cook",
     "claimed_at": "2026-10-26T00:38:17Z"
@@ -169,13 +169,13 @@
         "by": "sous-chef"
       }
     ],
-    "decisions": null,
+    "decisions": [],
     "documentation": "The console now shows a finding's thread, so the recipe works as the channel between the reviewer and the fixer."
   },
   "approval": {
     "by": "chef",
     "at": "2026-10-26T00:35:22Z",
-    "fingerprint": "4984098d94858a1ec142f89c987e41d5c232bc2ad85c7699893ef9b20fd75fe1"
+    "fingerprint": "2b480eb51cf7920e4df8791907255cb4910bb251997d34752f73904baea25beb"
   },
   "overlays": {}
 }

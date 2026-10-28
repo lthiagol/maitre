@@ -272,63 +272,6 @@ func TestTheFingerprintIsAFunctionOfTheContent(t *testing.T) {
 	}
 }
 
-// TestALegacyApprovalIsRestampedNotRefused covers the older encoding.
-//
-// A plan approved before the normalisation carries a digest the canonical one does not
-// match. The content did not change; only the encoding did — so the approval is
-// re-stamped, not treated as tampering.
-func TestALegacyApprovalIsRestampedNotRefused(t *testing.T) {
-	ops, store := newOps(t)
-	r, err := ops.CreateRecipe(readySpec())
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, ev := range []Event{EventGroom, EventSpecify} {
-		if _, err := ops.Advance(r.ID, ev); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if _, err := ops.ApproveRecipe(r.ID, "chef"); err != nil {
-		t.Fatal(err)
-	}
-
-	// Stamp it the way the older build did: the file's own lists, hashed as they are.
-	raw, err := store.LoadRecipe(r.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw.Scope.InScope = nil
-	legacy, err := raw.fingerprint()
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw.Approval.Fingerprint = legacy
-	if err := store.SaveRecipe(raw); err != nil {
-		t.Fatal(err)
-	}
-
-	// The store re-stamps it.
-	loaded, err := store.LoadRecipe(r.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	canonical, err := loaded.Fingerprint()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if loaded.Approval.Fingerprint == legacy {
-		t.Fatal("the approval should be re-stamped canonically")
-	}
-	if loaded.Approval.Fingerprint != canonical {
-		t.Fatalf("the approval carries %q, want the canonical %q", loaded.Approval.Fingerprint, canonical)
-	}
-
-	// And the gate does not refuse the recipe nobody touched.
-	if _, err := ops.ClaimRecipe(r.ID, "runner"); err != nil {
-		t.Fatalf("the claim should not be refused: %v", err)
-	}
-}
-
 // TestTamperedFrozenSectionsAreCaught covers the immutability gate.
 //
 // The artifact must not assert a sign-off over content that is no longer there.

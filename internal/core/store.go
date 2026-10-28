@@ -418,8 +418,6 @@ func (s *Store) LoadRecipe(id string) (*Recipe, error) {
 	if err := checkRetiredRecipe(raw, &r); err != nil {
 		return nil, err
 	}
-	// Before the normalisation, so the legacy digest can still be read.
-	r.restampLegacyApproval()
 	r.normaliseLists()
 	return &r, nil
 }
@@ -455,7 +453,6 @@ func (s *Store) ListRecipes() ([]Recipe, error) {
 		if err := checkRetiredRecipe(raw, &r); err != nil {
 			return nil, err
 		}
-		r.restampLegacyApproval()
 		r.normaliseLists()
 		out = append(out, r)
 	}

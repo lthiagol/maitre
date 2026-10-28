@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "seq": 37,
+  "seq": 38,
   "events": [
     {
       "seq": 1,
@@ -411,6 +411,20 @@
         "from": "approval-fingerprint:proofs",
         "kind": "migration",
         "to": "approval-fingerprint:evidence"
+      },
+      "domain_version": 6
+    },
+    {
+      "seq": 38,
+      "at": "2026-10-28T10:07:50Z",
+      "kind": "control",
+      "actor": "runner",
+      "session": "s-migrate",
+      "role": "runner",
+      "data": {
+        "from": "approval-fingerprint:candidates",
+        "kind": "migration",
+        "to": "approval-fingerprint:canonical"
       },
       "domain_version": 6
     }

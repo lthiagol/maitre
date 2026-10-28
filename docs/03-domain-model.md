@@ -177,11 +177,17 @@ sections is **rejected at write time**, and a hand edit to them is caught by the
 `needs_regrooming` flag with an actual mechanism.
 
 The fingerprint is a **pure function of the content**: the digest is taken over a
-canonical form, so the same recipe hashes the same way whatever the load path and
-whatever build wrote the file. A digest that depended on how the file happened to be
-written would refuse every transition of a plan nobody touched. A plan approved by an
-older build carries the older encoding; the tool re-stamps it canonically rather than
-reading it as tampering.
+**canonical payload** — a shape the code owns, with fixed field names — so the same
+recipe hashes the same way whatever the load path and whatever build wrote the file.
+A digest that depended on how the file happened to be written would refuse every
+transition of a plan nobody touched. And because the payload's names are the code's,
+**a rename of a record's field does not move the digest at all**: a rename is not an
+edit, and a plan approved before a rename must not be read as tampered. There is one
+encoding, so there is no candidate set of encodings to recognise.
+
+The payload covers exactly the frozen sections: the intent, the scope, and each
+criterion's declared shape. A criterion's **evidence** is excluded — the records grow
+after the approval, and a digest that moved with them would refuse the work.
 
 ### 2.2 Acceptance criterion
 
