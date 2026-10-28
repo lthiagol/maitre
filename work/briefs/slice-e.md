@@ -58,9 +58,27 @@ the orchestrator can close the slice.
 - Update `docs/decisions/README.md` (the ADR index) and `0004-naming.md` so it says plainly that it is superseded by 0009, and **keep its tables as the record of what it said**.
 - The house rule is *docs state intent; ADRs record choices* — so this ADR is where the choice lives, and `docs/07-vocabulary.md` is where the chef's decision of record lives. Both point at each other.
 
+**One more ADR, and the line that decides it.** The rename moved the *incidental*
+vocabulary in the ADRs whose subject is the **mechanism** (0002, 0006, 0008) and left
+the ones whose subject is the **vocabulary** (0004, 0005) as the record of what they
+said. That line is settled.
+
+**But `docs/decisions/0006-verification.md` § 2 is wrong about the code**, and it is
+this slice's to fix because this slice touches the ADRs:
+
+> ### 2. Evidence has one of three match states
+
+The code has **four** — `proven` · `rejected` · `unknown` · `signed-off` — and the
+ADR's table lists three, under a name the code does not use (*unproven* for
+*unknown*). The sign-off is the one the ADR's own section is about, and it is missing.
+
+**A dated record of a *choice* is not a licence to misdescribe the mechanism.** The
+ADR's table must say what the code has. Fix it here, and say in your report exactly
+what you changed.
+
 ### AC-04 — the sweep
 
-Every remaining mention of an old name is gone from the docs and the code: `Kitchen Brigade`, `scale` (the binary), `line-cook`, `taster`, `expo` (the role), `Chopboard`, `special`, `prep note`, `Proof` (where it means the record), `R01`-style ids, `github.com/lthiagol/kitchen-brigade`.
+Every remaining mention of an old name is gone from the docs and the code: `Kitchen Brigade`, `scale` (the binary), `line-cook`, `taster`, `expo` (the role), `Chopboard`, `special`, `prep note`, `Proof` (where it means the record — and the record is called **evidence** now, so a leftover *proof* that means the record is drift too), `R01`-style ids, `github.com/lthiagol/kitchen-brigade`.
 
 - `grep` the tree and prove it. Report the exact commands and their output in the commit message.
 - **`docs/audit.md` is the ledger of the night — do not sweep it.** Its rows record the names as they were when the finding was filed; rewriting them would rewrite the record. Leave them, and say so in your report.
