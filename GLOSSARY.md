@@ -56,10 +56,10 @@ _Avoid_: Milestone, task, ticket, prompt
 **Backlog item**:
 The plan's loose end — one artifact with a **kind**: an `idea` (a hunch, an
 observation, an agent discovery), a `feature` or a `bug` (a small task, ready to work).
-It replaces the two file types the plan used to hold — a *special* and a *prep note* —
-and the **kind** is the only truth about its shape. It becomes a recipe when it is
-promoted, and shaping an idea into a small task is an update, not a promotion: the id
-does not change.
+It replaces the two file types the plan used to hold — see
+[ADR 0009](docs/decisions/0009-vocabulary.md) § 3 — and the **kind** is the only truth
+about its shape. It becomes a recipe when it is promoted, and shaping an idea into a
+small task is an update, not a promotion: the id does not change.
 _Avoid_: Special, prep note, note, brief, ticket
 
 **Course**:
