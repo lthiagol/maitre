@@ -14,11 +14,13 @@ import (
 // MatchState says whether the evidence matched anything, and whether the tool could
 // tell.
 //
-//	proven   — the count is known and greater than zero
-//	rejected — the count is known and zero: the filter matched nothing
-//	unproven — the count could not be determined; not machine evidence
+//	proven     — the count is known and greater than zero
+//	rejected   — the count is known and zero: the filter matched nothing
+//	unknown    — the count could not be determined; not machine evidence
+//	signed-off — a human vouched for a procedure the tool could not check; it claims
+//	              no match, and it is the one exception to the zero-match rule
 //
-// Only proven satisfies a gate. See docs/decisions/0006-verification.md.
+// Only proven is machine evidence. See docs/decisions/0006-verification.md.
 type MatchState string
 
 const (

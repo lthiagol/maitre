@@ -107,8 +107,8 @@ use the same code.
 
 **Slice 4 — the console.** Five tabs (Recipes · Backlog · Path · Log · Settings), the
 triage grouping, the served checkbox, the detail pane with `glamour` markdown, the
-primary action and the refusal banner. The lower rungs — specials and prep notes, with
-one-way promotion — came with it, so the Backlog tab has data.
+primary action and the refusal banner. The lower rungs — the backlog's ideas and small
+tasks, with one-way promotion — came with it, so the Backlog tab has data.
 
 **Slice 5a — the fullscreen console.** The console owns the terminal: alt screen, its
 own background, and a window title. The list fills the height and scrolls to keep the
@@ -230,12 +230,12 @@ weaker rules to it. `core.DomainVersion` says which rules the tool speaks;
 | [0001](docs/decisions/0001-stack.md) | Stack: **Go + Charm** (bubbletea v2, lipgloss v2, bubbles v2, glamour v2) |
 | [0002](docs/decisions/0002-human-interface-first.md) | Build order: human interface first, CLI derived from it |
 | [0003](docs/decisions/0003-surface-split.md) | Who writes what: artifact vs. management |
-| [0004](docs/decisions/0004-naming.md) | Naming — superseded in part by 0009 |
-| [0005](docs/decisions/0005-vocabulary.md) | Vocabulary: generic methodology, specific product |
+| [0004](docs/decisions/0004-naming.md) | Naming — superseded by 0009 |
+| [0005](docs/decisions/0005-vocabulary.md) | Vocabulary: generic methodology, specific product — superseded in part by 0009 |
 | [0006](docs/decisions/0006-verification.md) | Verification — who runs it, and what evidence is |
 | [0007](docs/decisions/0007-operation-layer.md) | The operation layer |
 | [0008](docs/decisions/0008-artifact-is-the-channel.md) | The artifact is the channel — no agent-to-agent messaging |
-| **0009** | **Naming: maitre · `maitre-cli` · `maitre` · the ladder** — written in a later slice; until then [docs/07-vocabulary.md](docs/07-vocabulary.md) is the decision of record |
+| [0009](docs/decisions/0009-vocabulary.md) | Vocabulary — the kitchen, the crew, and the machine's records; the decision of record is [docs/07-vocabulary.md](docs/07-vocabulary.md) |
 
 ## Layout
 

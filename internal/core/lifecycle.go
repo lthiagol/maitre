@@ -277,7 +277,7 @@ var gates = []gate{
 		// The approval record is created by the transition, so the gate checks the
 		// transition's context.
 		//
-		// The chef is the human; everyone else in the brigade is an agent. The
+		// The chef is the human; everyone else in the crew is an agent. The
 		// deny-list is the agent roles, so a human may approve under any name they
 		// like — but the actor performing the approval may not be one of the
 		// agents. That is the permission boundary ADR-0006 promised: the runner is

@@ -47,7 +47,7 @@ func recipeReviewedBy(t *testing.T, claimer, reviewer string) (*Operations, *Rec
 
 // TestTheRenamedRolesAreTheAgentRoles covers the deny-list after the rename.
 //
-// The brigade's jobs are plain words now: the sous chef, the runner, the reviewer and
+// The crew's jobs are plain words now: the sous chef, the runner, the reviewer and
 // the orchestrator. The list is a deny list, so the retired names must stay on it —
 // a plan written before the rename is refused exactly like one written after it.
 func TestTheRenamedRolesAreTheAgentRoles(t *testing.T) {

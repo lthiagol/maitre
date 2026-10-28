@@ -60,9 +60,8 @@ that would live as prose inside a backlog item. Deferred — build and observe.
 
 ### 1.1 How a backlog item becomes work
 
-The backlog's two rungs — a *special* (a hunch) and a *prep note* (intent and scope,
-before criteria) — are **one artifact with a kind**. The kind is the only truth; the
-console's groups are derived from it.
+The backlog is **one artifact with a kind**. The kind is the only truth about its
+shape, and the console's groups are derived from it.
 
 ```
 idea ──shaped into──▶ a small task   (kind: idea → feature|bug, plus a scope)

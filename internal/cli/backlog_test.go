@@ -201,7 +201,7 @@ func TestAnUnknownKindNamesTheKinds(t *testing.T) {
 
 // TestTheBacklogDismissesEveryKind covers the dismissal.
 //
-// Only a special could be dismissed before, and no one could say why. An idea, a
+// Only one kind could be dismissed before, and no one could say why. An idea, a
 // feature and a bug are all things the chef can decide against.
 func TestTheBacklogDismissesEveryKind(t *testing.T) {
 	dir := newPlan(t)

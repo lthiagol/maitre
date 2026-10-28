@@ -84,7 +84,7 @@ func TestADeferralDoesNotUndoAPass(t *testing.T) {
 
 // TestOnlyTheChefMayApprove covers the permission deny-list.
 //
-// The chef is the human; everyone else in the brigade is an agent. The list is a deny
+// The chef is the human; everyone else in the crew is an agent. The list is a deny
 // list, so a human may approve under any name — but an agent cannot sign off at all.
 func TestOnlyTheChefMayApprove(t *testing.T) {
 	store := Open(filepath.Join(t.TempDir(), PlanDirName))

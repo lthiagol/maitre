@@ -24,7 +24,7 @@ commit is the fix — see [sync.sh](sync.sh).
 
 | Skill | Why not |
 |---|---|
-| `code-review` | **Adapted instead of vendored** — it becomes our `taster` role. Its Spec axis must read a recipe from `kitchen/`, not an issue tracker. See `docs/decisions/`. |
+| `code-review` | **Adapted instead of vendored** — it becomes our `reviewer` role. Its Spec axis must read a recipe from `kitchen/`, not an issue tracker. See `docs/decisions/`. |
 | `wayfinder` | Tracker-coupled and decision-shaped. We took its *ideas* — map-as-index, fog of war, name-not-id, HITL-vs-AFK — not the skill. |
 | `prototype` | The method transfers; the artifacts assume a web stack. We already have `maitre --render` for the equivalent. |
 | `implement`, `implement-spec` | Call `tdd` (premise 2) and assume multi-agent worktree orchestration (premise 3). |
@@ -37,6 +37,6 @@ skills/sync.sh          # re-copy at the pinned commit, report what changed
 skills/sync.sh --bump   # move to a newer commit, then re-copy
 ```
 
-The script never edits a vendored file by hand. If a skill needs changing for Kitchen
-Brigade, it becomes **our** skill under `templates/skills/` — the vendored copy stays
-pristine so the diff against upstream stays readable.
+The script never edits a vendored file by hand. If a skill needs changing for maitre, it
+becomes **our** skill under `templates/skills/` — the vendored copy stays pristine so the
+diff against upstream stays readable.

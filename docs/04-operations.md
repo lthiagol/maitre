@@ -170,8 +170,8 @@ commands, 265 subcommands.)
 | `maitre-cli backlog` | list · create · update · dismiss · promote |
 | workspace | `init` · `demo` · `plan` · `path` · `log` (`--since <seq>`) · `gates` |
 
-The backlog is **one noun**. It was two — `special` and `prepnote` — and two file types
-for one list is two nouns for one thing. `backlog create` takes `--kind
+The backlog is **one noun**. It was two file types for one list, and two file types for
+one list is two nouns for one thing. `backlog create` takes `--kind
 idea|feature|bug` (default `idea`), and `backlog update --kind` is the **shaping**
 step: an idea becomes a small task by being made a `feature` or a `bug` and gaining a
 `--scope`. The id does not change — `BL01` stays `BL01`. `dismiss` works on every
@@ -302,8 +302,8 @@ notices. See [ADR-0008](decisions/0008-artifact-is-the-channel.md).
 - **`SignOffCriterion`** — a human signing off an unproven criterion is *evidence
   without a command*. Is it evidence with a different match state, or a separate field
   on the criterion? The criterion status must stay derivable.
-- **The backlog operations** — answered: the special and the prep note are one
-  artifact with a kind, and one verb group.
+- **The backlog operations** — answered: the two old file types are one artifact with
+  a kind, and one verb group.
 - **Whether `Advance` should be one operation or a set.** Today it is one, taking an
   event. The alternative is one operation per event — more discoverable, more surface.
   The gate table suggests one.

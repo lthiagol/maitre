@@ -626,7 +626,7 @@ func frozenCriteria(in []Criterion) []Criterion {
 
 // AgentRoles are the names that may not sign a recipe off.
 //
-// The chef is the human; everyone else in the brigade is an agent — the sous chef,
+// The chef is the human; everyone else in the crew is an agent — the sous chef,
 // the runner, the reviewer and the orchestrator. `agent` is the CLI's default actor,
 // so it is on the list too: a caller who does not say who they are is not the chef.
 //

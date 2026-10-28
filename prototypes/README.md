@@ -7,7 +7,7 @@ they are the sketch you react to before the real thing gets built.
 
 ```bash
 cat prototypes/tab-recipes.txt    # the board — the main surface
-cat prototypes/tab-backlog.txt    # specials and prep notes
+cat prototypes/tab-backlog.txt    # the backlog: ideas and small tasks
 cat prototypes/tab-path.txt       # the execution order
 cat prototypes/tab-log.txt        # the activity journal
 cat prototypes/tab-settings.txt   # the plan, the view, the keys
@@ -16,10 +16,15 @@ cat prototypes/tab-settings.txt   # the plan, the view, the keys
 **These are generated from the real console** — `maitre --render --plain` output, saved.
 They are not sketches; they are what the tool actually draws.
 
+**They are captured output, and they predate the rename.** The ids in them are `R01`,
+the recipe is called the *proof contract*, and the tab bar has five tabs. They are the
+record of the layout that was compared, so they are kept as they were; the *table*
+below names the plan as it is now.
+
 | Tab | Holds | Job |
 |---|---|---|
 | **Recipes** | every recipe, grouped by what needs the chef | view · decide |
-| **Backlog** | specials and prep notes | manage the backlog |
+| **Backlog** | the backlog's items — ideas and small tasks | manage the backlog |
 | **Path** | the execution order, and what blocks what | run |
 | **Log** | the activity journal | see the audit trail |
 | **Settings** | the plan, the view, the keys | — |
@@ -31,7 +36,7 @@ Autopilot · Settings. Four are gone:
 |---|---|
 | Overview | the triage-ordered board *is* the overview; a second tab would restate it |
 | Milestones | → **Recipes**, our vocabulary |
-| Ideas | folded into **Backlog** — a special is our idea |
+| Ideas | folded into **Backlog** — a backlog item is our idea |
 | Autopilot | v2 has no orchestration; the running recipes are a section of the board |
 
 ## The layout variants
@@ -54,15 +59,15 @@ Seven recipes spread across every lane, so each tab has something to say:
 
 | | | |
 |---|---|---|
-| R01 Sharpen the AC gate | draft | |
-| R02 Sign off the menu | ready | awaiting the chef |
-| R03 Wire the review queue | remediation | 1 open tasting note |
-| R04 Add the backlog view | approved | waiting on R02 |
-| R05 Sharpen the evidence contract | executing | on the line |
-| R06 Draft the glossary | closed | served |
-| R07 Record the review protocol | draft | waiting on R05 |
+| RCP01 Sharpen the AC gate | draft | |
+| RCP02 Sign off the menu | ready | awaiting the chef |
+| RCP03 Wire the review queue | remediation | 1 open tasting note |
+| RCP04 Add the backlog view | approved | waiting on RCP02 |
+| RCP05 Sharpen the evidence contract | executing | on the line |
+| RCP06 Draft the glossary | closed | served |
+| RCP07 Record the review protocol | draft | waiting on RCP05 |
 
-Plus four specials and two prep notes in the backlog.
+Plus four ideas and two small tasks in the backlog.
 
 ## Rules for prototypes
 

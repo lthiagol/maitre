@@ -447,7 +447,7 @@ the journal is the only event log.
 ```mermaid
 flowchart LR
     subgraph adapters["adapters"]
-        cmd_scale["cmd/maitre-cli"]
+        cmd_cli["cmd/maitre-cli"]
         cmd_maitre["cmd/maitre"]
     end
     subgraph surfaces["surfaces"]
@@ -457,7 +457,7 @@ flowchart LR
     core["internal/core<br/><i>domain · gates · store · operations</i><br/>stdlib only"]
     plan[("kitchen/")]
 
-    cmd_scale --> cli
+    cmd_cli --> cli
     cmd_maitre --> ui
     cli --> core
     ui --> core

@@ -81,8 +81,8 @@ off, reviews, serves. It does **not** claim the work — that is an agent's move
 console is not an agent.
 
 This was found the hard way: an early build let the console claim a recipe as
-`line-cook`, which put a false claim in the artifact — the journal said `chef`, the
-recipe said `line-cook`. Offering to do an agent's job is how a surface ends up lying
+`runner`, which put a false claim in the artifact — the journal said `chef`, the
+recipe said `runner`. Offering to do an agent's job is how a surface ends up lying
 about who did what.
 
 The chef's moves are derived (`core.ChefMoveOf`), so the footer cannot offer a move the

@@ -155,12 +155,12 @@ func seed(store *Store, stress bool) error {
 	// RCP04 — approved and idle. It has no runner yet, and it waits on RCP02.
 	r04, err := sous.CreateRecipe(RecipeSpec{
 		Title:      "Add the backlog view",
-		Outcome:    "Specials and prep notes are visible and promotable",
+		Outcome:    "Backlog items are visible and promotable",
 		Problem:    "v1 had twelve artifact types and no ladder, so nothing connected to anything",
 		InScope:    []string{"the backlog lane"},
 		OutOfScope: []string{"web shell", "orchestration"},
 		Criteria: []CriterionSpec{
-			{Description: "the backlog lists specials", Verification: "go test ./internal/core -run Backlog"},
+			{Description: "the backlog lists items", Verification: "go test ./internal/core -run Backlog"},
 		},
 		WorkPackages: []string{"ui"},
 		Steps: []StepSpec{
@@ -178,7 +178,7 @@ func seed(store *Store, stress bool) error {
 	if _, err := chef.ApproveRecipe(r04.ID, "chef"); err != nil {
 		return fmt.Errorf("seed RCP04 approve: %w", err)
 	}
-	if _, err := chef.SignOffCriterion(r04.ID, "AC-01", "chef", "the backlog lists specials"); err != nil {
+	if _, err := chef.SignOffCriterion(r04.ID, "AC-01", "chef", "the backlog lists items"); err != nil {
 		return fmt.Errorf("seed RCP04 sign off: %w", err)
 	}
 	// RCP04 cannot run until RCP02 is signed off and closed.

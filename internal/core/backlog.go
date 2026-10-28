@@ -7,9 +7,8 @@ import (
 
 // The backlog: one artifact, with a kind.
 //
-// The backlog had two file types — a *special* (a hunch) and a *prep note* (intent and
-// scope, before criteria) — and two CLI verb groups. They are one artifact now: a
-// **backlog item** whose `kind` says what it is.
+// The backlog had two file types and two CLI verb groups. They are one artifact now:
+// a **backlog item** whose `kind` says what it is.
 //
 // The kind is the only truth. The console's two groups — *Ideas* and *Small tasks* —
 // are derived from it and never stored. The id is kind-neutral: `BL01` stays `BL01`
@@ -49,8 +48,8 @@ var BacklogKinds = []string{KindIdea, KindFeature, KindBug}
 
 // BacklogItem is the backlog's artifact.
 //
-// The body is why the item is worth doing — the hunch's note and the prep note's
-// intent, merged. The scope is the work, if it is known.
+// The body is why the item is worth doing — a hunch, or the intent behind a small
+// task. The scope is the work, if it is known.
 type BacklogItem struct {
 	ID         string   `json:"id"`
 	Title      string   `json:"title"`
@@ -300,7 +299,7 @@ func emptyIfNil(list []string) []string {
 // DismissBacklogItem marks a backlog item as not worth pursuing.
 //
 // Every kind can be dismissed: an idea, a feature and a bug are all things the chef
-// can decide against, and the asymmetry of the old ladder — only a special could be
+// can decide against, and the asymmetry of the old ladder — only one kind could be
 // dismissed — had no reason behind it.
 func (o *Operations) DismissBacklogItem(id, reason string) (*BacklogItem, error) {
 	unlock, err := o.store.lock()
