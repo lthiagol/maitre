@@ -73,6 +73,23 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **F-85** | the spec, the decision of record and the `DomainVersion` comment all still said *"a format change moves the version on its own"* — **the coupling this slice split**. The runner's judgement was right; the prose still taught the opposite. | **closed** — the version fences the **writer**, the fingerprint is the **tripwire** that says the facts moved. |
 | **F-86** | **the sweep's instrument was blind, not the tree.** The command and the brief's list omitted *maître d'*, so one of the seven renamed terms was outside its reach — the sweep would have passed whatever the tree said about it, because **it never asked**. | **closed** — the command carries all seven names and excludes the glossary's `_Avoid_` lines. **The command is written down below**, because an instrument that lives only in a commit message is one the next reader has to dig for. |
 
+### Slice F's findings — one shape, three times
+
+| Finding | What | State |
+|---|---|---|
+| **F-87** | a retired name could **buy a gate**: `line-cook` claims, `runner` reviews, and `review.reviewer_independent` passed. The rule had been enforced per *operation* instead of at the *entry*. | **closed** — a retired name cannot enter a live record by any path, however it is spelled. |
+| **F-88** | the operations doc still said the retired names *name the role they stood for* — the resolution was gone. | **closed** — the doc says what the code says. |
+| **F-89** | the digest's **encoding** changed and neither fence moved: a plan from the previous build passed the version guard and was refused as *tampered* — a lie, since nothing was tampered with. | **closed** — the digest's payload shape is a **format fact**, so the shape moves, so the version moves (**7**), so the version guard gives the honest message. |
+| **F-90** | the new "one format" wire scanned one package, exempted a whole file, and omitted the retired id literals — three doors open. | **closed** — it scans the whole tree, its exemptions are per *declaration*, and it reads the code's canonical lists instead of carrying its own copy. |
+| **F-91** | the domain's own API could **write a record it then refused to read** — the tool bricked the plan it had just written. | **closed** — the rule moved to where a name enters a record, and the writer's check runs **before** the write. |
+| **F-92** | `docs/03` contradicted itself: § 1 said a retired file name is read as readily as a current one, while § 6 and § 6.2 said it is refused. | **closed** — § 1 draws the line the code draws: a **typed name** is a lookup and is tolerated, a **file's name on disk** is the format and is refused, the **journal** is history. |
+| **F-93** | the record's name fields were enumerated **twice** — the writer's list and the reader's list — with no wire comparing them, and the drift's consequence was F-91's hole. | **closed** — and then **the field list went away entirely**: the check is **by value**, so a new name-carrying field is caught automatically, and the writer and the reader run the *same* function. |
+
+**The shape of all three of the severe ones: two answers to one question.** A rule
+enforced per *operation* instead of per *entry*; a digest's *encoding* the version
+could not see; a list of *fields* written out twice. The remedy is always the same:
+**one answer, and the one that is asked.**
+
 ### The tree is shared — with the mascot's session
 
 Since 2026-10-27 evening, **another session is drawing the mascot in this same
@@ -298,7 +315,7 @@ that is not a migration path, that is a log.
 
 | Slice | What | State |
 |--:|---|---|
-| **F** | the tolerance machinery comes out; the format is one format | 🟡 **in flight** | [briefs/slice-f.md](briefs/slice-f.md) |
+| **F** | the tolerance machinery comes out; the format is one format | 🟡 **closing** — review `ok`; F-87..F-93 closed; a two-line prose round is with the runner | [briefs/slice-f.md](briefs/slice-f.md) |
 
 ## The rules that keep this durable
 
