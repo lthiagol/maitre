@@ -501,11 +501,13 @@ small task keeps its id, so the trail survives the shaping.
 
 **There is one format.** The retired shapes are not supported, and there is no
 second reader for them: a plan that carries `kitchen/specials/`,
-`kitchen/prep-notes/`, a record under a retired field name, or a live record under a
-retired id form is **not supported**, and the tool says so plainly instead of
-pretending the plan is empty. The **journal** is the one thing that keeps the old
-names: it is history, it is append-only, and the reader still resolves what the
-journal names.
+`kitchen/prep-notes/`, a record under a retired field name, a live record under a
+retired id form, or a **file named with a retired id form** is **not supported**,
+and the tool says so plainly instead of pretending the plan is empty. **Not
+supported means no writes**: the refusal is on the write path too, so the tool does
+not hand records to a plan it does not support. The **journal** is the one thing
+that keeps the old names: it is history, it is append-only, and the reader still
+resolves what the journal names.
 
 | Field | |
 |---|---|
@@ -585,6 +587,13 @@ the chef can do, and it promises no migration. Reading is always allowed. See
 `core.DomainVersion`; the guard itself is `Store.checkDomainVersion` in
 `internal/core/lock.go`.
 
+**The write path has a second fence.** A plan that carries a retired artifact is
+**not supported** either, and the retired check gates the write:
+`Store.checkRetiredPlan`, in `internal/core/retired.go`, refuses the write before
+anything lands. The two fences say one thing twice — *this tool does not write plans
+it does not support* — and a message at read time is not a fence: the plan would
+keep taking records in a format the tool does not speak.
+
 **Two facts, two jobs.** The **version** is the **plan-side** fact: it says which
 rules the plan was written under, and it fences the writer. The **fingerprint** is the
 **code-side** tripwire: it hashes the gates, the transitions, the lifecycles, the
@@ -650,7 +659,9 @@ old name is a record the current reader does not know.
 name the same recipe, and `BL01`, `bl01`, `BL1`, `B01` and `1` all name the same
 backlog item: a name resolves to a record, and a name is not a record. The **record**
 on disk is in the current format — `RCP01`, `BL01`, `evidence`, `completion` — and a
-record under a retired form is refused. The **journal** keeps the old names and the
+record under a retired form is refused. The **file's name** is part of the format,
+so a file named with a retired id form is refused as well — while a name the tool
+merely tolerates (`RCP1`, `B01`) is read. The **journal** keeps the old names and the
 old ids, because the journal is history: it is append-only, and the reader still
 resolves what it names. See [07-vocabulary.md](07-vocabulary.md).
 

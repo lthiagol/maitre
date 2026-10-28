@@ -400,9 +400,10 @@ func (s *Store) DiskFingerprint() (string, error) {
 // LoadRecipe reads one recipe by id.
 //
 // The plan is read in the current format only: a file that carries a retired field
-// name or a retired id form is refused, not half-read.
+// name or a retired id form is refused, not half-read — and a file whose **name**
+// carries a retired id form is refused too, because the name is part of the format.
 func (s *Store) LoadRecipe(id string) (*Recipe, error) {
-	if err := s.checkRetiredDirectories(); err != nil {
+	if err := s.checkRetiredLayout(); err != nil {
 		return nil, err
 	}
 	path, err := s.findRecipePath(id)
@@ -429,7 +430,7 @@ func (s *Store) LoadRecipe(id string) (*Recipe, error) {
 // The list is never nil: an empty plan is an empty list, and the CLI marshals an
 // empty list as `[]` and a nil slice as `null`. A client cannot iterate `null`.
 func (s *Store) ListRecipes() ([]Recipe, error) {
-	if err := s.checkRetiredDirectories(); err != nil {
+	if err := s.checkRetiredLayout(); err != nil {
 		return nil, err
 	}
 	entries, err := os.ReadDir(s.RecipeDir())

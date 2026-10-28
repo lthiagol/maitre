@@ -251,6 +251,10 @@ func TestAFailedRemovalDoesNotFailTheWrite(t *testing.T) {
 // another kind sitting in the directory is not a copy of this artifact. Deleting it
 // would lose an artifact the tool was never asked to touch, with nothing in the
 // journal to say so.
+//
+// The record inside the file is a recipe's: a plan holds one record per file, and a
+// record whose id is not a recipe's id is a plan this tool does not support. The
+// *name* is the other kind's, and the name is what the removal reads.
 func TestTheRemovalLeavesAnotherKindsFileAlone(t *testing.T) {
 	ops, store := newOps(t)
 	r, err := ops.CreateRecipe(spec())
@@ -258,7 +262,7 @@ func TestTheRemovalLeavesAnotherKindsFileAlone(t *testing.T) {
 		t.Fatal(err)
 	}
 	rogue := filepath.Join(store.RecipeDir(), "C01-rogue.json")
-	if err := os.WriteFile(rogue, []byte("{\"id\":\"C01\",\"title\":\"a course\"}\n"), 0o644); err != nil {
+	if err := os.WriteFile(rogue, []byte("{\"id\":\"RCP02\",\"title\":\"a course\"}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

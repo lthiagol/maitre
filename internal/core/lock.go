@@ -32,7 +32,27 @@ var staleLockAfter = 30 * time.Second
 // applying rules the plan was not written under.
 // lock takes the plan lock and refuses a plan written under other rules.
 func (s *Store) lock() (func(), error) {
-	return s.lockUnder(s.checkDomainVersion)
+	return s.lockUnder(s.checkWritable)
+}
+
+// checkWritable refuses a write to a plan the tool does not support.
+//
+// Two fences, and both hold:
+//
+//   - the plan's **version** must be the tool's version — a stale tool does not
+//     write a plan it does not understand; and
+//   - the plan must carry **no retired artifact** — a plan in a retired format is
+//     not supported, and *not supported* means **no writes**, not only a message at
+//     read time.
+//
+// The second fence was missing: the reader refused such a plan and the writer wrote
+// to it anyway, so the plan kept taking records in a format the tool does not
+// speak. A message is not a fence.
+func (s *Store) checkWritable() error {
+	if err := s.checkDomainVersion(); err != nil {
+		return err
+	}
+	return s.checkRetiredPlan()
 }
 
 // lockUnder takes the plan lock, with the given guard.
@@ -110,6 +130,10 @@ func (s *Store) checkDomainVersion() error {
 // The declaration is the one write that crosses the version fence, and it may only
 // move the plan **forward**: a tool may not stamp a plan with a version it does not
 // speak, and a plan under a newer version is not this tool's to move.
+//
+// The retired fence holds here too: a plan that still carries a retired artifact is
+// not supported, and the declaration records a plan that has already moved — so the
+// plan is migrated before it is declared.
 func (s *Store) checkDeclarationForward() error {
 	j, err := s.LoadJournal()
 	if err != nil {
@@ -119,5 +143,5 @@ func (s *Store) checkDeclarationForward() error {
 	if plan > DomainVersion {
 		return fmt.Errorf("this plan is under domain version %d and this tool speaks %d: a declaration only moves a plan forward", plan, DomainVersion)
 	}
-	return nil
+	return s.checkRetiredPlan()
 }

@@ -203,6 +203,113 @@ func TestTheJournalKeepsTheOldNames(t *testing.T) {
 	}
 }
 
+// TestAPlanWithARetiredArtifactIsNotWrittenTo covers the write path.
+//
+// **Not supported means no writes.** The reader refused such a plan and the writer
+// wrote to it anyway — so `maitre-cli backlog create` kept handing records to a
+// plan the tool does not support, and the message at read time was the only fence
+// there was. The fence is on the write path now.
+func TestAPlanWithARetiredArtifactIsNotWrittenTo(t *testing.T) {
+	cases := []struct {
+		name    string
+		prepare func(t *testing.T, s *Store)
+	}{
+		{
+			name: "a retired directory",
+			prepare: func(t *testing.T, s *Store) {
+				old := filepath.Join(s.Root, "specials")
+				if err := os.MkdirAll(old, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(old, "S01-a-hunch.json"),
+					[]byte(`{"id":"S01","title":"A hunch","status":"open"}`), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			},
+		},
+		{
+			name: "a retired record",
+			prepare: func(t *testing.T, s *Store) {
+				writeRecipeFile(t, s, "RCP01-t.json", `{"id":"RCP01","title":"t","slug":"t","lifecycle":"draft",
+					"acceptance":[{"id":"AC-01","description":"d","verification":"go test ./...",
+					"proofs":[{"command":"go test ./...","exit_code":0,"matched":1,"match":"proven"}]}]}`)
+			},
+		},
+		{
+			name: "a retired file name",
+			prepare: func(t *testing.T, s *Store) {
+				writeRecipeFile(t, s, "R01-t.json", `{"id":"RCP01","title":"t","slug":"t","lifecycle":"draft"}`)
+			},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			s := newStore(t)
+			if err := s.Init(); err != nil {
+				t.Fatal(err)
+			}
+			ops := NewOperations(s, AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+			c.prepare(t, s)
+
+			_, err := ops.CreateBacklogItem("A hunch", "a body", nil, "idea", nil)
+			if err == nil {
+				t.Fatal("a plan with a retired artifact must not be written to")
+			}
+			var unsupported *UnsupportedPlanError
+			if !errors.As(err, &unsupported) {
+				t.Fatalf("the refusal should be an unsupported plan: %v", err)
+			}
+
+			// And the recipe is not written either.
+			if _, err := ops.CreateRecipe(readySpec()); err == nil {
+				t.Fatal("a plan with a retired artifact must not be written to")
+			}
+
+			// And nothing landed.
+			entries, err := os.ReadDir(filepath.Join(s.Root, DirBacklog))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, e := range entries {
+				t.Errorf("the refusal wrote %s anyway", e.Name())
+			}
+		})
+	}
+}
+
+// TestTheFileNameMustBeInTheCurrentFormat covers the note.
+//
+// A file named `R01-<slug>.json` is a retired id form on disk, and the file's name
+// is part of the format: the plan is not supported, and the refusal says what the
+// name should be.
+func TestTheFileNameMustBeInTheCurrentFormat(t *testing.T) {
+	s := newStore(t)
+	if err := s.Init(); err != nil {
+		t.Fatal(err)
+	}
+	writeRecipeFile(t, s, "R01-t.json", `{"id":"RCP01","title":"t","slug":"t","lifecycle":"draft"}`)
+
+	_, err := s.LoadRecipe("RCP01")
+	if err == nil {
+		t.Fatal("a file named with a retired id form must not be read")
+	}
+	var unsupported *UnsupportedPlanError
+	if !errors.As(err, &unsupported) {
+		t.Fatalf("the refusal should be an unsupported plan: %v", err)
+	}
+	if !strings.Contains(err.Error(), "RCP01") {
+		t.Errorf("the refusal should name the current form: %v", err)
+	}
+	if !strings.Contains(err.Error(), "R01-t.json") {
+		t.Errorf("the refusal should name the file: %v", err)
+	}
+
+	// And the listing refuses it too: a plan is not half-read.
+	if _, err := s.ListRecipes(); err == nil {
+		t.Fatal("the listing must not read a plan whose files are named in a retired form")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // The wire for "one format"
 // ---------------------------------------------------------------------------
@@ -368,6 +475,10 @@ func TestTheOneFormatWireCanFail(t *testing.T) {
 // A retired word is named **once** in the glossary: in the `_Avoid_` line of the
 // entry that replaced it. A retired word in the prose is a word the tool still
 // uses, and the glossary is what a reader trusts to say which word is which.
+//
+// The retired recipe-level stamp is not in the list: its name — `evidence` — is a
+// **current** word too (the criterion's record), and the glossary names it in the
+// `Completion` entry's `_Avoid_` line.
 func TestTheGlossaryNamesEachRetiredNameOnce(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("..", "..", "GLOSSARY.md"))
 	if err != nil {
@@ -377,7 +488,9 @@ func TestTheGlossaryNamesEachRetiredNameOnce(t *testing.T) {
 	if section == "" {
 		t.Fatal("the glossary has no language section — the wire would check nothing")
 	}
-	for _, name := range RetiredNames {
+	names := append([]string{}, RetiredNames...)
+	names = append(names, "special", "prep-note", "proof")
+	for _, name := range names {
 		found := 0
 		for _, line := range strings.Split(section, "\n") {
 			if !glossaryNames(line, name) {

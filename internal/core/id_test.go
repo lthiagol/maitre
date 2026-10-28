@@ -2,8 +2,10 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -119,12 +121,16 @@ func TestTheNormaliserStripsEveryLeadingLetter(t *testing.T) {
 	}
 }
 
-// TestAFileNamedWithTheOldIdIsStillRead covers the plan on disk.
+// TestAFileNamedWithTheOldIdIsRefused covers the plan on disk.
 //
 // The ids changed; the files written before the change did not. A file named
-// `R01-<slug>.json` is the same artifact as one named `RCP01-<slug>.json`, and the
-// reader takes both.
-func TestAFileNamedWithTheOldIdIsStillRead(t *testing.T) {
+// `R01-<slug>.json` is a **retired id form on disk** — and the file's name is part
+// of the format, so the plan is not supported: the reader says so plainly instead
+// of reading a plan that says one thing in its name and another in its content.
+//
+// The **lookup** stays tolerant: a name is not a record, and `R01` still names the
+// recipe the plan holds.
+func TestAFileNamedWithTheOldIdIsRefused(t *testing.T) {
 	s := newStore(t)
 	if err := s.Init(); err != nil {
 		t.Fatal(err)
@@ -148,15 +154,24 @@ func TestAFileNamedWithTheOldIdIsStillRead(t *testing.T) {
 	if err := os.Rename(filepath.Join(s.RecipeDir(), "RCP01-a-recipe.json"), old); err != nil {
 		t.Fatal(err)
 	}
-	rec, err := s.LoadRecipe(got.ID)
-	if err != nil {
-		t.Fatalf("the recipe under its old file name: %v", err)
+	_, err = s.LoadRecipe(got.ID)
+	if err == nil {
+		t.Fatal("a file named with a retired id form must not be read")
 	}
-	if rec.ID != "RCP01" {
-		t.Errorf("the id is %q, want RCP01", rec.ID)
+	var unsupported *UnsupportedPlanError
+	if !errors.As(err, &unsupported) {
+		t.Fatalf("the refusal should be an unsupported plan: %v", err)
 	}
-	// And it answers to the old form.
-	rec, err = ops.GetRecipe("R01")
+	if !strings.Contains(err.Error(), "RCP01") {
+		t.Errorf("the refusal should name the current form: %v", err)
+	}
+
+	// And the lookup's tolerance stands: the old form still names the recipe the
+	// plan holds — as long as the file is named in the current form.
+	if err := os.Rename(old, filepath.Join(s.RecipeDir(), "RCP01-a-recipe.json")); err != nil {
+		t.Fatal(err)
+	}
+	rec, err := ops.GetRecipe("R01")
 	if err != nil {
 		t.Fatalf("R01: %v", err)
 	}

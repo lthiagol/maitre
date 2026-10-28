@@ -127,7 +127,7 @@ func (v *BacklogItem) Slug() string { return Slugify(v.Title) }
 // The record itself is current-format only: an item without a `kind`, or with a
 // retired id form, is refused.
 func (s *Store) LoadBacklogItem(id string) (*BacklogItem, error) {
-	if err := s.checkRetiredDirectories(); err != nil {
+	if err := s.checkRetiredLayout(); err != nil {
 		return nil, err
 	}
 	raw, path, err := s.readArtifact(filepathJoin(s.Root, DirBacklog), id)
@@ -149,7 +149,7 @@ func (s *Store) LoadBacklogItem(id string) (*BacklogItem, error) {
 // The list is never nil: an empty plan is an empty list, and the CLI marshals an
 // empty list as `[]` and a nil slice as `null`. A client cannot iterate `null`.
 func (s *Store) ListBacklogItems() ([]BacklogItem, error) {
-	if err := s.checkRetiredDirectories(); err != nil {
+	if err := s.checkRetiredLayout(); err != nil {
 		return nil, err
 	}
 	entries, err := readDirSafe(filepathJoin(s.Root, DirBacklog))
