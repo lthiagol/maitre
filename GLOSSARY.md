@@ -181,6 +181,9 @@ the skills and the docs.
 | evidence | **evidence** |
 | steps | **method** |
 | guidance | **method** |
+| — | **kitchen** |
+| — | **sign-off** |
+| — | **tasting** |
 | — | **completion** |
 | — | **line** |
 | — | **board** |
