@@ -109,11 +109,22 @@ came with the crossing of the two words — the per-criterion record became
 **The version and the fingerprint are two fences, and they fence different things.**
 The **version** is the plan-side fact: the plan says which rules it was written under,
 and the tool writes it only under those same rules. The **fingerprint** is the
-code-side tripwire: it says *the format's facts changed* — it covers what the tool
-writes, and moving it means the facts moved, not that the writer moved. So a change to
-the **facts list** — a guard that now covers one fact more — moves the fingerprint and
-leaves the version alone, and a change to **what the tool writes** moves both. The
-fingerprint is what makes sure the version is moved **by hand** when it should be.
+code-side tripwire: it hashes **the facts of the format**, so it says *the format
+changed*.
+
+**So the version moves when the format changes — and the facts list must name every
+fact the format has**, because **a fact the list does not name is a change the version
+cannot see.** That was not a theory: version 6 covered **two digest encodings**,
+because the approval digest's payload shape was not in the list. The shape now is, so
+the shape is a fact, and **version 7** came with it.
+
+**And the other direction, which is easy to get backwards:** a change to the *list*
+does not by itself change the format. Slice E made the list name the root files and
+the journal envelope — facts the format **already had**, which the list had not been
+naming — so the fingerprint moved and the version did not. **A fact added to the list
+that the format already had is not a format change; a fact the format *changed* is.**
+
+The fingerprint is what makes sure the version is moved **by hand** when it should be.
 
 ## What is strings only
 
