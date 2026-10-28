@@ -96,7 +96,7 @@ _Avoid_: User, approver, owner, manager
 **Maitre**:
 The console — the chef's window on the kitchen. It greets the chef, takes the order,
 and checks on the tables. It **manages** the plan; it does not author the artifact.
-_Avoid_: TUI, dashboard, frontend, UI
+_Avoid_: maître d', TUI, dashboard, frontend, UI
 
 **Sous-chef**:
 The coordinator agent. Composes recipe cards, preps the line, and runs the tasting.
