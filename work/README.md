@@ -229,39 +229,39 @@ a pane's scrollback; the receipt in `work/inbox/` is what the orchestrator can a
 read. A lane that stops mid-work should still write its receipt, saying where it
 stopped.
 
-### The sweep — the command, so the next reader need not dig for it
+### The sweep — the command, and what it now returns
 
 The rename's last slice swept the tree of every old name. The **command** is the
-instrument, and an instrument that lives only in a commit message is an instrument
-the next reader has to dig for — so it is written down here.
+instrument, and an instrument that lives only in a commit message is an instrument the
+next reader has to dig for — so it is written down here.
 
 ```bash
 grep -rnE --exclude-dir=.git --exclude-dir=work --exclude-dir=logo --exclude-dir=bin --exclude-dir=kitchen \
   --include="*.go" --include="*.md" --include="*.py" -i \
-  "kitchen brigade|kitchen-brigade|chopboard|\bexpo\b|\btaster\b|line-cook|line cook|\bspecials?\b|prep[ -]note|\bproofs?\b|maître d'" . \
-  | grep -v "^./docs/audit" \
-  | grep -v "^./docs/audits/" \
-  | grep -v "^./research/" \
-  | grep -v "^./docs/decisions/0004-naming.md" \
-  | grep -v "^./docs/decisions/0005-vocabulary.md" \
-  | grep -v "^./docs/decisions/0009-vocabulary.md" \
-  | grep -v "^./docs/07-vocabulary.md" \
-  | grep -v "^./prototypes/tab-" \
-  | grep -v "^./GLOSSARY.md:[0-9]*:_Avoid_:"
+  "kitchen brigade|kitchen-brigade|chopboard|\bexpo\b|\btaster\b|line-cook|line cook|maître d'|\bR01\b|\bS01\b|\bN01\b" . \
+  | grep -v "^./docs/audit" | grep -v "^./docs/audits/" | grep -v "^./research/" \
+  | grep -v "^./docs/decisions/000[45]-" | grep -v "^./docs/decisions/0009-" \
+  | grep -v "^./docs/07-vocabulary.md" | grep -v "^./prototypes/" \
+  | grep -v "^./GLOSSARY.md:[0-9]*:_Avoid_:" \
+  | grep -v "_test.go"
 ```
 
-**It returns 72 lines in 18 files**, and every one names something that still
-exists: the legacy reader, the retired-role aliases, the tests of the old ids and
-the migration events, the dated version notes, the tripwires' own mutations.
+**What it returns: nothing that is a live value.** Every hit is a place that
+*explains* the refusal or records the history — the code's own detection
+(`internal/core/retired.go`), the deny-list that refuses the retired names
+(`internal/core/model.go`), the comments that say why a retired id is refused, and the
+docs' two sections that say the names are refused. The names survive **where the tool
+refuses them**, and nowhere else.
 
-**The rules the command encodes:**
+**The rules the command encodes, and one it cannot:**
 
 | | |
 |---|---|
-| **Carry every name** | all seven retired names, *maître d'* among them. A command that cannot see a name is not a check — that was **F-86**. |
-| **A warning is not drift** | the glossary's `_Avoid_` lines name retired words **on purpose**, so they are excluded. A retired word outside one is drift. |
+| **Carry every name** | all the retired **literals**. A command that cannot see a name is not a check — that was **F-86**. |
+| **The families need a human** | `special`, `proof` and `legacy` are **English words** as well as retired names — *"no special case in a rule"* is not drift. A grep cannot tell the two apart, so the families are **read**, not grepped. The code's own wire (F-90) does distinguish them, and it scans the tree. |
+| **A warning is not drift** | the glossary's `_Avoid_` lines name retired words **on purpose**, so they are excluded. |
 | **The records are not swept** | the ledger keeps the names as they were when each finding was filed; `research/` is about v1; the old ADRs keep their tables as the record of what they said; `docs/07` and ADR 0009 are the rename's own tables. |
-| **No script** | deliberately. The sweep is a **one-time act** over a tree that now has *legitimate* old names. A permanent tripwire would need a permanent exclusion list, and **a tripwire with a long exclusion list is a tripwire that has stopped seeing**. The live facts have their own instruments: the deny-list wire, the derived-views wire, the plan-format wire. |
+| **No script** | deliberately. The sweep is a **one-time act** over a tree that now has *legitimate* old names — in the code that refuses them, and in the prose that explains it. A permanent tripwire would need a permanent exclusion list, and **a tripwire with a long exclusion list is a tripwire that has stopped seeing**. The live facts have their own instruments: the deny-list wire, the one-format wire, the derived-views wire, the plan-format wire. |
 
 ## The chef's ruling — 2026-10-28: **no migrations**
 
