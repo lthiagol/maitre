@@ -70,16 +70,22 @@ lint:
 	$(MAKE) vet
 	$(MAKE) staticcheck
 
-# `PKG` and `RUN` narrow the run:
+# One place decides how a test run is invoked. `test` and `test-race` differ
+# in the flags they add and in nothing else: the filter and the package
+# always reach the script, and the zero-match check always applies. Two
+# recipes that spelled the invocation out separately would drift — and a slow
+# gate that can pass having tested nothing is the worst kind of broken gate.
+#
 #   make test PKG=./internal/core RUN='-run Role|SelfReview'
+#
 # A filter that matches no test fails — a green that proves nothing.
-test:
-	$(call header,$@)
-	GO=$(GO) scripts/go-test.sh "$(RUN)" "$(PKG)"
+TEST_FLAGS ?=
+test: TEST_FLAGS :=
+test-race: TEST_FLAGS := -race -shuffle=on -count=2
 
-test-race:
+test test-race:
 	$(call header,$@)
-	GO=$(GO) scripts/go-test.sh "-race -shuffle=on -count=2" "$(PKG)"
+	GO=$(GO) scripts/go-test.sh "$(TEST_FLAGS) $(RUN)" "$(PKG)"
 
 goldens:
 	$(call header,$@)
