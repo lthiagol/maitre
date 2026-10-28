@@ -1,64 +1,45 @@
-Runner: slice G fix 1 done. Commits: 4. Fixed: F-94, F-95, F-96 and the boundary. The tree is free of the drawings; the glyph is in the brand package, in the rendered output and in the card's art. Notes: the reviewer should know these.
+Runner: slice G fix 2 done. Commits: 1 (plus this receipt). Fixed: F-97 and the glyph's scope. The drawing is declared once, and the wire holds it. Notes: the reviewer should know these.
 
-| Commit | Fix |
-|---|---|
-| `a919d7f` fix: the mark yields to the content, in the height too | F-94 |
-| `f39af35` fix: the wire that says where the mark may be, and that can fail | F-95 |
-| `659e14a` fix: the boundary wire parses the imports, whatever the spelling | F-96 |
-| `a6065b3` test: both boundaries of the width rule are pinned | the boundary |
+**F-97 — the exemption is the declaration, not the file.** The wire's question is
+now *is every occurrence of the drawing the canonical declaration?* The declaration
+is found by parsing the package, and the two literals that hold the drawings are
+masked out of the search — so the full drawing may be in the literal that holds it,
+the half drawing in the literal that holds it, and nowhere else: not in another
+file, not in another corner of the declaring file.
 
-**F-94 — the height rule.** The tab's area is `height − 5` rows; the mark costs
-**six** (five lines and the blank under them); the content is 15. So the mark is
-drawn only when the content and the mark both fit, and otherwise the tab has **no
-mark** — the content is whole. The wire renders the tab at 80 columns and at 20,
-24, 26, 30 and 40 rows, and asserts that the content is whole at every one of them
-(the `LAST EVENT` section and the event row are on the screen) and that the mark is
-drawn only at 26 and above. At 80×24 the tab is byte-for-byte what it was before
-the mark.
+**The glyph's scope is the category, not the extension.** The rule as stated and the
+rule as implemented are the same rule now:
 
-**F-95 — the scope wire, and the truth about the tree.** Two rules, because there
-are two things:
+| Form | code | rendered output | art | prose |
+|---|---|---|---|---|
+| the drawings | the canonical declaration, and nowhere else | — | — | — |
+| the compact glyph | the canonical declaration, and nowhere else | may ride along | may ride along | may be quoted |
 
-| Thing | Rule | Where it is, today |
-|---|---|---|
-| the drawings | in the source files and in the declaration, and **nowhere else** — any file type | the two `.txt` sources and `internal/brand/mark.go` |
-| the compact glyph | must not be **pasted into another code file** | `internal/brand/mark.go`, the two goldens (rendered output), the wallpaper SVG (ninety copies — the card's own art), and prose: the brand sheet, the ledger, the briefs |
+A script is code, so the glyph pasted into `scripts/console-shot.py` now fails the
+wire. Prose may quote the glyph — the brand sheet and the reviewer's ledger name
+it, and quoting is not pasting.
 
-**The earlier claim was false and is withdrawn**: *"the mark's characters appear in
-no other file in the tree"* — the goldens carry the glyph on the header line, and
-so do the wallpaper, the brand sheet and the ledger. What is true: **the drawings
-appear nowhere else in the tree**; the glyph is declared in the brand package and
-appears in the rendered output and in the card's art.
+**The exclusions are records, not holes**, and the comment says so: `.git` is the
+repository's own objects, `bin` is build output (the binaries carry the art as
+string literals), `skills` is vendored third-party, and `work` is the night's
+scratch — the briefs, the transcripts and the receipts quote what the console
+shows, art and all.
 
-**The exemption is per declaration, not per package.** The declaration is found by
-parsing the package, so a pasted copy is never mistaken for it and a rename does
-not widen the exemption. The wire can fail: the reviewer's two mutations (a copy
-in `internal/brand/zz_probe.go`, a copy in `internal/ui/testdata/zz_probe.txt`), the
-glyph in another code file, and each of them fails it — proven in a scratch tree
-and by hand in this tree.
+**Proven by hand in this tree**, each one failing the wire and then removed: a copy
+beside the declaration in `internal/brand/mark.go`; a copy in a golden; a copy in a
+doc; a copy in the plan (`kitchen/`); a copy in `cmd/`; a copy in `images/`; and
+the glyph in a script. The wire's own test proves the same list in a scratch tree.
 
-**The directories the wire does not read**: `.git`, `bin`, `skills` and `work`. The
-binaries carry the art as string literals, and the transcripts capture what the
-console shows — art and all. Everything else is read: `docs`, `images`, `kitchen`,
-every file, any type. If the reviewer wants `work/` scanned too, that is one line.
-
-**F-96 — the boundary wire parses the imports.** Every spelling is caught —
-single-line, grouped, blank — because a wire that catches one spelling waits for
-the other. Proven by hand in this tree: a blank import and a single-line import of
-`internal/brand` in `internal/core` both fail the wire, and both compile. The
-scope is in the comment: the rule is about the code that **ships**, so the wire
-reads the **non-test** files of `internal/core`.
-
-**The boundary is pinned.** The full form is 28 columns and is drawn one column in,
-so it needs **29**: 29 takes the full form, 28 does not. The half form needs
-**15**: 15 takes it, 14 and 13 do not. Changing the threshold to
-`brand.Width(Full)` now fails the suite — it passed before.
+**One thing to report.** While proving the wire, a probe was written over
+`scripts/console-shot.py` by mistake — the probe's path was the script's own path.
+It was restored from git at once and is byte-identical to HEAD; `git status` shows
+it untouched. No other file was written outside the ones I own.
 
 **The tree.** `make lint && gofmt -l . && make test && make regen-goldens &&
-git status --short` is clean; the goldens did not move (the header did not move).
-The budgets: `internal/core` 0, `internal/cli` 0, `internal/ui` 28,
-`internal/brand` 0. The tripwires hold — the derived-views table, the gate table,
-the plan format, the command count (42). `core.DomainVersion` is still 7.
+git status --short` is clean; the goldens did not move. The budgets: `internal/core`
+0, `internal/cli` 0, `internal/ui` 28, `internal/brand` 0. The tripwires hold — the
+derived-views table, the gate table, the plan format, the command count (42).
+`core.DomainVersion` is still 7.
 
 **Not touched**: `docs/audit.md`, `docs/07-vocabulary.md`, `work/` (except this
 receipt), `images/`, `README.md`, and the card's copy.
