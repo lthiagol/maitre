@@ -357,6 +357,11 @@ orchestrator found none of them. The ledger's open table holds only the chef's r
    `/tmp` took half the night's record once, and the briefs are the reasoning that
    produced the code. A brief in the repo is in the history next to the change it
    caused.
+2. **The gate is `make check`.** One command, and every check is a target: a focused
+   check is `make test PKG=… RUN=…`, and the tools are not run directly. The gate
+   runs where the code lands — in CI, on every push — and the pre-push hook runs the
+   fast one. The **slow** gate (`-race -shuffle=on -count=2`, three minutes) stays in
+   CI; a push does not wait for it.
 2. **The lanes' scrollback is captured at every slice boundary**, into
    `work/transcripts/`. The scrollback is bounded and rotates: the runner's pane
    held 85 lines of a much longer conversation when it was first captured. The ledger
