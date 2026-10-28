@@ -548,10 +548,10 @@ newer tool stamps its own version on the next write. Reading is always allowed. 
 **What the stamp covers is exactly what the fingerprint hashes**: the gates, the
 transitions, the lifecycles, the events, the chef's moves, the rules on a tasting
 note's outcome **and the facts of the plan's format** — the id prefixes, the
-directories, the field names on disk. A rule outside that list is a rule the stamp
-cannot see — so a rule that changes has to be added to the list, or the plan cannot
-say which rules it was written under. It is the *shape* of the rules, not their
-behaviour: what a gate computes is not in the fingerprint either.
+directories, the root files and the field names on disk. A rule outside that list is
+a rule the stamp cannot see — so a rule that changes has to be added to the list, or
+the plan cannot say which rules it was written under. It is the *shape* of the rules,
+not their behaviour: what a gate computes is not in the fingerprint either.
 
 **The stamp protects the future, not the corpus.** The guard refuses only when the
 plan is newer than the tool, so a plan stamped 1 stays open to a version-1 tool until

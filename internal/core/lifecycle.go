@@ -188,10 +188,10 @@ const MinOutOfScope = 2
 // version is bumped because the **writer** changed.
 //
 // **Version 4: the stamp covers the plan's format.** The fingerprint now hashes the
-// facts of the format — the id prefixes, the directories, the field names on disk —
-// so a format change moves the version on its own. Before this, the format was
-// versioned by hand: a tool could write old-format records into a new-format plan
-// and nothing noticed.
+// facts of the format — the id prefixes, the directories, the root files and the field
+// names on disk — so a format change moves the version on its own. Before this, the
+// format was versioned by hand: a tool could write old-format records into a
+// new-format plan and nothing noticed.
 //
 // **Version 3: the plan format changed.** A recipe's id is `RCP01` and its file is
 // named `RCP01-<slug>.json`, where version 2 wrote `R01` and `R01-<slug>.json`. The
