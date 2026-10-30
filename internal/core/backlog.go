@@ -67,9 +67,9 @@ type BacklogItem struct {
 // ready to run.
 //
 // The rule lives here, once, because three surfaces need it — the promotion, which
-// refuses an idea and gives a small task a criterion, and the console, which files a
-// small task under *Small tasks*. Two answers to one question is how the console and
-// the domain drift apart.
+// refuses an idea, the criteria a promoted recipe starts with, and the console, which
+// files a small task under *Small tasks*. Two answers to one question is how the
+// console and the domain drift apart.
 func isSmallTask(kind string) bool {
 	return kind == KindFeature || kind == KindBug
 }
