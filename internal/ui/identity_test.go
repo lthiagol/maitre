@@ -54,27 +54,83 @@ func TestTheWindowTitleAndTheHeaderAgree(t *testing.T) {
 	}
 }
 
-// TestTheNameFallsBackToThePlanRoot proves a plan with no name still has one.
+// TestTheNameHasOneAnswer proves the two nameless cases answer the same.
 //
-// The plan's own name is the answer; without one, the console falls back to the
-// plan's root, so the tab is never a bare "maitre".
-func TestTheNameFallsBackToThePlanRoot(t *testing.T) {
+// A plan whose project file names nothing and a plan whose project file is missing
+// are the same case, and they answer the same — and the answer is a **name**, never
+// a path.
+func TestTheNameHasOneAnswer(t *testing.T) {
 	store := identityStore(t)
+	project := filepath.Join(store.Root, core.FileProject)
+
 	// A plan whose project file carries no name.
-	if err := os.WriteFile(filepath.Join(store.Root, core.FileProject),
+	if err := os.WriteFile(project,
 		[]byte(`{"name":"","created":"2026-01-01T00:00:00Z"}`), 0o644); err != nil {
+		t.Fatalf("write project: %v", err)
+	}
+	empty := loadInto(t, New(store))
+	emptyName := empty.projectName()
+
+	// The same plan without a project file at all.
+	if err := os.Remove(project); err != nil {
+		t.Fatalf("remove project: %v", err)
+	}
+	missing := loadInto(t, New(store))
+	missingName := missing.projectName()
+
+	if emptyName != missingName {
+		t.Errorf("the two nameless cases answer differently: %q and %q", emptyName, missingName)
+	}
+	if emptyName != "demo" {
+		t.Errorf("the name is %q, want the project's directory name %q", emptyName, "demo")
+	}
+	if strings.ContainsRune(emptyName, filepath.Separator) {
+		t.Errorf("the name is a path: %q", emptyName)
+	}
+	if got, want := empty.View().WindowTitle, "maitre · "+emptyName; got != want {
+		t.Errorf("the window title is %q, want %q", got, want)
+	}
+	if got, want := missing.View().WindowTitle, "maitre · "+emptyName; got != want {
+		t.Errorf("the window title is %q, want %q", got, want)
+	}
+}
+
+// TestTheNameIsSanitised proves the name goes through the same door as every other
+// rendered string.
+//
+// The plan's own file is written by the tool — `Init` takes the directory's
+// basename — and a directory may carry a newline. A name that broke the header
+// would break the screen.
+func TestTheNameIsSanitised(t *testing.T) {
+	store := identityStore(t)
+	raw := `{"name":"we\nird","created":"2026-01-01T00:00:00Z"}`
+	if err := os.WriteFile(filepath.Join(store.Root, core.FileProject), []byte(raw), 0o644); err != nil {
 		t.Fatalf("write project: %v", err)
 	}
 	m := loadInto(t, New(store))
 
-	if got, want := m.projectName(), store.Root; got != want {
-		t.Errorf("the name is %q, want the plan's root %q", got, want)
+	name := m.projectName()
+	if strings.ContainsAny(name, "\n\r\t") {
+		t.Errorf("the name still carries a control character: %q", name)
 	}
-	if got, want := m.View().WindowTitle, "maitre · "+store.Root; got != want {
-		t.Errorf("the window title is %q, want %q", got, want)
+	first := strings.SplitN(plain(m), "\n", 2)[0]
+	if !strings.Contains(first, "we ird") {
+		t.Errorf("the header does not carry the sanitised name: %q", first)
 	}
-	if !strings.Contains(plain(m), "· "+store.Root) {
-		t.Errorf("the header does not carry the fallback\n%s", plain(m))
+	// The header is one row: a name with a newline would take two, and the screen
+	// would be corrupt.
+	clean := loadInto(t, New(identityStore(t)))
+	if got, want := len(strings.Split(plain(m), "\n")), len(strings.Split(plain(clean), "\n")); got != want {
+		t.Errorf("the header is %d rows, want %d\n%s", got, want, plain(m))
+	}
+	// The file on disk keeps what was written: the sanitising is a rendering
+	// concern, not a claim about the data.
+	onDisk, err := os.ReadFile(filepath.Join(store.Root, core.FileProject))
+	if err != nil {
+		t.Fatalf("read project: %v", err)
+	}
+	if string(onDisk) != raw {
+		t.Errorf("the file on disk changed:\n%s", onDisk)
 	}
 }
 
@@ -177,8 +233,8 @@ func TestThePlanKeepsItsOwnName(t *testing.T) {
 // TestTheSettingsTabShowsThePlanRoot proves the Settings tab says which plan this
 // is.
 //
-// Two plans whose names are alike are told apart by their path — the project
-// directory, not the plan directory inside it.
+// The row is labelled `root`, and the root is the plan directory — the one
+// `core.FindRoot` returns and `store.Root` holds.
 func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
 	store := identityStore(t)
 	m := loadInto(t, New(store))
@@ -190,11 +246,11 @@ func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
 	}
 	rows := text.String()
 
-	if want := humanPath(m.planRoot()); !strings.Contains(rows, want) {
+	if want := humanPath(store.Root); !strings.Contains(rows, want) {
 		t.Errorf("the Settings tab does not show the plan's root %q\n%s", want, rows)
 	}
-	if unwanted := humanPath(store.Root); strings.Contains(rows, unwanted) {
-		t.Errorf("the Settings tab shows the plan directory %q instead of the root\n%s", unwanted, rows)
+	if unwanted := humanPath(filepath.Dir(store.Root)); strings.Contains(rows, unwanted+"\n") {
+		t.Errorf("the Settings tab shows the project's directory %q instead of the root\n%s", unwanted, rows)
 	}
 	for _, p := range palettes() {
 		if !strings.Contains(rows, p.name) {

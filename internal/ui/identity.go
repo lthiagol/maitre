@@ -4,8 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/lthiagol/maitre/internal/core"
 )
 
 // Option configures the console when it is built.
@@ -26,16 +24,19 @@ func WithProject(name string) Option {
 // and the window title. Two computations would drift, and the drift would show as a
 // terminal whose tab says one project and whose header says another.
 //
-// The `--project` flag wins: it is what the chef asked for. Without it, the plan's
-// own name is the answer, and a plan that has no name falls back to its root.
+// The answer is the domain's: the console asks *what is this plan called?* and does
+// not answer it a second time. The `--project` flag is what the chef asked for, so
+// it wins.
+//
+// The name is a **rendered string**, and it goes through the same door as every
+// other one: a newline in a name would corrupt the screen, and the plan's own file
+// is written by the tool — `Init` takes the directory's basename, and a directory
+// may carry a newline.
 func (m *Model) projectName() string {
 	if m.project != "" {
-		return m.project
+		return sanitize(m.project)
 	}
-	if p, err := m.ops.GetProject(); err == nil && p.Name != "" {
-		return p.Name
-	}
-	return m.store.Root
+	return sanitize(m.store.ProjectName())
 }
 
 // windowTitle is the title the operating system puts on the terminal's tab.
@@ -44,18 +45,6 @@ func (m *Model) projectName() string {
 // the project's name — not the product's.
 func (m *Model) windowTitle() string {
 	return "maitre · " + m.projectName()
-}
-
-// planRoot is the project's directory — the one that holds the plan directory.
-//
-// The store is rooted at `<project>/kitchen`, and the path a chef needs is the
-// project: it is the directory they can open, and the one that tells two plans
-// apart when their names are alike.
-func (m *Model) planRoot() string {
-	if filepath.Base(m.store.Root) == core.PlanDirName {
-		return filepath.Dir(m.store.Root)
-	}
-	return m.store.Root
 }
 
 // humanPath shortens a path for a human: the home directory becomes `~`.
