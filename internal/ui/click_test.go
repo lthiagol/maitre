@@ -256,6 +256,114 @@ func TestAClickOnTheFullScreenDetailDoesNothing(t *testing.T) {
 	}
 }
 
+// stepAt is the scripted spelling of a click at a point.
+func stepAt(verb string, x, y int) string {
+	return fmt.Sprintf("%s@(%d,%d)", verb, x, y)
+}
+
+// TestTheClickIsDrivableFromAScript covers the scripted click.
+//
+// The console is driven from a script by `maitre --keys`, and CI has no terminal,
+// so the click has to be drivable the way the keys are.
+func TestTheClickIsDrivableFromAScript(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 12
+	m.View()
+
+	// The Backlog label, at the position the last drawn frame says it is at.
+	x, y := m.hits.tabs[int(TabBacklog)].centre()
+	if _, err := Drive(m, []string{stepAt("click", x, y)}); err != nil {
+		t.Fatal(err)
+	}
+	if m.tab != TabBacklog {
+		t.Errorf("the scripted click left the console on %q, want %q", m.tab.Label(), TabBacklog.Label())
+	}
+}
+
+// TestTheScriptedClickTakesAPosition covers a click on a row.
+func TestTheScriptedClickTakesAPosition(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 12
+	m.View()
+
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no row with an item")
+	}
+	if _, err := Drive(m, []string{stepAt("click", 5, row)}); err != nil {
+		t.Fatal(err)
+	}
+	if m.selRecipes != 1 {
+		t.Errorf("the scripted click left the cursor on %d, want 1", m.selRecipes)
+	}
+}
+
+// TestTheClickSurvivesTheSplitter covers the command line.
+//
+// The steps are separated by commas, and the position is bracketed — so the comma
+// inside it is not a separator.
+func TestTheClickSurvivesTheSplitter(t *testing.T) {
+	steps := SplitSteps("click@(12,5),tab")
+	want := []string{"click@(12,5)", "tab"}
+	if len(steps) != len(want) {
+		t.Fatalf("the steps are %q, want %q", steps, want)
+	}
+	for i := range want {
+		if steps[i] != want[i] {
+			t.Errorf("step %d is %q, want %q", i, steps[i], want[i])
+		}
+	}
+}
+
+// TestAnUnknownClickStepIsRefused covers the driver's refusal.
+func TestAnUnknownClickStepIsRefused(t *testing.T) {
+	m := newModel(t)
+	if _, err := Drive(m, []string{"click:sideways"}); err == nil {
+		t.Fatal("expected an unknown click to be refused")
+	}
+	if _, err := Drive(m, []string{"click@(1"}); err == nil {
+		t.Fatal("expected a malformed position to be refused")
+	}
+	if _, err := Drive(m, []string{"click@1,5"}); err == nil {
+		t.Fatal("expected an unbracketed position to be refused")
+	}
+}
+
+// TestTheClickLeavesAnOpenPromptAlone checks the prompt keeps the selection.
+//
+// While the prompt is open every input belongs to it — the console must not move
+// the selection out from under a half-typed answer.
+func TestTheClickLeavesAnOpenPromptAlone(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 12
+	m.View()
+
+	m.openReview("RCP02")
+	if m.prompt == nil {
+		t.Fatal("the prompt should be open")
+	}
+	before := m.selRecipes
+	beforeTab := m.tab
+
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no row with an item")
+	}
+	click(t, m, 5, row)
+	if m.selRecipes != before {
+		t.Errorf("the click moved the selection to %d while the prompt was open", m.selRecipes)
+	}
+
+	x, y := m.hits.tabs[int(TabBoard)].centre()
+	click(t, m, x, y)
+	if m.tab != beforeTab {
+		t.Errorf("the click went to %q while the prompt was open", m.tab.Label())
+	}
+}
+
 // TestTheClickOnATabIsTheKeyboardsSwitch checks the click makes the keyboard's move.
 //
 // The keyboard's `tab` and the mouse's click on the next tab's label must land in

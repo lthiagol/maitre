@@ -118,6 +118,8 @@ type mouseStep struct {
 //	"wheel:down@(12,5)"  the wheel down, at column 12, row 5
 //	"click"             the click, over the list
 //	"click@(12,5)"      the click, at column 12, row 5
+//	"click"             the click, over the list
+//	"click@(12,5)"      the click, at column 12, row 5
 //
 // The coordinates are the terminal's own: zero-based, with (0,0) at the upper-left
 // corner. The position is **bracketed**, because the steps are separated by commas
@@ -142,6 +144,11 @@ func MouseFor(name string, m *Model) (tea.MouseMsg, bool) {
 		case "down":
 			return tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown}, true
 		}
+	case "click":
+		if step.arg != "" {
+			return nil, false
+		}
+		return tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft}, true
 	}
 	return nil, false
 }
