@@ -336,3 +336,55 @@ func TestTheWheelLeavesAnOpenPromptAlone(t *testing.T) {
 		t.Errorf("the wheel scrolled the detail to %d while the prompt was open", m.detailScroll)
 	}
 }
+
+// TestTheWheelScrollsTheSplitDetail covers the split layout's detail pane.
+//
+// The pane scrolls in **both** layouts. It did not: the split layout drew the detail
+// without looking at the offset, so the wheel moved the offset and the frame came
+// out the same.
+func TestTheWheelScrollsTheSplitDetail(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 20
+	before := StripANSI(m.View().Content)
+
+	x, y := m.hits.detail.centre()
+	m.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
+	if m.detailScroll != wheelStep {
+		t.Fatalf("the wheel over the split detail scrolled it by %d, want %d", m.detailScroll, wheelStep)
+	}
+
+	after := StripANSI(m.View().Content)
+	if before == after {
+		t.Errorf("the frame did not move:\n%s", after)
+	}
+}
+
+// TestTheScrollsBoundIsThePanesWidth covers the bound the scroll stops at.
+//
+// The pane is narrower in the split layout, and a narrower pane wraps the same text
+// into more rows. The bound is counted at the width the pane draws with, so the
+// scroll can reach the pane's last row.
+func TestTheScrollsBoundIsThePanesWidth(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 20
+	m.View()
+
+	pane := len(detailRows(m.detailLines(m.detailPaneWidth())))
+	if m.detailLineCount() != pane {
+		t.Errorf("the bound is %d rows, want the pane's %d", m.detailLineCount(), pane)
+	}
+	if m.detailPaneWidth() != m.width-m.listColumn()-3 {
+		t.Errorf("the pane draws at %d columns, want %d", m.detailPaneWidth(), m.width-m.listColumn()-3)
+	}
+
+	// The scroll reaches the pane's last row.
+	x, y := m.hits.detail.centre()
+	for i := 0; i < 200; i++ {
+		m.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
+	}
+	if want := m.detailLineCount() - 1; m.detailScroll != want {
+		t.Errorf("the scroll stopped at %d, want %d", m.detailScroll, want)
+	}
+}

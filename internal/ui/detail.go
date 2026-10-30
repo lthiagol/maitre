@@ -109,14 +109,42 @@ func (m *Model) viewDetail(width int) string {
 	if !ok {
 		return m.styDim.Render("  (nothing selected)")
 	}
-	rows := detailRows(m.recipeDetail(rec, width))
-	if m.detailScroll > 0 {
-		if m.detailScroll >= len(rows) {
-			m.detailScroll = len(rows) - 1
-		}
-		rows = rows[m.detailScroll:]
-	}
+	rows := m.detailScrollRows(detailRows(m.recipeDetail(rec, width)))
 	return strings.Join(rows, "\n")
+}
+
+// detailScrollRows is the detail's rows, from the scroll's offset.
+//
+// The offset is applied **here**, once. Two places that applied it were two answers
+// to *where in the recipe is the chef*, and the layouts disagreed: the split layout
+// moved the offset and drew the same frame.
+func (m *Model) detailScrollRows(rows []string) []string {
+	if m.detailScroll <= 0 || len(rows) == 0 {
+		return rows
+	}
+	if m.detailScroll >= len(rows) {
+		m.detailScroll = len(rows) - 1
+	}
+	return rows[m.detailScroll:]
+}
+
+// detailPaneWidth is the width the detail pane draws with.
+//
+// The pane is beside the list in the split layout, and the list takes a column of
+// it — so the pane is narrower there. A narrower pane wraps the same text into
+// **more** rows, so the pane's width is also the width the scroll's bound is
+// computed against: one answer for the detail's rows, and the bound cannot stop
+// early against a row count the pane never had.
+func (m *Model) detailPaneWidth() int {
+	if m.mode == ModeDetail {
+		return m.width - 4
+	}
+	if m.width >= splitThreshold {
+		return m.width - m.listColumn() - 3
+	}
+	// The single layout draws no pane. The width only answers for the bound, and
+	// the full screen is the honest answer for it.
+	return m.width - 4
 }
 
 // recipeDetail renders one recipe.

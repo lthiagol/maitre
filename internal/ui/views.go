@@ -91,13 +91,7 @@ func (m *Model) renderDetailFull() string {
 	b.WriteString(m.summaryLine() + "\n")
 	bannerRows := m.writeBanner(&b)
 
-	detail := detailRows(m.detailLines(m.width - 4))
-	if m.detailScroll > 0 {
-		if m.detailScroll >= len(detail) {
-			m.detailScroll = len(detail) - 1
-		}
-		detail = detail[m.detailScroll:]
-	}
+	detail := m.detailScrollRows(detailRows(m.detailLines(m.detailPaneWidth())))
 	h := m.listAreaHeight()
 	start := headerRows + bannerRows
 	for i := 0; i < h; i++ {
@@ -144,7 +138,7 @@ func (m *Model) renderSingle(lines []listLine) string {
 // renderSplit draws the list and the detail side by side, both full height.
 func (m *Model) renderSplit(lines []listLine) string {
 	listWidth := m.listColumn()
-	detailWidth := m.width - listWidth - 3
+	detailWidth := m.detailPaneWidth()
 
 	var left []string
 	h := m.listAreaHeight()
@@ -156,7 +150,9 @@ func (m *Model) renderSplit(lines []listLine) string {
 			left = append(left, "")
 		}
 	}
-	right := detailRows(m.detailLines(detailWidth))
+	// The pane scrolls here, like it does full screen: the offset is applied where
+	// the detail is drawn.
+	right := m.detailScrollRows(detailRows(m.detailLines(detailWidth)))
 	if len(right) > h {
 		right = right[:h]
 	}

@@ -653,8 +653,13 @@ func (m *Model) scrollDetail(delta int) {
 }
 
 // detailLineCount is how many rows the open recipe's detail has.
+//
+// It is counted at the width the pane draws with — the narrower one in the split
+// layout — because a narrower pane wraps the same text into more rows. The bound
+// and the pane have to agree, or the scroll stops early against a row count the
+// pane never had.
 func (m *Model) detailLineCount() int {
-	return len(detailRows(m.detailLines(m.width - 4)))
+	return len(detailRows(m.detailLines(m.detailPaneWidth())))
 }
 
 // applyTheme makes the theme under the cursor the console's theme.
