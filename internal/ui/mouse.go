@@ -35,14 +35,19 @@ func (m *Model) handleMouse(mouse tea.Mouse) (tea.Model, tea.Cmd) {
 
 // scrollUnderPointer scrolls whatever is under the pointer.
 //
-// The wheel over the list scrolls the list, and the wheel over the detail scrolls
-// the detail. Both are the scrolls the keyboard drives — the same offset, the same
+// The detail pane answers the pointer when the pointer is over it. The **list**
+// answers the rest: it is the console's one scrollable thing, so a pointer over the
+// header scrolls the list rather than nothing. The full-screen detail has no list on
+// screen, so there the wheel over the header does nothing at all.
+//
+// Both scrolls are the scrolls the keyboard drives — the same offset, the same
 // clamping — so a second scroll variable never creeps in.
 func (m *Model) scrollUnderPointer(x, y, delta int) {
-	switch {
-	case m.hits.overDetail(x, y):
+	if m.hits.overDetail(x, y) {
 		m.scrollDetail(delta)
-	case m.hits.overList(x, y):
+		return
+	}
+	if !m.hits.list.empty() {
 		m.move(delta)
 	}
 }

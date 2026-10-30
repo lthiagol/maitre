@@ -16,20 +16,38 @@ const tabBarRow = headerRows - 2
 
 // hitBox is a rectangle on the screen.
 //
-// The bounds are inclusive: a one-cell box has x0 == x1. An empty box has x1 < x0
-// and holds nothing.
+// The bounds are inclusive: a one-cell box has x0 == x1.
+//
+// The zero box is **not there**. A region that was never drawn must answer for
+// nothing: a zero box that answered for one cell at the origin made the top-left
+// corner of a screen with no detail pane look like it had one.
 type hitBox struct {
 	x0, x1 int
 	y0, y1 int
+	// there says the region is on screen. The zero box is not.
+	there bool
+}
+
+// newHitBox is a region that is there.
+func newHitBox(x0, x1, y0, y1 int) hitBox {
+	return hitBox{x0: x0, x1: x1, y0: y0, y1: y1, there: true}
 }
 
 // contains reports whether the point is inside the box.
 func (b hitBox) contains(x, y int) bool {
+	if !b.there {
+		return false
+	}
 	return x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1
 }
 
 // empty reports whether the box holds nothing.
-func (b hitBox) empty() bool { return b.x1 < b.x0 || b.y1 < b.y0 }
+func (b hitBox) empty() bool {
+	if !b.there {
+		return true
+	}
+	return b.x1 < b.x0 || b.y1 < b.y0
+}
 
 // centre is the middle of the box.
 func (b hitBox) centre() (int, int) {
@@ -117,10 +135,12 @@ func (m *Model) hitMapOf(tabs []hitBox, bannerRows int, lines []listLine, start,
 	hits := hitMap{tabs: tabs, detail: detail}
 	for i := 0; i < bannerRows; i++ {
 		row := headerRows + i
-		hits.banner = append(hits.banner, hitBox{x0: 0, x1: m.width - 1, y0: row, y1: row})
+		hits.banner = append(hits.banner, newHitBox(0, m.width-1, row, row))
 	}
 	width := m.listColumn()
-	hits.list = hitBox{x0: 0, x1: width - 1, y0: start, y1: start + height - 1}
+	if height > 0 {
+		hits.list = newHitBox(0, width-1, start, start+height-1)
+	}
 	for i := 0; i < height; i++ {
 		idx := m.offset + i
 		item := -1
@@ -128,7 +148,7 @@ func (m *Model) hitMapOf(tabs []hitBox, bannerRows int, lines []listLine, start,
 			item = lines[idx].itemIdx
 		}
 		hits.rows = append(hits.rows, hitRow{
-			hitBox: hitBox{x0: 0, x1: width - 1, y0: start + i, y1: start + i},
+			hitBox: newHitBox(0, width-1, start+i, start+i),
 			item:   item,
 		})
 	}

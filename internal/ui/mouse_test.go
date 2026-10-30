@@ -238,8 +238,11 @@ func TestTheWheelScrollsTheDetail(t *testing.T) {
 	}
 }
 
-// TestTheWheelOverTheHeaderDoesNothing checks the wheel answers what is under it.
-func TestTheWheelOverTheHeaderDoesNothing(t *testing.T) {
+// TestTheWheelOverTheHeaderScrollsTheList covers the fallback.
+//
+// The list is the console's one scrollable thing: where the pointer is not over the
+// detail, the list scrolls.
+func TestTheWheelOverTheHeaderScrollsTheList(t *testing.T) {
 	m := newModel(t)
 	m.width = 120
 	m.height = 30
@@ -247,8 +250,34 @@ func TestTheWheelOverTheHeaderDoesNothing(t *testing.T) {
 
 	before := m.selRecipes
 	m.Update(tea.MouseWheelMsg{X: 1, Y: 0, Button: tea.MouseWheelDown})
+	if m.selRecipes == before {
+		t.Errorf("the wheel over the header did not scroll the list")
+	}
+}
+
+// TestTheWheelOverTheFullScreenHeaderDoesNothing checks the fallback stops where the
+// list is not on screen.
+//
+// The full-screen detail has no list beside it, so there is nothing for the wheel to
+// scroll but the detail — and the header is not the detail.
+func TestTheWheelOverTheFullScreenHeaderDoesNothing(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	// The detail full screen: the detail owns the body.
+	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m.View()
+
+	before := m.selRecipes
+	beforeScroll := m.detailScroll
+	m.Update(tea.MouseWheelMsg{X: 1, Y: 0, Button: tea.MouseWheelDown})
 	if m.selRecipes != before {
-		t.Errorf("the wheel over the header moved the selection to %d", m.selRecipes)
+		t.Errorf("the wheel moved the selection to %d while the detail was open", m.selRecipes)
+	}
+	if m.detailScroll != beforeScroll {
+		t.Errorf("the wheel scrolled the detail to %d from over the header", m.detailScroll)
 	}
 }
 
@@ -273,25 +302,32 @@ func TestTheMouseIsDrivableFromAScript(t *testing.T) {
 }
 
 // TestTheScriptedMouseTakesAPosition covers the coordinates.
+//
+// The position says where the pointer is, and the console answers what is under it:
+// the list on the left, the detail on the right.
 func TestTheScriptedMouseTakesAPosition(t *testing.T) {
 	m := newModel(t)
-	m.width = 120
+	m.width = 200
 	m.height = 12
+	m.View()
 
-	// Over the header: nothing scrolls.
-	if _, err := Drive(m, []string{"wheel:down@1,0"}); err != nil {
-		t.Fatal(err)
-	}
-	if m.selRecipes != 0 {
-		t.Errorf("the wheel over the header moved the selection to %d", m.selRecipes)
-	}
-
-	// Over the list: it scrolls.
+	// Over the list: the list scrolls.
 	if _, err := Drive(m, []string{"wheel:down@1,6"}); err != nil {
 		t.Fatal(err)
 	}
 	if m.selRecipes == 0 {
 		t.Errorf("the wheel over the list did not scroll it")
+	}
+	if m.detailScroll != 0 {
+		t.Errorf("the wheel over the list scrolled the detail to %d", m.detailScroll)
+	}
+
+	// Over the detail: the detail scrolls.
+	if _, err := Drive(m, []string{"wheel:down@150,6"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.detailScroll != wheelStep {
+		t.Errorf("the wheel over the detail scrolled it by %d, want %d", m.detailScroll, wheelStep)
 	}
 }
 
@@ -386,5 +422,63 @@ func TestTheScrollsBoundIsThePanesWidth(t *testing.T) {
 	}
 	if want := m.detailLineCount() - 1; m.detailScroll != want {
 		t.Errorf("the scroll stopped at %d, want %d", m.detailScroll, want)
+	}
+}
+
+// TestTheOriginIsNotAPhantomDetail covers the absent region.
+//
+// The list layout has no detail pane, and a region that was never drawn must answer
+// for nothing: the zero box answered for one cell at the origin, and the wheel at
+// the origin scrolled a pane that is not on screen.
+func TestTheOriginIsNotAPhantomDetail(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	if !m.hits.detail.empty() {
+		t.Errorf("the list layout should have no detail region: %+v", m.hits.detail)
+	}
+	if m.hits.overDetail(0, 0) {
+		t.Errorf("the origin should not be over a detail that is not there")
+	}
+
+	// The wheel at the origin scrolls the list.
+	before := m.selRecipes
+	m.Update(tea.MouseWheelMsg{X: 0, Y: 0, Button: tea.MouseWheelDown})
+	if m.selRecipes == before {
+		t.Errorf("the wheel at the origin did not scroll the list")
+	}
+	if m.detailScroll != 0 {
+		t.Errorf("the wheel at the origin scrolled the detail to %d", m.detailScroll)
+	}
+}
+
+// TestAClearedMapAnswersNothing covers the map of a frame that was never drawn.
+//
+// The error view and the opening view draw no list and no detail, so the map is
+// cleared — and a cleared map answers nothing.
+func TestAClearedMapAnswersNothing(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	m.hits = hitMap{}
+	if m.hits.overList(0, 0) {
+		t.Errorf("a cleared map should have no list")
+	}
+	if m.hits.overDetail(0, 0) {
+		t.Errorf("a cleared map should have no detail")
+	}
+	if !m.hits.list.empty() || !m.hits.detail.empty() {
+		t.Errorf("a cleared map should hold nothing")
+	}
+
+	// And the wheel on it scrolls nothing.
+	before := m.selRecipes
+	m.Update(tea.MouseWheelMsg{X: 0, Y: 0, Button: tea.MouseWheelDown})
+	if m.selRecipes != before {
+		t.Errorf("the wheel on a cleared map moved the selection to %d", m.selRecipes)
 	}
 }

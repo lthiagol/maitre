@@ -102,7 +102,7 @@ func (m *Model) renderDetailFull() string {
 	}
 	// The detail owns the whole body: the list is not on screen.
 	m.hits = m.hitMapOf(tabs, bannerRows, nil, start, 0,
-		hitBox{x0: 0, x1: m.width - 1, y0: start, y1: start + h - 1})
+		newHitBox(0, m.width-1, start, start+h-1))
 	// The footer is the last row of the screen, on a row of its own. Do not trim:
 	// the trailing newline is the padding that holds the footer down.
 	return b.String() + m.footer()
@@ -173,7 +173,7 @@ func (m *Model) renderSplit(lines []listLine) string {
 	// the rest of the terminal.
 	start := headerRows + bannerRows
 	m.hits = m.hitMapOf(tabs, bannerRows, lines, start, h,
-		hitBox{x0: listWidth + 1, x1: m.width - 1, y0: start, y1: start + h - 1})
+		newHitBox(listWidth+1, m.width-1, start, start+h-1))
 	return b.String() + m.footer()
 }
 
@@ -284,7 +284,7 @@ func (m *Model) tabBar() (string, []hitBox) {
 			parts = append(parts, m.styTabIdle.Render(label))
 		}
 		w := lipgloss.Width(label)
-		boxes = append(boxes, hitBox{x0: col, x1: col + w - 1, y0: tabBarRow, y1: tabBarRow})
+		boxes = append(boxes, newHitBox(col, col+w-1, tabBarRow, tabBarRow))
 		// The labels are joined by two spaces.
 		col += w + 2
 	}
