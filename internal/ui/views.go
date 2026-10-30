@@ -479,7 +479,13 @@ func (m *Model) footer() string {
 		// The Settings tab has no recipe to open: `enter` applies the theme.
 		keys = append(keys, key{"↑↓", "move"}, key{"tab", "switch"}, key{"enter", "apply theme"})
 	default:
-		keys = append(keys, key{"↑↓", "move"}, key{"tab", "switch"}, key{"enter", "detail"})
+		keys = append(keys, key{"↑↓", "move"}, key{"tab", "switch"})
+		// The footer never promises a key that does nothing. `enter` opens the
+		// detail, and there is one only where the pane has something to show —
+		// the same answer the key reads.
+		if m.hasDetail() {
+			keys = append(keys, key{"enter", "detail"})
+		}
 	}
 	if label := m.primaryActionLabel(); label != "" {
 		keys = append(keys, key{"space", label})

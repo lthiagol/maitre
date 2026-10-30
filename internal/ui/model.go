@@ -655,9 +655,9 @@ func (m *Model) openDetail() {
 // hasDetail reports whether the current selection has a detail to open.
 //
 // The console has **one** detail pane, and it follows the tab: a recipe on Recipes,
-// Path and Board, a backlog item on Backlog. The pane and the key read the same
-// answer, so the key can never open something the pane does not show — and a
-// backlog item is not a recipe, so it needs its own answer here.
+// Path and Board, a backlog item on Backlog, a journal entry on Log. The pane and
+// the key read the same answer, so the key can never open something the pane does
+// not show — and a backlog item is not a recipe, so it needs its own answer here.
 func (m *Model) hasDetail() bool {
 	switch m.tab {
 	case TabRecipes, TabPath, TabBoard:
@@ -666,6 +666,9 @@ func (m *Model) hasDetail() bool {
 	case TabBacklog:
 		_, ok := m.selectedBacklogItem()
 		return ok
+	case TabLog:
+		events := m.logWindow()
+		return m.selLog >= 0 && m.selLog < len(events)
 	}
 	return false
 }
