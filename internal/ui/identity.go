@@ -52,7 +52,11 @@ func (m *Model) windowTitle() string {
 // A path with the home directory spelled out is longer than it needs to be, and the
 // part that is the same in every one of the chef's paths is the part that says
 // nothing.
+//
+// The path is **sanitised** first: it is drawn on one row, and a directory whose
+// name carries a newline would split it.
 func humanPath(path string) string {
+	path = sanitize(path)
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
 		return path

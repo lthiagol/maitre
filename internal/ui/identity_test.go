@@ -259,6 +259,39 @@ func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
 	}
 }
 
+// TestTheRootRowIsOneRow proves a path with a newline in it does not split the row.
+//
+// The path is not the plan's content — but the console draws it on one line, and a
+// directory whose name carries a newline would take two.
+func TestTheRootRowIsOneRow(t *testing.T) {
+	// A plan whose directory name carries a newline.
+	root := filepath.Join(t.TempDir(), "we\nird", core.PlanDirName)
+	store := core.Open(root)
+	if err := core.Seed(store); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+	m := loadInto(t, New(store))
+	m.tab = TabSettings
+
+	var text strings.Builder
+	for _, line := range m.settingsLines() {
+		text.WriteString(line.text + "\n")
+	}
+	rows := text.String()
+
+	for _, line := range strings.Split(strings.TrimRight(rows, "\n"), "\n") {
+		if strings.Contains(line, "\n") || strings.Contains(line, "\r") {
+			t.Errorf("the root row is split: %q", line)
+		}
+	}
+	if !strings.Contains(rows, "we ird") {
+		t.Errorf("the root row does not carry the sanitised path\n%s", rows)
+	}
+	if strings.Contains(rows, "we\nird") {
+		t.Errorf("the root row carries a newline\n%s", rows)
+	}
+}
+
 // TestHumanPathShortensTheHomeDirectory proves the path is formatted for a human.
 //
 // The home directory is the same in every one of the chef's paths, and the part
