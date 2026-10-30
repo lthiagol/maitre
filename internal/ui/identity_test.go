@@ -75,3 +75,37 @@ func TestTheNameFallsBackToThePlanRoot(t *testing.T) {
 		t.Errorf("the header does not carry the fallback\n%s", plain(m))
 	}
 }
+
+// TestTheHeaderNameIsNotAFootnote proves the project's name reads as a name.
+//
+// A name in the faint style reads as a footnote, and a footnote is not an identity.
+func TestTheHeaderNameIsNotAFootnote(t *testing.T) {
+	store := identityStore(t)
+	m := loadInto(t, New(store))
+
+	header := m.header()
+	name := m.projectName()
+	if !strings.Contains(header, m.styAcc.Render(name)) {
+		t.Errorf("the header does not render the name in the accent style: %q", header)
+	}
+	if strings.Contains(header, m.styFaint.Render(name)) {
+		t.Errorf("the header renders the name in the faint style: %q", header)
+	}
+}
+
+// TestTheHeaderKeepsTheProductsName proves the slice moved only the project's name.
+//
+// The mark, the product's name and the separator are the console's own; a slice that
+// renames the project and also renames the product is doing more than it said.
+func TestTheHeaderKeepsTheProductsName(t *testing.T) {
+	store := identityStore(t)
+	m := loadInto(t, New(store))
+
+	header := m.header()
+	if !strings.Contains(header, " ⋈ maitre") {
+		t.Errorf("the header lost the mark and the product's name: %q", header)
+	}
+	if !strings.Contains(header, " · ") {
+		t.Errorf("the header lost the separator: %q", header)
+	}
+}

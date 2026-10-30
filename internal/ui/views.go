@@ -207,8 +207,13 @@ func (m *Model) scrollToSelection(lines []listLine) {
 //
 // The mark's compact form sits before the product name — one cell, so the header
 // stays one line. The header is the one place the console has no room to draw.
+//
+// The project's name is a **name**, not a footnote: it wears the console's accent,
+// where the product's name wears the ink. The two are different things, and they
+// read differently.
 func (m *Model) header() string {
-	return m.styTitle.Render(" "+brand.Compact+" maitre") + m.styFaint.Render(" · "+m.projectName())
+	return m.styTitle.Render(" "+brand.Compact+" maitre") +
+		m.styFaint.Render(" · ") + m.styAcc.Render(m.projectName())
 }
 
 // markFor is the drawing that fits a column of the given width.
