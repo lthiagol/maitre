@@ -13,7 +13,7 @@
 | Session | Feature | What it lands | State | Brief |
 |--:|---|---|---|---|
 | **T1** | the identity | the window title carries the project; the header's name stops being a footnote; `--project`; the Settings tab shows the plan's path | ✅ closed · 11 commits · 94a53ff, 8fc7438, f0b2aa5, 82289c6, 0bbcb35, 5a79638, 67b455d, b4a3052, 55bdc81, 8a6866b, cf8c05e | [tui-t1.md](../briefs/tui-t1.md) · [fix 1](../briefs/fix-tui-t1-1.md) · [fix 2](../briefs/fix-tui-t1-2.md) |
-| **T2a** | the mouse, part 1 | the mouse is on; the render builds the hit map; the wheel scrolls | 🔄 **fix cycle 2 done** — 12 commits · a72ea98, 115b650, 284fb65, 0672f9f, 9f971cb, 7035ec7, e4b7061, 619b342, 47be828, f1cc1ca, a332158, d8d7b95 | [tui-t2a.md](../briefs/tui-t2a.md) · [fix 1](../briefs/fix-tui-t2a-1.md) · [fix 2](../briefs/fix-tui-t2a-2.md) |
+| **T2a** | the mouse, part 1 | the mouse is on; the render builds the hit map; the wheel scrolls | ✅ closed · 12 commits · a72ea98, 115b650, 284fb65, 0672f9f, 9f971cb, 7035ec7, e4b7061, 619b342, 47be828, f1cc1ca, a332158, d8d7b95 | [tui-t2a.md](../briefs/tui-t2a.md) · [fix 1](../briefs/fix-tui-t2a-1.md) · [fix 2](../briefs/fix-tui-t2a-2.md) |
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | 🔄 **briefed** · next | [tui-t2b.md](../briefs/tui-t2b.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ⏳ planned | — |
 | **T3b** | the backlog moves | dismiss · create · edit | ⏳ planned | — |
