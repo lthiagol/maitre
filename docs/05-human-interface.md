@@ -253,7 +253,7 @@ console's header, drawn inside the terminal, and it carries the same name.
 | Key | Action |
 |---|---|
 | `↑` `↓` / `j` `k` | move in the list — scroll the detail when it is open |
-| `tab` | next recipe |
+| `tab` | next tab |
 | `enter` | expand the detail to full screen; on **Settings**, apply the theme under the cursor |
 | `esc` | back to the split view |
 | `n` `N` | move the cursor over the recipe's open tasting notes |
@@ -264,12 +264,17 @@ console's header, drawn inside the terminal, and it carries the same name.
 | `q` | quit |
 
 **The mouse is on.** The console asks the terminal for cell-motion reporting, so the
-wheel reaches it. The wheel drives the same scroll the keyboard drives.
+wheel and the click reach it. The wheel drives the same scroll the keyboard drives,
+and **a click is a move**: it makes the move the key makes, and adds no state of its
+own.
 
 | Gesture | Where | What |
 |---|---|---|
 | wheel | over the detail pane | scroll the detail |
 | wheel | anywhere else, **while the list is on screen** | scroll the list, keeping the selection visible |
+| click | on a tab label | switch to that tab — the keyboard's `tab` |
+| click | on a list row | select it — the keyboard's `↑` `↓` |
+| click | on the detail pane | open the detail — the keyboard's `enter` |
 
 The list is the console's one scrollable thing, so a wheel over the header scrolls the
 list rather than nothing. The **full-screen detail** has no list beside it: there the
@@ -278,12 +283,20 @@ wheel over the header does nothing at all, and the wheel over the detail scrolls
 The wheel's step is **three lines**: one is too slow to be useful, and a page is too
 fast to aim with.
 
+**A click on a row shows that recipe, and the layout decides how.** In the **split
+layout** the detail is on screen beside the list, so the click selects and the detail
+follows the selection. In the **narrow layout** the detail is not on screen at all, so
+a click that only selected would show the chef nothing: there the click also opens
+the detail. The **Backlog** has no detail yet, so a click there selects and stops; and
+a click on a **theme** row selects it — `enter` applies the theme.
+
 **The mouse is drivable from a script.** `maitre --keys` takes the same steps the
 console takes:
 
 ```
 maitre --keys "wheel:down"         # the wheel, over the list
 maitre --keys "wheel:down@(12,5)"   # the wheel, at column 12, row 5
+maitre --keys "click@(12,2)"        # the click, at column 12, row 2
 ```
 
 The coordinates are the terminal's own — zero-based, with (0, 0) at the upper-left
