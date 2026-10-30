@@ -122,6 +122,7 @@ write has changed, **stop and report it**.
 | Q4 | the filter before the tags? | **the filter now; the tags later**, with the CLI (`DomainVersion` 7 → 8) | 2026-10-30 |
 | Q5 | the per-project accent colour | **later** — the window title is the fix, the colour is the extra | 2026-10-30 |
 | Q6 | may the console create backlog items? | **yes** — a backlog item is not a recipe, so ADR-0003 does not forbid it | 2026-10-30 |
+| Q7 | where does the rule that answers *"what is this plan called?"* live in the spec? | **`docs/03` § 6, beside the plan format** — the rule is about what the reader answers from `project.json`, and § 6 is where the reader looks. It is **not** in § 8: the name is a *stored* fact, not a derived view. A wire holds it | 2026-10-30 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 

@@ -44,6 +44,93 @@ func TestTheDocStatesThePlanFormatVersion(t *testing.T) {
 	}
 }
 
+// TestThePlanFormatStatesTheNameRule holds the plan's name rule in the spec.
+//
+// The rule answers *what is this plan called?* and the domain answers it once. It
+// was in the code and **nowhere in the spec** — `docs/03` § 6 named `project.json` as
+// *project meta · charter · settings* and said nothing about the name's fallback. A
+// rule no document states is a rule a reader has to re-derive from the code, and
+// F-103 is what happened when the code carried it twice and the spec carried it
+// never.
+//
+// The wire reads § 6 and checks the rule is there: the plan's own name, the
+// project's directory as the fallback, and **never a path**.
+func TestThePlanFormatStatesTheNameRule(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "docs", "03-domain-model.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	section := sectionOf(string(raw), "## 6. Plan format")
+	if section == "" {
+		t.Fatal("the doc has no § 6. Plan format")
+	}
+	if err := checkNameRule(section); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestTheNameRuleTripwireFailsOnRealDrift keeps the tripwire from being turned off.
+//
+// A tripwire that cannot fail is not a tripwire. The drift this one guards against
+// happened once: the rule was in the code and nowhere in the spec, and nothing said
+// so.
+func TestTheNameRuleTripwireFailsOnRealDrift(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("..", "..", "docs", "03-domain-model.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := string(raw)
+	section := sectionOf(doc, "## 6. Plan format")
+	if section == "" {
+		t.Fatal("the doc has no § 6. Plan format")
+	}
+
+	cases := []struct {
+		name  string
+		doc   string
+		check func(string) error
+	}{
+		{"the rule deleted", strings.Replace(doc, "**The plan's name.**", "**The plan.**", 1), checkNameRule},
+		{"the fallback renamed", strings.Replace(doc, "project's directory", "plan's directory", 1), checkNameRule},
+		{"the path dropped", strings.Replace(doc, "never a path", "a path", 1), checkNameRule},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if c.doc == doc {
+				t.Fatal("the scratch copy is the same as the real doc — the corruption did not apply")
+			}
+			if err := c.check(sectionOf(c.doc, "## 6. Plan format")); err == nil {
+				t.Fatal("the tripwire should have tripped")
+			}
+		})
+	}
+}
+
+// checkNameRule checks that the plan format states the rule that answers *what is
+// this plan called?*.
+//
+// The rule has three parts, and each one is a claim the code makes: the plan's own
+// name, the project's directory as the fallback, and **never a path**.
+func checkNameRule(section string) error {
+	for _, para := range strings.Split(section, "\n\n") {
+		if !strings.Contains(para, "The plan's name") {
+			continue
+		}
+		var missing []string
+		if !strings.Contains(para, "project's directory") {
+			missing = append(missing, "the project's directory as the fallback")
+		}
+		if !strings.Contains(para, "never a path") {
+			missing = append(missing, "never a path")
+		}
+		if len(missing) > 0 {
+			return errMismatch{what: "plan's name rule", missing: missing}
+		}
+		return nil
+	}
+	return errMismatch{what: "plan's name rule", missing: []string{"the rule"}}
+}
+
 // TestTheDocNamesThePlanFormatTheCodeHas keeps the plan format honest.
 //
 // The plan format is what the code writes on disk: the directories under the plan

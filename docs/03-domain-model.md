@@ -530,6 +530,14 @@ is stock, recipes and courses are the line — is a **view in the UI**, not a di
 boundary. Two roots would cost a workspace spanning both and buy nothing, since
 per-type subdirectories already allow selective commits (`git add kitchen/recipes`).
 
+**The plan's name.** The `name` in `project.json` is the plan's name. A plan that names
+nothing — the field is empty, the file is missing, the file cannot be read — is named
+after **its project's directory**, the one that holds the plan directory. The answer is
+**one**, and it is **never a path**: a name says *which project*, a path says *which
+directory*, and they are different questions. The domain answers it once, and every
+surface that shows the name reads that one answer — the console's header and its
+window title, the CLI's `plan`.
+
 The backlog is **one artifact with a kind**. It was two — a *special* (a hunch) in
 `kitchen/specials/` and a *prep note* (intent and scope, before criteria) in
 `kitchen/prep-notes/` — and two file types for one list is two nouns for one thing.
