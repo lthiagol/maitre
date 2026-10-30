@@ -14,6 +14,9 @@ import (
 // reports per notch, and it is small enough to stop on.
 const wheelStep = 3
 
+// mouseVerbs are the gestures the console answers.
+var mouseVerbs = []string{"wheel"}
+
 // handleMouse answers a mouse event.
 //
 // The console answers the wheel and leaves the rest for the click: a click that
@@ -62,14 +65,17 @@ type mouseStep struct {
 
 // MouseFor turns a mouse step name into the mouse event it names.
 //
-// The spelling is `<verb>[:<arg>][@<x>,<y>]`:
+// The spelling is `<verb>[:<arg>][@(<x>,<y>)]`:
 //
 //	"wheel:up"          the wheel up, over the list
-//	"wheel:down@12,5"   the wheel down, at column 12, row 5
+//	"wheel:down@(12,5)"  the wheel down, at column 12, row 5
 //
 // The coordinates are the terminal's own: zero-based, with (0,0) at the upper-left
-// corner. A step with no position goes over the list — the console's default
-// target — and over the detail when the list is not on screen.
+// corner. The position is **bracketed**, because the steps are separated by commas
+// and the comma inside a position must not be one.
+//
+// A step with no position goes over the list — the console's default target — and
+// over the detail when the list is not on screen.
 func MouseFor(name string, m *Model) (tea.MouseMsg, bool) {
 	step, ok := parseMouseStep(name)
 	if !ok || step.verb != "wheel" {
@@ -90,7 +96,7 @@ func MouseFor(name string, m *Model) (tea.MouseMsg, bool) {
 
 // parseMouseStep reads a mouse step name.
 //
-// The spelling is `<verb>[:<arg>][@<x>,<y>]`. A name that is not a mouse step is
+// The spelling is `<verb>[:<arg>][@(<x>,<y>)]`. A name that is not a mouse step is
 // refused, so the driver can fall back to the keys.
 func parseMouseStep(name string) (mouseStep, bool) {
 	head := name
@@ -112,9 +118,16 @@ func parseMouseStep(name string) (mouseStep, bool) {
 	return step, true
 }
 
-// parseCoords reads the "x,y" of a mouse step.
+// parseCoords reads the "(x,y)" of a mouse step.
+//
+// The position is bracketed, so the comma inside it is not a step separator: the
+// steps are separated by commas, and "wheel:down@(12,5)" has to survive that.
 func parseCoords(s string) (int, int, bool) {
-	parts := strings.Split(s, ",")
+	s = strings.TrimSpace(s)
+	if len(s) < 2 || !strings.HasPrefix(s, "(") || !strings.HasSuffix(s, ")") {
+		return 0, 0, false
+	}
+	parts := strings.Split(s[1:len(s)-1], ",")
 	if len(parts) != 2 {
 		return 0, 0, false
 	}
@@ -127,4 +140,49 @@ func parseCoords(s string) (int, int, bool) {
 		return 0, 0, false
 	}
 	return x, y, true
+}
+
+// isMouseStep reports whether the name names a mouse gesture at all.
+//
+// A name that names a gesture and is malformed is a mistake in a script, and the
+// driver says so — rather than calling it an unknown key.
+func isMouseStep(name string) bool {
+	verb, _, _ := strings.Cut(name, ":")
+	verb = strings.ToLower(verb)
+	for _, v := range mouseVerbs {
+		if verb == v {
+			return true
+		}
+	}
+	return false
+}
+
+// SplitSteps splits a command line of steps into steps.
+//
+// The steps are separated by commas, and a position is **bracketed** — so the comma
+// inside it is not a separator. "tab,wheel:down@(12,5)" is two steps, and the
+// position survives.
+//
+// The grammar lives here, next to the parser that reads it: the command line and
+// the driver must not disagree about what a step is.
+func SplitSteps(s string) []string {
+	var out []string
+	depth := 0
+	start := 0
+	for i, r := range s {
+		switch r {
+		case '(':
+			depth++
+		case ')':
+			if depth > 0 {
+				depth--
+			}
+		case ',':
+			if depth == 0 {
+				out = append(out, s[start:i])
+				start = i + 1
+			}
+		}
+	}
+	return append(out, s[start:])
 }

@@ -264,13 +264,16 @@ console's header, drawn inside the terminal, and it carries the same name.
 | `q` | quit |
 
 **The mouse is on.** The console asks the terminal for cell-motion reporting, so the
-wheel reaches it. The wheel scrolls what is under the pointer, and it drives the same
-scroll the keyboard drives.
+wheel reaches it. The wheel drives the same scroll the keyboard drives.
 
 | Gesture | Where | What |
 |---|---|---|
-| wheel | over the list | scroll the list, keeping the selection visible |
 | wheel | over the detail pane | scroll the detail |
+| wheel | anywhere else | scroll the list, keeping the selection visible |
+
+The list is the console's one scrollable thing, so a wheel over the header scrolls the
+list rather than nothing. The **full-screen detail** has no list beside it, and there
+the wheel scrolls the detail alone.
 
 The wheel's step is **three lines**: one is too slow to be useful, and a page is too
 fast to aim with.
@@ -279,12 +282,13 @@ fast to aim with.
 console takes:
 
 ```
-maitre --keys "wheel:down"        # the wheel, over the list
-maitre --keys "wheel:down@12,5"   # the wheel, at column 12, row 5
+maitre --keys "wheel:down"         # the wheel, over the list
+maitre --keys "wheel:down@(12,5)"   # the wheel, at column 12, row 5
 ```
 
 The coordinates are the terminal's own — zero-based, with (0, 0) at the upper-left
-corner.
+corner. The position is **bracketed**, because the steps are separated by commas and
+the comma inside a position must not be one.
 
 **The theme is the chef's to pick.** The Settings tab lists the palettes under a
 **THEME** heading; the cursor moves over them and `enter` applies the one under it. The

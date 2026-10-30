@@ -312,7 +312,7 @@ func TestTheScriptedMouseTakesAPosition(t *testing.T) {
 	m.View()
 
 	// Over the list: the list scrolls.
-	if _, err := Drive(m, []string{"wheel:down@1,6"}); err != nil {
+	if _, err := Drive(m, []string{"wheel:down@(1,6)"}); err != nil {
 		t.Fatal(err)
 	}
 	if m.selRecipes == 0 {
@@ -323,7 +323,7 @@ func TestTheScriptedMouseTakesAPosition(t *testing.T) {
 	}
 
 	// Over the detail: the detail scrolls.
-	if _, err := Drive(m, []string{"wheel:down@150,6"}); err != nil {
+	if _, err := Drive(m, []string{"wheel:down@(150,6)"}); err != nil {
 		t.Fatal(err)
 	}
 	if m.detailScroll != wheelStep {
@@ -337,8 +337,11 @@ func TestAnUnknownMouseStepIsRefused(t *testing.T) {
 	if _, err := Drive(m, []string{"wheel:sideways"}); err == nil {
 		t.Fatal("expected an unknown mouse step to be refused")
 	}
-	if _, err := Drive(m, []string{"wheel:down@1"}); err == nil {
+	if _, err := Drive(m, []string{"wheel:down@(1"}); err == nil {
 		t.Fatal("expected a malformed position to be refused")
+	}
+	if _, err := Drive(m, []string{"wheel:down@1,5"}); err == nil {
+		t.Fatal("expected an unbracketed position to be refused")
 	}
 }
 
@@ -422,6 +425,40 @@ func TestTheScrollsBoundIsThePanesWidth(t *testing.T) {
 	}
 	if want := m.detailLineCount() - 1; m.detailScroll != want {
 		t.Errorf("the scroll stopped at %d, want %d", m.detailScroll, want)
+	}
+}
+
+// TestThePositionFormSurvivesTheCommandLine covers the spelling on the command
+// line.
+//
+// The steps are separated by commas, so a position has to be bracketed: the comma
+// inside it must not be a separator.
+func TestThePositionFormSurvivesTheCommandLine(t *testing.T) {
+	steps := SplitSteps("tab,wheel:down@(12,5),space")
+	want := []string{"tab", "wheel:down@(12,5)", "space"}
+	if len(steps) != len(want) {
+		t.Fatalf("the steps are %q, want %q", steps, want)
+	}
+	for i := range want {
+		if steps[i] != want[i] {
+			t.Errorf("step %d is %q, want %q", i, steps[i], want[i])
+		}
+	}
+}
+
+// TestThePositionFormIsDrivable covers the command line's spelling, end to end.
+func TestThePositionFormIsDrivable(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 12
+	m.View()
+
+	// The wheel, at column 150, row 6 — over the detail pane.
+	if _, err := Drive(m, SplitSteps("wheel:down@(150,6)")); err != nil {
+		t.Fatal(err)
+	}
+	if m.detailScroll != wheelStep {
+		t.Errorf("the wheel at the position scrolled the detail by %d, want %d", m.detailScroll, wheelStep)
 	}
 }
 

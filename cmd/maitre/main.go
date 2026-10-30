@@ -12,7 +12,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"charm.land/bubbletea/v2"
 
@@ -73,7 +72,7 @@ func run() error {
 			return nil
 		}
 		if *keys != "" {
-			out, err := ui.Drive(m, strings.Split(*keys, ","))
+			out, err := ui.Drive(m, ui.SplitSteps(*keys))
 			if err != nil {
 				return err
 			}

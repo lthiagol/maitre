@@ -78,6 +78,9 @@ func stepMsg(m *Model, name string) (tea.Msg, error) {
 	if msg, ok := MouseFor(name, m); ok {
 		return msg, nil
 	}
+	if isMouseStep(name) {
+		return nil, fmt.Errorf("malformed mouse step %q", name)
+	}
 	key, ok := KeyFor(name)
 	if !ok {
 		return nil, fmt.Errorf("unknown step %q", name)
