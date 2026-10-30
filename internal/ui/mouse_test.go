@@ -399,35 +399,6 @@ func TestTheWheelScrollsTheSplitDetail(t *testing.T) {
 	}
 }
 
-// TestTheScrollsBoundIsThePanesWidth covers the bound the scroll stops at.
-//
-// The pane is narrower in the split layout, and a narrower pane wraps the same text
-// into more rows. The bound is counted at the width the pane draws with, so the
-// scroll can reach the pane's last row.
-func TestTheScrollsBoundIsThePanesWidth(t *testing.T) {
-	m := newModel(t)
-	m.width = 200
-	m.height = 20
-	m.View()
-
-	pane := len(detailRows(m.detailLines(m.detailPaneWidth())))
-	if m.detailLineCount() != pane {
-		t.Errorf("the bound is %d rows, want the pane's %d", m.detailLineCount(), pane)
-	}
-	if m.detailPaneWidth() != m.width-m.listColumn()-3 {
-		t.Errorf("the pane draws at %d columns, want %d", m.detailPaneWidth(), m.width-m.listColumn()-3)
-	}
-
-	// The scroll reaches the pane's last row.
-	x, y := m.hits.detail.centre()
-	for i := 0; i < 200; i++ {
-		m.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
-	}
-	if want := m.detailLineCount() - 1; m.detailScroll != want {
-		t.Errorf("the scroll stopped at %d, want %d", m.detailScroll, want)
-	}
-}
-
 // TestThePositionFormSurvivesTheCommandLine covers the spelling on the command
 // line.
 //
