@@ -103,6 +103,20 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 Stage **by name** — never `git add -A`, never `git add .`. If a file you did not
 write has changed, **stop and report it**.
 
+**And the change is often another lane's mutation, in flight.** The reviewer mutates
+the code to prove its tests bite, and the mutation is in the working tree while it
+runs. So a lane that finds a stranger's edit:
+
+| | |
+|---|---|
+| **does not touch the file** | the lane that owns it will revert it, and a second revert can lose the experiment |
+| **reports it** | the receipt says what changed, what it breaks, and what the change looks like |
+| **says whose it probably is** | a mutation that disables a rule the slice just landed is the reviewer's experiment |
+| **stands by** | the orchestrator answers, and the answer is usually *wait* |
+
+A lane that reverts a stranger's edit breaks that lane's experiment and hides the
+evidence. A lane that waits for the tree to be clean is doing the right thing.
+
 ## The invariants — these do not move
 
 | | |
