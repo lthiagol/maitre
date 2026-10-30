@@ -25,6 +25,7 @@ const (
 	promptTriage
 	promptShape
 	promptDismiss
+	promptCreate
 )
 
 // promptChoice is one thing the chef may choose.
@@ -47,8 +48,9 @@ var reviewChoices = []promptChoice{
 //
 // One prompt, several questions: a verdict on a recipe (ok, or changes needed), an
 // action on a tasting note (dismiss, or comment), a shaping (what kind of work it
-// is, and what is in it), and a dismissal (why not). All have the same shape —
-// choose, then say why — so they share one prompt rather than several frameworks.
+// is, and what is in it), a dismissal (why not), and a new item (what it is). All
+// have the same shape — choose, then say why — so they share one prompt rather than
+// several frameworks.
 //
 // The console never decides — it asks. The chef chooses, says why, and the round is
 // recorded with their name on it. A verdict the console invented would be a verdict
@@ -75,6 +77,8 @@ func (p *chefPrompt) title() string {
 		return "shape " + p.id
 	case promptDismiss:
 		return "dismiss " + p.id
+	case promptCreate:
+		return "new backlog item"
 	}
 	return "review " + p.id
 }
@@ -88,6 +92,8 @@ func (p *chefPrompt) textTitle() string {
 		return "scope for " + p.id
 	case promptDismiss:
 		return "why not, for " + p.id
+	case promptCreate:
+		return "the hunch, in one line"
 	}
 	return "notes for " + p.id
 }
@@ -101,17 +107,19 @@ func (p *chefPrompt) cancelled() string {
 		return "shape cancelled"
 	case promptDismiss:
 		return "dismiss cancelled"
+	case promptCreate:
+		return "create cancelled"
 	}
 	return "review cancelled"
 }
 
 // needsText reports whether the prompt's answer cannot be empty.
 //
-// A shaping needs a scope and a dismissal needs a reason: without one the write
-// says nothing to the next reader.
+// A shaping needs a scope, a dismissal needs a reason, and an item needs a title:
+// without one the write says nothing to the next reader.
 func (p *chefPrompt) needsText() bool {
 	switch p.kind {
-	case promptShape, promptDismiss:
+	case promptShape, promptDismiss, promptCreate:
 		return true
 	}
 	return false
@@ -124,6 +132,8 @@ func (p *chefPrompt) missingText() string {
 		return "a small task needs a scope — say what is in it"
 	case promptDismiss:
 		return "a dismissal needs a reason — say why not"
+	case promptCreate:
+		return "an item needs a title — say what it is"
 	}
 	return ""
 }
@@ -228,6 +238,8 @@ func (m *Model) recordPrompt() (tea.Model, tea.Cmd) {
 		return m.recordShape(p)
 	case promptDismiss:
 		return m.recordDismiss(p)
+	case promptCreate:
+		return m.recordCreate(p)
 	}
 	return m.recordReview(p)
 }

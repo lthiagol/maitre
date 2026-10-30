@@ -22,7 +22,8 @@ import (
 //	promote to recipe  an open small task — one criterion, signable
 //	none               a settled item — no key, and the footer says so
 //
-// The dismissal sits beside them: `d` dismisses an item, with the chef's reason.
+// The dismissal sits beside them: `d` dismisses an item, with the chef's reason,
+// and `a` writes a new item down.
 
 // shapeChoices are the kinds an idea can be shaped into.
 //
@@ -143,4 +144,32 @@ func (m *Model) canDismissSelected() bool {
 		return false
 	}
 	return core.BacklogMoveOf(item).Dismissable
+}
+
+// openCreate asks the chef what the hunch is.
+//
+// A backlog item is **not** a recipe: the console may write one down (the chef's
+// ruling, Q6) and it may never author a recipe (ADR-0003).
+func (m *Model) openCreate() {
+	m.prompt = &chefPrompt{kind: promptCreate, step: askText}
+	m.refusal = ""
+	m.status = ""
+}
+
+// recordCreate writes the item down.
+//
+// The item starts as an **idea** — the kind a hunch starts as — and the chef shapes
+// it after, with the move the domain names.
+//
+// Nothing else is written: no recipe, and nothing outside the plan's backlog.
+func (m *Model) recordCreate(p *chefPrompt) (tea.Model, tea.Cmd) {
+	item, err := m.ops.CreateBacklogItem(strings.TrimSpace(p.text), "", nil, core.KindIdea, nil)
+	if err != nil {
+		m.refusal = refusalText(err)
+		m.status = ""
+		return m, nil
+	}
+	m.refusal = ""
+	m.status = fmt.Sprintf("wrote down %s — an idea; shape it when it is ready", item.ID)
+	return m, m.reload()
 }

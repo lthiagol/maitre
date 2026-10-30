@@ -263,6 +263,7 @@ console's header, drawn inside the terminal, and it carries the same name.
 | `n` `N` | move the cursor over the recipe's open tasting notes |
 | `space` | the primary action for this recipe — sign off, review, triage, serve; on the **Backlog**, the item's move: shape an idea, promote a small task |
 | `d` | on the **Backlog**, dismiss the selected item — the reason is asked for, and the domain appends it to the item's body |
+| `a` | on the **Backlog**, write a new item down — it starts as an **idea**, the kind a hunch starts as |
 | `1` `2` `3` | list ordering: triage · lane · plain |
 | `c` | show or hide served recipes |
 | `r` | reload |

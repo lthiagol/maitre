@@ -624,6 +624,14 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case "a":
+		// The backlog's own key: write a new item down.
+		if m.tab == TabBacklog {
+			m.openCreate()
+			return m, nil
+		}
+		return m, nil
+
 	case " ", "space":
 		return m.primaryAction()
 	}

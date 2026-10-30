@@ -1,6 +1,11 @@
 package ui
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -267,4 +272,139 @@ func TestTheFooterOffersTheDismissOnlyWhileTheDomainSaysSo(t *testing.T) {
 	if strings.Contains(out, "d dismiss") {
 		t.Errorf("the footer offers a dismissal the domain refuses:\n%s", out)
 	}
+}
+
+// TestCreatingAnItemWritesABacklogItemAndNothingElse covers the creation.
+//
+// The chef's ruling (Q6): the console may create a backlog item — a backlog item is
+// not a recipe, so ADR-0003 does not forbid it. The item starts as an **idea**,
+// the kind a hunch starts as, and the chef shapes it after.
+//
+// And nothing else is written: no recipe, and nothing outside the plan's backlog.
+func TestCreatingAnItemWritesABacklogItemAndNothingElse(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+
+	before := planFiles(t, m.store.Root)
+	recipes, err := m.ops.ListRecipes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	steps := append([]string{"a"}, typed("A weekly digest of what changed")...)
+	steps = append(steps, "enter")
+	if _, err := Drive(m, steps); err != nil {
+		t.Fatal(err)
+	}
+	if m.refusal != "" {
+		t.Fatalf("the creation was refused: %s", m.refusal)
+	}
+
+	items, err := m.ops.ListBacklogItems()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var created *core.BacklogItem
+	for i := range items {
+		if items[i].Title == "A weekly digest of what changed" {
+			created = &items[i]
+		}
+	}
+	if created == nil {
+		t.Fatalf("the item was not written: %+v", items)
+	}
+	if created.Kind != core.KindIdea {
+		t.Errorf("the kind is %q, want %q — a hunch starts as an idea", created.Kind, core.KindIdea)
+	}
+	if created.Status != core.StatusOpen {
+		t.Errorf("the status is %q, want %q", created.Status, core.StatusOpen)
+	}
+
+	// No recipe.
+	after, err := m.ops.ListRecipes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(after) != len(recipes) {
+		t.Fatalf("the plan holds %d recipes, want %d — the console writes no recipe", len(after), len(recipes))
+	}
+
+	// And nothing outside the plan's backlog, but the journal — the plan's own
+	// event log records the creation.
+	changed := changedFiles(before, planFiles(t, m.store.Root))
+	for _, path := range changed {
+		if path == core.FileActivity {
+			continue
+		}
+		if strings.HasPrefix(path, core.DirBacklog+"/") {
+			continue
+		}
+		t.Errorf("the creation wrote %q — outside the backlog", path)
+	}
+}
+
+// TestAnItemWithNoTitleIsNotWritten covers the empty answer.
+func TestAnItemWithNoTitleIsNotWritten(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+
+	if _, err := Drive(m, []string{"a", "enter"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.prompt == nil {
+		t.Fatal("the prompt should stay open")
+	}
+	items, err := m.ops.ListBacklogItems()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(items) != 6 {
+		t.Fatalf("the backlog holds %d items, want 6 — nothing was written", len(items))
+	}
+}
+
+// planFiles is every file in the plan, by relative path, with its content's digest.
+func planFiles(t *testing.T, root string) map[string]string {
+	t.Helper()
+	out := map[string]string{}
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		sum := sha256.Sum256(raw)
+		out[rel] = hex.EncodeToString(sum[:])
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// changedFiles is the paths whose content differs between two snapshots.
+func changedFiles(before, after map[string]string) []string {
+	var out []string
+	for path, sum := range after {
+		if before[path] != sum {
+			out = append(out, path)
+		}
+	}
+	for path := range before {
+		if _, ok := after[path]; !ok {
+			out = append(out, path)
+		}
+	}
+	sort.Strings(out)
+	return out
 }

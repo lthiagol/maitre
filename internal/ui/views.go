@@ -490,11 +490,14 @@ func (m *Model) footer() string {
 	if label := m.primaryActionLabel(); label != "" {
 		keys = append(keys, key{"space", label})
 	}
-	// The backlog's own key. `d` is offered only when the domain says the item may
+	// The backlog's own keys. `d` is offered only when the domain says the item may
 	// still be dismissed — a key the domain would refuse is a key the footer must
 	// not name.
-	if m.tab == TabBacklog && m.canDismissSelected() {
-		keys = append(keys, key{"d", "dismiss"})
+	if m.tab == TabBacklog {
+		if m.canDismissSelected() {
+			keys = append(keys, key{"d", "dismiss"})
+		}
+		keys = append(keys, key{"a", "add item"})
 	}
 	// The note cursor is only worth a key when there is a note to point at.
 	if len(m.openNotes()) > 0 {
