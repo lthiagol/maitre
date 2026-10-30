@@ -118,8 +118,6 @@ type mouseStep struct {
 //	"wheel:down@(12,5)"  the wheel down, at column 12, row 5
 //	"click"             the click, over the list
 //	"click@(12,5)"      the click, at column 12, row 5
-//	"click"             the click, over the list
-//	"click@(12,5)"      the click, at column 12, row 5
 //
 // The coordinates are the terminal's own: zero-based, with (0,0) at the upper-left
 // corner. The position is **bracketed**, because the steps are separated by commas
@@ -203,10 +201,14 @@ func parseCoords(s string) (int, int, bool) {
 
 // isMouseStep reports whether the name names a mouse gesture at all.
 //
+// The verb is what comes before the argument and the position, so "click@(1,2"
+// names the click even when its position is broken: the gesture is known, and
+// only the position is wrong.
+//
 // A name that names a gesture and is malformed is a mistake in a script, and the
 // driver says so — rather than calling it an unknown key.
 func isMouseStep(name string) bool {
-	verb, _, _ := strings.Cut(name, ":")
+	verb, _, _ := strings.Cut(mouseVerbOf(name), ":")
 	verb = strings.ToLower(verb)
 	for _, v := range mouseVerbs {
 		if verb == v {
@@ -214,6 +216,36 @@ func isMouseStep(name string) bool {
 		}
 	}
 	return false
+}
+
+// mouseVerbOf is the name up to the position.
+//
+// The position is the "(x,y)" after the "@", and it is the last part of the
+// spelling: "click:sideways@(1,2)" is the click with the argument "sideways"
+// and the position "(1,2)".
+func mouseVerbOf(name string) string {
+	if i := strings.Index(name, "@"); i >= 0 {
+		return name[:i]
+	}
+	return name
+}
+
+// malformedPosition reports whether the name's position is the broken part.
+//
+// The position is bracketed — "(x,y)" — because the steps are separated by
+// commas. A name that opens the bracket and never closes it carries a malformed
+// position: the bracket is what the reader has to fix.
+func malformedPosition(name string) bool {
+	i := strings.Index(name, "@")
+	if i < 0 {
+		return false
+	}
+	pos := strings.TrimSpace(name[i+1:])
+	if !strings.HasPrefix(pos, "(") {
+		return false
+	}
+	_, _, ok := parseCoords(pos)
+	return !ok
 }
 
 // SplitSteps splits a command line of steps into steps.
