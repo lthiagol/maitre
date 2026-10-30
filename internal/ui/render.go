@@ -80,7 +80,8 @@ func (m *Model) renderAll() string {
 		m.tab = tab
 		b.WriteString(m.header() + "\n")
 		b.WriteString(m.styRule.Render(strings.Repeat("─", max(10, m.width))) + "\n")
-		b.WriteString(m.tabBar() + "\n")
+		bar, _ := m.tabBar()
+		b.WriteString(bar + "\n")
 		b.WriteString(m.summaryLine() + "\n")
 		for _, l := range m.listLines() {
 			b.WriteString(l.text + "\n")

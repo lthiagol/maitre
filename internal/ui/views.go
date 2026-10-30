@@ -45,6 +45,9 @@ func (m *Model) View() tea.View {
 		v.AltScreen = true
 		v.WindowTitle = m.windowTitle()
 		v.MouseMode = tea.MouseModeCellMotion
+		// Nothing is drawn but the error: the map is empty, so no mouse event can
+		// land on a tab that is not on screen.
+		m.hits = hitMap{}
 		return v
 	}
 	if !m.ready {
@@ -52,6 +55,7 @@ func (m *Model) View() tea.View {
 		v.AltScreen = true
 		v.WindowTitle = m.windowTitle()
 		v.MouseMode = tea.MouseModeCellMotion
+		m.hits = hitMap{}
 		return v
 	}
 
@@ -82,9 +86,10 @@ func (m *Model) renderDetailFull() string {
 	var b strings.Builder
 	b.WriteString(m.header() + "\n")
 	b.WriteString(m.ruleLine() + "\n")
-	b.WriteString(m.tabBar() + "\n")
+	bar, tabs := m.tabBar()
+	b.WriteString(bar + "\n")
 	b.WriteString(m.summaryLine() + "\n")
-	m.writeBanner(&b)
+	bannerRows := m.writeBanner(&b)
 
 	detail := detailRows(m.detailLines(m.width - 4))
 	if m.detailScroll > 0 {
@@ -94,12 +99,16 @@ func (m *Model) renderDetailFull() string {
 		detail = detail[m.detailScroll:]
 	}
 	h := m.listAreaHeight()
+	start := headerRows + bannerRows
 	for i := 0; i < h; i++ {
 		if i < len(detail) {
 			b.WriteString(detail[i])
 		}
 		b.WriteString("\n")
 	}
+	// The detail owns the whole body: the list is not on screen.
+	m.hits = m.hitMapOf(tabs, bannerRows, nil, start, 0,
+		hitBox{x0: 0, x1: m.width - 1, y0: start, y1: start + h - 1})
 	// The footer is the last row of the screen, on a row of its own. Do not trim:
 	// the trailing newline is the padding that holds the footer down.
 	return b.String() + m.footer()
@@ -110,11 +119,13 @@ func (m *Model) renderSingle(lines []listLine) string {
 	var b strings.Builder
 	b.WriteString(m.header() + "\n")
 	b.WriteString(m.ruleLine() + "\n")
-	b.WriteString(m.tabBar() + "\n")
+	bar, tabs := m.tabBar()
+	b.WriteString(bar + "\n")
 	b.WriteString(m.summaryLine() + "\n")
-	m.writeBanner(&b)
+	bannerRows := m.writeBanner(&b)
 
 	h := m.listAreaHeight()
+	start := headerRows + bannerRows
 	for i := 0; i < h; i++ {
 		idx := m.offset + i
 		if idx < len(lines) {
@@ -122,6 +133,8 @@ func (m *Model) renderSingle(lines []listLine) string {
 		}
 		b.WriteString("\n")
 	}
+
+	m.hits = m.hitMapOf(tabs, bannerRows, lines, start, h, hitBox{})
 
 	// The footer is the last row of the screen. Do not trim: the trailing newlines
 	// are the padding that holds the footer down.
@@ -154,10 +167,17 @@ func (m *Model) renderSplit(lines []listLine) string {
 	var b strings.Builder
 	b.WriteString(m.header() + "\n")
 	b.WriteString(m.ruleLine() + "\n")
-	b.WriteString(m.tabBar() + "\n")
+	bar, tabs := m.tabBar()
+	b.WriteString(bar + "\n")
 	b.WriteString(m.summaryLine() + "\n")
-	m.writeBanner(&b)
+	bannerRows := m.writeBanner(&b)
 	b.WriteString(joinColumns(left, right, listWidth))
+
+	// The detail sits beside the list: the list's column, one column of air, and
+	// the rest of the terminal.
+	start := headerRows + bannerRows
+	m.hits = m.hitMapOf(tabs, bannerRows, lines, start, h,
+		hitBox{x0: listWidth + 1, x1: m.width - 1, y0: start, y1: start + h - 1})
 	return b.String() + m.footer()
 }
 
@@ -251,16 +271,28 @@ func (m *Model) ruleLine() string {
 }
 
 // tabBar is the row of tabs.
-func (m *Model) tabBar() string {
+//
+// It returns the row and the boxes the labels occupy. The mouse is answered against
+// the frame, and the renderer is the only thing that knows where the labels are —
+// so the renderer says.
+func (m *Model) tabBar() (string, []hitBox) {
 	var parts []string
+	var boxes []hitBox
+	col := 0
 	for i, name := range TabNames {
+		label := "  " + name
 		if Tab(i) == m.tab {
-			parts = append(parts, m.styTabActive.Render("▸ "+name))
-			continue
+			label = "▸ " + name
+			parts = append(parts, m.styTabActive.Render(label))
+		} else {
+			parts = append(parts, m.styTabIdle.Render(label))
 		}
-		parts = append(parts, m.styTabIdle.Render("  "+name))
+		w := lipgloss.Width(label)
+		boxes = append(boxes, hitBox{x0: col, x1: col + w - 1, y0: tabBarRow, y1: tabBarRow})
+		// The labels are joined by two spaces.
+		col += w + 2
 	}
-	return strings.Join(parts, "  ")
+	return strings.Join(parts, "  "), boxes
 }
 
 // summaryLine is the per-tab summary, with the status or refusal on the right.
@@ -328,11 +360,17 @@ func (m *Model) bannerLines() []string {
 	return out
 }
 
-// writeBanner writes the refusal banner, if there is one.
-func (m *Model) writeBanner(b *strings.Builder) {
-	for _, l := range m.bannerLines() {
+// writeBanner writes the refusal banner, if there is one, and returns how many rows
+// it took.
+//
+// The banner sits between the summary and the list, so the list starts lower when it
+// is there.
+func (m *Model) writeBanner(b *strings.Builder) int {
+	lines := m.bannerLines()
+	for _, l := range lines {
 		b.WriteString(l + "\n")
 	}
+	return len(lines)
 }
 
 // bannerRoom is how many rows the banner may take.

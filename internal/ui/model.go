@@ -121,6 +121,13 @@ type Model struct {
 	// offset is the first visible line of the list.
 	offset int
 
+	// hits is where the last drawn frame put things.
+	//
+	// It is a fact about the screen, not about the plan, so it lives here and not in
+	// the domain. The mouse event arrives after the frame was drawn, so the map is
+	// kept between renders and rebuilt by the next one.
+	hits hitMap
+
 	// detailScroll is how far the detail pane has been scrolled.
 	detailScroll int
 
