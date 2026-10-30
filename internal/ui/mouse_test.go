@@ -60,6 +60,10 @@ func TestTheHitMapKnowsWhereTheTabsAre(t *testing.T) {
 		if got != want {
 			t.Errorf("the tab %q is drawn as %q at columns %d..%d, want %q", TabNames[i], got, box.x0, box.x1, want)
 		}
+		// The map answers the same question the drawing does.
+		if at := m.hits.tabAt(box.x0, tabBarRow); at != i {
+			t.Errorf("the point at column %d holds tab %d, want %d", box.x0, at, i)
+		}
 	}
 }
 
@@ -88,6 +92,14 @@ func TestTheHitMapKnowsWhereTheRowsAre(t *testing.T) {
 		}
 		if row.y0 != m.hits.list.y0+i {
 			t.Errorf("the row %d is on row %d, want %d", i, row.y0, m.hits.list.y0+i)
+		}
+		// The map answers the same question the drawing does.
+		at, ok := m.hits.rowAt(0, row.y0)
+		if want := row.item >= 0; ok != want {
+			t.Errorf("the point on row %d holds item %d (%t), want an item: %t", row.y0, at, ok, want)
+		}
+		if ok && at != row.item {
+			t.Errorf("the point on row %d holds item %d, want %d", row.y0, at, row.item)
 		}
 	}
 }
