@@ -33,7 +33,7 @@ func run() error {
 	plain := fs.Bool("plain", false, "strip colours from the output")
 	width := fs.Int("width", 100, "render width")
 	show := fs.String("show", "", "render one recipe by id instead of the list")
-	keys := fs.String("keys", "", "drive the console with these keys before rendering, comma separated")
+	keys := fs.String("keys", "", "drive the console with these steps before rendering, comma separated — keys and mouse steps")
 	all := fs.Bool("all", false, "render every tab instead of the current one")
 	project := fs.String("project", "", "the name to show for this session — display only, nothing is written")
 	if err := fs.Parse(os.Args[1:]); err != nil {

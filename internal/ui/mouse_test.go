@@ -239,3 +239,57 @@ func TestTheWheelOverTheHeaderDoesNothing(t *testing.T) {
 		t.Errorf("the wheel over the header moved the selection to %d", m.selRecipes)
 	}
 }
+
+// TestTheMouseIsDrivableFromAScript covers the scripted wheel.
+//
+// The console is driven from a script by `maitre --keys`, and CI has no terminal, so
+// the mouse has to be drivable the way the keys are.
+func TestTheMouseIsDrivableFromAScript(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 12
+	before := m.selRecipes
+
+	// The model has never been drawn: the driver has to draw the frame before it
+	// answers the mouse, or the wheel lands on a map that is not on screen.
+	if _, err := Drive(m, []string{"wheel:down"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.selRecipes == before {
+		t.Errorf("the scripted wheel did not scroll the list: still on %d", m.selRecipes)
+	}
+}
+
+// TestTheScriptedMouseTakesAPosition covers the coordinates.
+func TestTheScriptedMouseTakesAPosition(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 12
+
+	// Over the header: nothing scrolls.
+	if _, err := Drive(m, []string{"wheel:down@1,0"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.selRecipes != 0 {
+		t.Errorf("the wheel over the header moved the selection to %d", m.selRecipes)
+	}
+
+	// Over the list: it scrolls.
+	if _, err := Drive(m, []string{"wheel:down@1,6"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.selRecipes == 0 {
+		t.Errorf("the wheel over the list did not scroll it")
+	}
+}
+
+// TestAnUnknownMouseStepIsRefused covers the driver's refusal.
+func TestAnUnknownMouseStepIsRefused(t *testing.T) {
+	m := newModel(t)
+	if _, err := Drive(m, []string{"wheel:sideways"}); err == nil {
+		t.Fatal("expected an unknown mouse step to be refused")
+	}
+	if _, err := Drive(m, []string{"wheel:down@1"}); err == nil {
+		t.Fatal("expected a malformed position to be refused")
+	}
+}

@@ -39,20 +39,28 @@ func KeyFor(name string) (tea.KeyPressMsg, bool) {
 	return tea.KeyPressMsg{}, false
 }
 
-// Drive applies a sequence of key names to the model and returns the resulting view.
+// Drive applies a sequence of steps to the model and returns the resulting view.
 //
-// It is how the console is tested without a terminal: the same model, the same keys, the
-// same rendering.
-func Drive(m *Model, keys []string) (string, error) {
-	for _, name := range keys {
-		key, ok := KeyFor(name)
-		if !ok {
-			return "", fmt.Errorf("unknown key %q", name)
+// A step is a key name ("tab", "space", "up") or a mouse step ("wheel:down",
+// "wheel:down@12,5"). It is how the console is tested without a terminal — and how a
+// script drives it — so the mouse has to be drivable the same way the keys are.
+//
+// The frame is drawn **before** each step. A mouse event is answered against the
+// frame the chef is looking at, so the hit map has to be that frame's: a step that
+// clicks against a map from a frame that is not on screen clicks the wrong thing.
+func Drive(m *Model, steps []string) (string, error) {
+	for _, name := range steps {
+		// The frame on screen, and the map that goes with it.
+		_ = m.View()
+
+		msg, err := stepMsg(m, name)
+		if err != nil {
+			return "", err
 		}
-		updated, cmd := m.Update(key)
+		updated, cmd := m.Update(msg)
 		m = updated.(*Model)
 		if cmd != nil {
-			// Run the command the key produced — a reload, for instance.
+			// Run the command the step produced — a reload, for instance.
 			if msg := cmd(); msg != nil {
 				updated, _ = m.Update(msg)
 				m = updated.(*Model)
@@ -60,4 +68,19 @@ func Drive(m *Model, keys []string) (string, error) {
 		}
 	}
 	return m.View().Content, nil
+}
+
+// stepMsg turns a step name into the message it stands for.
+//
+// A mouse step is tried first: a key name is never a mouse step, and the mouse is
+// the one that needs the frame.
+func stepMsg(m *Model, name string) (tea.Msg, error) {
+	if msg, ok := MouseFor(name, m); ok {
+		return msg, nil
+	}
+	key, ok := KeyFor(name)
+	if !ok {
+		return nil, fmt.Errorf("unknown step %q", name)
+	}
+	return key, nil
 }
