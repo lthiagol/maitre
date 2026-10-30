@@ -27,6 +27,9 @@ what the chef actually sees with four terminals open — is the hardcoded string
 
 - The name is the plan's `project.json` `name` — the same source the header uses
   today (`m.ops.GetProject()`, falling back to the plan's root).
+  **Corrected in fix cycle 1 (F-100):** the domain answers the plan's name once —
+  `core.Store.ProjectName()` — and the console asks it. The answer is a name, never
+  a path.
 - **One source for the name.** The header and the window title must not compute it
   separately; there is one function that answers *"what is this plan called?"*, and
   both read it.
@@ -63,7 +66,12 @@ apart when their names are alike.
 
 - The path is the plan's root, formatted for a human (`~/Code/Pessoal/maitre`), not
   a raw absolute path with the home directory spelled out.
+  **Corrected in fix cycle 1 (F-101):** the root is the **plan directory**, and the
+  example was the project's directory — `~/Code/Pessoal/maitre/kitchen`. The row is
+  labelled `root`, and it shows the root.
 - The Settings tab currently lists the themes. The path is one more row, labelled.
+  **Corrected in fix cycle 1 (F-101):** the tab already carried a `root` row; it
+  showed the plan directory's parent.
 
 ### AC-05 — the goldens
 

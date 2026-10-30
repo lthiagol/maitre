@@ -231,6 +231,12 @@ row 4..      the list - scrollable, fills to the bottom
 row N-1      up/down move - tab switch - space sign off - q quit
 ```
 
+**The window title carries the project.** It is the row the operating system puts on
+the terminal's tab, and it reads `maitre · <project>` — the plan's own name, or the
+name `maitre --project <name>` gives it for the session. It is the answer to *which of
+my four terminals is this?*, and it is **not** the screen's row 0: that row is the
+console's header, drawn inside the terminal, and it carries the same name.
+
 - The **list scrolls** to keep the selection visible. Section headers scroll with their
   items, so a header can disappear while its items stay selected.
 - The **footer is pinned** to the last row and is **contextual**: `space` means different
