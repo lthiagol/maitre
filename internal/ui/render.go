@@ -10,8 +10,8 @@ import (
 // Snapshot loads the plan into a model without a terminal.
 //
 // It is the same model the console uses, so a script can drive it — see Drive.
-func Snapshot(store *core.Store, width int) (*Model, error) {
-	return snapshot(store, width, New(store))
+func Snapshot(store *core.Store, width int, opts ...Option) (*Model, error) {
+	return snapshot(store, width, New(store, opts...))
 }
 
 // SnapshotScripted loads a plan into a console whose writes are stamped as scripted.
@@ -19,8 +19,8 @@ func Snapshot(store *core.Store, width int) (*Model, error) {
 // The console is the chef's surface, so a human driving it acts as the chef. A script
 // driving it acts on the chef's behalf — and the journal should say which, so a
 // reader can tell a human's verdict from a driven one.
-func SnapshotScripted(store *core.Store, width int) (*Model, error) {
-	return snapshot(store, width, NewScripted(store))
+func SnapshotScripted(store *core.Store, width int, opts ...Option) (*Model, error) {
+	return snapshot(store, width, NewScripted(store, opts...))
 }
 
 func snapshot(store *core.Store, width int, m *Model) (*Model, error) {
@@ -44,8 +44,8 @@ func snapshot(store *core.Store, width int, m *Model) (*Model, error) {
 // It is the same view the console draws, without the terminal. It serves three purposes:
 // sharing a snapshot in chat or a PR, checking the console in CI, and letting an agent
 // read the board the way the chef sees it.
-func Render(store *core.Store, width int) (string, error) {
-	m, err := snapshotModel(store, width)
+func Render(store *core.Store, width int, opts ...Option) (string, error) {
+	m, err := snapshotModel(store, width, opts...)
 	if err != nil {
 		return "", err
 	}
@@ -53,8 +53,8 @@ func Render(store *core.Store, width int) (string, error) {
 }
 
 // RenderDetail produces a static snapshot of one recipe.
-func RenderDetail(store *core.Store, id string, width int) (string, error) {
-	m, err := snapshotModel(store, width)
+func RenderDetail(store *core.Store, id string, width int, opts ...Option) (string, error) {
+	m, err := snapshotModel(store, width, opts...)
 	if err != nil {
 		return "", err
 	}
@@ -69,8 +69,8 @@ func RenderDetail(store *core.Store, id string, width int) (string, error) {
 }
 
 // snapshotModel loads the plan into a model without a terminal.
-func snapshotModel(store *core.Store, width int) (*Model, error) {
-	return Snapshot(store, width)
+func snapshotModel(store *core.Store, width int, opts ...Option) (*Model, error) {
+	return Snapshot(store, width, opts...)
 }
 
 // renderAll renders every tab, one after another.

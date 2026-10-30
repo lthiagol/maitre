@@ -35,6 +35,7 @@ func run() error {
 	show := fs.String("show", "", "render one recipe by id instead of the list")
 	keys := fs.String("keys", "", "drive the console with these keys before rendering, comma separated")
 	all := fs.Bool("all", false, "render every tab instead of the current one")
+	project := fs.String("project", "", "the name to show for this session — display only, nothing is written")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return err
 	}
@@ -49,15 +50,22 @@ func run() error {
 	}
 	store := core.Open(root)
 
+	// The name the console shows. It is display only: the plan keeps its own name
+	// on disk, and the journal never hears about this.
+	var opts []ui.Option
+	if *project != "" {
+		opts = append(opts, ui.WithProject(*project))
+	}
+
 	if *keys != "" || *all || *show != "" || *render {
 		// A driven console writes under its own session, so the journal can show
 		// that a verdict was scripted rather than given.
-		m, err := ui.SnapshotScripted(store, *width)
+		m, err := ui.SnapshotScripted(store, *width, opts...)
 		if err != nil {
 			return err
 		}
 		if *show != "" {
-			out, err := ui.RenderDetail(store, *show, *width)
+			out, err := ui.RenderDetail(store, *show, *width, opts...)
 			if err != nil {
 				return err
 			}
@@ -72,7 +80,7 @@ func run() error {
 			fmt.Print(finish(out, *plain))
 			return nil
 		}
-		out, err := ui.Render(store, *width)
+		out, err := ui.Render(store, *width, opts...)
 		if err != nil {
 			return err
 		}
@@ -86,7 +94,7 @@ func run() error {
 
 	// The interactive console watches the disk: the chef sees a change on disk
 	// without pressing `r`.
-	p := tea.NewProgram(ui.NewLive(store))
+	p := tea.NewProgram(ui.NewLive(store, opts...))
 	if _, err := p.Run(); err != nil {
 		return err
 	}

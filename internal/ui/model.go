@@ -159,16 +159,16 @@ type Model struct {
 // It does not watch the disk: the snapshot and the script paths are not interactive
 // programs, and a poll loop in one of them would keep it alive. The interactive
 // program uses NewLive.
-func New(store *core.Store) *Model {
-	return newConsole(store, "console")
+func New(store *core.Store, opts ...Option) *Model {
+	return newConsole(store, "console", opts...)
 }
 
 // NewLive builds the console model over a store, and it watches the disk.
 //
 // The chef sees a change on disk without pressing `r`: the console stats the plan's
 // files once a second, and reloads when one of them has changed.
-func NewLive(store *core.Store) *Model {
-	m := newConsole(store, "console")
+func NewLive(store *core.Store, opts ...Option) *Model {
+	m := newConsole(store, "console", opts...)
 	m.live = true
 	return m
 }
@@ -178,12 +178,12 @@ func NewLive(store *core.Store) *Model {
 // The console is the chef's surface: a human pressing space in it is the chef
 // deciding. A script pressing space for them is the chef's decision mediated by a
 // machine — which the journal should be able to show.
-func NewScripted(store *core.Store) *Model {
-	return newConsole(store, "console-script")
+func NewScripted(store *core.Store, opts ...Option) *Model {
+	return newConsole(store, "console-script", opts...)
 }
 
-func newConsole(store *core.Store, session string) *Model {
-	return &Model{
+func newConsole(store *core.Store, session string, opts ...Option) *Model {
+	m := &Model{
 		store:      store,
 		ops:        core.NewOperations(store, core.AuditContext{Actor: "chef", Session: session, Role: "chef"}),
 		showServed: true,
@@ -192,6 +192,10 @@ func newConsole(store *core.Store, session string) *Model {
 		theme:        newTheme(kitchen()),
 		pollInterval: PollInterval,
 	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
 }
 
 // Init loads the plan.

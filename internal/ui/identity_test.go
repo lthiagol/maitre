@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -73,6 +74,102 @@ func TestTheNameFallsBackToThePlanRoot(t *testing.T) {
 	}
 	if !strings.Contains(plain(m), "· "+store.Root) {
 		t.Errorf("the header does not carry the fallback\n%s", plain(m))
+	}
+}
+
+// TestTheProjectOverrideReachesTheConsole proves `--project` names the plan for the
+// session.
+//
+// The flag is what a chef with two checkouts of one project needs, and it is the
+// answer to two plans whose directories share a basename.
+func TestTheProjectOverrideReachesTheConsole(t *testing.T) {
+	store := identityStore(t)
+	m := loadInto(t, New(store, WithProject("the-other-one")))
+
+	if got, want := m.View().WindowTitle, "maitre · the-other-one"; got != want {
+		t.Errorf("the window title is %q, want %q", got, want)
+	}
+	if !strings.Contains(plain(m), "· the-other-one") {
+		t.Errorf("the header does not carry the override\n%s", plain(m))
+	}
+	if strings.Contains(plain(m), "· demo") {
+		t.Errorf("the header still carries the plan's own name\n%s", plain(m))
+	}
+}
+
+// TestEveryConstructorTakesTheOverride proves the flag reaches all three.
+//
+// `New`, `NewLive` and `NewScripted` are the console's three doors, and a flag that
+// reaches two of them reaches the wrong two.
+func TestEveryConstructorTakesTheOverride(t *testing.T) {
+	store := identityStore(t)
+
+	for name, build := range map[string]func(*core.Store, ...Option) *Model{
+		"New":         New,
+		"NewLive":     NewLive,
+		"NewScripted": NewScripted,
+	} {
+		m := loadInto(t, build(store, WithProject("named")))
+		if got, want := m.View().WindowTitle, "maitre · named"; got != want {
+			t.Errorf("%s: the window title is %q, want %q", name, got, want)
+		}
+	}
+}
+
+// TestTheProjectOverrideWritesNothing proves the flag is display only.
+//
+// It must not touch the plan's metadata, and it must not enter the journal: a name
+// the chef typed is not a fact about the plan.
+func TestTheProjectOverrideWritesNothing(t *testing.T) {
+	store := identityStore(t)
+	project := filepath.Join(store.Root, core.FileProject)
+	activity := filepath.Join(store.Root, core.FileActivity)
+	before := map[string][]byte{}
+	for _, path := range []string{project, activity} {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read %s: %v", path, err)
+		}
+		before[path] = raw
+	}
+
+	m := loadInto(t, New(store, WithProject("zz-override-name")))
+	_ = m.View()
+
+	for path, raw := range before {
+		now, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read %s: %v", path, err)
+		}
+		if string(now) != string(raw) {
+			t.Errorf("%s changed:\nbefore: %s\nafter:  %s", path, raw, now)
+		}
+	}
+
+	journal, err := store.LoadJournal()
+	if err != nil {
+		t.Fatalf("load journal: %v", err)
+	}
+	for _, e := range journal.Events {
+		if strings.Contains(fmt.Sprint(e), "zz-override-name") {
+			t.Errorf("the override entered the journal: %+v", e)
+		}
+	}
+}
+
+// TestThePlanKeepsItsOwnName proves the override does not change the plan.
+//
+// The console shows what the chef asked for; the plan still says what it says.
+func TestThePlanKeepsItsOwnName(t *testing.T) {
+	store := identityStore(t)
+	m := loadInto(t, New(store, WithProject("zz-override-name")))
+
+	p, err := m.ops.GetProject()
+	if err != nil {
+		t.Fatalf("get project: %v", err)
+	}
+	if p.Name != "demo" {
+		t.Errorf("the plan's name is %q, want %q", p.Name, "demo")
 	}
 }
 
