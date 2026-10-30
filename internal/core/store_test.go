@@ -61,6 +61,56 @@ func TestProjectNameHasOneAnswer(t *testing.T) {
 	}
 }
 
+// TestLoadProjectAnswersTheSameName proves the two surfaces agree.
+//
+// `maitre-cli plan` reads the project through LoadProject, and the console reads it
+// through ProjectName. Two answers to one question is the house's standing failure,
+// so the rule lives in one place and both surfaces ask it.
+func TestLoadProjectAnswersTheSameName(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "demo", PlanDirName)
+	s := Open(root)
+	if err := s.Init(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+	project := filepath.Join(s.Root, FileProject)
+
+	cases := []struct {
+		what string
+		plan func()
+	}{
+		{"the plan names itself", func() {}},
+		{"the plan names nothing", func() {
+			raw, err := os.ReadFile(project)
+			if err != nil {
+				t.Fatalf("read project: %v", err)
+			}
+			emptied := strings.Replace(string(raw), `"name": "demo"`, `"name": ""`, 1)
+			if err := os.WriteFile(project, []byte(emptied), 0o644); err != nil {
+				t.Fatalf("write project: %v", err)
+			}
+		}},
+		{"the plan has no project file", func() {
+			if err := os.Remove(project); err != nil {
+				t.Fatalf("remove project: %v", err)
+			}
+		}},
+	}
+
+	for _, c := range cases {
+		c.plan()
+		p, err := s.LoadProject()
+		if err != nil {
+			t.Fatalf("%s: load project: %v", c.what, err)
+		}
+		if p.Name != s.ProjectName() {
+			t.Errorf("%s: LoadProject answers %q and ProjectName answers %q", c.what, p.Name, s.ProjectName())
+		}
+		if p.Name != "demo" {
+			t.Errorf("%s: the name is %q, want %q", c.what, p.Name, "demo")
+		}
+	}
+}
+
 func TestInitCreatesTheLayout(t *testing.T) {
 	s := newStore(t)
 	for _, d := range []string{DirRecipes, DirCourses, DirBacklog} {

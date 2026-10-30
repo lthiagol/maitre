@@ -105,41 +105,60 @@ type projectFile struct {
 }
 
 // LoadProject reads the plan-level metadata.
+//
+// The name is not answered here: the domain answers it once — see ProjectName — and
+// this asks. Two copies of the rule would be two answers to one question.
 func (s *Store) LoadProject() (Project, error) {
+	doc, err := s.readProjectFile()
+	if err != nil {
+		// The error is wrapped, so the test for a missing file has to unwrap it.
+		if errors.Is(err, os.ErrNotExist) {
+			return Project{Name: s.projectName(doc)}, nil
+		}
+		// The name is still the answer even when the file cannot be read: the
+		// caller that ignores the error still gets the plan's name.
+		return Project{Name: s.projectName(doc)}, err
+	}
+	return Project{Name: s.projectName(doc), Created: doc.Created}, nil
+}
+
+// ProjectName returns the plan's name — the answer to *what is this plan called?*.
+//
+// It asks the rule and gives the answer back, so every reader of the name — the
+// console, the CLI — gets the same one.
+//
+// The answer is **never a path**. A path would say *which directory* where the
+// chef asked *which project*, and the two are different questions.
+func (s *Store) ProjectName() string {
+	doc, _ := s.readProjectFile()
+	return s.projectName(doc)
+}
+
+// projectName is the rule, in one place.
+//
+// The plan's own name, and the project's directory name when the plan names
+// nothing: a missing file, an unreadable file and an empty name are the same case.
+func (s *Store) projectName(doc projectFile) string {
+	if doc.Name == "" {
+		return s.defaultProjectName()
+	}
+	return doc.Name
+}
+
+// readProjectFile reads and parses the plan's project file.
+//
+// A missing file is an error here, and the caller decides what a plan without one
+// answers — the file carries no name to read.
+func (s *Store) readProjectFile() (projectFile, error) {
 	raw, err := os.ReadFile(filepath.Join(s.Root, FileProject))
 	if err != nil {
-		if os.IsNotExist(err) {
-			return Project{Name: s.defaultProjectName()}, nil
-		}
-		return Project{}, fmt.Errorf("read project: %w", err)
+		return projectFile{}, fmt.Errorf("read project: %w", err)
 	}
 	var doc projectFile
 	if err := json.Unmarshal(raw, &doc); err != nil {
-		return Project{}, fmt.Errorf("parse project: %w", err)
+		return projectFile{}, fmt.Errorf("parse project: %w", err)
 	}
-	name := doc.Name
-	if name == "" {
-		// A plan that names nothing answers with the same name a plan without a
-		// project file answers with. One question, one answer.
-		name = s.defaultProjectName()
-	}
-	return Project{Name: name, Created: doc.Created}, nil
-}
-
-// ProjectName returns the plan's name.
-//
-// One question, one answer: the name the plan's own file gives it, and the project's
-// directory name when the plan names nothing. A missing file and an empty name are
-// the same case, and they answer the same.
-//
-// The answer is **never a path**. A path in the header would say *which directory*
-// where the chef asked *which project*, and the two are different questions.
-func (s *Store) ProjectName() string {
-	p, err := s.LoadProject()
-	if err != nil || p.Name == "" {
-		return s.defaultProjectName()
-	}
-	return p.Name
+	return doc, nil
 }
 
 // defaultProjectName is the name a plan that names nothing answers with: the
