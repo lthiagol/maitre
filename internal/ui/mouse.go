@@ -19,6 +19,11 @@ const wheelStep = 3
 // The console answers the wheel and leaves the rest for the click: a click that
 // does nothing yet would look like a thing that works.
 func (m *Model) handleMouse(mouse tea.Mouse) (tea.Model, tea.Cmd) {
+	// An open prompt takes every input. The console must not move the selection out
+	// from under a half-typed answer.
+	if m.prompt != nil {
+		return m, nil
+	}
 	switch mouse.Button {
 	case tea.MouseWheelUp:
 		m.scrollUnderPointer(mouse.X, mouse.Y, -wheelStep)

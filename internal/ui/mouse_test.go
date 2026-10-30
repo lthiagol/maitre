@@ -305,3 +305,34 @@ func TestAnUnknownMouseStepIsRefused(t *testing.T) {
 		t.Fatal("expected a malformed position to be refused")
 	}
 }
+
+// TestTheWheelLeavesAnOpenPromptAlone checks the prompt keeps the selection.
+//
+// While the prompt is open every input belongs to it — the console must not move
+// the selection out from under a half-typed answer.
+func TestTheWheelLeavesAnOpenPromptAlone(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 12
+	m.View()
+
+	// A prompt is open on the selected recipe.
+	m.openReview("RCP02")
+	if m.prompt == nil {
+		t.Fatal("the prompt should be open")
+	}
+	before := m.selRecipes
+	beforeScroll := m.detailScroll
+
+	lx, ly := m.hits.list.centre()
+	m.Update(tea.MouseWheelMsg{X: lx, Y: ly, Button: tea.MouseWheelDown})
+	if m.selRecipes != before {
+		t.Errorf("the wheel moved the selection to %d while the prompt was open", m.selRecipes)
+	}
+
+	dx, dy := m.hits.detail.centre()
+	m.Update(tea.MouseWheelMsg{X: dx, Y: dy, Button: tea.MouseWheelDown})
+	if m.detailScroll != beforeScroll {
+		t.Errorf("the wheel scrolled the detail to %d while the prompt was open", m.detailScroll)
+	}
+}
