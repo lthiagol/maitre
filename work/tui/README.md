@@ -12,7 +12,7 @@
 
 | Session | Feature | What it lands | State | Brief |
 |--:|---|---|---|---|
-| **T1** | the identity | the window title carries the project; the header's name stops being a footnote; `--project`; the Settings tab shows the plan's path | ✅ closed · 5 commits · 94a53ff, 8fc7438, f0b2aa5, 82289c6 | [tui-t1.md](../briefs/tui-t1.md) |
+| **T1** | the identity | the window title carries the project; the header's name stops being a footnote; `--project`; the Settings tab shows the plan's path | ✅ closed · 7 commits · 94a53ff, 8fc7438, f0b2aa5, 82289c6, 0bbcb35 | [tui-t1.md](../briefs/tui-t1.md) |
 | **T2a** | the mouse, part 1 | the mouse is on; the render builds the hit map; the wheel scrolls | 🔄 **briefed** | [tui-t2a.md](../briefs/tui-t2a.md) |
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | 🔄 **briefed** | [tui-t2b.md](../briefs/tui-t2b.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ⏳ planned | — |
