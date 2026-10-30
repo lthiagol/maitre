@@ -14,7 +14,7 @@
 | 1 | **Title** | the project name **is** already in the header — `⋈ maitre · kbtest` — but dimmed, and the **window title is the hardcoded string `maitre`** (`views.go:53`) | the window title carries the project; the header's project name stops being a footnote; a `--project` flag for two checkouts of one project |
 | 2 | **Home tab** | v1's **Overview** was dropped because it *restated the board* | a **Home** tab with **numbers, never items**; the art moves there; the Sous-Chef tab dissolves into it; the tab count stays 7 |
 | 3 | **Mouse** | `internal/ui` handles **no mouse event at all** — no `tea.MouseMsg` case exists | bubbletea v2 sets the mouse mode on the `View`; a **hit map the render builds**; wheel, click a row, click a tab |
-| 4 | **Backlog** | the cursor **does** move (verified) — but `enter` **does nothing**: a backlog item has **no detail pane**. And `space` promotes **an idea**, which yields a recipe with **no acceptance criteria** | a detail pane for the item; `space` stops being a trap on an idea; dismiss · create · edit reach the console — the operations already exist |
+| 4 | **Backlog** | the cursor **does** move (verified) — but `enter` **does nothing**: a backlog item has **no detail pane**. And `space` promotes **an idea**, which yields a recipe with **no acceptance criteria** | a detail pane for the item; `space` stops being a trap on an idea; **shape it** · dismiss · create reach the console — the operations already exist. The **free edit** of every field is **not in this round**: it is a five-field surface, and the round's need is the moves |
 | 5 | **Path & Board** | **Board** is the glossary's own word for the dependency tree (*"what waits on what, drawn as a dependency tree"*). The Path's `READY` means *not blocked* — it holds drafts and things waiting on you | **Path → Ready**, and Ready means *adoptable now*. **Board stays Board.** Merging them is a no |
 | 6 | **Grouping** | the glossary's word is **course** (*avoid: epic, theme, group*), and [docs/06 § 1](../../docs/06-proposals.md#1-courses) already ruled **no course file**. Recipes carry **no tags**; backlog items do | a **filter** now (no format change), and **tags** as a later domain decision, taken with the CLI |
 
@@ -168,7 +168,7 @@ feeling, and it is a defect, not a taste.
 | Move | Today | Proposal |
 |---|---|---|
 | **Read** | nothing | a detail pane: title, body, scope, kind, status, tags, dates, `promoted_to` |
-| **Promote** | `space`, on every row, including ideas | `space` on a **small task** promotes. On an **idea**, `space` offers *shape it* — the kind change `idea → feature`, which is an update, not a promotion. The footer says which |
+| **Promote** | `space`, on every row, including ideas | `space` on a **small task** promotes. On an **idea**, `space` offers *shape it* — the kind changes to a small task (the chef picks which) and a scope is added, which is an update, not a promotion. The footer says which |
 | **Dismiss** | not in the console | the console dismisses with a reason — `DismissBacklogItem` exists in core and `maitre-cli backlog dismiss` exists; only the console's surface is missing |
 | **Create** | not in the console | the console creates a backlog item — `CreateBacklogItem` exists. A backlog item is **not** a recipe, so this does not break ADR-0003 (the console never authors the recipe) |
 | **Shape it** | not in the console | the console changes the kind and adds a scope — the **update** that `docs/03` § 1.1 calls *shaping*. The id does not change. `UpdateBacklogItem` exists |
