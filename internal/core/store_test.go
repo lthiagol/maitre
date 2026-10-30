@@ -3,6 +3,7 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -17,6 +18,47 @@ func newStore(t *testing.T) *Store {
 		t.Fatalf("init: %v", err)
 	}
 	return s
+}
+
+// TestProjectNameHasOneAnswer proves the plan's name is answered once.
+//
+// A plan whose project file names nothing and a plan whose project file is missing
+// are the same case, and they answer the same. The answer is a name — never a path.
+func TestProjectNameHasOneAnswer(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "demo", PlanDirName)
+	s := Open(root)
+	if err := s.Init(); err != nil {
+		t.Fatalf("init: %v", err)
+	}
+
+	// The plan names itself.
+	if got, want := s.ProjectName(), "demo"; got != want {
+		t.Errorf("the name is %q, want %q", got, want)
+	}
+
+	// The plan names nothing.
+	raw, err := os.ReadFile(filepath.Join(s.Root, FileProject))
+	if err != nil {
+		t.Fatalf("read project: %v", err)
+	}
+	emptied := strings.Replace(string(raw), `"name": "demo"`, `"name": ""`, 1)
+	if err := os.WriteFile(filepath.Join(s.Root, FileProject), []byte(emptied), 0o644); err != nil {
+		t.Fatalf("write project: %v", err)
+	}
+	if got, want := s.ProjectName(), "demo"; got != want {
+		t.Errorf("the name is %q, want %q", got, want)
+	}
+
+	// The plan has no project file at all.
+	if err := os.Remove(filepath.Join(s.Root, FileProject)); err != nil {
+		t.Fatalf("remove project: %v", err)
+	}
+	if got, want := s.ProjectName(), "demo"; got != want {
+		t.Errorf("the name is %q, want %q", got, want)
+	}
+	if strings.ContainsRune(s.ProjectName(), filepath.Separator) {
+		t.Errorf("the name is a path: %q", s.ProjectName())
+	}
 }
 
 func TestInitCreatesTheLayout(t *testing.T) {

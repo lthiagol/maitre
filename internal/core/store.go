@@ -109,7 +109,7 @@ func (s *Store) LoadProject() (Project, error) {
 	raw, err := os.ReadFile(filepath.Join(s.Root, FileProject))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return Project{Name: filepath.Base(filepath.Dir(s.Root))}, nil
+			return Project{Name: s.defaultProjectName()}, nil
 		}
 		return Project{}, fmt.Errorf("read project: %w", err)
 	}
@@ -117,7 +117,38 @@ func (s *Store) LoadProject() (Project, error) {
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		return Project{}, fmt.Errorf("parse project: %w", err)
 	}
-	return Project{Name: doc.Name, Created: doc.Created}, nil
+	name := doc.Name
+	if name == "" {
+		// A plan that names nothing answers with the same name a plan without a
+		// project file answers with. One question, one answer.
+		name = s.defaultProjectName()
+	}
+	return Project{Name: name, Created: doc.Created}, nil
+}
+
+// ProjectName returns the plan's name.
+//
+// One question, one answer: the name the plan's own file gives it, and the project's
+// directory name when the plan names nothing. A missing file and an empty name are
+// the same case, and they answer the same.
+//
+// The answer is **never a path**. A path in the header would say *which directory*
+// where the chef asked *which project*, and the two are different questions.
+func (s *Store) ProjectName() string {
+	p, err := s.LoadProject()
+	if err != nil || p.Name == "" {
+		return s.defaultProjectName()
+	}
+	return p.Name
+}
+
+// defaultProjectName is the name a plan that names nothing answers with: the
+// project's directory.
+//
+// The plan directory is `<project>/kitchen`, so the project's directory is the plan
+// directory's parent.
+func (s *Store) defaultProjectName() string {
+	return filepath.Base(filepath.Dir(s.Root))
 }
 
 // filepathJoin is filepath.Join, named short because it is used a lot.
