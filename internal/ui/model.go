@@ -594,12 +594,7 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.applyTheme()
 			return m, nil
 		}
-		if m.mode == ModeSplit {
-			if _, ok := m.currentRecipe(); ok {
-				m.mode = ModeDetail
-				m.detailScroll = 0
-			}
-		}
+		m.openDetail()
 		return m, nil
 
 	case "1", "2", "3":
@@ -639,6 +634,22 @@ func (m *Model) switchTab(t Tab) {
 	// The tab changes the recipe, and the note cursor belongs to the recipe.
 	// A footer that promises a triage the space refuses is a lie.
 	m.clampSelections()
+}
+
+// openDetail gives the detail the screen.
+//
+// It is the keyboard's `enter`: the detail takes the screen, and `esc` brings it
+// back. A tab that has no detail to show — the Backlog, the Settings — has no
+// detail to open, so the move does nothing there.
+func (m *Model) openDetail() {
+	if m.mode != ModeSplit {
+		return
+	}
+	if _, ok := m.currentRecipe(); !ok {
+		return
+	}
+	m.mode = ModeDetail
+	m.detailScroll = 0
 }
 
 // scrollDetail moves the detail pane's window.

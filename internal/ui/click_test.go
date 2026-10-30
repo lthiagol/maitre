@@ -103,6 +103,123 @@ func TestAClickOnAHeaderRowSelectsNothing(t *testing.T) {
 	}
 }
 
+// TestAClickOnARowInTheNarrowLayoutOpensTheDetail covers the narrow layout.
+//
+// The list is alone there — the detail is not on screen — so a click that only
+// selected would show the chef nothing. The click also opens the detail: the
+// keyboard's `enter`.
+func TestAClickOnARowInTheNarrowLayoutOpensTheDetail(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	if !m.hits.detail.empty() {
+		t.Fatalf("the narrow layout should have no detail on screen: %+v", m.hits.detail)
+	}
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no row with an item")
+	}
+	click(t, m, 5, row)
+	if m.mode != ModeDetail {
+		t.Errorf("the click in the narrow layout left the console in %v, want the detail on screen", m.mode)
+	}
+	rec, ok := m.currentRecipe()
+	if !ok {
+		t.Fatal("the detail has no recipe")
+	}
+	want := m.visibleRows()[1].ID
+	if rec.ID != want {
+		t.Errorf("the detail shows %s, want %s", rec.ID, want)
+	}
+}
+
+// TestAClickOnARowInTheSplitLayoutOnlySelects covers the split layout.
+//
+// The detail is on screen there, beside the list, and it follows the selection —
+// so the click selects, and nothing else.
+func TestAClickOnARowInTheSplitLayoutOnlySelects(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 30
+	m.View()
+
+	if m.hits.detail.empty() {
+		t.Fatal("the split layout should have the detail on screen")
+	}
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no row with an item")
+	}
+	click(t, m, 5, row)
+	if m.mode != ModeSplit {
+		t.Errorf("the click in the split layout opened the detail: mode is %v", m.mode)
+	}
+	if m.selRecipes != 1 {
+		t.Errorf("the click left the cursor on %d, want 1", m.selRecipes)
+	}
+	rec, ok := m.currentRecipe()
+	if !ok {
+		t.Fatal("the detail has no recipe")
+	}
+	if want := m.visibleRows()[1].ID; rec.ID != want {
+		t.Errorf("the detail shows %s, want %s", rec.ID, want)
+	}
+}
+
+// TestAClickOnTheBacklogSelectsAndStops covers the tab with no detail.
+//
+// The Backlog has no detail yet — that is T3a — so a click there selects and
+// stops.
+func TestAClickOnTheBacklogSelectsAndStops(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.tab = TabBacklog
+	m.View()
+
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no backlog row with an item")
+	}
+	click(t, m, 5, row)
+	if m.selBacklog != 1 {
+		t.Errorf("the click left the cursor on %d, want 1", m.selBacklog)
+	}
+	if m.mode != ModeSplit {
+		t.Errorf("the click on the backlog opened a detail: mode is %v", m.mode)
+	}
+}
+
+// TestAClickOnAThemeRowSelectsItAndDoesNotApplyIt covers the Settings tab.
+//
+// The theme is applied by `enter`, and applying it is a write. A click selects
+// the theme under the pointer and stops there.
+func TestAClickOnAThemeRowSelectsItAndDoesNotApplyIt(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.tab = TabSettings
+	m.View()
+
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no theme row")
+	}
+	before := m.theme.name
+	click(t, m, 5, row)
+	if m.selTheme != 1 {
+		t.Errorf("the click left the cursor on theme %d, want 1", m.selTheme)
+	}
+	if m.theme.name != before {
+		t.Errorf("the click applied the theme %q", m.theme.name)
+	}
+	if m.mode != ModeSplit {
+		t.Errorf("the click on a theme opened a detail: mode is %v", m.mode)
+	}
+}
+
 // TestTheClickOnATabIsTheKeyboardsSwitch checks the click makes the keyboard's move.
 //
 // The keyboard's `tab` and the mouse's click on the next tab's label must land in

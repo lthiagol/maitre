@@ -59,6 +59,13 @@ func (m *Model) clickAt(x, y int) {
 	}
 	if item, ok := m.hits.rowAt(x, y); ok {
 		m.selectItem(item)
+		// In the narrow layout the detail is not on screen at all, and a click
+		// that only selected would show the chef nothing. There the click also
+		// opens the detail — the keyboard's `enter`. In the split layout the
+		// detail is already on screen and follows the selection.
+		if m.hits.detail.empty() {
+			m.openDetail()
+		}
 		return
 	}
 }
