@@ -11,7 +11,7 @@ From [ADR-0003](decisions/0003-surface-split.md), the console owns:
 |---|---|
 | **View** | Read the plan well — the recipe as prose, the acceptance criteria with their evidence, the audit trail, findings anchored to code |
 | **Decide** | Sign off, triage tasting notes, accept or reject a scope, choose what is next |
-| **Manage the backlog** | Create, edit, shape, promote, dismiss backlog items |
+| **Manage the backlog** | Create, shape, promote, dismiss backlog items — the **free edit** of an item's fields is **not built** |
 | **Run** | Start, pause, watch, steer execution |
 
 It does **not** author the recipe. An agent does that, in a conversation with the chef,
