@@ -267,6 +267,7 @@ var DerivedViews = []DerivedView{
 	{Name: "tree", Function: TreeOf},
 	{Name: "backlog_groups", Function: BacklogGroups, Values: []string{"ideas", "tasks"}},
 	{Name: "promotion", Function: PromotionOf},
+	{Name: "backlog_move", Function: BacklogMoveOf, Values: backlogMoveValues()},
 }
 
 // NonViews are the exported functions of this package that are not derived views.
@@ -378,6 +379,15 @@ func laneValues() []string {
 func chefMoveValues() []string {
 	out := make([]string, 0, len(AllChefMoves))
 	for _, mv := range AllChefMoves {
+		out = append(out, string(mv))
+	}
+	return out
+}
+
+// backlogMoveValues are the backlog's moves, as names.
+func backlogMoveValues() []string {
+	out := make([]string, 0, len(AllBacklogMoves))
+	for _, mv := range AllBacklogMoves {
 		out = append(out, string(mv))
 	}
 	return out

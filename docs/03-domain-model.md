@@ -793,6 +793,7 @@ variations of a handful of these. **One operation, one name.**
 | `tree` | `TreeOf` | The plan as a dependency tree |
 | `backlog_groups` | `BacklogGroups` | `ideas` · `tasks` — the backlog's two groups, derived from the item's kind |
 | `promotion` | `PromotionOf` | Whether a backlog item may be promoted into a recipe, and why not |
+| `backlog_move` | `BacklogMoveOf` | `shape` · `promote` · `none` — the move the chef can make on a backlog item now, and whether it may still be dismissed |
 
 Two of these are **planned**: the domain does not compute them yet, and the table says
 so. A view the domain does not compute is not a view — it is a promise, and a promise

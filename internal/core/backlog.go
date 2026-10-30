@@ -111,6 +111,80 @@ func PromotionOf(item BacklogItem) Promotion {
 	return Promotion{true, ""}
 }
 
+// BacklogMoveKind is the move the chef can make on a backlog item right now.
+//
+// Derived, never stored: the console's footer and its keys read this, so the console
+// cannot offer a move the domain would refuse.
+type BacklogMoveKind string
+
+const (
+	// BacklogMoveNone is no move at all: the item is settled.
+	BacklogMoveNone BacklogMoveKind = ""
+	// BacklogMoveShape is the move that shapes an idea into a small task.
+	BacklogMoveShape BacklogMoveKind = "shape"
+	// BacklogMovePromote is the move that promotes a small task into a recipe.
+	BacklogMovePromote BacklogMoveKind = "promote"
+)
+
+// AllBacklogMoves is the closed set of the backlog's moves.
+//
+// The console's footer reads it, so a move the domain gains is a move the console
+// names the same day.
+var AllBacklogMoves = []BacklogMoveKind{BacklogMoveNone, BacklogMoveShape, BacklogMovePromote}
+
+// Label is what the console's footer calls the move.
+func (m BacklogMoveKind) Label() string {
+	switch m {
+	case BacklogMoveShape:
+		return "shape it"
+	case BacklogMovePromote:
+		return "promote to recipe"
+	}
+	return ""
+}
+
+// BacklogMove is what the chef can do with a backlog item right now.
+//
+// One answer, read in both places: the console's footer names the move the `space`
+// key makes, and it offers the dismiss key only when the domain says the item may
+// still be dismissed. A console that decided for itself would offer a move the
+// domain refuses — the defect F-114 closed.
+type BacklogMove struct {
+	// Primary is the move the `space` key makes: shape, promote, or none.
+	Primary BacklogMoveKind
+	// Dismissable is whether the item may still be dismissed.
+	Dismissable bool
+}
+
+// BacklogMoveOf derives what the chef can do with a backlog item right now.
+//
+// One place answers it, and the console asks.
+//
+// An **open idea** has one move: **shape it**. The kind changes and a scope is
+// added — an update, not a promotion — and the id does not change, so the trail
+// survives the shaping.
+//
+// An **open small task** has one move: **promote to recipe**. The promotion gives it
+// one acceptance criterion, so the recipe is checkable from the start.
+//
+// A **settled** item — promoted, dismissed — has **no** move. It is history, and the
+// footer says so rather than offering a key the domain would refuse.
+//
+// The promotion's own answer is read here, so the console can never offer a
+// promotion the domain refuses: one fact, one answer.
+//
+// view
+func BacklogMoveOf(item BacklogItem) BacklogMove {
+	if item.Status != StatusOpen {
+		return BacklogMove{Primary: BacklogMoveNone}
+	}
+	move := BacklogMove{Primary: BacklogMoveShape, Dismissable: true}
+	if PromotionOf(item).Allowed {
+		move.Primary = BacklogMovePromote
+	}
+	return move
+}
+
 // BacklogGroups splits the backlog into the two groups the console files it under.
 //
 // The groups are derived from the kind — the kind is the only truth, and a group is
