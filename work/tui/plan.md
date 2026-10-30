@@ -171,7 +171,8 @@ feeling, and it is a defect, not a taste.
 | **Promote** | `space`, on every row, including ideas | `space` on a **small task** promotes. On an **idea**, `space` offers *shape it* — the kind change `idea → feature`, which is an update, not a promotion. The footer says which |
 | **Dismiss** | not in the console | the console dismisses with a reason — `DismissBacklogItem` exists in core and `maitre-cli backlog dismiss` exists; only the console's surface is missing |
 | **Create** | not in the console | the console creates a backlog item — `CreateBacklogItem` exists. A backlog item is **not** a recipe, so this does not break ADR-0003 (the console never authors the recipe) |
-| **Edit** | not in the console | the console edits title, body, scope, kind and tags — `UpdateBacklogItem` exists |
+| **Shape it** | not in the console | the console changes the kind and adds a scope — the **update** that `docs/03` § 1.1 calls *shaping*. The id does not change. `UpdateBacklogItem` exists |
+| **Edit the fields** | not in the console | editing title, body and tags as a form is **not in this round**: it is a five-field surface, and the round's need is the moves below |
 
 Every one of those operations already exists in the domain. **This slice is the
 console catching up to its own domain, and it needs no CLI work.**
@@ -291,7 +292,7 @@ T1–T7, and two of them split because they do not fit in one sitting.
 | **T2a** | the mouse, part 1 | the mouse is on; the render builds the hit map; the wheel scrolls the list and the detail | — | M |
 | **T2b** | the mouse, part 2 | a click on a tab switches; a click on a row selects and opens the detail; the mouse is drivable from a script | T2a | S |
 | **T3a** | the backlog is readable | the detail pane renders a backlog item; `space` on an idea stops promoting it into a dead end; D-3 and D-5 land | — | M |
-| **T3b** | the backlog moves | dismiss · create · edit reach the console; D-4's first half | T3a | M |
+| **T3b** | the backlog moves | shape it · dismiss · create reach the console; D-4's first half | T3a | M |
 | **T4** | the Home tab | the landing tab with numbers and no items; the art moves here; the Sous-Chef dissolves into it; D-2 lands | — | M |
 | **T5** | the Ready tab | `core.Adoptable` and the tab that answers the chef's question; the Path becomes Ready; D-1 and D-4 land | — | M |
 | **T6** | the Board, as a visual place | the tree drawn left to right at ≥ 160 columns; clicking a node opens its detail | T2b | M |
