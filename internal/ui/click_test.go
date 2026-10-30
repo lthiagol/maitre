@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"charm.land/bubbletea/v2"
@@ -59,26 +60,57 @@ func headerRow(m *Model) (int, bool) {
 	return 0, false
 }
 
+// drawnRecipeID is the recipe id the frame drew on the screen row.
+//
+// The recipe row carries the id in its first column, so the id is the first
+// field of the line that looks like one.
+func drawnRecipeID(t *testing.T, frame string, row int) string {
+	t.Helper()
+	lines := strings.Split(frame, "\n")
+	if row < 0 || row >= len(lines) {
+		t.Fatalf("the frame has no row %d", row)
+	}
+	for _, field := range strings.Fields(lines[row]) {
+		if strings.HasPrefix(field, "RCP") {
+			return field
+		}
+	}
+	return ""
+}
+
 // TestAClickOnARowSelectsIt covers the list.
+//
+// The row is the fourth recipe's row — deep enough that the row the pointer
+// went over and the recipe under the cursor are two different answers.
 func TestAClickOnARowSelectsIt(t *testing.T) {
 	m := newModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
 
-	row, ok := rowFor(m, 1)
+	row, ok := rowFor(m, 4)
 	if !ok {
 		t.Fatal("the map holds no row with an item")
 	}
-	click(t, m, 5, row)
-	if m.selRecipes != 1 {
-		t.Errorf("the click on the row left the cursor on %d, want 1", m.selRecipes)
+	// The frame the click lands on: the recipe that row drew.
+	drawn := drawnRecipeID(t, plain(m), row)
+	if drawn == "" {
+		t.Fatalf("the row %d draws no recipe:\n%s", row, plain(m))
 	}
-	// The selection is the tab's own selection: the recipe under it is the recipe
-	// the row drew.
-	rows := m.visibleRows()
-	if got := rows[m.selRecipes].ID; got != rows[1].ID {
-		t.Errorf("the cursor is on %s, want %s", got, rows[1].ID)
+
+	click(t, m, 5, row)
+	if m.selRecipes != 4 {
+		t.Errorf("the click on the row left the cursor on %d, want 4", m.selRecipes)
+	}
+	// The selection is the tab's own selection: the recipe under the cursor is
+	// the recipe the row drew. The two are read from different places — the
+	// frame and the model's rows — so the comparison can fail.
+	summary, ok := m.currentSummary()
+	if !ok {
+		t.Fatal("the cursor is on no recipe")
+	}
+	if summary.ID != drawn {
+		t.Errorf("the cursor is on %s, want %s — the recipe the row drew", summary.ID, drawn)
 	}
 }
 
@@ -86,13 +118,23 @@ func TestAClickOnARowSelectsIt(t *testing.T) {
 //
 // A header is not a thing to select: the map says the row holds no item, and the
 // click leaves the cursor where it was.
+//
+// The cursor is somewhere else before the click, so a header click that moved
+// it — to item 0, say — is visible.
 func TestAClickOnAHeaderRowSelectsNothing(t *testing.T) {
 	m := newModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
 
+	// The keyboard's move: the cursor leaves the first row.
+	m.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	m.View()
 	before := m.selRecipes
+	if before == 0 {
+		t.Fatalf("the cursor is still on the first item, want it elsewhere")
+	}
+
 	row, ok := headerRow(m)
 	if !ok {
 		t.Fatal("the map holds no header row")
@@ -328,6 +370,33 @@ func TestAnUnknownClickStepIsRefused(t *testing.T) {
 	}
 	if _, err := Drive(m, []string{"click@1,5"}); err == nil {
 		t.Fatal("expected an unbracketed position to be refused")
+	}
+}
+
+// TestTheRefusalsNameTheirCause covers what each refusal says.
+//
+// The house's rule: each cause names its own remedy. A malformed position is
+// fixed by writing the position, an unknown step by writing a step the console
+// knows — so the reader must be able to tell them apart.
+func TestTheRefusalsNameTheirCause(t *testing.T) {
+	m := newModel(t)
+
+	// The bracket is never closed: the step is known, and the position is wrong.
+	_, err := Drive(m, []string{"click@(1,2"})
+	if err == nil {
+		t.Fatal("expected a malformed position to be refused")
+	}
+	if !strings.Contains(err.Error(), "position") {
+		t.Errorf("the refusal %q does not name the malformed position", err)
+	}
+
+	// The step names no gesture the console knows.
+	_, err = Drive(m, []string{"wibble"})
+	if err == nil {
+		t.Fatal("expected an unknown step to be refused")
+	}
+	if !strings.Contains(err.Error(), "unknown step") {
+		t.Errorf("the refusal %q does not name the unknown step", err)
 	}
 }
 
