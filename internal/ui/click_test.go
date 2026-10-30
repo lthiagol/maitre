@@ -220,6 +220,42 @@ func TestAClickOnAThemeRowSelectsItAndDoesNotApplyIt(t *testing.T) {
 	}
 }
 
+// TestAClickOnTheDetailPaneOpensIt covers the detail pane.
+//
+// A click inside the detail pane is the console's `enter` on that recipe: the
+// detail takes the screen, and `esc` brings it back.
+func TestAClickOnTheDetailPaneOpensIt(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 30
+	m.View()
+
+	x, y := m.hits.detail.centre()
+	click(t, m, x, y)
+	if m.mode != ModeDetail {
+		t.Errorf("the click on the detail left the console in %v, want the detail on screen", m.mode)
+	}
+}
+
+// TestAClickOnTheFullScreenDetailDoesNothing covers the full-screen detail.
+//
+// The detail already has the screen, and `enter` does nothing there — so the
+// click does nothing there too.
+func TestAClickOnTheFullScreenDetailDoesNothing(t *testing.T) {
+	m := newModel(t)
+	m.width = 200
+	m.height = 30
+	m.View()
+	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m.View()
+
+	x, y := m.hits.detail.centre()
+	click(t, m, x, y)
+	if m.mode != ModeDetail {
+		t.Errorf("the click on the open detail left the console in %v", m.mode)
+	}
+}
+
 // TestTheClickOnATabIsTheKeyboardsSwitch checks the click makes the keyboard's move.
 //
 // The keyboard's `tab` and the mouse's click on the next tab's label must land in

@@ -68,6 +68,9 @@ func (m *Model) clickAt(x, y int) {
 		}
 		return
 	}
+	if m.hits.overDetail(x, y) {
+		m.openDetail()
+	}
 }
 
 // selectItem puts the cursor on an item of the current tab.
