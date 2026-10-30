@@ -145,6 +145,27 @@ git add work/inbox && git commit -q -m "inbox: runner reports tui-t2a"
 
 **Write the receipt, commit it, and *then* nudge** — if a lane is waiting for it.
 
+### The notify command — verbatim, use it as it is
+
+The orchestrator's pane id is **w1H:p1**. Your receipt is the record; the nudge is the
+bell. Send **both**, in this order, and the nudge **last**:
+
+```bash
+mkdir -p work/inbox
+cat > work/inbox/runner-tui-t2a.md <<EOF
+Runner: T2a done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. The wheel step: <what you chose, and why>. The scripted mouse spelling: <the syntax you chose>. The goldens: <unchanged / changed, and why>. Notes: <what T2b needs to know>.
+EOF
+git add work/inbox && git commit -q -m "inbox: runner reports tui-t2a"
+herdr agent prompt "w1H:p1" "Runner: T2a done. Commits: <n>. Per-AC evidence: AC-01..AC-06 stamped. Pre-notify gate: pass. The wheel step: <what you chose, and why>. The scripted mouse spelling: <the syntax you chose>. The goldens: <unchanged / changed, and why>. Notes: <what T2b needs to know>."
+```
+
+**If the nudge fails** — it only reaches an idle receiver — the receipt is the half
+that cannot be lost. Write the receipt anyway, and say so in it.
+
+**Nothing else waits on you.** After the nudge, end your turn. Do not poll for a
+reply, do not re-dispatch yourself, do not start another slice. The orchestrator
+decides what happens next.
+
 **One write per file, and commit as soon as the file is coherent.**
 
 ## Before you report
