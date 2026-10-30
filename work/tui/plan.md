@@ -9,7 +9,12 @@
 
 ## The answer, in one table
 
-| # | Your point | What the code says today | The proposal |
+> The *when the round started* column is a **snapshot**: it says what the code said
+> before the round began, so the rows whose slices have landed are the record of the
+> problem they solved. The round's **state** is
+> [work/tui/README.md](README.md)'s table, and the code is the truth.
+
+| # | Your point | What the code said when the round started | The proposal |
 |--:|---|---|---|
 | 1 | **Title** | the project name **is** already in the header — `⋈ maitre · kbtest` — but dimmed, and the **window title is the hardcoded string `maitre`** (`views.go:53`) | the window title carries the project; the header's project name stops being a footnote; a `--project` flag for two checkouts of one project |
 | 2 | **Home tab** | v1's **Overview** was dropped because it *restated the board* | a **Home** tab with **numbers, never items**; the art moves there; the Sous-Chef tab dissolves into it; the tab count stays 7 |
@@ -165,7 +170,7 @@ feeling, and it is a defect, not a taste.
 
 **What the tab should have:**
 
-| Move | Today | Proposal |
+| Move | When the round started | Proposal |
 |---|---|---|
 | **Read** | nothing | a detail pane: title, body, scope, kind, status, tags, dates, `promoted_to` |
 | **Promote** | `space`, on every row, including ideas | `space` on a **small task** promotes. On an **idea**, `space` offers *shape it* — the kind changes to a small task (the chef picks which) and a scope is added, which is an update, not a promotion. The footer says which |
