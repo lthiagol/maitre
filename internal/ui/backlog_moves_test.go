@@ -137,6 +137,43 @@ func TestShapingAnIdeaChangesItsKindAndScopeAndKeepsItsId(t *testing.T) {
 	}
 }
 
+// TestTheShapePromptOffersTheDomainsKinds covers the prompt's choices.
+//
+// The kinds are the **domain's**: `core.BacklogMoveOf` carries the kinds a shaping
+// may pick, and the prompt offers exactly those. A console-side copy of a domain
+// fact is the shape F-114 closed — and a copy that **disagrees** with the domain is
+// what this holds.
+func TestTheShapePromptOffersTheDomainsKinds(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	item, ok := m.selectedBacklogItem()
+	if !ok {
+		t.Fatal("there is no item under the cursor")
+	}
+	move := core.BacklogMoveOf(item)
+	if len(move.Kinds) == 0 {
+		t.Fatal("the domain names no kind to shape into")
+	}
+
+	if _, err := Drive(m, []string{"space"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.prompt == nil {
+		t.Fatal("the prompt should be open")
+	}
+	if len(m.prompt.choices) != len(move.Kinds) {
+		t.Fatalf("the prompt offers %d kinds, want the domain's %d (%v)",
+			len(m.prompt.choices), len(move.Kinds), move.Kinds)
+	}
+	for i, ch := range m.prompt.choices {
+		if ch.value != move.Kinds[i] {
+			t.Errorf("the prompt offers %q, want the domain's %q", ch.value, move.Kinds[i])
+		}
+	}
+}
+
 // TestTheShapePromptAsksForTheKindAndTheScope covers the prompt.
 //
 // The console asks for what the domain needs and no more: what kind of work this

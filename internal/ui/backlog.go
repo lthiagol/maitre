@@ -25,14 +25,29 @@ import (
 // The dismissal sits beside them: `d` dismisses an item, with the chef's reason,
 // and `a` writes a new item down.
 
-// shapeChoices are the kinds an idea can be shaped into.
+// shapeChoices are the choices the shape prompt offers.
 //
-// The domain knows two small tasks — a feature and a bug — and the chef says which
-// one this is. The console does not pick for them: a bug shaped as a feature is a
-// lie in the plan.
-var shapeChoices = []promptChoice{
-	{key: "f", label: "feature", value: core.KindFeature},
-	{key: "b", label: "bug", value: core.KindBug},
+// The kinds come from the domain — `core.BacklogMoveOf` carries the kinds a shaping
+// may pick — so the console carries **no list of its own**. A console-side copy of
+// a domain fact is the shape F-114 closed: the console decides for itself and
+// nothing holds it.
+//
+// The letter that stands for a kind is the console's own affordance — the domain
+// owns the kind, not the key that picks it.
+func shapeChoices(move core.BacklogMove) []promptChoice {
+	out := make([]promptChoice, 0, len(move.Kinds))
+	for _, kind := range move.Kinds {
+		out = append(out, promptChoice{key: kindKey(kind), label: kind, value: kind})
+	}
+	return out
+}
+
+// kindKey is the letter that picks a kind in the prompt.
+func kindKey(kind string) string {
+	if kind == "" {
+		return ""
+	}
+	return string(kind[0])
 }
 
 // backlogPrimary does the move the domain says the selected item has.
@@ -45,9 +60,10 @@ func (m *Model) backlogPrimary() (tea.Model, tea.Cmd) {
 		m.status = "nothing here"
 		return m, nil
 	}
-	switch core.BacklogMoveOf(item).Primary {
+	move := core.BacklogMoveOf(item)
+	switch move.Primary {
 	case core.BacklogMoveShape:
-		m.openShape(item.ID)
+		m.openShape(item.ID, move)
 		return m, nil
 	case core.BacklogMovePromote:
 		return m.promoteSelected()
@@ -59,10 +75,10 @@ func (m *Model) backlogPrimary() (tea.Model, tea.Cmd) {
 // openShape asks the chef to shape the item into a small task.
 //
 // Two answers, in the console's own prompt: what kind of work it is, and what is in
-// it. The scope is asked for because the domain needs one — a small task without a
-// scope is work nobody can tell the end of.
-func (m *Model) openShape(id string) {
-	m.prompt = &chefPrompt{id: id, kind: promptShape, choices: shapeChoices}
+// it. The kinds are the domain's, and the scope is asked for because the domain
+// needs one — a small task without a scope is work nobody can tell the end of.
+func (m *Model) openShape(id string, move core.BacklogMove) {
+	m.prompt = &chefPrompt{id: id, kind: promptShape, choices: shapeChoices(move)}
 	m.refusal = ""
 	m.status = ""
 }

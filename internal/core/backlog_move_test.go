@@ -81,6 +81,62 @@ func TestTheMoveNeverOffersARefusedPromotion(t *testing.T) {
 	}
 }
 
+// TestTheMoveCarriesTheKindsAShapingMayPick covers the kinds.
+//
+// The console's shape prompt offers the kinds the **domain** names, so the list is
+// read from the rule — `isSmallTask` — and not copied: a kind the rule gains is a
+// kind the console's prompt offers the same day.
+func TestTheMoveCarriesTheKindsAShapingMayPick(t *testing.T) {
+	ops, _ := newOps(t)
+
+	idea, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	move := BacklogMoveOf(*idea)
+	if move.Primary != BacklogMoveShape {
+		t.Fatalf("the move is %q, want %q", move.Primary, BacklogMoveShape)
+	}
+	if len(move.Kinds) == 0 {
+		t.Fatal("a shaping names no kind to shape into")
+	}
+	for _, kind := range move.Kinds {
+		if !isSmallTask(kind) {
+			t.Errorf("%q is offered, and it is not a small task", kind)
+		}
+	}
+	// Every small task the domain knows is offered.
+	for _, kind := range BacklogKinds {
+		if !isSmallTask(kind) {
+			continue
+		}
+		if !containsString(move.Kinds, kind) {
+			t.Errorf("%q is a small task, and the move does not offer it", kind)
+		}
+	}
+
+	// And a settled item offers nothing: there is no shaping to pick a kind for.
+	task, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ops.PromoteBacklogItem(task.ID); err != nil {
+		t.Fatal(err)
+	}
+	settled, err := ops.ListBacklogItems()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, it := range settled {
+		if it.ID != task.ID {
+			continue
+		}
+		if got := BacklogMoveOf(it); len(got.Kinds) != 0 {
+			t.Errorf("a settled item offers %v, want none", got.Kinds)
+		}
+	}
+}
+
 // TestTheMoveIsALabeledSet covers the closed set.
 //
 // The footer calls the moves by name, and a move the domain gains is a name the

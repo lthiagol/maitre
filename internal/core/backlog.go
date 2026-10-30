@@ -154,6 +154,12 @@ type BacklogMove struct {
 	Primary BacklogMoveKind
 	// Dismissable is whether the item may still be dismissed.
 	Dismissable bool
+	// Kinds are the kinds a shaping may pick — the domain's small tasks. They are
+	// empty unless the move is a shaping.
+	//
+	// The console offers them, and it carries no list of its own: a console-side
+	// copy of a domain fact is the same shape as the defect F-114 closed.
+	Kinds []string
 }
 
 // BacklogMoveOf derives what the chef can do with a backlog item right now.
@@ -181,8 +187,26 @@ func BacklogMoveOf(item BacklogItem) BacklogMove {
 	move := BacklogMove{Primary: BacklogMoveShape, Dismissable: true}
 	if PromotionOf(item).Allowed {
 		move.Primary = BacklogMovePromote
+		return move
 	}
+	// A shaping picks a kind, and the kinds are the domain's: its small tasks, in
+	// its own order. The console asks for them; it does not carry a list.
+	move.Kinds = smallTaskKinds()
 	return move
+}
+
+// smallTaskKinds are the kinds a backlog item can be shaped into.
+//
+// The list is read from the rule, not copied: `isSmallTask` says which kinds are
+// small tasks, and a kind the rule gains is a kind this list carries the same day.
+func smallTaskKinds() []string {
+	out := make([]string, 0, len(BacklogKinds))
+	for _, k := range BacklogKinds {
+		if isSmallTask(k) {
+			out = append(out, k)
+		}
+	}
+	return out
 }
 
 // BacklogGroups splits the backlog into the two groups the console files it under.
