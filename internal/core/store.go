@@ -220,6 +220,12 @@ func (s *Store) ProjectRoot() string { return filepath.Dir(s.Root) }
 // tool does not accept is not a record this tool reads — so it is not a record this
 // tool writes. The rule does not depend on an operation remembering to check: the
 // domain's API cannot write a plan it will not read.
+//
+// **The writer writes the same shape the reader reads.** A list is a list: an empty
+// one is `[]`, never `null`. The reader normalises a recipe it reads; the writer
+// normalises the one it writes — so a recipe written **first** time (a promotion's,
+// or `recipe create`'s) says the same thing as one that was read and written back.
+// One place decides, and every writer agrees.
 func (s *Store) SaveRecipe(r *Recipe) error {
 	if r.ID == "" {
 		return fmt.Errorf("recipe has no id")
@@ -230,6 +236,7 @@ func (s *Store) SaveRecipe(r *Recipe) error {
 	if err := checkRecordNames(r); err != nil {
 		return err
 	}
+	r.normaliseLists()
 	name := fmt.Sprintf("%s-%s.json", r.ID, r.Slug)
 	dir := s.RecipeDir()
 	if err := writeJSONAtomic(filepath.Join(dir, name), r); err != nil {
