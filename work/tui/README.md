@@ -16,7 +16,7 @@
 | **T2a** | the mouse, part 1 | the mouse is on; the render builds the hit map; the wheel scrolls | ✅ closed · 12 commits · a72ea98, 115b650, 284fb65, 0672f9f, 9f971cb, 7035ec7, e4b7061, 619b342, 47be828, f1cc1ca, a332158, d8d7b95 | [tui-t2a.md](../briefs/tui-t2a.md) · [fix 1](../briefs/fix-tui-t2a-1.md) · [fix 2](../briefs/fix-tui-t2a-2.md) |
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | ✅ closed · 9 commits · 4dfd5a4, 187d706, f64e6a2, ac8df77, 588cf5f, 9c716ce, 0144216, 6bb7545, f8969ef | [tui-t2b.md](../briefs/tui-t2b.md) · [fix 1](../briefs/fix-tui-t2b-1.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ✅ closed · 9 commits · 4dc8079, 1b550c6, 1804ccc, b873821, 5edae71, aa4ba5f, da36146, 99a7576, 63964ce | [tui-t3a.md](../briefs/tui-t3a.md) · [fix 1](../briefs/fix-tui-t3a-1.md) · [fix 2](../briefs/fix-tui-t3a-2.md) |
-| **T3b** | the backlog moves | dismiss · create · edit | 🔄 **briefed** | [tui-t3b.md](../briefs/tui-t3b.md) |
+| **T3b** | the backlog moves | the domain answers the item's move; the console shapes · promotes · dismisses · creates | ✅ closed · 4 commits · 1297cdd, 35688a6, 4799b3b, 7de9a16 | [tui-t3b.md](../briefs/tui-t3b.md) |
 | **T4** | the Home tab | the landing tab; the art; the Sous-Chef dissolves; D-2 | ⏳ planned | — |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ⏳ planned | — |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ⏳ planned | — |
@@ -27,12 +27,15 @@
 half-built slice is `in progress`, and its commits are already in the log — read the
 last commit's body before redoing anything.
 
-**The briefs that exist** are T1, T2a, T2b and T3a. The rest are written **just before**
-their session — a brief written today is stale by the time the slice runs.
+**The briefs that exist** are T1, T2a, T2b, T3a and T3b. The rest are written **just
+before** their session — a brief written today is stale by the time the slice runs.
 
-**The next session is T3b** — the backlog's moves: dismiss · create · edit. T3a left
-the item readable and removed the trap; the other moves are still the console's
-missing surfaces, and the operations they need already exist in the domain.
+**The next session is T4** — the Home tab: the landing tab with numbers and no items;
+the art moves there; the Sous-Chef dissolves into it; D-2 lands. T3b left the
+backlog's moves in the console — the domain answers what an item's move is, and the
+console shapes, promotes, dismisses and creates. The **free edit** of an item's
+fields is **not built**: the three moves are what the chef needs, and the refusal
+pointed at exactly those.
 
 **The commits** land in the table's own row as they happen: `T1 · 2 commits ·
 3f9c1a2, 8b0e441`. A row with commits under it and no `closed` is a session that
