@@ -269,11 +269,11 @@ wheel reaches it. The wheel drives the same scroll the keyboard drives.
 | Gesture | Where | What |
 |---|---|---|
 | wheel | over the detail pane | scroll the detail |
-| wheel | anywhere else | scroll the list, keeping the selection visible |
+| wheel | anywhere else, **while the list is on screen** | scroll the list, keeping the selection visible |
 
 The list is the console's one scrollable thing, so a wheel over the header scrolls the
-list rather than nothing. The **full-screen detail** has no list beside it, and there
-the wheel scrolls the detail alone.
+list rather than nothing. The **full-screen detail** has no list beside it: there the
+wheel over the header does nothing at all, and the wheel over the detail scrolls it.
 
 The wheel's step is **three lines**: one is too slow to be useful, and a page is too
 fast to aim with.
