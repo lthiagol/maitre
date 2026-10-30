@@ -53,6 +53,7 @@ are **created fresh, per slice**, and their pane ids are recorded here.
 | **reviewer** | reviews, files findings in [../docs/audit.md](../docs/audit.md), never edits the implementation. **The current lane is `w1Z:p9`.** |
 | **verifier** | the reviewer's own second lane; it dispatched F-49 and F-50 |
 | **orchestrator** | dispatches, verifies, rules on the findings, writes the paper. **This one is `w1Z:p1`.** |
+| **the tab** | the lanes live on a **fresh tab per slice**, in the **orchestrator's** workspace — `herdr tab create --workspace "$HERDR_WORKSPACE_ID"`. **The default is the *focused* workspace**, which is the user's, and may be another project: a lane tab created without it lands there |
 
 ### Slice D's findings
 
@@ -158,8 +159,10 @@ repository.** It has files in the tree (`logo/`) and it may write to the plan.
 | LOW notes | the roles in `docs/04`'s prose and the CLI's documented example have no wire; `GLOSSARY.md` still carries the old names; `maître d'` survives in `GLOSSARY.md` and two old ADRs | **slice E** — the sweep owns "every remaining mention of an old name is gone" |
 
 ```bash
-# a fresh lane, on a fresh tab
-RAW=$(herdr tab create --label "rename: slice B" --cwd "$PWD" --no-focus)
+# a fresh lane, on a fresh tab — in the ORCHESTRATOR's workspace.
+# Without --workspace, herdr lands the tab in the FOCUSED one: the user's,
+# which is often another project.
+RAW=$(herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label "rename: slice B" --cwd "$PWD" --no-focus)
 PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['root_pane']['pane_id'])")
 herdr agent start runner --kind opencode --pane "$PANE"
 ```
@@ -209,7 +212,7 @@ From slice C on, each slice gets a **fresh agent on a fresh tab**, closed when t
 slice is reviewed:
 
 ```bash
-RAW=$(herdr tab create --label "rename: slice C" --cwd "$PWD" --no-focus)
+RAW=$(herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label "rename: slice C" --cwd "$PWD" --no-focus)
 PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['root_pane']['pane_id'])")
 herdr agent start runner --kind opencode --pane "$PANE"
 ```

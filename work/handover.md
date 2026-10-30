@@ -56,7 +56,9 @@ you accept.
 
 ```bash
 ORCH_PANE="${HERDR_PANE_ID:-none}"
-RAW=$(herdr tab create --label "rename: slice B" --cwd "$PWD" --no-focus)
+# the tab goes in the ORCHESTRATOR's workspace. Without --workspace, herdr
+# lands it in the FOCUSED one — the user's, often another project.
+RAW=$(herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label "rename: slice B" --cwd "$PWD" --no-focus)
 PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['root_pane']['pane_id'])")
 herdr agent start runner --kind opencode --pane "$PANE"
 
@@ -64,6 +66,10 @@ herdr agent start runner --kind opencode --pane "$PANE"
 sed "s|\$ORCH_PANE|$ORCH_PANE|g" work/briefs/slice-b-resume.md > /tmp/dispatch-b.md
 herdr agent prompt runner "$(cat /tmp/dispatch-b.md)"
 ```
+
+**The tab is created in your own workspace** (`$HERDR_WORKSPACE_ID`). `herdr tab
+create` without `--workspace` lands the tab in the **focused** workspace — the user's,
+and often another project — so the lane would run somewhere the chef is not looking.
 
 Record each lane's pane id in `work/README.md`. If `$HERDR_PANE_ID` is empty you have
 no pane: **the file receipt is then the only channel**, and you read `work/inbox/`
