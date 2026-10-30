@@ -15,25 +15,48 @@ import (
 const wheelStep = 3
 
 // mouseVerbs are the gestures the console answers.
-var mouseVerbs = []string{"wheel"}
+var mouseVerbs = []string{"wheel", "click"}
 
 // handleMouse answers a mouse event.
 //
-// The console answers the wheel and leaves the rest for the click: a click that
-// does nothing yet would look like a thing that works.
-func (m *Model) handleMouse(mouse tea.Mouse) (tea.Model, tea.Cmd) {
+// The console answers the wheel and the click. The **press** is the gesture: a
+// release is the same gesture coming back, and answering both would make every
+// move happen twice.
+func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 	// An open prompt takes every input. The console must not move the selection out
 	// from under a half-typed answer.
 	if m.prompt != nil {
 		return m, nil
 	}
-	switch mouse.Button {
-	case tea.MouseWheelUp:
-		m.scrollUnderPointer(mouse.X, mouse.Y, -wheelStep)
-	case tea.MouseWheelDown:
-		m.scrollUnderPointer(mouse.X, mouse.Y, wheelStep)
+	switch ev := msg.(type) {
+	case tea.MouseWheelMsg:
+		switch ev.Button {
+		case tea.MouseWheelUp:
+			m.scrollUnderPointer(ev.X, ev.Y, -wheelStep)
+		case tea.MouseWheelDown:
+			m.scrollUnderPointer(ev.X, ev.Y, wheelStep)
+		}
+	case tea.MouseClickMsg:
+		if ev.Button == tea.MouseLeft {
+			m.clickAt(ev.X, ev.Y)
+		}
 	}
 	return m, nil
+}
+
+// clickAt answers a click.
+//
+// A click is a move, and the console's moves are the keyboard's: the click makes
+// the move the key makes, and it adds no state of its own.
+//
+// What is under the pointer decides, and the map is what says — the tab bar, the
+// list, the detail pane. The order matters: the tab bar is above the list, and
+// the detail pane is beside it.
+func (m *Model) clickAt(x, y int) {
+	if tab := m.hits.tabAt(x, y); tab >= 0 {
+		m.switchTab(Tab(tab))
+		return
+	}
 }
 
 // scrollUnderPointer scrolls whatever is under the pointer.
@@ -69,6 +92,8 @@ type mouseStep struct {
 //
 //	"wheel:up"          the wheel up, over the list
 //	"wheel:down@(12,5)"  the wheel down, at column 12, row 5
+//	"click"             the click, over the list
+//	"click@(12,5)"      the click, at column 12, row 5
 //
 // The coordinates are the terminal's own: zero-based, with (0,0) at the upper-left
 // corner. The position is **bracketed**, because the steps are separated by commas
@@ -78,18 +103,21 @@ type mouseStep struct {
 // over the detail when the list is not on screen.
 func MouseFor(name string, m *Model) (tea.MouseMsg, bool) {
 	step, ok := parseMouseStep(name)
-	if !ok || step.verb != "wheel" {
+	if !ok {
 		return nil, false
 	}
 	x, y := m.hits.defaultPoint()
 	if step.hasPos {
 		x, y = step.x, step.y
 	}
-	switch step.arg {
-	case "up":
-		return tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelUp}, true
-	case "down":
-		return tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown}, true
+	switch step.verb {
+	case "wheel":
+		switch step.arg {
+		case "up":
+			return tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelUp}, true
+		case "down":
+			return tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown}, true
+		}
 	}
 	return nil, false
 }

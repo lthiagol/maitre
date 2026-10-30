@@ -290,7 +290,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKey(msg)
 
 	case tea.MouseMsg:
-		return m.handleMouse(msg.Mouse())
+		return m.handleMouse(msg)
 	}
 	return m, nil
 }
@@ -534,17 +534,11 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "tab", "right", "l":
-		m.tab = Tab((int(m.tab) + 1) % len(TabNames))
-		m.status = ""
-		// The tab changes the recipe, and the note cursor belongs to the recipe.
-		// A footer that promises a triage the space refuses is a lie.
-		m.clampSelections()
+		m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
 		return m, nil
 
 	case "shift+tab", "left", "h":
-		m.tab = Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames))
-		m.status = ""
-		m.clampSelections()
+		m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 		return m, nil
 
 	case "up", "k":
@@ -632,6 +626,19 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m.primaryAction()
 	}
 	return m, nil
+}
+
+// switchTab goes to another tab.
+//
+// It is the **one** switch: the keyboard's `tab` and the mouse's click on a tab
+// label both come through here. A click that set the tab and skipped the rest
+// would be a second answer to one question.
+func (m *Model) switchTab(t Tab) {
+	m.tab = t
+	m.status = ""
+	// The tab changes the recipe, and the note cursor belongs to the recipe.
+	// A footer that promises a triage the space refuses is a lie.
+	m.clampSelections()
 }
 
 // scrollDetail moves the detail pane's window.
