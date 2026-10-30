@@ -849,10 +849,26 @@ func (m *Model) selectedBacklogItem() (core.BacklogItem, bool) {
 }
 
 // promoteSelected promotes the selected backlog item into a recipe.
+//
+// The console **asks** the domain before it acts: `core.PromotionOf` is a read, and
+// its answer is the reason the banner shows when the answer is no. The console does
+// not call the operation to find out — the operation **journals** every refusal, and
+// the journal is the plan's only event log, append-only. Calling it would record an
+// attempt the console never offered: the footer, in the same frame, offers no move
+// at all on an item the domain refuses.
+//
+// The recipe path's precedent is the same: the console asks `core.ChefMoveOf` and
+// does not call the operation when there is no move. A move that **is** offered and
+// is turned away by the plan is an attempt, and the plan's own refusal says so.
 func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
 	item, ok := m.selectedBacklogItem()
 	if !ok {
 		m.status = "nothing to promote here"
+		return m, nil
+	}
+	if p := core.PromotionOf(item); !p.Allowed {
+		m.refusal = refusalText(&core.RefusalError{Reason: p.Reason})
+		m.status = ""
 		return m, nil
 	}
 	recipe, err := m.ops.PromoteBacklogItem(item.ID)
