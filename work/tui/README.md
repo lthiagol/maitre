@@ -12,7 +12,7 @@
 
 | Session | Feature | What it lands | State | Brief |
 |--:|---|---|---|---|
-| **T1** | the identity | the window title carries the project; the header's name stops being a footnote; `--project`; the Settings tab shows the plan's path | 🔄 **fix cycle 2** — 9 commits · 94a53ff, 8fc7438, f0b2aa5, 82289c6, 0bbcb35, 5a79638, 67b455d, b4a3052, 55bdc81 | [tui-t1.md](../briefs/tui-t1.md) · [fix 1](../briefs/fix-tui-t1-1.md) · [fix 2](../briefs/fix-tui-t1-2.md) |
+| **T1** | the identity | the window title carries the project; the header's name stops being a footnote; `--project`; the Settings tab shows the plan's path | ✅ closed · 11 commits · 94a53ff, 8fc7438, f0b2aa5, 82289c6, 0bbcb35, 5a79638, 67b455d, b4a3052, 55bdc81, 8a6866b, cf8c05e | [tui-t1.md](../briefs/tui-t1.md) · [fix 1](../briefs/fix-tui-t1-1.md) · [fix 2](../briefs/fix-tui-t1-2.md) |
 | **T2a** | the mouse, part 1 | the mouse is on; the render builds the hit map; the wheel scrolls | 🔄 **briefed** | [tui-t2a.md](../briefs/tui-t2a.md) |
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | 🔄 **briefed** | [tui-t2b.md](../briefs/tui-t2b.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ⏳ planned | — |
@@ -32,7 +32,8 @@ their session — a brief written today is stale by the time the slice runs.
 
 **The commits** land in the table's own row as they happen: `T1 · 2 commits ·
 3f9c1a2, 8b0e441`. A row with commits under it and no `closed` is a session that
-did not finish its report.
+did not finish its report. **The count is the number of ids the row names**, and the
+commits that wrote the row are not among them — a commit cannot carry its own hash.
 
 ## The session protocol
 
