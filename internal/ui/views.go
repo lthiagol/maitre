@@ -1027,7 +1027,7 @@ func (m *Model) settingsLines() []listLine {
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 	add("")
 	add(" " + m.stySec.Render("PLAN"))
-	add("  " + m.styDim.Render("root        ") + m.store.Root)
+	add("  " + m.styDim.Render("root        ") + humanPath(m.planRoot()))
 	add("  " + m.styDim.Render("recipes     ") + fmt.Sprint(len(m.recipes)))
 	add("  " + m.styDim.Render("backlog     ") + fmt.Sprint(len(m.items)))
 	add("  " + m.styDim.Render("events      ") + fmt.Sprint(len(m.journal.Events)))

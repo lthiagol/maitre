@@ -173,6 +173,54 @@ func TestThePlanKeepsItsOwnName(t *testing.T) {
 	}
 }
 
+// TestTheSettingsTabShowsThePlanRoot proves the Settings tab says which plan this
+// is.
+//
+// Two plans whose names are alike are told apart by their path — the project
+// directory, not the plan directory inside it.
+func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
+	store := identityStore(t)
+	m := loadInto(t, New(store))
+	m.tab = TabSettings
+
+	var text strings.Builder
+	for _, line := range m.settingsLines() {
+		text.WriteString(line.text + "\n")
+	}
+	rows := text.String()
+
+	if want := humanPath(m.planRoot()); !strings.Contains(rows, want) {
+		t.Errorf("the Settings tab does not show the plan's root %q\n%s", want, rows)
+	}
+	if unwanted := humanPath(store.Root); strings.Contains(rows, unwanted) {
+		t.Errorf("the Settings tab shows the plan directory %q instead of the root\n%s", unwanted, rows)
+	}
+	for _, p := range palettes() {
+		if !strings.Contains(rows, p.name) {
+			t.Errorf("the Settings tab lost the theme %q\n%s", p.name, rows)
+		}
+	}
+}
+
+// TestHumanPathShortensTheHomeDirectory proves the path is formatted for a human.
+//
+// The home directory is the same in every one of the chef's paths, and the part
+// that is the same is the part that says nothing.
+func TestHumanPathShortensTheHomeDirectory(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+
+	if got, want := humanPath(filepath.Join(home, "Code", "maitre")), "~/Code/maitre"; got != want {
+		t.Errorf("humanPath is %q, want %q", got, want)
+	}
+	if got, want := humanPath(home), "~"; got != want {
+		t.Errorf("humanPath is %q, want %q", got, want)
+	}
+	if got, want := humanPath("/somewhere/else"), "/somewhere/else"; got != want {
+		t.Errorf("humanPath is %q, want %q", got, want)
+	}
+}
+
 // TestTheHeaderNameIsNotAFootnote proves the project's name reads as a name.
 //
 // A name in the faint style reads as a footnote, and a footnote is not an identity.
