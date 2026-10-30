@@ -210,11 +210,11 @@ func TestAClickOnARowInTheSplitLayoutOnlySelects(t *testing.T) {
 	}
 }
 
-// TestAClickOnTheBacklogSelectsAndStops covers the tab with no detail.
+// TestAClickOnTheBacklogOpensTheItem covers the tab's detail.
 //
-// The Backlog has no detail yet — that is T3a — so a click there selects and
-// stops.
-func TestAClickOnTheBacklogSelectsAndStops(t *testing.T) {
+// The Backlog has a detail now: the item's own. In the narrow layout the detail is
+// not on screen, so the click opens it — the keyboard's `enter`.
+func TestAClickOnTheBacklogOpensTheItem(t *testing.T) {
 	m := newModel(t)
 	m.width = 120
 	m.height = 30
@@ -229,8 +229,8 @@ func TestAClickOnTheBacklogSelectsAndStops(t *testing.T) {
 	if m.selBacklog != 1 {
 		t.Errorf("the click left the cursor on %d, want 1", m.selBacklog)
 	}
-	if m.mode != ModeSplit {
-		t.Errorf("the click on the backlog opened a detail: mode is %v", m.mode)
+	if m.mode != ModeDetail {
+		t.Errorf("the click on the backlog did not open the detail: mode is %v", m.mode)
 	}
 }
 

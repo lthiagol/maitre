@@ -639,17 +639,35 @@ func (m *Model) switchTab(t Tab) {
 // openDetail gives the detail the screen.
 //
 // It is the keyboard's `enter`: the detail takes the screen, and `esc` brings it
-// back. A tab that has no detail to show — the Backlog, the Settings — has no
+// back. A tab that has nothing to open — the Settings, the Sous-Chef — has no
 // detail to open, so the move does nothing there.
 func (m *Model) openDetail() {
 	if m.mode != ModeSplit {
 		return
 	}
-	if _, ok := m.currentRecipe(); !ok {
+	if !m.hasDetail() {
 		return
 	}
 	m.mode = ModeDetail
 	m.detailScroll = 0
+}
+
+// hasDetail reports whether the current selection has a detail to open.
+//
+// The console has **one** detail pane, and it follows the tab: a recipe on Recipes,
+// Path and Board, a backlog item on Backlog. The pane and the key read the same
+// answer, so the key can never open something the pane does not show — and a
+// backlog item is not a recipe, so it needs its own answer here.
+func (m *Model) hasDetail() bool {
+	switch m.tab {
+	case TabRecipes, TabPath, TabBoard:
+		_, ok := m.currentRecipe()
+		return ok
+	case TabBacklog:
+		_, ok := m.selectedBacklogItem()
+		return ok
+	}
+	return false
 }
 
 // scrollDetail moves the detail pane's window.

@@ -287,8 +287,10 @@ fast to aim with.
 layout** the detail is on screen beside the list, so the click selects and the detail
 follows the selection. In the **narrow layout** the detail is not on screen at all, so
 a click that only selected would show the chef nothing: there the click also opens
-the detail. The **Backlog** has no detail yet, so a click there selects and stops; and
-a click on a **theme** row selects it — `enter` applies the theme.
+the detail. The **Backlog** has a detail of its own — the item's, with its body, its
+scope, its tags and its dates — so a click on a backlog row opens it, exactly as a
+click on a recipe row opens the recipe. A click on a **theme** row selects it —
+`enter` applies the theme.
 
 **The mouse is drivable from a script.** `maitre --keys` takes the same steps the
 console takes:
