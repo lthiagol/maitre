@@ -39,18 +39,20 @@ func (m *Model) View() tea.View {
 	if m.err != nil {
 		v := tea.NewView(m.styBad.Render("error: " + m.err.Error()))
 		v.AltScreen = true
+		v.WindowTitle = m.windowTitle()
 		return v
 	}
 	if !m.ready {
 		v := tea.NewView(m.styDim.Render("opening the kitchen…"))
 		v.AltScreen = true
+		v.WindowTitle = m.windowTitle()
 		return v
 	}
 
 	v := tea.NewView(m.renderLayout())
 	v.AltScreen = true
 	v.BackgroundColor = lipgloss.Color(m.colBg)
-	v.WindowTitle = "maitre"
+	v.WindowTitle = m.windowTitle()
 	return v
 }
 
@@ -206,11 +208,7 @@ func (m *Model) scrollToSelection(lines []listLine) {
 // The mark's compact form sits before the product name — one cell, so the header
 // stays one line. The header is the one place the console has no room to draw.
 func (m *Model) header() string {
-	name := m.store.Root
-	if p, err := m.ops.GetProject(); err == nil && p.Name != "" {
-		name = p.Name
-	}
-	return m.styTitle.Render(" "+brand.Compact+" maitre") + m.styFaint.Render(" · "+name)
+	return m.styTitle.Render(" "+brand.Compact+" maitre") + m.styFaint.Render(" · "+m.projectName())
 }
 
 // markFor is the drawing that fits a column of the given width.

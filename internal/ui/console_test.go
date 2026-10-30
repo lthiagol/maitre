@@ -30,7 +30,16 @@ func newModel(t *testing.T) *Model {
 // tests the copy, and the copy is where the bug was.
 func loadModel(t *testing.T, store *core.Store) *Model {
 	t.Helper()
-	m := New(store)
+	return loadInto(t, New(store))
+}
+
+// loadInto reads a plan into the given console model.
+//
+// The message comes from the reload and goes through the model's own Update — the
+// same path the running console takes. A helper that copies the fields by hand
+// tests the copy, and the copy is where the bug was.
+func loadInto(t *testing.T, m *Model) *Model {
+	t.Helper()
 	msg := m.reload()()
 	loaded, ok := msg.(reloadMsg)
 	if !ok {

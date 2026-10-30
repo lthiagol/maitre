@@ -129,6 +129,12 @@ type Model struct {
 	ready  bool
 	err    error
 
+	// project is the name the console shows for this session, when one was given.
+	//
+	// It is display only: nothing is written and the plan keeps its own name.
+	// Empty means the plan's own name.
+	project string
+
 	// refusal is the banner shown after a refused action.
 	refusal string
 	// status is a transient one-line message.
