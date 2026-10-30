@@ -70,7 +70,7 @@ func TestBacklogUpdateGoesThroughAnOperation(t *testing.T) {
 func TestBacklogUpdateRefusesAPromotedItem(t *testing.T) {
 	dir := newPlan(t)
 
-	res := cli(t, dir, "backlog", "create", "--title", "An item", "--body", "first")
+	res := cli(t, dir, "backlog", "create", "--title", "An item", "--body", "first", "--kind", "feature")
 	if !res.ok(t) {
 		t.Fatalf("backlog create failed:\n%s", res.Stderr)
 	}

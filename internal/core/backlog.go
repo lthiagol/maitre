@@ -66,12 +66,49 @@ type BacklogItem struct {
 // isSmallTask reports whether a kind is a small task: the work is known, and it is
 // ready to run.
 //
-// The rule lives here, once, because two surfaces need it — the promotion, which
-// gives a small task a criterion, and the console, which files a small task under
-// *Small tasks*. Two answers to one question is how the console and the domain drift
-// apart.
+// The rule lives here, once, because three surfaces need it — the promotion, which
+// refuses an idea and gives a small task a criterion, and the console, which files a
+// small task under *Small tasks*. Two answers to one question is how the console and
+// the domain drift apart.
 func isSmallTask(kind string) bool {
 	return kind == KindFeature || kind == KindBug
+}
+
+// Promotion is whether a backlog item may be promoted into a recipe, and why not.
+//
+// One fact, one answer: the promotion reads it before it writes, and the console's
+// footer reads it before it offers the move.
+type Promotion struct {
+	// Allowed is true when the item may be promoted.
+	Allowed bool
+	// Reason says why it may not, when it may not. It names the remedy.
+	Reason string
+}
+
+// PromotionOf derives whether a backlog item may be promoted into a recipe.
+//
+// A **small task** may be promoted: the work is known, and it is ready to run, so the
+// promotion gives it one acceptance criterion and the recipe is checkable from the
+// start.
+//
+// An **idea** may not. It carries no acceptance criteria, and a recipe without them
+// can never pass `ac.falsifiable` — so it can never be signed off. Promoting one
+// would file the work as **known** when it is a hunch, and would land the chef in a
+// dead end. The refusal names the remedy: shape it into a small task first.
+//
+// An item that is not open may not be promoted either — it is already history.
+//
+// view
+func PromotionOf(item BacklogItem) Promotion {
+	switch {
+	case item.Status != StatusOpen:
+		return Promotion{false, fmt.Sprintf("backlog item %s is %s", item.ID, item.Status)}
+	case !isSmallTask(item.Kind):
+		return Promotion{false, fmt.Sprintf(
+			"%q carries no acceptance criteria, and a recipe without them can never be signed off — shape it into a small task first",
+			item.Kind)}
+	}
+	return Promotion{true, ""}
 }
 
 // BacklogGroups splits the backlog into the two groups the console files it under.
@@ -345,12 +382,16 @@ func (o *Operations) DismissBacklogItem(id, reason string) (*BacklogItem, error)
 
 // PromoteBacklogItem turns a backlog item into a recipe.
 //
-// The recipe starts in **draft**: it carries the item's intent, its scope and — for a
-// small task — one acceptance criterion, and nothing else. The recipe is not
-// pre-groomed: the out-of-scope items, the falsifiable verification and the steps
-// are the recipe's own life, exactly as for any recipe. **No gate is weakened** — a
-// criterion with no verification cannot pass the falsifiable gate, and a recipe with
-// no out-of-scope items cannot be groomed.
+// Only a **small task** may be promoted. An idea is refused, with the reason: it
+// carries no acceptance criteria, and a recipe without them can never be signed off.
+// The rule is `PromotionOf`, and it is read here before anything is written.
+//
+// The recipe starts in **draft**: it carries the item's intent, its scope and one
+// acceptance criterion, and nothing else. The recipe is not pre-groomed: the
+// out-of-scope items, the falsifiable verification and the steps are the recipe's own
+// life, exactly as for any recipe. **No gate is weakened** — a criterion with no
+// verification cannot pass the falsifiable gate, and a recipe with no out-of-scope
+// items cannot be groomed.
 //
 // Promotion is one-way: the item records where it went, so the trail survives.
 //
@@ -372,8 +413,11 @@ func (o *Operations) PromoteBacklogItem(id string) (*Recipe, error) {
 	if err != nil {
 		return nil, err
 	}
-	if v.Status != StatusOpen {
-		return nil, o.refuseLocked(id, fmt.Sprintf("backlog item %s is %s", id, v.Status))
+	// The one answer to "may this be promoted?", read before anything is written.
+	// An idea is refused here, with the reason — the console reads the same answer
+	// and does not offer the move.
+	if p := PromotionOf(*v); !p.Allowed {
+		return nil, o.refuseLocked(id, p.Reason)
 	}
 	recipeID, err := o.store.NextRecipeID()
 	if err != nil {
@@ -422,8 +466,9 @@ func (o *Operations) PromoteBacklogItem(id string) (*Recipe, error) {
 // verification cannot pass the falsifiable gate, so nothing is claimed that is not
 // proven.
 //
-// An **idea** becomes a recipe with no criteria: it is a big thing, and the criteria
-// are what the recipe is groomed into.
+// Only a small task reaches here: the promotion refuses an idea, and an idea has no
+// criteria to give. The guard is the same rule, so a kind the domain does not know
+// cannot slip a criterion past the refusal.
 func (o *Operations) promotedCriteria(v *BacklogItem) []CriterionSpec {
 	if !isSmallTask(v.Kind) {
 		return nil

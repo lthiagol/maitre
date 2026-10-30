@@ -266,6 +266,7 @@ var DerivedViews = []DerivedView{
 	{Name: "triage", Function: TriageOf, Values: triageSectionValues()},
 	{Name: "tree", Function: TreeOf},
 	{Name: "backlog_groups", Function: BacklogGroups, Values: []string{"ideas", "tasks"}},
+	{Name: "promotion", Function: PromotionOf},
 }
 
 // NonViews are the exported functions of this package that are not derived views.

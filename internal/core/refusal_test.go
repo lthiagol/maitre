@@ -159,7 +159,7 @@ func TestABadRequestIsNotJournalled(t *testing.T) {
 // the word for two different sets.
 func TestARefusedOverlayIsJournalled(t *testing.T) {
 	ops, store := newOps(t)
-	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	item, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

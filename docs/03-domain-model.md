@@ -65,7 +65,6 @@ shape, and the console's groups are derived from it.
 
 ```
 idea ──shaped into──▶ a small task   (kind: idea → feature|bug, plus a scope)
-idea ──shaped into──▶ a recipe       (promote)
 small task ──promoted──▶ a recipe
 ```
 
@@ -73,7 +72,7 @@ small task ──promoted──▶ a recipe
 |---|---|
 | **Shaping** | An **update**, not a promotion: the kind changes and a scope is added, and the id does not. `BL01` stays `BL01` — the id is kind-neutral, so the trail survives the shaping |
 | **Promotion** | One-way. The item's status becomes `promoted` and it records what it became (`promoted_to`) |
-| **An idea** | Becomes a recipe in `draft` with **no** criterion: the criteria are what the recipe is groomed into |
+| **An idea** | May **not** be promoted: it carries no acceptance criteria, and a recipe without them can never pass `ac.falsifiable`, so it can never be signed off. The refusal names the remedy — **shape it into a small task first** (`core.PromotionOf`) |
 | **A small task** | Becomes a recipe in `draft` with **exactly one** criterion: the work is small enough to be one thing. The criterion makes the work **checkable** — it says what has to be true — and it becomes **falsifiable** when the recipe's own life writes its verification |
 
 **No gate is weakened.** The promoted recipe is **not** pre-groomed: it carries no
@@ -793,6 +792,7 @@ variations of a handful of these. **One operation, one name.**
 | `triage` | `TriageOf` | `Needs you` · `On the line` · `Being shaped` · `On hold` · `Served` — the board's other axis: what the chef should do next |
 | `tree` | `TreeOf` | The plan as a dependency tree |
 | `backlog_groups` | `BacklogGroups` | `ideas` · `tasks` — the backlog's two groups, derived from the item's kind |
+| `promotion` | `PromotionOf` | Whether a backlog item may be promoted into a recipe, and why not |
 
 Two of these are **planned**: the domain does not compute them yet, and the table says
 so. A view the domain does not compute is not a view — it is a promise, and a promise

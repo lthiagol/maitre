@@ -61,7 +61,7 @@ func TestConcurrentCreationsTakeDistinctIDs(t *testing.T) {
 func TestAFailedPromotionLeavesTheSourceOpen(t *testing.T) {
 	ops, store := newOps(t)
 
-	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	item, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +153,7 @@ func TestADanglingPointerResolvesToNothing(t *testing.T) {
 func TestAPromotionIsRecordedInTheJournal(t *testing.T) {
 	ops, store := newOps(t)
 
-	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	item, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestAPromotionIsRecordedInTheJournal(t *testing.T) {
 func TestTwoConcurrentPromotionsCannotBothSucceed(t *testing.T) {
 	ops, store := newOps(t)
 
-	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	item, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

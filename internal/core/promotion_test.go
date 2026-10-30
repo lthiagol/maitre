@@ -1,41 +1,119 @@
 package core
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
 
-// TestAnIdeaPromotesToARecipeInDraft covers the idea's road.
+// TestAnIdeaIsNotPromoted covers the refusal.
 //
-// An idea is a hunch. It becomes a recipe, and the recipe starts in **draft**: the
-// criteria are what the recipe is groomed into, and writing them is the recipe's own
-// life.
-func TestAnIdeaPromotesToARecipeInDraft(t *testing.T) {
-	ops, _ := newOps(t)
+// An idea is a hunch: it carries no acceptance criteria, and a recipe without them
+// can never pass `ac.falsifiable`, so it can never be signed off. Promoting one
+// would file the work as **known** — the domain's own definition of a small task —
+// and would leave the chef in a dead end one keystroke away.
+//
+// The refusal names the remedy: shape it into a small task first.
+func TestAnIdeaIsNotPromoted(t *testing.T) {
+	ops, store := newOps(t)
 
 	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	recipe, err := ops.PromoteBacklogItem(item.ID)
+	_, err = ops.PromoteBacklogItem(item.ID)
+	if err == nil {
+		t.Fatal("an idea must not be promoted")
+	}
+	var re *RefusalError
+	if !errors.As(err, &re) {
+		t.Fatalf("the refusal should be a refusal: %v", err)
+	}
+	for _, want := range []string{"acceptance criteria", "signed off", "small task"} {
+		if !strings.Contains(re.Reason, want) {
+			t.Errorf("the refusal should name %q: %q", want, re.Reason)
+		}
+	}
+
+	// Nothing was written: no recipe, and the item is still open.
+	recipes, err := store.ListRecipes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if recipe.Lifecycle != LifecycleDraft {
-		t.Fatalf("the lifecycle is %q, want draft", recipe.Lifecycle)
+	if len(recipes) != 0 {
+		t.Fatalf("the plan holds %d recipes, want none", len(recipes))
 	}
-	if recipe.Title != item.Title {
-		t.Fatalf("the title is %q, want %q", recipe.Title, item.Title)
+	after, err := store.LoadBacklogItem(item.ID)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if recipe.Intent.Outcome != item.Title {
-		t.Fatalf("the outcome is %q, want %q", recipe.Intent.Outcome, item.Title)
+	if after.Status != StatusOpen {
+		t.Fatalf("the item is %q, want %q — a refusal writes nothing", after.Status, StatusOpen)
 	}
-	if recipe.Intent.Problem != item.Body {
-		t.Fatalf("the problem is %q, want %q", recipe.Intent.Problem, item.Body)
+}
+
+// TestThePromotionAnswerIsOnePlace covers the answer both surfaces read.
+//
+// The domain refuses the promotion, and the console's footer reads the same answer —
+// so the console cannot offer a move the domain refuses. Two implementations of the
+// rule would be how the console and the domain drift apart.
+func TestThePromotionAnswerIsOnePlace(t *testing.T) {
+	ops, _ := newOps(t)
+
+	idea, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	if err != nil {
+		t.Fatal(err)
 	}
-	// An idea carries no criterion: the criteria are the recipe's own work.
-	if len(recipe.Acceptance) != 0 {
-		t.Fatalf("the recipe has %d criteria, want none", len(recipe.Acceptance))
+	task, err := ops.CreateBacklogItem("A small task", "worth doing", []string{"the work"}, KindFeature, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if p := PromotionOf(*idea); p.Allowed {
+		t.Error("an idea may not be promoted")
+	}
+	if p := PromotionOf(*task); !p.Allowed {
+		t.Errorf("a small task may be promoted: %s", p.Reason)
+	}
+
+	// And the refusal the operation gives is the answer's reason.
+	_, err = ops.PromoteBacklogItem(idea.ID)
+	if err == nil {
+		t.Fatal("an idea must not be promoted")
+	}
+	var re *RefusalError
+	if !errors.As(err, &re) {
+		t.Fatalf("the refusal should be a refusal: %v", err)
+	}
+	if re.Reason != PromotionOf(*idea).Reason {
+		t.Errorf("the refusal says %q, want the answer's reason %q",
+			re.Reason, PromotionOf(*idea).Reason)
+	}
+}
+
+// TestAPromotedItemMayNotBePromotedAgain covers the closed set.
+//
+// The item is history once it is promoted: it says where it went, and it cannot go
+// there twice.
+func TestAPromotedItemMayNotBePromotedAgain(t *testing.T) {
+	ops, store := newOps(t)
+
+	item, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ops.PromoteBacklogItem(item.ID); err != nil {
+		t.Fatal(err)
+	}
+	after, err := store.LoadBacklogItem(item.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p := PromotionOf(*after); p.Allowed {
+		t.Error("a promoted item may not be promoted again")
+	}
+	if _, err := ops.PromoteBacklogItem(item.ID); err == nil {
+		t.Fatal("a promoted item must not be promoted again")
 	}
 }
 
@@ -74,7 +152,7 @@ func TestASmallTaskPromotesToARecipeWithOneCriterion(t *testing.T) {
 func TestAPromotionIsOneWay(t *testing.T) {
 	ops, store := newOps(t)
 
-	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	item, err := ops.CreateBacklogItem("A small task", "worth doing", nil, KindFeature, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

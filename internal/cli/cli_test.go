@@ -210,7 +210,7 @@ func TestTheJournalIsStampedWithTheSession(t *testing.T) {
 func TestTheBacklogPromotesUpTheLadder(t *testing.T) {
 	dir := newPlan(t)
 
-	res := cli(t, dir, "backlog", "create", "--title", "A hunch", "--body", "worth noticing")
+	res := cli(t, dir, "backlog", "create", "--title", "A small task", "--body", "worth doing", "--kind", "feature")
 	if !res.ok(t) {
 		t.Fatalf("backlog create failed:\n%s", res.Stderr)
 	}
@@ -221,6 +221,29 @@ func TestTheBacklogPromotesUpTheLadder(t *testing.T) {
 	recipe := res.doc(t)["recipe"].(map[string]any)
 	if recipe["id"] != "RCP01" {
 		t.Fatalf("recipe id = %v, want RCP01", recipe["id"])
+	}
+}
+
+// TestTheBacklogRefusesToPromoteAnIdea covers the trap the console walked into.
+//
+// An idea carries no acceptance criteria, and a recipe without them can never be
+// signed off. The refusal says so, and names the remedy.
+func TestTheBacklogRefusesToPromoteAnIdea(t *testing.T) {
+	dir := newPlan(t)
+
+	res := cli(t, dir, "backlog", "create", "--title", "A hunch", "--body", "worth noticing")
+	if !res.ok(t) {
+		t.Fatalf("backlog create failed:\n%s", res.Stderr)
+	}
+	res = cli(t, dir, "backlog", "promote", "BL01")
+	if res.Code == 0 {
+		t.Fatalf("an idea must not be promoted:\n%s", res.Stdout)
+	}
+	if !strings.Contains(res.Stderr, "acceptance criteria") {
+		t.Errorf("the refusal should say why:\n%s", res.Stderr)
+	}
+	if !strings.Contains(res.Stderr, "small task") {
+		t.Errorf("the refusal should name the remedy:\n%s", res.Stderr)
 	}
 }
 

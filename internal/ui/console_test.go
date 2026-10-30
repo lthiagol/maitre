@@ -227,7 +227,8 @@ func TestBacklogTabListsTheItems(t *testing.T) {
 func TestPromotingAnItemFromTheBacklog(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
-	m.selBacklog = 0
+	// The small task: the ideas come first, and an idea is not promoted.
+	m.selBacklog = 4
 	m.Update(tea.KeyPressMsg{Code: ' '})
 	if m.refusal != "" {
 		t.Fatalf("the promotion was refused: %s", m.refusal)

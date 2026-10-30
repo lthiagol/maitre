@@ -74,7 +74,6 @@ console's two groups do not need two file types to exist.
 
 ```
 idea ──shaped into──▶ a small task  (kind: idea → feature|bug, plus scope)
-idea ──shaped into──▶ a recipe       (straight to the big thing)
 small task ──promoted──▶ a recipe with ONE criterion and ONE evidence
 ```
 
@@ -83,6 +82,10 @@ be guarded.** It becomes a recipe with a single criterion, so every gate still a
 The alternative — letting a small task close without gates — is a hole in the domain's
 promise, and the third alternative, a second executable artifact type, is a second
 anatomy, a second gate set and a second close path.
+
+An **idea** is not promoted: it carries no acceptance criteria, and a recipe without
+them can never be signed off. The refusal names the remedy — shape it into a small
+task first, and the small task's road above is the one that leads to a recipe.
 
 `dismiss` comes to the small tasks too. Before, only specials could be dismissed, and no
 one could say why.
