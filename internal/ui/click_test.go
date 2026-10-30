@@ -39,6 +39,70 @@ func TestAClickOnATabLabelSwitchesTheTab(t *testing.T) {
 	}
 }
 
+// rowFor is the screen row that holds an item, and whether there is one.
+func rowFor(m *Model, item int) (int, bool) {
+	for _, r := range m.hits.rows {
+		if r.item == item {
+			return r.y0, true
+		}
+	}
+	return 0, false
+}
+
+// headerRow is the screen row of a header — a row that holds no item.
+func headerRow(m *Model) (int, bool) {
+	for _, r := range m.hits.rows {
+		if r.item < 0 {
+			return r.y0, true
+		}
+	}
+	return 0, false
+}
+
+// TestAClickOnARowSelectsIt covers the list.
+func TestAClickOnARowSelectsIt(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	row, ok := rowFor(m, 1)
+	if !ok {
+		t.Fatal("the map holds no row with an item")
+	}
+	click(t, m, 5, row)
+	if m.selRecipes != 1 {
+		t.Errorf("the click on the row left the cursor on %d, want 1", m.selRecipes)
+	}
+	// The selection is the tab's own selection: the recipe under it is the recipe
+	// the row drew.
+	rows := m.visibleRows()
+	if got := rows[m.selRecipes].ID; got != rows[1].ID {
+		t.Errorf("the cursor is on %s, want %s", got, rows[1].ID)
+	}
+}
+
+// TestAClickOnAHeaderRowSelectsNothing covers the headers.
+//
+// A header is not a thing to select: the map says the row holds no item, and the
+// click leaves the cursor where it was.
+func TestAClickOnAHeaderRowSelectsNothing(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	before := m.selRecipes
+	row, ok := headerRow(m)
+	if !ok {
+		t.Fatal("the map holds no header row")
+	}
+	click(t, m, 5, row)
+	if m.selRecipes != before {
+		t.Errorf("the click on a header moved the cursor to %d, want %d", m.selRecipes, before)
+	}
+}
+
 // TestTheClickOnATabIsTheKeyboardsSwitch checks the click makes the keyboard's move.
 //
 // The keyboard's `tab` and the mouse's click on the next tab's label must land in

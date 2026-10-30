@@ -57,6 +57,20 @@ func (m *Model) clickAt(x, y int) {
 		m.switchTab(Tab(tab))
 		return
 	}
+	if item, ok := m.hits.rowAt(x, y); ok {
+		m.selectItem(item)
+		return
+	}
+}
+
+// selectItem puts the cursor on an item of the current tab.
+//
+// The index is the one the **map** holds — the index the tab's own selection
+// uses, the one the render drew the row from — and the move is the keyboard's:
+// the same selection state, the same clamping, the same scroll into view.
+func (m *Model) selectItem(index int) {
+	m.status = ""
+	m.moveTo(index)
 }
 
 // scrollUnderPointer scrolls whatever is under the pointer.
