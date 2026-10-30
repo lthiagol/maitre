@@ -617,6 +617,13 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.moveNote(-1)
 		return m, nil
 
+	case "d":
+		// The backlog's own key: dismiss the selected item, with the reason.
+		if m.tab == TabBacklog {
+			return m.dismissSelected()
+		}
+		return m, nil
+
 	case " ", "space":
 		return m.primaryAction()
 	}

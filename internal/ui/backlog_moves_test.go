@@ -187,3 +187,84 @@ func TestAShapingWithoutAScopeIsNotWritten(t *testing.T) {
 		t.Errorf("the kind is %q, want %q — nothing was written", item.Kind, core.KindIdea)
 	}
 }
+
+// TestDismissingAnItemRecordsTheReason covers the dismissal.
+//
+// The domain appends the reason to the item's body, so a dismissal without one
+// says nothing to the next reader. The console asks for it, in the chef's own
+// words.
+func TestDismissingAnItemRecordsTheReason(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	steps := append([]string{"d"}, typed("not now the board already shows it")...)
+	steps = append(steps, "enter")
+	if _, err := Drive(m, steps); err != nil {
+		t.Fatal(err)
+	}
+	if m.refusal != "" {
+		t.Fatalf("the dismissal was refused: %s", m.refusal)
+	}
+
+	item, err := m.store.LoadBacklogItem("BL01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if item.Status != core.StatusDismissed {
+		t.Fatalf("the status is %q, want %q", item.Status, core.StatusDismissed)
+	}
+	if !strings.Contains(item.Body, "not now the board already shows it") {
+		t.Errorf("the body does not carry the reason:\n%s", item.Body)
+	}
+}
+
+// TestADismissalWithoutAReasonIsNotWritten covers the empty answer.
+//
+// A dismissal without a reason says nothing to the next reader, so nothing is
+// written and the prompt stays open.
+func TestADismissalWithoutAReasonIsNotWritten(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	if _, err := Drive(m, []string{"d", "enter"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.prompt == nil {
+		t.Fatal("the prompt should stay open")
+	}
+	item, err := m.store.LoadBacklogItem("BL01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if item.Status != core.StatusOpen {
+		t.Errorf("the status is %q, want %q — nothing was written", item.Status, core.StatusOpen)
+	}
+}
+
+// TestTheFooterOffersTheDismissOnlyWhileTheDomainSaysSo holds the dismiss key.
+//
+// A key the domain would refuse is a key the footer must not name: a settled item
+// is history, and it cannot be dismissed again.
+func TestTheFooterOffersTheDismissOnlyWhileTheDomainSaysSo(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	out := plain(m)
+	if !strings.Contains(out, "d dismiss") {
+		t.Errorf("the footer should offer the dismissal:\n%s", out)
+	}
+
+	// Dismiss it: the item is settled, and the key is gone.
+	steps := append([]string{"d"}, typed("not now")...)
+	steps = append(steps, "enter")
+	if _, err := Drive(m, steps); err != nil {
+		t.Fatal(err)
+	}
+	out = plain(m)
+	if strings.Contains(out, "d dismiss") {
+		t.Errorf("the footer offers a dismissal the domain refuses:\n%s", out)
+	}
+}

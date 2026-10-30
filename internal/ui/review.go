@@ -24,6 +24,7 @@ const (
 	promptReview promptKind = iota
 	promptTriage
 	promptShape
+	promptDismiss
 )
 
 // promptChoice is one thing the chef may choose.
@@ -45,9 +46,9 @@ var reviewChoices = []promptChoice{
 // chefPrompt is the console asking the chef to decide.
 //
 // One prompt, several questions: a verdict on a recipe (ok, or changes needed), an
-// action on a tasting note (dismiss, or comment), and a shaping (what kind of work
-// it is, and what is in it). All have the same shape — choose, then say why — so
-// they share one prompt rather than several frameworks.
+// action on a tasting note (dismiss, or comment), a shaping (what kind of work it
+// is, and what is in it), and a dismissal (why not). All have the same shape —
+// choose, then say why — so they share one prompt rather than several frameworks.
 //
 // The console never decides — it asks. The chef chooses, says why, and the round is
 // recorded with their name on it. A verdict the console invented would be a verdict
@@ -72,6 +73,8 @@ func (p *chefPrompt) title() string {
 		return "triage " + p.id + " " + p.finding
 	case promptShape:
 		return "shape " + p.id
+	case promptDismiss:
+		return "dismiss " + p.id
 	}
 	return "review " + p.id
 }
@@ -83,6 +86,8 @@ func (p *chefPrompt) textTitle() string {
 		return "notes for " + p.id + " " + p.finding
 	case promptShape:
 		return "scope for " + p.id
+	case promptDismiss:
+		return "why not, for " + p.id
 	}
 	return "notes for " + p.id
 }
@@ -94,22 +99,31 @@ func (p *chefPrompt) cancelled() string {
 		return "triage cancelled"
 	case promptShape:
 		return "shape cancelled"
+	case promptDismiss:
+		return "dismiss cancelled"
 	}
 	return "review cancelled"
 }
 
 // needsText reports whether the prompt's answer cannot be empty.
 //
-// A shaping needs a scope: without one the write says nothing to the next reader,
-// and a small task without a scope is work nobody can tell the end of.
+// A shaping needs a scope and a dismissal needs a reason: without one the write
+// says nothing to the next reader.
 func (p *chefPrompt) needsText() bool {
-	return p.kind == promptShape
+	switch p.kind {
+	case promptShape, promptDismiss:
+		return true
+	}
+	return false
 }
 
 // missingText is what the status says when the chef answers with nothing.
 func (p *chefPrompt) missingText() string {
-	if p.kind == promptShape {
+	switch p.kind {
+	case promptShape:
 		return "a small task needs a scope — say what is in it"
+	case promptDismiss:
+		return "a dismissal needs a reason — say why not"
 	}
 	return ""
 }
@@ -212,6 +226,8 @@ func (m *Model) recordPrompt() (tea.Model, tea.Cmd) {
 		return m.recordTriage(p)
 	case promptShape:
 		return m.recordShape(p)
+	case promptDismiss:
+		return m.recordDismiss(p)
 	}
 	return m.recordReview(p)
 }
