@@ -67,6 +67,32 @@ At every slice boundary, the session's scrollback is captured into
 `work/transcripts/`. It is bounded and rotates — one night of lanes held 85 lines of
 a much longer conversation when it was first captured.
 
+### The lanes
+
+One tab per slice, in **the orchestrator's own workspace**, split for the runner and
+the reviewer. **Both lanes are fresh for every slice.**
+
+```bash
+# the tab goes in the ORCHESTRATOR's workspace.
+# Without --workspace, herdr lands the tab in the FOCUSED one — the user's,
+# and often another project. T1's tab opened in training-prod, not in maitre.
+RAW=$(herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label "tui: T<N>" --cwd "$PWD" --no-focus)
+ROOT_PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['root_pane']['pane_id'])")
+SPLIT_RAW=$(herdr pane split "$ROOT_PANE" --direction right --ratio 0.5 --cwd "$PWD")
+SPLIT_PANE=$(echo "$SPLIT_RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['pane']['pane_id'])")
+
+herdr agent start runner   --kind opencode --pane "$ROOT_PANE"  --timeout 60000
+herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
+```
+
+| | |
+|---|---|
+| **The tab** | `--workspace "$HERDR_WORKSPACE_ID"` — the tab belongs beside the orchestrator. The default is the **focused** workspace, which is the user's |
+| **The split** | the runner on the left, the reviewer on the right. `herdr agent start` has **no `--no-focus`** — it pulls the chef's UI to the tab, once per lane |
+| **The reviewer** | briefed **after** the runner's work lands, so it reads the code fresh. A reviewer briefed in advance would form its model of the code before the code existed |
+| **The dispatch** | the brief plus the notify block with the orchestrator's **real pane id** — `$HERDR_PANE_ID`, not a placeholder |
+| **The delivery check** | one `herdr pane read --lines 40`, ~5 s after each dispatch. Activity lines mean delivered; the raw prompt above the spinner means a stuck draft — report it and ask the chef to press Enter, **never blind-resend** |
+
 ### The tree is shared
 
 Stage **by name** — never `git add -A`, never `git add .`. If a file you did not
