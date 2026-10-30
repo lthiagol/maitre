@@ -35,17 +35,23 @@ const refusalMarker = "⛔ "
 const splitThreshold = 160
 
 // View renders the console.
+//
+// The mouse mode is set on **every** view the console draws. In bubbletea v2 the
+// mode belongs to the view, not to the program: a view that does not ask for the
+// mouse gets no mouse, and the terminal drops the events on the floor.
 func (m *Model) View() tea.View {
 	if m.err != nil {
 		v := tea.NewView(m.styBad.Render("error: " + m.err.Error()))
 		v.AltScreen = true
 		v.WindowTitle = m.windowTitle()
+		v.MouseMode = tea.MouseModeCellMotion
 		return v
 	}
 	if !m.ready {
 		v := tea.NewView(m.styDim.Render("opening the kitchen…"))
 		v.AltScreen = true
 		v.WindowTitle = m.windowTitle()
+		v.MouseMode = tea.MouseModeCellMotion
 		return v
 	}
 
@@ -53,6 +59,7 @@ func (m *Model) View() tea.View {
 	v.AltScreen = true
 	v.BackgroundColor = lipgloss.Color(m.colBg)
 	v.WindowTitle = m.windowTitle()
+	v.MouseMode = tea.MouseModeCellMotion
 	return v
 }
 
