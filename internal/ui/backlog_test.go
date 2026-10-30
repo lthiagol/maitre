@@ -111,41 +111,55 @@ func TestTheFooterDoesNotOfferAMoveTheDomainRefuses(t *testing.T) {
 	}
 }
 
-// TestSpaceOnAnIdeaIsRefusedWithTheReason covers the refusal.
+// TestSpaceOnAnIdeaShapesIt covers the idea's move.
 //
-// The console asks the domain **whether** the item may be promoted and shows the
-// domain's reason — it does not decide by itself that an idea is not promotable.
-func TestSpaceOnAnIdeaIsRefusedWithTheReason(t *testing.T) {
+// T3a refused the space on an idea and named the remedy: *shape it into a small
+// task first*. This slice **is** that remedy — so the space on an idea shapes it,
+// and there is nothing to refuse. The domain's refusal of the *promotion* of an
+// idea stands: `maitre-cli backlog promote` on an idea is still refused, with the
+// reason.
+func TestSpaceOnAnIdeaShapesIt(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
 	m.selBacklog = 0
 
 	m.Update(tea.KeyPressMsg{Code: ' '})
-	if m.refusal == "" {
-		t.Fatal("the space on an idea was not refused")
+	if m.refusal != "" {
+		t.Fatalf("the space on an idea was refused: %s", m.refusal)
 	}
-	for _, want := range []string{"acceptance criteria", "signed off", "small task"} {
-		if !strings.Contains(m.refusal, want) {
-			t.Errorf("the refusal should name %q: %s", want, m.refusal)
-		}
+	if m.prompt == nil {
+		t.Fatal("the space on an idea should open the shaping prompt")
+	}
+	if !strings.Contains(m.prompt.title(), "BL01") {
+		t.Errorf("the prompt should name the item: %q", m.prompt.title())
+	}
+}
+
+// TestThePromptWritesNothingUntilTheChefAnswers covers the journal.
+//
+// The journal's own rule is that a refusal is *"an attempt that was turned away"* —
+// and an attempt is a write. Nothing is written until the chef answers the prompt,
+// so the plan's only event log stays byte-for-byte as it was.
+func TestThePromptWritesNothingUntilTheChefAnswers(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	before := activityChecksum(t, m.store.Root)
+	m.Update(tea.KeyPressMsg{Code: ' '})
+	after := activityChecksum(t, m.store.Root)
+
+	if before != after {
+		t.Errorf("the prompt wrote to the journal: %s → %s", before, after)
 	}
 
-	// And nothing was written.
-	items, err := m.ops.ListBacklogItems()
+	// And the item is still an idea.
+	item, err := m.store.LoadBacklogItem("BL01")
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, it := range items {
-		if it.Status != core.StatusOpen {
-			t.Fatalf("%s is %q — a refused promotion writes nothing", it.ID, it.Status)
-		}
-	}
-	recipes, err := m.ops.ListRecipes()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(recipes) != len(m.recipes) {
-		t.Fatalf("the plan holds %d recipes, want %d", len(recipes), len(m.recipes))
+	if item.Kind != core.KindIdea {
+		t.Errorf("the kind is %q, want %q", item.Kind, core.KindIdea)
 	}
 }
 
@@ -179,31 +193,17 @@ func TestTheFooterAsksTheDomainAboutPromotability(t *testing.T) {
 	}
 }
 
-// TestSpaceOnAnIdeaWritesNothingToThePlan covers the journal.
+// TestTheItemDetailSaysWhyAnIdeaIsNotPromotable covers the item's own detail.
 //
-// The footer offers no move on an idea, so pressing space is not an attempt: the
-// plan's only event log stays byte-for-byte as it was. The journal's own rule is
-// that a refusal is *"an attempt that was turned away"* — and nobody attempted
-// anything.
-func TestSpaceOnAnIdeaWritesNothingToThePlan(t *testing.T) {
+// The idea's move is a shaping, and the detail says why the item is not a recipe
+// yet: it carries no acceptance criteria, and a recipe without them can never be
+// signed off. The reason reaches the chef where the item is, not only in a banner.
+func TestTheItemDetailSaysWhyAnIdeaIsNotPromotable(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
 	m.selBacklog = 0
-
-	before := activityChecksum(t, m.store.Root)
-	m.Update(tea.KeyPressMsg{Code: ' '})
-	after := activityChecksum(t, m.store.Root)
-
-	if before != after {
-		t.Errorf("the refusal wrote to the journal: %s → %s", before, after)
-	}
-
-	// And the reason still reaches the chef: in the banner, and in the item's
-	// own detail.
-	if !strings.Contains(m.refusal, "acceptance criteria") {
-		t.Errorf("the banner does not carry the reason: %q", m.refusal)
-	}
 	m.width = 200
+
 	if out := plain(m); !strings.Contains(out, "acceptance criteria") {
 		t.Errorf("the item's detail does not carry the reason\n%s", out)
 	}

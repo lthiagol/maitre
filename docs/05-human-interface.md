@@ -241,10 +241,12 @@ console's header, drawn inside the terminal, and it carries the same name.
   items, so a header can disappear while its items stay selected.
 - The **footer is pinned** to the last row and is **contextual**: `space` means different
   things for a ready recipe (sign off), a self-reviewed one (review), a recipe with an
-  open tasting note (triage), a reviewed one (serve), a **small task** in the backlog
-  (promote). It never offers a move the gates would refuse. The backlog's answer comes
-  from the domain: an **idea** has no promotion to offer, so the footer offers none,
-  and the item's detail says why.
+  open tasting note (triage), a reviewed one (serve), an **idea** in the backlog
+  (shape it), a **small task** in the backlog (promote). It never offers a move the
+  gates would refuse. The backlog's answer comes from the domain: an idea's move is a
+  **shaping** — the kind changes and a scope is added, and the id does not — a small
+  task's is its **promotion**, and a settled item has neither, so the footer offers no
+  `space` there, and the item's detail says why.
 - A **resize** re-lays out.
 - At **160 columns and above** the detail pane appears beside the list; below that the
   list takes the whole terminal and `enter` opens the detail full screen. A split at 100
@@ -259,7 +261,7 @@ console's header, drawn inside the terminal, and it carries the same name.
 | `enter` | expand the detail to full screen; on **Settings**, apply the theme under the cursor |
 | `esc` | back to the split view |
 | `n` `N` | move the cursor over the recipe's open tasting notes |
-| `space` | the primary action for this recipe — sign off, review, triage, serve; on the **Backlog**, the small task's promotion |
+| `space` | the primary action for this recipe — sign off, review, triage, serve; on the **Backlog**, the item's move: shape an idea, promote a small task |
 | `1` `2` `3` | list ordering: triage · lane · plain |
 | `c` | show or hide served recipes |
 | `r` | reload |

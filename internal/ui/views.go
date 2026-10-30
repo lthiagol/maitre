@@ -540,12 +540,9 @@ func (m *Model) primaryActionLabel() string {
 			return ""
 		}
 		// The domain's answer, not the console's: the footer names the move the
-		// current selection has, and an idea has none — the domain refuses to
-		// promote it, and the footer must not promise a move the domain refuses.
-		if !core.PromotionOf(item).Allowed {
-			return ""
-		}
-		return "promote to recipe"
+		// current selection has — shape it, promote it, or nothing — and a
+		// settled item has none, so the console must not promise a key there.
+		return core.BacklogMoveOf(item).Primary.Label()
 	}
 	return ""
 }

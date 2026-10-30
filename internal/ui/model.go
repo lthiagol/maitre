@@ -778,7 +778,7 @@ func (m *Model) listCount() int {
 func (m *Model) primaryAction() (tea.Model, tea.Cmd) {
 	switch m.tab {
 	case TabBacklog:
-		return m.promoteSelected()
+		return m.backlogPrimary()
 	case TabRecipes, TabPath, TabBoard:
 		return m.actOnRecipe()
 	}
