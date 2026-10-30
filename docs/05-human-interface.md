@@ -263,6 +263,29 @@ console's header, drawn inside the terminal, and it carries the same name.
 | `r` | reload |
 | `q` | quit |
 
+**The mouse is on.** The console asks the terminal for cell-motion reporting, so the
+wheel reaches it. The wheel scrolls what is under the pointer, and it drives the same
+scroll the keyboard drives.
+
+| Gesture | Where | What |
+|---|---|---|
+| wheel | over the list | scroll the list, keeping the selection visible |
+| wheel | over the detail pane | scroll the detail |
+
+The wheel's step is **three lines**: one is too slow to be useful, and a page is too
+fast to aim with.
+
+**The mouse is drivable from a script.** `maitre --keys` takes the same steps the
+console takes:
+
+```
+maitre --keys "wheel:down"        # the wheel, over the list
+maitre --keys "wheel:down@12,5"   # the wheel, at column 12, row 5
+```
+
+The coordinates are the terminal's own — zero-based, with (0, 0) at the upper-left
+corner.
+
 **The theme is the chef's to pick.** The Settings tab lists the palettes under a
 **THEME** heading; the cursor moves over them and `enter` applies the one under it. The
 active theme is marked, so the chef can see which one is in force. The choice is for the
