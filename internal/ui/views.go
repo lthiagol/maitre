@@ -529,9 +529,17 @@ func (m *Model) primaryActionLabel() string {
 		}
 		return core.ChefMoveOf(*rec).Label()
 	case TabBacklog:
-		if _, ok := m.selectedBacklogItem(); ok {
-			return "promote to recipe"
+		item, ok := m.selectedBacklogItem()
+		if !ok {
+			return ""
 		}
+		// The domain's answer, not the console's: the footer names the move the
+		// current selection has, and an idea has none — the domain refuses to
+		// promote it, and the footer must not promise a move the domain refuses.
+		if !core.PromotionOf(item).Allowed {
+			return ""
+		}
+		return "promote to recipe"
 	}
 	return ""
 }

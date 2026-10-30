@@ -48,6 +48,12 @@ func (m *Model) backlogDetail(width int) []string {
 	out = append(out, " "+m.styDim.Render(item.Kind+" · "+item.Status))
 	out = append(out, " "+m.styFaint.Render(fmt.Sprintf("created %s · updated %s", item.Created, item.Updated)))
 	out = append(out, "")
+	// What the domain says about the item's next move — and the reason when there
+	// is none. The console does not decide: it renders the domain's answer.
+	if p := core.PromotionOf(item); !p.Allowed {
+		out = append(out, " "+m.styWarn.Render("→ "+p.Reason))
+		out = append(out, "")
+	}
 	if item.Body != "" {
 		out = append(out, m.stySec.Render("Why"))
 		out = append(out, indent(renderMarkdown(item.Body, width-4), "  "))
