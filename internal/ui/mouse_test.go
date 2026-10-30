@@ -144,3 +144,98 @@ func TestTheMapFollowsTheFrame(t *testing.T) {
 		}
 	}
 }
+
+// TestTheWheelScrollsTheList covers the wheel over the list.
+func TestTheWheelScrollsTheList(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	before, ok := m.currentSummary()
+	if !ok {
+		t.Fatal("there is no selected recipe")
+	}
+	x, y := m.hits.list.centre()
+	m.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
+	after, ok := m.currentSummary()
+	if !ok {
+		t.Fatal("there is no selected recipe")
+	}
+	if after.ID == before.ID {
+		t.Errorf("the wheel over the list did not scroll it: still on %s", after.ID)
+	}
+}
+
+// TestTheWheelIsTheKeyboardsScroll checks the wheel drives the same scroll.
+//
+// Two scrolls would be two answers to one question, so the wheel and the keyboard
+// must land in the same place.
+func TestTheWheelIsTheKeyboardsScroll(t *testing.T) {
+	wheeled := newModel(t)
+	wheeled.width = 120
+	wheeled.height = 12
+	wheeled.View()
+	x, y := wheeled.hits.list.centre()
+	for i := 0; i < 2; i++ {
+		wheeled.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
+	}
+	wheeled.View()
+
+	keyed := newModel(t)
+	keyed.width = 120
+	keyed.height = 12
+	for i := 0; i < 2*wheelStep; i++ {
+		keyed.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+	}
+	keyed.View()
+
+	if wheeled.selRecipes != keyed.selRecipes {
+		t.Errorf("the wheel landed on %d, the keyboard on %d", wheeled.selRecipes, keyed.selRecipes)
+	}
+	if wheeled.offset != keyed.offset {
+		t.Errorf("the wheel scrolled to %d, the keyboard to %d", wheeled.offset, keyed.offset)
+	}
+	if wheeled.offset == 0 {
+		t.Errorf("the list did not scroll at all: the offset is %d", wheeled.offset)
+	}
+}
+
+// TestTheWheelScrollsTheDetail covers the wheel over the detail pane.
+func TestTheWheelScrollsTheDetail(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	// Open the detail full screen: the detail owns the body.
+	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+	m.View()
+	if m.detailScroll != 0 {
+		t.Fatalf("the detail starts at the top, got %d", m.detailScroll)
+	}
+
+	x, y := m.hits.detail.centre()
+	m.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
+	if m.detailScroll != wheelStep {
+		t.Errorf("the wheel over the detail scrolled it by %d, want %d", m.detailScroll, wheelStep)
+	}
+	m.Update(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelUp})
+	if m.detailScroll != 0 {
+		t.Errorf("the wheel back up should return to the top, got %d", m.detailScroll)
+	}
+}
+
+// TestTheWheelOverTheHeaderDoesNothing checks the wheel answers what is under it.
+func TestTheWheelOverTheHeaderDoesNothing(t *testing.T) {
+	m := newModel(t)
+	m.width = 120
+	m.height = 30
+	m.View()
+
+	before := m.selRecipes
+	m.Update(tea.MouseWheelMsg{X: 1, Y: 0, Button: tea.MouseWheelDown})
+	if m.selRecipes != before {
+		t.Errorf("the wheel over the header moved the selection to %d", m.selRecipes)
+	}
+}
