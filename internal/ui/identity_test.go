@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lthiagol/maitre/internal/brand"
 	"github.com/lthiagol/maitre/internal/core"
 )
 
@@ -247,7 +248,7 @@ func TestTheHeaderKeepsTheProductsName(t *testing.T) {
 	m := loadInto(t, New(store))
 
 	header := m.header()
-	if !strings.Contains(header, " ⋈ maitre") {
+	if !strings.Contains(header, " "+brand.Compact+" maitre") {
 		t.Errorf("the header lost the mark and the product's name: %q", header)
 	}
 	if !strings.Contains(header, " · ") {
