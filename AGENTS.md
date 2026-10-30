@@ -262,6 +262,7 @@ prototypes/     throwaway design sketches
 work/           the work in progress — briefs, transcripts, the state of the rename
   briefs/       the dispatch contracts, one per slice
   transcripts/  the lanes' scrollback, captured at each slice boundary
+  tui/          the console's second time round — the plan, and the state of the slices
 docs/           design docs
   decisions/    ADRs
   audits/       the per-cycle review reports behind the ledger
@@ -422,6 +423,7 @@ takes minutes. `make install-hooks` copies the hook into `.git/hooks/`.
 | [docs/audit.md](docs/audit.md) | The audit ledger — every finding, open or closed |
 | [docs/audits/](docs/audits/) | The per-cycle review reports behind the ledger's rows |
 | [work/README.md](work/README.md) | The work in progress — the state of the rename, and how to resume it |
+| [work/tui/README.md](work/tui/README.md) | The console's second time round — the state of the slices, and how to resume one |
 | [prototypes/README.md](prototypes/README.md) | The board layout prototypes |
 | [skills/README.md](skills/README.md) | The vendored skills, why we took them, how to re-sync |
 
