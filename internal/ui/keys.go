@@ -74,11 +74,18 @@ func Drive(m *Model, steps []string) (string, error) {
 //
 // A mouse step is tried first: a key name is never a mouse step, and the mouse is
 // the one that needs the frame.
+//
+// The refusals name their own cause, because each cause names its own remedy: a
+// malformed position is fixed by writing the position, a malformed mouse step by
+// writing the step, and an unknown step by writing a step the console knows.
 func stepMsg(m *Model, name string) (tea.Msg, error) {
 	if msg, ok := MouseFor(name, m); ok {
 		return msg, nil
 	}
 	if isMouseStep(name) {
+		if malformedPosition(name) {
+			return nil, fmt.Errorf("malformed mouse step %q: the position must be (x,y)", name)
+		}
 		return nil, fmt.Errorf("malformed mouse step %q", name)
 	}
 	key, ok := KeyFor(name)
