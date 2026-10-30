@@ -1,6 +1,10 @@
 package ui
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -109,8 +113,8 @@ func TestTheFooterDoesNotOfferAMoveTheDomainRefuses(t *testing.T) {
 
 // TestSpaceOnAnIdeaIsRefusedWithTheReason covers the refusal.
 //
-// The console asks the domain to promote the item and shows the domain's reason —
-// it does not decide by itself that an idea is not promotable.
+// The console asks the domain **whether** the item may be promoted and shows the
+// domain's reason — it does not decide by itself that an idea is not promotable.
 func TestSpaceOnAnIdeaIsRefusedWithTheReason(t *testing.T) {
 	m := newModel(t)
 	m.tab = TabBacklog
@@ -143,4 +147,75 @@ func TestSpaceOnAnIdeaIsRefusedWithTheReason(t *testing.T) {
 	if len(recipes) != len(m.recipes) {
 		t.Fatalf("the plan holds %d recipes, want %d", len(recipes), len(m.recipes))
 	}
+}
+
+// TestTheFooterAsksTheDomainAboutPromotability holds the footer's guard.
+//
+// The console **asks** the domain whether an item may be promoted. A console that
+// decided for itself would pass a test on the two cases where its own rule and the
+// domain's answer **agree**: an idea (neither promotes it) and an open small task
+// (both promote it). Those two hold nothing.
+//
+// The case where the answers **differ** is a **promoted** small task: it is still a
+// small task — the console's own rule would say yes — and the domain refuses it,
+// because it is no longer open. A console that decided by the kind would offer
+// `space promote to recipe` on it; one that asks does not.
+func TestTheFooterAsksTheDomainAboutPromotability(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	// The small task: the ideas come first, and an idea is not promoted.
+	m.selBacklog = 4
+	m.Update(tea.KeyPressMsg{Code: ' '})
+	if m.refusal != "" {
+		t.Fatalf("the promotion was refused: %s", m.refusal)
+	}
+	m.Update(m.reload()())
+
+	// The item is a promoted small task now. The domain refuses it; the kind does
+	// not.
+	out := plain(m)
+	if strings.Contains(out, "space promote to recipe") {
+		t.Errorf("the footer offers a promotion the domain refuses — the console decided for itself\n%s", out)
+	}
+}
+
+// TestSpaceOnAnIdeaWritesNothingToThePlan covers the journal.
+//
+// The footer offers no move on an idea, so pressing space is not an attempt: the
+// plan's only event log stays byte-for-byte as it was. The journal's own rule is
+// that a refusal is *"an attempt that was turned away"* — and nobody attempted
+// anything.
+func TestSpaceOnAnIdeaWritesNothingToThePlan(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	before := activityChecksum(t, m.store.Root)
+	m.Update(tea.KeyPressMsg{Code: ' '})
+	after := activityChecksum(t, m.store.Root)
+
+	if before != after {
+		t.Errorf("the refusal wrote to the journal: %s → %s", before, after)
+	}
+
+	// And the reason still reaches the chef: in the banner, and in the item's
+	// own detail.
+	if !strings.Contains(m.refusal, "acceptance criteria") {
+		t.Errorf("the banner does not carry the reason: %q", m.refusal)
+	}
+	m.width = 200
+	if out := plain(m); !strings.Contains(out, "acceptance criteria") {
+		t.Errorf("the item's detail does not carry the reason\n%s", out)
+	}
+}
+
+// activityChecksum is the checksum of the plan's event log.
+func activityChecksum(t *testing.T, root string) string {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(root, core.FileActivity))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(raw)
+	return hex.EncodeToString(sum[:])
 }
