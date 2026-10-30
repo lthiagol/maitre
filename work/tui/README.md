@@ -153,7 +153,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q3 | **T5** — the Ready tab carries both blocks, and the small task's row names its two further steps |
 | Q4 | **T7** — the filter is the console's answer; the recipe's tags stay a domain decision for the CLI |
 | Q5 | **after T1** — not a slice of its own until the window title is in |
-| Q6 | **T3b** — the console creates and edits backlog items |
+| Q6 | **T3b** — the console creates backlog items. The **free edit** of every field is **not built**: a later round, if it is wanted at all |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
