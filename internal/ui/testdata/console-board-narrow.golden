@@ -1,0 +1,40 @@
+ ⋈ maitre · demo
+────────────────────────────────────────────────────────────────────────────────────────────────────
+  Home    Recipes    Backlog    Ready  ▸ Board    Log    Settings
+ the tree · 6 recipes · 4 can go now · 2 waiting
+● RCP01 draft       Sharpen the AC gate                           0/2
+● RCP02 ready       Sign off the menu                             1/2
+ └─ needs RCP02
+   └─ RCP04 approved    Add the backlog view                          1/1 needs RCP02
+● RCP03 remediation Wire the review queue                         2/3 1 note
+● RCP05 executing   Sharpen the evidence contract                 1/2
+ └─ needs RCP05
+   └─ RCP07 draft       Record the review protocol                    0/1 needs RCP05
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ↑↓ move · tab switch · enter detail · r reload · q quit

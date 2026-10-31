@@ -30,6 +30,12 @@ const homeGoldenPath = "testdata/console-home.golden"
 // stressGoldenPath is the same, against the pathological plan.
 const stressGoldenPath = "testdata/console-stress.golden"
 
+// narrowBoardGoldenPath is the Board tab below 160 columns.
+//
+// The wide drawing starts at 160. Below that the vertical tree is the tree,
+// and this file is that drawing: the connectors, the trunk, the forks.
+const narrowBoardGoldenPath = "testdata/console-board-narrow.golden"
+
 // clockPattern is the time of day in a rendered journal entry.
 //
 // The clock is not pinned by a golden: it changes on every run, and a golden that
@@ -123,6 +129,56 @@ func TestHomeMatchesTheGolden(t *testing.T) {
 	}
 	if got != string(want) {
 		t.Errorf("the console does not match the home golden.\n--- got ---\n%s\n--- want ---\n%s", got, want)
+	}
+}
+
+// TestTheNarrowBoardMatchesTheGolden pins the vertical tree.
+//
+// Below 160 columns the Board is today's tree. The golden is that screen, at
+// the width the other narrow goldens use. A wide drawing that leaked below
+// 160 would move it.
+func TestTheNarrowBoardMatchesTheGolden(t *testing.T) {
+	store := goldenStore(t)
+	m, err := Snapshot(store, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.tab = TabBoard
+	got := StripANSI(m.View().Content)
+	// The seeded plan forks one child at a time, so the screen shows the last
+	// connector. A branch with siblings is what draws ├─ — that test lives
+	// with the tree fixture.
+	if !strings.Contains(got, "└─") {
+		t.Fatalf("the narrow tree should keep its connector:\n%s", got)
+	}
+	// The same drawing at the other narrow widths. The golden's width is the
+	// byte-for-byte pin; these two must stay the vertical tree as well.
+	for _, width := range []int{80, 159} {
+		m.width = width
+		out := StripANSI(m.View().Content)
+		if !strings.Contains(out, "└─") {
+			t.Errorf("at %d columns the tree should stay vertical:\n%s", width, out)
+		}
+	}
+	m.width = 100
+
+	if *update {
+		if err := os.MkdirAll(filepath.Dir(narrowBoardGoldenPath), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(narrowBoardGoldenPath, []byte(got), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		t.Log("narrow board golden updated")
+		return
+	}
+
+	want, err := os.ReadFile(narrowBoardGoldenPath)
+	if err != nil {
+		t.Fatalf("read narrow board golden: %v — run `make regen-goldens`", err)
+	}
+	if got != string(want) {
+		t.Errorf("the narrow board does not match the golden.\n--- got ---\n%s\n--- want ---\n%s", got, want)
 	}
 }
 
