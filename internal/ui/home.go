@@ -18,9 +18,9 @@ import (
 // you** if and only if the console has a chef move for it"*.
 //
 // The precedent is v1's **Overview** lane, dropped because it *restated the board*.
-// Home is not that: it shows what the board does not carry — the plan's evidence,
-// the tasting, the backlog's counts, the automation's vital signs — and it shows
-// them as numbers. A second board would be a second story about the same plan.
+// Home shows the plan's counts and no items. The board shows the recipes; Home
+// shows their counts. The recipes' counts appear on both — the chef's ruling, the
+// full set. A second board would be a second story about the same plan.
 //
 // Every number is the domain's. `core.PlanStats` computes them, and the console
 // renders them: a number the console counted itself is a number the CLI would count

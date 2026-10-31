@@ -43,10 +43,11 @@ Autopilot · Settings. Four are gone:
 | Autopilot | v2 has no orchestration; the running recipes are a section of the board |
 
 **Home is not the Overview.** The lane was dropped because it *restated the board* —
-a second list of the same recipes. Home shows **numbers and never items**: the
-counts the board does not carry (the evidence, the tasting, the backlog, the
-automation's vital signs), and no row on it is selectable. A test holds it — see
-[the Home tab](#the-home-tab).
+a second list of the same recipes. Home shows **numbers and never items**. The
+board shows the recipes; Home shows their counts. The recipes' counts appear on
+both, which is the chef's ruling — the full set. The evidence, the tasting, the
+backlog and the automation's vital signs are counts beside those, and no row on
+Home is selectable. A test holds it — see [the Home tab](#the-home-tab).
 
 ## Lanes — the board's organising axis
 
@@ -445,10 +446,11 @@ touches anything.
 > is zero. **A test holds it.**
 
 v1's **Overview** lane was dropped because it *restated the board* — a second list
-of the same recipes. The risk is the same one, and the difference is written down:
-Home shows what the board does **not** carry — the evidence, the tasting, the
-backlog's counts, the automation's vital signs — and it shows them as numbers. A
-second board would be a second story about the same plan.
+of the same recipes. The difference is numbers against items: the board shows the
+recipes, and Home shows their counts. The recipes' counts appear on both — the
+chef's ruling, the full set. The evidence, the tasting, the backlog and the
+automation's vital signs are counts beside those, and Home shows them as numbers.
+A second board would be a second story about the same plan.
 
 The footer on Home promises no move: there is no item under the cursor, so there is
 nothing to sign off, triage or serve.

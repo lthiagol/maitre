@@ -21,7 +21,7 @@ import (
 // is selectable, `space` does nothing there, and the tab's item count is zero.
 //
 // The precedent is v1's **Overview** lane, dropped because it restated the board.
-// Home shows what the board does not carry, and it shows it as numbers.
+// The board shows the recipes; Home shows their counts.
 
 // TestTheConsoleLandsOnHome covers the tab's place.
 //
