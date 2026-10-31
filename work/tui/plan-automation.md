@@ -1,13 +1,17 @@
-# T8 — the Sous-Chef tab
+# The automation — the skills, and the Sous-Chef tab
 
-> **This is the design.** Nothing is built. The slice's brief is written *after* the
-> chef rules on the questions in § 10, and the brief wins over this file where they
-> differ.
+> **This is the design.** Nothing is built. Each slice's brief is written *after*
+> the chef rules on the questions in § 10, and the brief wins over this file where
+> they differ.
 >
 > The design the T1–T7 round followed is [plan.md](plan.md); the round's state is
-> [README.md](README.md). This is the first slice **out** of that round — the
+> [README.md](README.md). This is the first work **out** of that round — the
 > orchestrator's tab was explicitly *not in this plan*, and it comes back now
 > because the orchestrator does.
+>
+> **It is two slices, not one.** The house rule is one slice per session: two
+> slices in one session means two sets of context, and the second is the one that
+> breaks. The split is in § 11.
 
 ## The answer
 
@@ -18,10 +22,12 @@ A tab that **starts the automation** and then **shows it working**.
 | **The name** | **Sous-Chef** — ruled 2026-10-31. The tab's old name: the automation's tab, when it was a placeholder that said so plainly |
 | **The place** | **between Board and Log** — ruled 2026-10-31. **8 tabs**: Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings |
 | **The move** | one: **start the automation**. `space` on the tab spawns the orchestrator |
+| **The role** | the spawned orchestrator **loads its own role**: `maitre-cli skill load orchestrator-role`. The skill is the role's knowledge; the startup task adds the work |
 | **What it shows** | the crew — the **orchestrator**, the **runner**, the **reviewer** — each with its state and what it is on |
 | **Where the state comes from** | **herdr**, the runtime. The console asks it; the plan does not carry it |
 | **The blocked agent** | raises a message to the **orchestrator**, asking for directions. The orchestrator decides |
-| **The domain** | **no new view, no format change.** The console's action spawns a process and writes nothing to the plan — unless **Q20** says otherwise |
+| **The domain** | **no new view, no format change.** The console's action spawns a process and writes nothing to the plan |
+| **The CLI** | gains a **skills menu**: `maitre-cli skill help` · `list` · `load <name>` |
 | **`DomainVersion`** | **7** — unless Q20 says otherwise |
 
 ## 1 — Why the tab exists
@@ -84,7 +90,16 @@ works the plan, and a tab on the wrong directory is an automation on nobody's pl
 herdr pane run <the pane> mcode-herdr "<the startup task>"
 ```
 
-The startup task names the job and the path. What it says beyond that is **Q21**.
+The startup task is **short**, because the role is not in it:
+
+> You are the orchestrator of the plan at &lt;the plan's root&gt;.
+> Run `maitre-cli skill load orchestrator-role` and follow it.
+> The recipes to execute are: &lt;the work&gt;.
+
+**The skill carries the role; the startup task carries the work.** The chef's
+ruling: *"it would describe what an orchestrator does and what it should know to
+act as an orchestrator, aside that the information necessary to work, like what
+recipe(s) should be executed."*
 
 **4 — the console remembers nothing.** It does not write a file, and it does not
 keep the pane id in memory. It finds the crew again by asking herdr (§ 5), so a
@@ -161,7 +176,8 @@ place where the work happens. The crew's members are not lanes.
 | **no format change** | `core.DomainVersion` stays **7**. The plan's format does not move, and the repo's own plan is not stamped forward |
 | **the console gains a dependency** | the `herdr` binary, on the PATH. It is a runtime dependency, not a module — `internal/ui`'s budget is unchanged |
 | **the console's new action** | spawns a process. It writes **nothing** to the plan — unless **Q20** says otherwise |
-| **`internal/core`, `internal/cli`** | do not change |
+| **`internal/core`** | does not change. The skills are **files**, and the CLI reads them; the domain computes nothing new |
+| **`internal/cli`** | gains three verbs — `skill help`, `skill list`, `skill load <name>` — and the file reading behind them. Still **stdlib-only** |
 
 ## 9 — Failure handling
 
@@ -181,10 +197,51 @@ place where the work happens. The crew's members are not lanes.
 | **Q17** | the count and the place | **ruled: 8 tabs, between Board and Log** |
 | **Q18** | does the tab offer the chef a move? | **ruled: it starts the automation.** The blocked agent asks the **orchestrator**, not the chef |
 | **Q19** | where the state comes from | **ruled by the design: herdr**, found by the agents' cwd. The plan carries no crew state |
-| **Q20** | does starting the automation leave a trace in the plan's journal? | **no** — the journal records what happened *to the plan*, and the crew's state is runtime state. The orchestrator's own writes are recorded through the CLI as usual. A trace would mean a new operation and a format change |
-| **Q21** | what does the startup task say? | **the job and the path** — *"you are the orchestrator of the plan at &lt;path&gt;"* — and nothing else. The orchestrator reads the plan and decides what is needed; the console does not tell it which slice to work on |
+| **Q20** | does starting the automation leave a trace in the plan's journal? | **ruled: no.** The journal records what happened *to the plan*; the crew's state is runtime state. The orchestrator's own writes are recorded through the CLI as usual |
+| **Q21** | what does the startup task say? | **ruled: it loads the role.** `maitre-cli skill load orchestrator-role`, plus the work. The skill carries the role's knowledge; the startup task carries the work |
+| **Q22** | can the chef stop the automation from the tab? | **ruled: no.** One move — start. Stopping is the chef's terminal business |
+| **Q23** | where do the skills live? | **the project, next to `kitchen/`** — the repo already has a `skills/` folder, and the skills belong to the plan's project, not to the tool's installation |
+| **Q24** | one slice or two? | **two** — **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. The tab's startup task loads the skill, so the skill must exist first |
 
-## 11 — Not in this slice
+## 11 — The two slices
+
+| | |
+|---|---|
+| **T8 — the skills** | `maitre-cli skill help` · `list` · `load <name>`, the skills' home, and the **`orchestrator-role`** skill. Nothing here touches the console |
+| **T9 — the Sous-Chef tab** | the tab, the move that starts the automation, the crew's rows, and the startup task that loads the role |
+
+**The order is forced.** The tab's startup task runs `maitre-cli skill load
+orchestrator-role`, so the skill has to exist before the tab can spawn anything
+that works. T8 first.
+
+## 12 — The skills
+
+A skill is **a file the CLI spits out**. The chef's words: *"similar to a cat on a
+file and it would spit the skill content."*
+
+| | |
+|---|---|
+| **`maitre-cli skill help`** | what the menu is, and what the verbs do |
+| **`maitre-cli skill list`** | every skill's name, and a line about each |
+| **`maitre-cli skill load <name>`** | the skill's content, on stdout |
+
+**The skill is the role.** `orchestrator-role` is what the spawned agent runs to
+become an orchestrator: what the job is, what it must know, and the protocol it
+follows — brief the crew, open the lanes, wait, close the slice. The work itself
+is never in the skill; it arrives in the startup task.
+
+**A skill is not a recipe.** A recipe is the plan's unit of work, signed off and
+tasted. A skill is the machine's own instruction sheet for a job — it is not
+signed off, it has no acceptance criteria, and it is not shared between plans
+unless the project carries it. That is the same line the plan draws for **tags**:
+*a label is not an artifact*.
+
+**This is the file written this session.** The `mcode-herdr-flow.txt` in the
+parent directory is a first draft of exactly this skill — the herdr mechanics, the
+lane protocol, the receipt and nudge. It becomes `orchestrator-role` when the
+skills' home is ruled (Q23).
+
+## 13 — Not in this slice
 
 | | |
 |---|---|
