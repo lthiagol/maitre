@@ -64,8 +64,8 @@ written down.
 | Block | The number | Where it comes from |
 |---|---|---|
 | The plan | the project's name and the path | `project.json` |
-| The recipes | total · need you · on the line · served | the triage sections, counted |
-| The **evidence** | criteria · proven · failed · rejected · unproven | `core.EvidenceSummaryOf`, summed — a derived view that does not exist yet |
+| The recipes | need you · on the line · being shaped · served — the triage's sections, and **the parts add up** | the triage sections |
+| The **evidence** | proven · failed · rejected · unproven · pending — the states, and **the parts add up** | `core.EvidenceSummaryOf`, summed |
 | The **tasting** | open notes · open findings | `core.OpenFindingsOf` |
 | The backlog | ideas · small tasks | `core.BacklogGroups` |
 | The **automation** | the plan's domain version · this build's · the last journal event | the Sous-Chef tab's content, moved |
