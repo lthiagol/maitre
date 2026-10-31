@@ -481,9 +481,11 @@ type board struct {
 }
 
 // boardTree is the tree the Board tab shows, and the rows it draws.
+//
+// Below 160 columns it is the vertical tree. At 160 and above it is the same
+// tree drawn left to right. The membership is TreeOf either way.
 func (m *Model) boardTree() board {
 	tree := core.TreeOf(m.recipes)
-	b := &boardBuilder{m: m}
 	if len(tree.Roots) == 0 && len(tree.Orphans) == 0 && len(tree.Stuck) == 0 {
 		// "The tree is empty" means the plan has no recipes. A plan that has
 		// recipes and an empty tree is a different thing, and the console must not
@@ -492,12 +494,24 @@ func (m *Model) boardTree() board {
 		if len(m.recipes) > 0 {
 			text = "The plan has recipes, but none of them is open."
 		}
+		b := &boardBuilder{m: m}
 		b.out = append(b.out, listLine{
 			text:    "  " + m.styDim.Render(text),
 			itemIdx: -1,
 		})
 		return board{rows: b.out}
 	}
+	if m.width >= splitThreshold {
+		return m.boardTreeWide(tree)
+	}
+	return m.boardTreeNarrow(tree)
+}
+
+// boardTreeNarrow draws the vertical tree.
+//
+// The connectors are ├─ and └─. Below 160 columns this is the whole drawing.
+func (m *Model) boardTreeNarrow(tree core.Tree) board {
+	b := &boardBuilder{m: m}
 	for _, root := range tree.Roots {
 		b.trunk(root)
 	}

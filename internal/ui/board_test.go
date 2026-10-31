@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/lthiagol/maitre/internal/core"
 )
 
@@ -211,4 +213,186 @@ func treeModel(t *testing.T) *Model {
 	m := loadModel(t, store)
 	m.height = 40
 	return m
+}
+
+// TestTheWideBoardDrawsLeftToRight covers the drawing at 160 columns.
+//
+// The trunk's column is left of its fork's. The node shows the title, the
+// dependency it waits on is still readable, and an orphan and a cycle are
+// still on the board. The footer is the last row, and a node that does not
+// fit is truncated rather than wrapped.
+func TestTheWideBoardDrawsLeftToRight(t *testing.T) {
+	m := shapeModel(t)
+	m.width = 160
+	m.height = 40
+	m.tab = TabBoard
+
+	out := plain(m)
+	lines := strings.Split(out, "\n")
+	if len(lines) != m.height {
+		t.Fatalf("the screen has %d rows, want %d — a wrapped node pushes the footer", len(lines), m.height)
+	}
+	if !strings.Contains(lines[len(lines)-1], "quit") {
+		t.Errorf("the footer should be the last row, got %q", lines[len(lines)-1])
+	}
+	for _, line := range lines {
+		if w := lipgloss.Width(line); w > m.width {
+			t.Errorf("a row is %d columns, the screen is %d — it wraps:\n%s", w, m.width, line)
+		}
+	}
+	if strings.Contains(out, "├─") || strings.Contains(out, "└─") {
+		t.Errorf("at 160 columns the tree is left to right:\n%s", out)
+	}
+
+	trunk, fork := boardLine(t, lines, "The trunk"), boardLine(t, lines, "The fork")
+	if trunk != fork {
+		t.Fatalf("the fork should sit on the trunk's row, trunk row %d fork row %d\n%s", trunk, fork, out)
+	}
+	if colOf(lines[trunk], "The trunk") >= colOf(lines[fork], "The fork") {
+		t.Errorf("the trunk's column should be left of the fork's:\n%s", lines[trunk])
+	}
+	if !strings.Contains(lines[trunk], "needs RCP01") {
+		t.Errorf("the fork should still say what it waits on:\n%s", lines[trunk])
+	}
+	if !strings.Contains(out, "The orphan") || !strings.Contains(out, "not in the plan") {
+		t.Errorf("the orphan should still be drawn:\n%s", out)
+	}
+	if !strings.Contains(out, "Cycle left") || !strings.Contains(out, "Cycle right") || !strings.Contains(out, "dependency cycle") {
+		t.Errorf("the cycle should still be drawn:\n%s", out)
+	}
+	if strings.Contains(lines[len(lines)-1], "claim") {
+		t.Errorf("the footer should not offer a claim:\n%s", lines[len(lines)-1])
+	}
+
+	// The keyboard still moves down the tree, and enter still opens the detail.
+	if _, err := Drive(m, []string{"down", "enter"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.selBoard != 1 {
+		t.Errorf("down should move to the fork, the selection is %d", m.selBoard)
+	}
+	if m.mode != ModeDetail {
+		t.Errorf("enter should open the detail, the mode is %v", m.mode)
+	}
+	rec, ok := m.currentRecipe()
+	if !ok || rec.ID != "RCP02" {
+		t.Fatalf("the detail should be the fork, got %+v", rec)
+	}
+
+	// A title longer than the column is cut, and the footer stays put.
+	long := longTitleModel(t)
+	long.width = 160
+	long.height = 24
+	long.tab = TabBoard
+	longOut := plain(long)
+	longLines := strings.Split(longOut, "\n")
+	if len(longLines) != long.height {
+		t.Fatalf("a long title wrapped the screen into %d rows, want %d", len(longLines), long.height)
+	}
+	if !strings.Contains(longLines[len(longLines)-1], "quit") {
+		t.Errorf("the footer should be the last row, got %q", longLines[len(longLines)-1])
+	}
+	for _, line := range longLines {
+		if w := lipgloss.Width(line); w > long.width {
+			t.Errorf("a row is %d columns, the screen is %d", w, long.width)
+		}
+	}
+	if !strings.Contains(longOut, "…") {
+		t.Errorf("a title that does not fit should be truncated:\n%s", longOut)
+	}
+}
+
+// boardLine is the row that holds the text.
+func boardLine(t *testing.T, lines []string, text string) int {
+	t.Helper()
+	for i, line := range lines {
+		if strings.Contains(line, text) {
+			return i
+		}
+	}
+	t.Fatalf("the board does not show %q", text)
+	return -1
+}
+
+// colOf is the column text starts at.
+func colOf(line, text string) int {
+	i := strings.Index(line, text)
+	if i < 0 {
+		return -1
+	}
+	return lipgloss.Width(line[:i])
+}
+
+// shapeModel is a console over a trunk, a fork, an orphan and a cycle.
+func shapeModel(t *testing.T) *Model {
+	t.Helper()
+	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
+	store := core.Open(root)
+	if err := store.Init(); err != nil {
+		t.Fatal(err)
+	}
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+	mk := func(title string) string {
+		got, err := ops.CreateRecipe(core.RecipeSpec{
+			Title:      title,
+			Outcome:    "the wide tree draws the fork to the right",
+			Problem:    "the vertical tree is the narrow drawing",
+			OutOfScope: []string{"web shell", "orchestration"},
+			Criteria: []core.CriterionSpec{
+				{Description: "the fork is to the right", Verification: "go test ./internal/ui -run TestTheWideBoard"},
+			},
+			WorkPackages: []string{"ui"},
+			Steps:        []core.StepSpec{{Action: "draw the fork", DoneWhen: "the fork is to the right", Covers: []string{"AC-02"}}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return got.ID
+	}
+	trunk := mk("The trunk")
+	fork := mk("The fork")
+	orphan := mk("The orphan")
+	left := mk("Cycle left")
+	right := mk("Cycle right")
+	setDeps(t, ops, fork, []string{trunk})
+	setDeps(t, ops, orphan, []string{"GONE"})
+	setDeps(t, ops, left, []string{right})
+	setDeps(t, ops, right, []string{left})
+
+	m := loadModel(t, store)
+	m.height = 40
+	return m
+}
+
+// longTitleModel is a console over one recipe whose title does not fit a node.
+func longTitleModel(t *testing.T) *Model {
+	t.Helper()
+	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
+	store := core.Open(root)
+	if err := store.Init(); err != nil {
+		t.Fatal(err)
+	}
+	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+	if _, err := ops.CreateRecipe(core.RecipeSpec{
+		Title:      strings.Repeat("n", 200),
+		Outcome:    "a node that does not fit is truncated",
+		Problem:    "a wrapped node pushes the footer off the screen",
+		OutOfScope: []string{"web shell", "orchestration"},
+		Criteria: []core.CriterionSpec{
+			{Description: "the node is one line", Verification: "go test ./internal/ui -run TestTheWideBoard"},
+		},
+		WorkPackages: []string{"ui"},
+		Steps:        []core.StepSpec{{Action: "truncate the node", DoneWhen: "the footer is the last row", Covers: []string{"AC-02"}}},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	return loadModel(t, store)
+}
+
+// setDeps sets a recipe's dependencies.
+func setDeps(t *testing.T, ops *core.Operations, id string, deps []string) {
+	t.Helper()
+	if _, err := ops.UpdateRecipe(id, core.Fragment{DependsOn: &deps}); err != nil {
+		t.Fatal(err)
+	}
 }

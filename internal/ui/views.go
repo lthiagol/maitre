@@ -74,9 +74,13 @@ func (m *Model) renderLayout() string {
 	if m.mode == ModeDetail {
 		return m.renderDetailFull()
 	}
-	// The Home tab has no detail: it shows the plan's numbers, and the whole width
-	// is the numbers' column. A pane beside it would hold nothing.
-	if m.tab == TabHome {
+	// Home has no detail: it shows the plan's numbers, and the whole width is
+	// the numbers' column. A pane beside it would hold nothing.
+	//
+	// The Board uses the width for the tree. At 160 and above the forks sit
+	// to the right of the trunk, and a pane beside the tree would take those
+	// columns. The detail opens on enter, and on a click.
+	if m.tab == TabHome || m.tab == TabBoard {
 		return m.renderSingle(lines)
 	}
 	if m.width >= splitThreshold && m.mode == ModeSplit {
