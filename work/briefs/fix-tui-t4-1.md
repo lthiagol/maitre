@@ -1,5 +1,5 @@
-You are the **runner**, again — the same lane that wrote T4. The orchestrator's pane id
-is `w1H:p1`; use it verbatim in the notify command below.
+You are a **fresh runner**. The lane that wrote T4 is gone; its commits are in the log.
+The orchestrator's pane id is `w1H:pJ`; use it verbatim in the notify command below.
 
 This is **T4's fix cycle 1**: **three findings the orchestrator ruled in**, and **one
 note**.
@@ -135,7 +135,7 @@ cat > work/inbox/runner-tui-t4-fix1.md <<EOF
 Runner: T4 fix 1 done. Commits: <n>. Fixed: F-122, F-123, F-124, F-125. The long name: <the name you used, the width, and that the footer is still last>. The automation's honesty: <the line the block carries now>. The rows that add up: <the arithmetic for both rows>. The doc: <what docs/05 says now>. The goldens: <what moved, and why>. DomainVersion: <7>. The gate: <make check, make check-race>. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox && git commit -q -m "inbox: runner reports tui-t4 fix 1"
-herdr agent prompt "w1H:p1" "Runner: T4 fix 1 done. Commits: <n>. Fixed: F-122, F-123, F-124, F-125. The long name: <the name you used, the width, and that the footer is still last>. The automation's honesty: <the line the block carries now>. The rows that add up: <the arithmetic for both rows>. The doc: <what docs/05 says now>. The goldens: <what moved, and why>. DomainVersion: <7>. The gate: <make check, make check-race>. Notes: <anything the reviewer should know>."
+herdr agent prompt "w1H:pJ" "Runner: T4 fix 1 done. Commits: <n>. Fixed: F-122, F-123, F-124, F-125. The long name: <the name you used, the width, and that the footer is still last>. The automation's honesty: <the line the block carries now>. The rows that add up: <the arithmetic for both rows>. The doc: <what docs/05 says now>. The goldens: <what moved, and why>. DomainVersion: <7>. The gate: <make check, make check-race>. Notes: <anything the reviewer should know>."
 ```
 
 **Write the receipt, commit it, and *then* nudge** — the nudge only reaches an idle

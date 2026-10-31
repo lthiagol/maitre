@@ -109,10 +109,10 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 
 | | |
 |---|---|
-| the **tab** | `w1H:t8` — *tui: T4* |
-| the **runner** | pane `w1H:pE`, handle `runner` |
-| the **reviewer** | pane `w1H:pF`, handle `reviewer` |
-| the **orchestrator** | pane `w1H:p1` — the one they nudge |
+| the **tab** | `w1H:tD` — *tui: T4 fix 1* |
+| the **runner** | pane `w1H:pM`, handle `runner` |
+| the **reviewer** | pane `w1H:pN`, handle `reviewer` — started, not briefed |
+| the **orchestrator** | pane `w1H:pJ` — the one they nudge |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
 gone, the receipt in `work/inbox/` is the record of what it did, and the slice's
@@ -161,6 +161,9 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q5 | the per-project accent colour | **later** — the window title is the fix, the colour is the extra | 2026-10-30 |
 | Q6 | may the console create backlog items? | **yes** — a backlog item is not a recipe, so ADR-0003 does not forbid it | 2026-10-30 |
 | Q7 | where does the rule that answers *"what is this plan called?"* live in the spec? | **`docs/03` § 6, beside the plan format** — the rule is about what the reader answers from `project.json`, and § 6 is where the reader looks. It is **not** in § 8: the name is a *stored* fact, not a derived view. A wire holds it | 2026-10-30 |
+| Q8 | the free edit of a backlog item's fields | **no, for now** — shape, promote, dismiss and create cover the moves | 2026-10-31 |
+| Q9 | a backlog item's empty `scope` and `tags` | **`[]`** — one rule for every record. `DomainVersion` stays 7 | 2026-10-31 |
+| Q10 | after a write, does the selection follow the item? | **yes** — the selection follows the item. The fix belongs in the model | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -170,7 +173,10 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q3 | **T5** — the Ready tab carries both blocks, and the small task's row names its two further steps |
 | Q4 | **T7** — the filter is the console's answer; the recipe's tags stay a domain decision for the CLI |
 | Q5 | **after T1** — not a slice of its own until the window title is in |
-| Q6 | **T3b** — the console creates backlog items. The **free edit** of every field is **not built**: a later round, if it is wanted at all |
+| Q6 | **T3b** — the console creates backlog items |
+| Q8 | **not this round** — the free edit stays unbuilt |
+| Q9 | **the backlog writer** — an empty `scope` or `tags` is `[]`. `DomainVersion` stays 7 |
+| Q10 | **the model** — after a write, the selection follows the item |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.

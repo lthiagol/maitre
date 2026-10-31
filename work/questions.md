@@ -7,9 +7,9 @@
 
 | # | Question | From | Who | Recommendation |
 |--:|---|---|---|---|
-| **Q8** | the **free edit** of a backlog item's fields — wanted at all? | T3b | chef | **no, for now** — the moves cover it, and the refusal already names the remedy: *shape it into a small task* |
-| **Q9** | a backlog item's `scope`/`tags`: written **absent**, or `[]`? | T3a | chef | **`[]`** — one rule for every record. The version does not move: the fingerprint hashes names |
-| **Q10** | after a write, does the selection follow the item? | T3b | chef | **yes** — a selection pointing at another item is a lie, and the fix belongs in the model |
+| ~~Q8~~ | ~~the free edit of a backlog item's fields~~ | T3b | chef | **no, for now** — ruled 2026-10-31 |
+| ~~Q9~~ | ~~a backlog item's `scope`/`tags`: absent, or `[]`?~~ | T3a | chef | **`[]`** — ruled 2026-10-31 |
+| ~~Q10~~ | ~~after a write, does the selection follow the item?~~ | T3b | chef | **yes** — ruled 2026-10-31 |
 | **Q11** | one marker or two for *the domain's answer*? | T3b | orchestrator | **two** — the recipe's arrow *asks*, the item's *states* |
 | **Q12** | does the unbracketed position's message name its remedy? | T2b | orchestrator | **yes** — one line; each cause names its own remedy |
 | **Q13** | the kinds list is built on every call | T3b | orchestrator | **later** — a per-frame allocation on a path that redraws the whole screen |
