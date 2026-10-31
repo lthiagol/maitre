@@ -430,24 +430,46 @@ func (m *Model) shownRows(filter string) []core.Summary {
 
 // shownSections is the Recipes tab's sections, with the given filter applied.
 //
-// A section with no match is not drawn: an empty section header is noise that says
-// the plan has something it does not have.
+// The filter drops **rows**, not the plan the rows are computed against: a
+// recipe's readiness is derived from the whole plan, so a filtered plan would
+// change what the plan says about a recipe. A filter is a view of the plan, and
+// it does not edit it.
+//
+// A section with no match is not drawn: an empty section header is noise that
+// says the plan has something it does not have.
 func (m *Model) shownSections(filter string) []core.TriageSection {
 	if filter == "" {
 		return m.sections
 	}
-	return m.orderedSections(m.filteredRecipes(filter))
-}
-
-// filteredRecipes is the plan's recipes that match the filter.
-func (m *Model) filteredRecipes(filter string) []core.Recipe {
-	out := make([]core.Recipe, 0, len(m.recipes))
-	for _, r := range m.recipes {
-		if matchFilter(filter, recipeFields(r)...) {
-			out = append(out, r)
+	byID := m.recipeIndex()
+	out := make([]core.TriageSection, 0, len(m.sections))
+	for _, sec := range m.sections {
+		kept := core.TriageSection{Name: sec.Name}
+		for _, item := range sec.Items {
+			r, ok := byID[item.ID]
+			if !ok || !matchFilter(filter, recipeFields(r)...) {
+				continue
+			}
+			kept.Items = append(kept.Items, item)
 		}
+		if len(kept.Items) == 0 {
+			continue
+		}
+		out = append(out, kept)
 	}
 	return out
+}
+
+// recipeIndex is the plan's recipes by id.
+//
+// It is built where it is used: a second copy of the plan is a second thing to
+// keep in step with the first.
+func (m *Model) recipeIndex() map[string]core.Recipe {
+	byID := make(map[string]core.Recipe, len(m.recipes))
+	for i := range m.recipes {
+		byID[m.recipes[i].ID] = m.recipes[i]
+	}
+	return byID
 }
 
 // currentSummary is the selected recipe's row on the Recipes tab.

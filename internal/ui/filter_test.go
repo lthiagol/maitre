@@ -463,6 +463,64 @@ func withoutSummary(s string) string {
 	return strings.Join(kept, "\n")
 }
 
+// rowOf is the list row that holds the recipe with that id.
+func rowOf(out, id string) string {
+	for _, line := range screenLines(out) {
+		if strings.Contains(line, id) {
+			return strings.TrimRight(line, " ")
+		}
+	}
+	return ""
+}
+
+// TestTheFilterDoesNotChangeTheRow covers AC-01.
+//
+// A filter is a view of the plan; it must not change what the plan says about a
+// recipe. The readiness mark is derived from the **whole** plan, so the filter
+// filters the rows and not the plan the rows are computed against.
+//
+// The proof: RCP04 waits on the closed RCP06, so the plan says it is ready to
+// claim. A filter that hides RCP06 used to take the `●` with it — and the Ready
+// tab still listed the recipe as adoptable, so the console contradicted itself
+// between two tabs of the same screen.
+func TestTheFilterDoesNotChangeTheRow(t *testing.T) {
+	m := recipesModel(t)
+	// RCP04 now waits on the closed RCP06.
+	deps := []string{"RCP06"}
+	if _, err := m.ops.UpdateRecipe("RCP04", core.Fragment{DependsOn: &deps}); err != nil {
+		t.Fatal(err)
+	}
+	m.Update(m.reload()())
+
+	before := plain(m)
+	row := rowOf(before, "RCP04")
+	if row == "" {
+		t.Fatalf("the row should be on screen:\n%s", before)
+	}
+	if !strings.Contains(row, "●") {
+		t.Fatalf("the recipe waits on a closed dependency, so it is ready:\n%s", before)
+	}
+
+	// A filter that keeps RCP04 and hides RCP06.
+	typeFilter(t, m, "backlog")
+	after := plain(m)
+
+	got := rowOf(after, "RCP04")
+	if got == "" {
+		t.Fatalf("the matching recipe should be on screen:\n%s", after)
+	}
+	if got != row {
+		t.Errorf("the row changed under the filter:\n--- unfiltered ---\n%s\n--- filtered ---\n%s", row, got)
+	}
+
+	// And the Ready tab agrees about the same recipe.
+	switchToTab(t, m, TabReady)
+	ready := plain(m)
+	if !strings.Contains(ready, "Add the backlog view") {
+		t.Errorf("the Ready tab should list the recipe as adoptable:\n%s", ready)
+	}
+}
+
 // TestTheFilterDoesNotApplyToTheOtherTabs covers AC-05.
 //
 // On Board, Log, Home and Settings, `/` says the filter does not apply here — and
