@@ -179,6 +179,8 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q14 | which tabs the filter covers | **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree (a hidden node misstates what waits on what); the Log holds events; Home and Settings hold numbers | 2026-10-31 |
 | Q15 | where the console says the filter exists | **the Settings tab's key list** — the footer names the move the *current selection* has, and `/` opens a mode, not a move. The footer's goldens do not move | 2026-10-31 |
 | Q16 | the orchestrator's tab's name | **Sous-Chef** — the tab's old name. The rows carry the glossary's job names (`orchestrator`, `runner`, `reviewer`), so the tab's name and the glossary's sous-chef stay two different things | 2026-10-31 |
+| Q17 | the orchestrator's tab: the count and the place | **8 tabs — Sous-Chef between Board and Log**. Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings | 2026-10-31 |
+| Q18 | does the Sous-Chef tab offer the chef a move? | **it starts the automation** — `space` spawns the orchestrator. A blocked agent raises a message to the **orchestrator**, asking for directions; the orchestrator decides | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -195,6 +197,8 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q14 | **T7** — the filter covers the plan-item lists, and the other tabs say so |
 | Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
 | Q16 | **T8** — the tab's name |
+| Q17 | **T8** — 8 tabs, Sous-Chef between Board and Log |
+| Q18 | **T8** — the tab's move is to start the automation; a blocked agent asks the orchestrator |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
