@@ -21,7 +21,7 @@
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
-| **T7** | the filter | `/` filters the list | ⏳ planned | — |
+| **T7** | the filter | `/` filters the list | 📌 briefed | [tui-t7.md](../briefs/tui-t7.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
@@ -31,12 +31,13 @@ last commit's body before redoing anything.
 **The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**Paused here.** T6 is closed. The next session is **T7**.
+**Paused here.** T6 is closed. The next session is **T7** — briefed, and in flight.
 
 | | |
 |---|---|
 | **T6** | closed. Cycle 2 ok, 0 blockers. Receipt: `work/inbox/reviewer-tui-t6-cycle2.md` (`7890f27`) |
-| **The next slice** | **T7** — `/` filters the list. No brief yet. Write it from [plan.md](plan.md) § 6 just before the session, on a fresh tab |
+| **The next slice** | **T7** — `/` filters the list. Brief: [tui-t7.md](../briefs/tui-t7.md). The runner is in flight |
+| **The ruling** | the filter covers **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree, the Log holds events, Home and Settings hold numbers. Ruled 2026-10-31 |
 | **No lane is in flight** | the T6 fix tab can be closed. Nothing is waiting on a nudge |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
@@ -96,25 +97,30 @@ ROOT_PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin
 SPLIT_RAW=$(herdr pane split "$ROOT_PANE" --direction right --ratio 0.5 --cwd "$PWD")
 SPLIT_PANE=$(echo "$SPLIT_RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['pane']['pane_id'])")
 
-herdr agent start runner   --kind cursor --pane "$ROOT_PANE"  --timeout 60000 -- --trust --force
-herdr agent start reviewer --kind cursor --pane "$SPLIT_PANE" --timeout 60000 -- --trust --force
+# the lanes are mcode-herdr agents: mcode, with the bridge that reports the
+# pane's state to herdr. `herdr agent start` has no mcode kind — its kinds are
+# compiled in — so the lane is launched in the pane instead.
+herdr pane run "$ROOT_PANE"  mcode-herdr
+herdr pane run "$SPLIT_PANE" mcode-herdr
 ```
 
 | | |
 |---|---|
 | **The tab** | `--workspace "$HERDR_WORKSPACE_ID"` — the tab belongs beside the orchestrator. The default is the **focused** workspace, which is the user's |
-| **The split** | the runner on the left, the reviewer on the right. `herdr agent start` has **no `--no-focus`** — it pulls the chef's UI to the tab, once per lane |
+| **The split** | the runner on the left, the reviewer on the right. Neither `herdr pane run` nor the launch steals the chef's focus |
+| **The lane** | `mcode-herdr` — mcode plus the bridge that reports `working` / `idle` / `blocked` for the pane. A lane that waits goes **idle**, so herdr shows the wait instead of a spinner that never ends |
 | **The reviewer** | briefed **after** the runner's work lands, so it reads the code fresh. A reviewer briefed in advance would form its model of the code before the code existed |
 | **The dispatch** | the brief plus the notify block with the orchestrator's **real pane id** — `$HERDR_PANE_ID`, not a placeholder |
 | **The delivery check** | one `herdr pane read --lines 40`, ~5 s after each dispatch. Activity lines mean delivered; the raw prompt above the spinner means a stuck draft — report it and ask the chef to press Enter, **never blind-resend** |
 
-**No slice is in flight.** The next one is T7, and its lanes do not exist yet.
+**T7 is in flight.** Its lanes are `mcode-herdr` agents, so herdr sees each lane's state
+— a waiting lane goes **idle**, and the receipt is what carries the report back.
 
 | | |
 |---|---|
-| the **tab** | none |
-| the **runner** | none |
-| the **reviewer** | none |
+| the **tab** | `w1H:tK` — "tui: T7", in the orchestrator's workspace `w1H` |
+| the **runner** | `w1H:pZ` — `mcode-herdr`, the left pane |
+| the **reviewer** | `w1H:p0` — `mcode-herdr`, the right pane. Briefed **after** the runner lands |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
 gone, the receipt in `work/inbox/` is the record of what it did, and the slice's
@@ -166,6 +172,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q8 | the free edit of a backlog item's fields | **no, for now** — shape, promote, dismiss and create cover the moves | 2026-10-31 |
 | Q9 | a backlog item's empty `scope` and `tags` | **`[]`** — one rule for every record. `DomainVersion` stays 7 | 2026-10-31 |
 | Q10 | after a write, does the selection follow the item? | **yes** — the selection follows the item. The fix belongs in the model | 2026-10-31 |
+| Q14 | which tabs the filter covers | **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree (a hidden node misstates what waits on what); the Log holds events; Home and Settings hold numbers | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -179,6 +186,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q8 | **not this round** — the free edit stays unbuilt |
 | Q9 | **the backlog writer** — an empty `scope` or `tags` is `[]`. `DomainVersion` stays 7 |
 | Q10 | **the model** — after a write, the selection follows the item |
+| Q14 | **T7** — the filter covers the plan-item lists, and the other tabs say so |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
