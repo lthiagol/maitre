@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/lthiagol/maitre/internal/brand"
 	"github.com/lthiagol/maitre/internal/core"
@@ -287,6 +288,53 @@ func TestTheHomeArtNeedsBothDimensions(t *testing.T) {
 			t.Errorf("at 12 rows the mark should be absent — the numbers need the height:\n%s", plain(m))
 		}
 	})
+}
+
+// TestALongPlanNameStaysOnOneRow covers a name the row cannot hold.
+//
+// The review measured it: a name of 100 characters at 80 columns wrapped the plan
+// row, and the wrap pushed the footer off the bottom. The name is `n` repeated 100
+// times. The row stays one line, every line fits the width, and the footer is the
+// last row.
+func TestALongPlanNameStaysOnOneRow(t *testing.T) {
+	const width = 80
+	name := strings.Repeat("n", 100)
+
+	root := filepath.Join(t.TempDir(), core.PlanDirName)
+	store := core.Open(root)
+	if err := core.Seed(store); err != nil {
+		t.Fatal(err)
+	}
+	m := loadInto(t, New(store, WithProject(name)))
+	m.width, m.height = width, 24
+
+	out := StripANSI(m.View().Content)
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	if len(lines) != 24 {
+		t.Fatalf("the screen has %d rows, want 24 — a wrapped row took one the layout did not count", len(lines))
+	}
+	if !strings.Contains(lines[23], "quit") {
+		t.Errorf("the footer should be the last row, got %q", lines[23])
+	}
+
+	plan := ""
+	for i, line := range lines {
+		if w := lipgloss.Width(line); w > width {
+			t.Errorf("row %d is %d columns wide and the terminal is %d: %q", i, w, width, line)
+		}
+		if strings.Contains(line, "name ") && strings.Contains(line, "path ") {
+			plan = line
+		}
+	}
+	if plan == "" {
+		t.Fatal("the plan row is not on the screen")
+	}
+	if strings.Contains(plan, name) {
+		t.Errorf("the 100-character name is whole on the row: %q", plan)
+	}
+	if !strings.Contains(plan, "…") {
+		t.Errorf("the name should be truncated to its tail: %q", plan)
+	}
 }
 
 // hasMark reports whether the screen carries the mark.

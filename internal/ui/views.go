@@ -239,8 +239,14 @@ func (m *Model) scrollToSelection(lines []listLine) {
 // where the product's name wears the ink. The two are different things, and they
 // read differently.
 func (m *Model) header() string {
-	return m.styTitle.Render(" "+brand.Compact+" maitre") +
-		m.styFaint.Render(" · ") + m.styAcc.Render(m.projectName())
+	lead := m.styTitle.Render(" "+brand.Compact+" maitre") + m.styFaint.Render(" · ")
+	// The header is one line. A name that does not fit is truncated to its tail,
+	// or the wrap pushes the tabs — and the footer — down.
+	budget := m.width - lipgloss.Width(lead)
+	if budget < 1 {
+		budget = 1
+	}
+	return lead + m.styAcc.Render(truncate(m.projectName(), budget))
 }
 
 // ruleLine is the rule under the header.
@@ -976,7 +982,14 @@ func (m *Model) settingsLines() []listLine {
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 	add("")
 	add(" " + m.stySec.Render("PLAN"))
-	add("  " + m.styDim.Render("root        ") + humanPath(m.store.Root))
+	// The root is one row. A path that does not fit is truncated to its tail, the
+	// same rule as the plan row: a wrap pushes the footer off the bottom.
+	rootLabel := "root        "
+	budget := m.width - len("  ") - len(rootLabel)
+	if budget < 1 {
+		budget = 1
+	}
+	add("  " + m.styDim.Render(rootLabel) + truncate(humanPath(m.store.Root), budget))
 	add("  " + m.styDim.Render("recipes     ") + fmt.Sprint(len(m.recipes)))
 	add("  " + m.styDim.Render("backlog     ") + fmt.Sprint(len(m.items)))
 	add("  " + m.styDim.Render("events      ") + fmt.Sprint(len(m.journal.Events)))

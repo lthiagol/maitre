@@ -106,9 +106,11 @@ func (m *Model) homeArt(content []string, width int) *homeMark {
 
 // planPathColumns is how many columns the plan's path gets.
 //
-// A path can be longer than the screen, and a row that wraps breaks the layout. The
-// tail is the part that names the plan, so the tail is what is kept — and the
-// Settings tab still holds the whole path.
+// A path can be longer than the screen, and a row that wraps takes a row the layout
+// did not count — the footer, which is the last row, leaves the screen. The tail is
+// the part that names the plan, so the tail is what is kept. The name beside it is
+// bounded to what the row has left, and the Settings tab's root row is bounded to
+// the width: one rule, both places.
 const planPathColumns = 56
 
 // homeContent is the tab's content: the plan's numbers, block by block.
@@ -135,10 +137,7 @@ func (m *Model) homeContent() []string {
 	}
 
 	block("THE PLAN")
-	add("  " + join(
-		stat("name", m.projectName()),
-		stat("path", truncate(humanPath(m.store.Root), planPathColumns)),
-	))
+	add(m.planRow())
 
 	block("THE RECIPES")
 	add("  " + join(
@@ -199,4 +198,32 @@ func (m *Model) homeContent() []string {
 		m.styFaint.Render(padRight(e.Kind, 12)+padRight(recipe, 6)+padRight(e.Actor, 10)) +
 		m.styDim.Render(at))
 	return out
+}
+
+// planRow is the plan's name and its path, on one line.
+//
+// The path is capped, and the name takes what the line has left. A name that does
+// not fit is truncated to its tail — the same rule as the path — so the row stays
+// one line and the footer stays the last row.
+func (m *Model) planRow() string {
+	path := truncate(humanPath(m.store.Root), planPathColumns)
+	name := m.projectName()
+
+	// "  name <name> · path <path>"
+	room := m.width - len("  name ") - len(" · path ")
+	if room < 2 {
+		room = 2
+	}
+	pathW := lipgloss.Width(path)
+	nameW := room - pathW
+	if nameW < 1 {
+		nameW = 1
+		path = truncate(path, room-nameW)
+	}
+	name = truncate(name, nameW)
+
+	stat := func(label, value string) string {
+		return m.styDim.Render(label+" ") + m.styFaint.Render(value)
+	}
+	return "  " + stat("name", name) + m.styDim.Render(" · ") + stat("path", path)
 }

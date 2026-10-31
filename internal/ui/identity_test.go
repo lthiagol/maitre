@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/lthiagol/maitre/internal/brand"
 	"github.com/lthiagol/maitre/internal/core"
 )
@@ -244,10 +246,31 @@ func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
 	for _, line := range m.settingsLines() {
 		text.WriteString(line.text + "\n")
 	}
-	rows := text.String()
+	rows := StripANSI(text.String())
 
-	if want := humanPath(store.Root); !strings.Contains(rows, want) {
-		t.Errorf("the Settings tab does not show the plan's root %q\n%s", want, rows)
+	path := humanPath(store.Root)
+	rootRow := ""
+	for _, line := range strings.Split(rows, "\n") {
+		if strings.Contains(line, "root") {
+			rootRow = line
+		}
+	}
+	if rootRow == "" {
+		t.Fatalf("the Settings tab has no root row\n%s", rows)
+	}
+	if w := lipgloss.Width(rootRow); w > m.width {
+		t.Errorf("the root row is %d columns and the terminal is %d: %q", w, m.width, rootRow)
+	}
+	// The tail is what the row keeps. A path that fits is there whole.
+	tail := path
+	if runes := []rune(path); len(runes) > 16 {
+		tail = string(runes[len(runes)-16:])
+	}
+	if !strings.Contains(rootRow, tail) {
+		t.Errorf("the root row does not carry the path's tail %q\n%s", tail, rootRow)
+	}
+	if lipgloss.Width("  root        "+path) <= m.width && !strings.Contains(rootRow, path) {
+		t.Errorf("the root row does not show the path %q\n%s", path, rows)
 	}
 	if unwanted := humanPath(filepath.Dir(store.Root)); strings.Contains(rows, unwanted+"\n") {
 		t.Errorf("the Settings tab shows the project's directory %q instead of the root\n%s", unwanted, rows)
@@ -256,6 +279,51 @@ func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
 		if !strings.Contains(rows, p.name) {
 			t.Errorf("the Settings tab lost the theme %q\n%s", p.name, rows)
 		}
+	}
+}
+
+// TestALongRootStaysOnOneRow covers a path the row cannot hold.
+//
+// The plan row truncates a long name; the Settings root is the same shape, and the
+// same rule. The directory's name is `p` repeated 100 times, the terminal is 80
+// columns, and the root row is one line with the footer still last.
+func TestALongRootStaysOnOneRow(t *testing.T) {
+	const width = 80
+	root := filepath.Join(t.TempDir(), strings.Repeat("p", 100), core.PlanDirName)
+	store := core.Open(root)
+	if err := core.Seed(store); err != nil {
+		t.Fatal(err)
+	}
+	m := loadInto(t, New(store))
+	m.tab = TabSettings
+	m.width, m.height = width, 40
+
+	out := StripANSI(m.View().Content)
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	if len(lines) != 40 {
+		t.Fatalf("the screen has %d rows, want 40 — a wrapped root took one the layout did not count", len(lines))
+	}
+	if !strings.Contains(lines[39], "quit") {
+		t.Errorf("the footer should be the last row, got %q", lines[39])
+	}
+
+	rootRow := ""
+	for i, line := range lines {
+		if w := lipgloss.Width(line); w > width {
+			t.Errorf("row %d is %d columns wide and the terminal is %d: %q", i, w, width, line)
+		}
+		if strings.Contains(line, "root") {
+			rootRow = line
+		}
+	}
+	if rootRow == "" {
+		t.Fatal("the root row is not on the screen")
+	}
+	if !strings.Contains(rootRow, "…") {
+		t.Errorf("the root should be truncated to its tail: %q", rootRow)
+	}
+	if strings.Contains(rootRow, strings.Repeat("p", 100)) {
+		t.Errorf("the 100-character directory name is whole on the row: %q", rootRow)
 	}
 }
 
