@@ -20,7 +20,7 @@
 | **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · cycle 2 ok · 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) · [cycle 2](../briefs/review-tui-t4-cycle2.md) |
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
-| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ implemented · 3 commits · 5713472, 92413be, cdfdc16 | [tui-t6.md](../briefs/tui-t6.md) |
+| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | 🔄 **changes-needed · fix 1 briefed** — 3 commits · 5713472, 92413be, cdfdc16 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -116,9 +116,9 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 
 | | |
 |---|---|
-| the **tab** | `w1H:tG` — *tui: T6* |
-| the **runner** | pane `w1H:pT`, handle `runner-t6` |
-| the **reviewer** | pane `w1H:pV`, handle `reviewer-t6` — briefed |
+| the **tab** | `w1H:tH` — *tui: T6 fix 1* |
+| the **runner** | pane `w1H:pW`, handle `runner-t6fix` |
+| the **reviewer** | pane `w1H:pX`, handle `reviewer-t6fix` — started, not briefed |
 | the **orchestrator** | pane `w1H:pJ` — the one they nudge |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
