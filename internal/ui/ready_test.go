@@ -85,6 +85,27 @@ func readyModel(t *testing.T) (*Model, *core.Store) {
 	return m, store
 }
 
+// TestTheBoardStillShowsWhatReadyDoesNot covers the shrunk overlap.
+//
+// A draft, and an approved recipe with an open dependency, stay on the Board.
+// Ready does not list them.
+func TestTheBoardStillShowsWhatReadyDoesNot(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBoard
+	m.height = 40
+	board := plain(m)
+	m.tab = TabReady
+	ready := plain(m)
+	for _, id := range []string{"RCP01", "RCP04"} {
+		if !strings.Contains(board, id) {
+			t.Errorf("the board should still show %s:\n%s", id, board)
+		}
+		if strings.Contains(ready, id) {
+			t.Errorf("Ready should not show %s:\n%s", id, ready)
+		}
+	}
+}
+
 // TestSpaceOnAnAdoptableRecipeClaimsNothing covers the console's limit.
 //
 // The row opens the recipe. space writes nothing, and the footer does not offer

@@ -200,7 +200,7 @@ side branches, and blocked milestones forked at their dependency.
 ● RCP01   draft       Sharpen the AC gate                           0/2
 ● RCP02   ready       Sign off the menu                             1/2
  └─ needs RCP02
-   └─ RCP04   approved    Add the backlog view                          1/1 ● needs RCP02
+   └─ RCP04   approved    Add the backlog view                          1/1 needs RCP02
 ● RCP05   executing   Sharpen the evidence contract                1/2
  └─ needs RCP05
    └─ RCP07   draft       Record the review protocol                    0/1 needs RCP05

@@ -101,8 +101,8 @@ func treeIDs(tree Tree) map[string]bool {
 // TestACycleIsDrawn covers the recipes a cycle keeps out of the tree.
 //
 // Two recipes that wait on each other have no root to walk from, and neither is an
-// orphan — its dependency is in the plan. The tree has to draw them anyway: the Path
-// tab lists them, and a tree that drops them tells the chef a story the plan does
+// orphan — its dependency is in the plan. The tree has to draw them anyway: Path
+// lists them, and a tree that drops them tells the chef a story the plan does
 // not.
 func TestACycleIsDrawn(t *testing.T) {
 	tree := TreeOf(treePlan(t))
@@ -213,11 +213,11 @@ func TestTheTreeForksAtTheDependency(t *testing.T) {
 	}
 }
 
-// TestTheTrunkIsThePathTabsReadyList covers the order.
+// TestTheTrunkIsPathsReadyList covers the order.
 //
-// Two tabs showing the same plan must not tell two stories: the tree's roots are
-// core.Path's ready entries, in the same order.
-func TestTheTrunkIsThePathTabsReadyList(t *testing.T) {
+// The Board's trunk is Path's ready list, in the same order. Ready answers a
+// different question, and the tree is not retargeted at Adoptable.
+func TestTheTrunkIsPathsReadyList(t *testing.T) {
 	recipes := treePlan(t)
 	tree := TreeOf(recipes)
 	ready, _ := Path(recipes)

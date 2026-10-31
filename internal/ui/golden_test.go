@@ -15,6 +15,10 @@ import (
 var update = flag.Bool("update", false, "update the golden file")
 
 // goldenPath is the checked-in snapshot of the console's Recipes tab.
+//
+// The three snapshots moved together: the tab label is Ready, and RCP04 lost
+// the readiness mark because it waits on RCP02. An approved recipe with an open
+// dependency is not ready to claim. The tests below are what claim the files.
 const goldenPath = "testdata/console-recipes.golden"
 
 // homeGoldenPath is the checked-in snapshot of the console's Home tab.

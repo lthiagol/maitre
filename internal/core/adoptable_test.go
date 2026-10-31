@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+// TestDomainVersionIsSeven covers the writer.
+//
+// This slice changes no rule the tool applies. The version stays 7.
+func TestDomainVersionIsSeven(t *testing.T) {
+	if DomainVersion != 7 {
+		t.Fatalf("DomainVersion = %d, want 7", DomainVersion)
+	}
+}
+
 // TestAdoptableAsksTheClaim covers the one answer.
 //
 // A recipe is adoptable iff EventStart would be accepted. The view asks that
@@ -79,6 +88,42 @@ func TestAdoptableAsksTheClaim(t *testing.T) {
 
 	if Adoptable(nil) == nil {
 		t.Fatal("an empty plan is an empty list")
+	}
+}
+
+// TestTheBoardKeepsWhatAdoptableDrops covers the two questions.
+//
+// An approved recipe with an unmet dependency, and a draft, stay on Path and on
+// the tree. Adoptable drops both.
+func TestTheBoardKeepsWhatAdoptableDrops(t *testing.T) {
+	plan := []Recipe{
+		{ID: "RCP01", Lifecycle: LifecycleDraft},
+		{ID: "RCP02", Lifecycle: LifecycleApproved, DependsOn: []string{"RCP01"}},
+	}
+	if got := Adoptable(plan); len(got) != 0 {
+		t.Fatalf("adoptable has %d recipes, want none", len(got))
+	}
+	ready, waiting := Path(plan)
+	if len(ready) != 1 || ready[0].Summary.ID != "RCP01" {
+		t.Fatalf("path ready = %+v, want RCP01", ready)
+	}
+	if len(waiting) != 1 || waiting[0].Summary.ID != "RCP02" || !strings.Contains(waiting[0].Note, "RCP01") {
+		t.Fatalf("path waiting = %+v, want RCP02 needing RCP01", waiting)
+	}
+	tree := TreeOf(plan)
+	seen := map[string]bool{}
+	var walk func(TreeNode)
+	walk = func(n TreeNode) {
+		seen[n.Summary.ID] = true
+		for _, c := range n.Waiting {
+			walk(c)
+		}
+	}
+	for _, n := range tree.Roots {
+		walk(n)
+	}
+	if !seen["RCP01"] || !seen["RCP02"] {
+		t.Fatalf("the tree shows %v, want RCP01 and RCP02", seen)
 	}
 }
 

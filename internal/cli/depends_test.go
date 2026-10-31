@@ -37,7 +37,7 @@ func TestADependencyIsReachableFromTheCLI(t *testing.T) {
 // TestTheDependencyGateIsReachable covers the gate the flag feeds.
 //
 // A dependency you cannot write is a gate you cannot trip: the claim would always
-// succeed, and the Path tab's "waiting" group would always be empty.
+// succeed, and `maitre-cli path`'s waiting list would always be empty.
 func TestTheDependencyGateIsReachable(t *testing.T) {
 	dir := newPlan(t)
 	cli(t, dir, "recipe", "create", "--title", "The dependent",
@@ -67,6 +67,15 @@ func TestTheDependencyGateIsReachable(t *testing.T) {
 	cli(t, dir, "recipe", "advance", "RCP01", "groom")
 	cli(t, dir, "recipe", "advance", "RCP01", "specify")
 	cli(t, dir, "--actor", "chef", "recipe", "approve", "RCP01", "--by", "chef")
+	// Still Path, after the sign-off. Adoptable would drop this recipe; path keeps
+	// it, and still names the dependency.
+	path = cli(t, dir, "path")
+	if !path.ok(t) {
+		t.Fatalf("path failed:\n%s", path.Stderr)
+	}
+	if !strings.Contains(path.Stdout, "needs RCP02") {
+		t.Fatalf("path no longer shows RCP01 waiting for RCP02:\n%s", path.Stdout)
+	}
 	res := cli(t, dir, "recipe", "claim", "RCP01", "--agent", "runner")
 	if res.Code != ExitGate {
 		t.Fatalf("exit = %d, want %d — a recipe with an open dependency must not be claimed",

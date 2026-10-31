@@ -106,7 +106,7 @@ func TestTheGateAndTheTriageAgree(t *testing.T) {
 	}
 }
 
-// TestThePathSaysWhoIsWaiting checks the path tab names the same blocker.
+// TestThePathSaysWhoIsWaiting checks Path names the same blocker.
 func TestThePathSaysWhoIsWaiting(t *testing.T) {
 	_, r := selfReviewedRecipe(t)
 	ready, waiting := Path([]Recipe{*r})
