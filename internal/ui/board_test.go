@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -300,6 +301,76 @@ func TestTheWideBoardDrawsLeftToRight(t *testing.T) {
 	if !strings.Contains(longOut, "…") {
 		t.Errorf("a title that does not fit should be truncated:\n%s", longOut)
 	}
+}
+
+// TestAClickOnABoardNodeOpensItsDetail covers the click, wide and narrow.
+//
+// The click selects that recipe and opens its detail — the same detail enter
+// opens. The coordinates come from the hit map, and the map's box covers the
+// title the render just drew.
+func TestAClickOnABoardNodeOpensItsDetail(t *testing.T) {
+	for _, width := range []int{100, 160} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			m := shapeModel(t)
+			m.width = width
+			m.height = 40
+			m.tab = TabBoard
+			m.View()
+
+			trunk, ok := hitForItem(m, 0)
+			if !ok {
+				t.Fatal("the render recorded no hit for the trunk")
+			}
+			fork, ok := hitForItem(m, 1)
+			if !ok {
+				t.Fatal("the render recorded no hit for the fork")
+			}
+			if width >= splitThreshold {
+				if trunk.y0 != fork.y0 || trunk.x1 >= fork.x0 {
+					t.Errorf("the fork's hit should sit to the right of the trunk's: trunk (%d,%d)-%d fork (%d,%d)-%d",
+						trunk.x0, trunk.y0, trunk.x1, fork.x0, fork.y0, fork.x1)
+				}
+			}
+
+			lines := strings.Split(plain(m), "\n")
+			if fork.y0 < 0 || fork.y0 >= len(lines) {
+				t.Fatalf("the fork's hit is on row %d, the screen has %d", fork.y0, len(lines))
+			}
+			col := colOf(lines[fork.y0], "The fork")
+			if col < fork.x0 || col > fork.x1 {
+				t.Errorf("the hit %d-%d does not cover the title at column %d on %q", fork.x0, fork.x1, col, lines[fork.y0])
+			}
+
+			x, y := fork.centre()
+			if _, err := Drive(m, []string{fmt.Sprintf("click@(%d,%d)", x, y)}); err != nil {
+				t.Fatal(err)
+			}
+			if m.selBoard != 1 {
+				t.Errorf("the click left the selection on %d, want the fork", m.selBoard)
+			}
+			if m.mode != ModeDetail {
+				t.Errorf("the click should open the detail, the mode is %v", m.mode)
+			}
+			rec, ok := m.currentRecipe()
+			if !ok || rec.Title != "The fork" {
+				got := ""
+				if ok {
+					got = rec.Title
+				}
+				t.Fatalf("the detail should be the fork, got %q", got)
+			}
+		})
+	}
+}
+
+// hitForItem is the hit the render recorded for a board recipe.
+func hitForItem(m *Model, item int) (hitRow, bool) {
+	for _, r := range m.hits.rows {
+		if r.item == item {
+			return r, true
+		}
+	}
+	return hitRow{}, false
 }
 
 // boardLine is the row that holds the text.

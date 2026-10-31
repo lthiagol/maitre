@@ -565,6 +565,9 @@ func (m *Model) primaryActionLabel() string {
 
 // listLines renders the current tab's list, marking which lines hold a selectable item.
 func (m *Model) listLines() []listLine {
+	// The wide board records a hit per node as it draws. Any other frame has
+	// none, or a click on the Recipes tab would land on a node from the Board.
+	m.boardHits = nil
 	switch m.tab {
 	case TabBacklog:
 		return m.backlogLines()

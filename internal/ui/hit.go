@@ -54,6 +54,18 @@ func (b hitBox) centre() (int, int) {
 	return (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2
 }
 
+// boardHit is one node the wide board placed.
+//
+// The render records it as it writes the node. The columns are the canvas's —
+// x 0 is the left of the screen — and line is the row in the board's lines.
+// A second walk that guessed the columns would be a second answer, and the
+// click would land on the guess.
+type boardHit struct {
+	item   int
+	x0, x1 int
+	line   int
+}
+
 // hitRow is a list row: where it is, and which item it holds.
 //
 // The item is the index the tab's own selection uses. A header holds none, and says
@@ -138,8 +150,26 @@ func (m *Model) hitMapOf(tabs []hitBox, bannerRows int, lines []listLine, start,
 		hits.banner = append(hits.banner, newHitBox(0, m.width-1, row, row))
 	}
 	width := m.listColumn()
+	// The wide board takes the screen, so its nodes sit past the list's usual
+	// column. The boxes are the ones the render recorded while it placed them.
+	if len(m.boardHits) > 0 && m.width > width {
+		width = m.width
+	}
 	if height > 0 {
 		hits.list = newHitBox(0, width-1, start, start+height-1)
+	}
+	if len(m.boardHits) > 0 {
+		for _, n := range m.boardHits {
+			if height <= 0 || n.line < m.offset || n.line >= m.offset+height {
+				continue
+			}
+			y := start + n.line - m.offset
+			hits.rows = append(hits.rows, hitRow{
+				hitBox: newHitBox(n.x0, n.x1, y, y),
+				item:   n.item,
+			})
+		}
+		return hits
 	}
 	for i := 0; i < height; i++ {
 		idx := m.offset + i

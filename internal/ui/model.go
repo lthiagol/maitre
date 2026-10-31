@@ -145,6 +145,12 @@ type Model struct {
 	// the domain. The mouse event arrives after the frame was drawn, so the map is
 	// kept between renders and rebuilt by the next one.
 	hits hitMap
+	// boardHits is where the wide board put its nodes, in that frame.
+	//
+	// The render fills it as it places the nodes, and hitMapOf copies it onto
+	// the screen. Empty means the frame is the vertical tree, whose rows are
+	// the hits.
+	boardHits []boardHit
 
 	// detailScroll is how far the detail pane has been scrolled.
 	detailScroll int

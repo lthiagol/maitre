@@ -105,9 +105,13 @@ func (w *wideBuilder) lines() []listLine {
 		byRow[c.row][c.depth] = c
 	}
 	out := make([]listLine, w.row)
+	// The hits are recorded here, in the loop that writes the nodes. The
+	// columns are the ones just placed — not a second guess afterwards.
+	var hits []boardHit
 	for r := 0; r < w.row; r++ {
 		var b strings.Builder
 		itemIdx := -1
+		x := 0
 		for d := 0; d < cols; d++ {
 			if d > 0 {
 				if _, ok := byRow[r][d]; ok && gapW > 0 {
@@ -115,19 +119,24 @@ func (w *wideBuilder) lines() []listLine {
 				} else {
 					b.WriteString(strings.Repeat(" ", gapW))
 				}
+				x += gapW
 			}
 			c, ok := byRow[r][d]
 			if !ok {
 				b.WriteString(strings.Repeat(" ", nodeW))
+				x += nodeW
 				continue
 			}
 			if c.item == w.m.selBoard {
 				itemIdx = c.item
 			}
+			hits = append(hits, boardHit{item: c.item, x0: x, x1: x + nodeW - 1, line: r})
 			b.WriteString(w.m.wideNode(c, nodeW))
+			x += nodeW
 		}
 		out[r] = listLine{text: b.String(), itemIdx: itemIdx}
 	}
+	w.m.boardHits = hits
 	return out
 }
 
