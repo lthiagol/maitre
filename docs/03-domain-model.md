@@ -794,6 +794,7 @@ variations of a handful of these. **One operation, one name.**
 | `backlog_groups` | `BacklogGroups` | `ideas` · `tasks` — the backlog's two groups, derived from the item's kind |
 | `promotion` | `PromotionOf` | Whether a backlog item may be promoted into a recipe, and why not |
 | `backlog_move` | `BacklogMoveOf` | `shape` · `promote` · `none` — the move the chef can make on a backlog item now, whether it may still be dismissed, and the kinds a shaping may pick (the small tasks) |
+| `plan_stats` | `PlanStatsOf` | The plan's numbers: recipes · evidence · tasting · backlog · automation — what the Home tab shows |
 
 Two of these are **planned**: the domain does not compute them yet, and the table says
 so. A view the domain does not compute is not a view — it is a promise, and a promise

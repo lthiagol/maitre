@@ -268,6 +268,7 @@ var DerivedViews = []DerivedView{
 	{Name: "backlog_groups", Function: BacklogGroups, Values: []string{"ideas", "tasks"}},
 	{Name: "promotion", Function: PromotionOf},
 	{Name: "backlog_move", Function: BacklogMoveOf, Values: backlogMoveValues()},
+	{Name: "plan_stats", Function: PlanStatsOf},
 }
 
 // NonViews are the exported functions of this package that are not derived views.
