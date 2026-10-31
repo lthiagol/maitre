@@ -7,6 +7,28 @@ import (
 	"charm.land/bubbletea/v2"
 )
 
+// textStep is the prefix of a step that types a whole word.
+//
+// It is the colon style the mouse steps use: "wheel:down@(12,5)", "text:tui".
+const textStep = "text:"
+
+// textMsg is a whole word, typed in one step.
+//
+// It is the script's way of naming a filter in one go. The single-character steps
+// keep working — a word is a convenience, not a second way of being a filter.
+type textMsg string
+
+// TextFor turns a text step into the text it types.
+//
+// A text step is "text:<string>". The string is typed as it is: a script that
+// names a filter in capitals gets the capitals.
+func TextFor(name string) (string, bool) {
+	if !strings.HasPrefix(name, textStep) {
+		return "", false
+	}
+	return name[len(textStep):], true
+}
+
 // KeyFor maps a key name to a key press.
 //
 // Names are the ones the console's help lists, plus any single character. It lets the
@@ -79,6 +101,9 @@ func Drive(m *Model, steps []string) (string, error) {
 // malformed position is fixed by writing the position, a malformed mouse step by
 // writing the step, and an unknown step by writing a step the console knows.
 func stepMsg(m *Model, name string) (tea.Msg, error) {
+	if text, ok := TextFor(name); ok {
+		return textMsg(text), nil
+	}
 	if msg, ok := MouseFor(name, m); ok {
 		return msg, nil
 	}

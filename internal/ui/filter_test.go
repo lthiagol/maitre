@@ -519,3 +519,92 @@ func TestTheFilterDoesNotApplyToTheOpenDetail(t *testing.T) {
 		t.Errorf("the console should say the filter does not apply here:\n%s", plain(m))
 	}
 }
+
+// TestTheFilterIsDrivenFromAScript covers AC-06.
+//
+// The filter is drivable, like every other key: `/` opens the line, the
+// single-character steps type into it one character at a time, and `text:<string>`
+// types a whole word in one step.
+func TestTheFilterIsDrivenFromAScript(t *testing.T) {
+	t.Run("the single characters", func(t *testing.T) {
+		m := recipesModel(t)
+		if _, err := Drive(m, []string{"/", "g", "l", "o", "s", "s", "a", "r", "y"}); err != nil {
+			t.Fatal(err)
+		}
+		if m.filter != "glossary" {
+			t.Errorf("the filter should read %q, got %q", "glossary", m.filter)
+		}
+		out := plain(m)
+		if !strings.Contains(out, "Draft the glossary") {
+			t.Errorf("the matching recipe should be on screen:\n%s", out)
+		}
+	})
+
+	t.Run("the whole word", func(t *testing.T) {
+		m := recipesModel(t)
+		if _, err := Drive(m, []string{"/", "text:glossary"}); err != nil {
+			t.Fatal(err)
+		}
+		if m.filter != "glossary" {
+			t.Errorf("the filter should read %q, got %q", "glossary", m.filter)
+		}
+		out := plain(m)
+		if !strings.Contains(out, "Draft the glossary") {
+			t.Errorf("the matching recipe should be on screen:\n%s", out)
+		}
+		if strings.Contains(out, "Sharpen the AC gate") {
+			t.Errorf("the recipes that do not match should be gone:\n%s", out)
+		}
+	})
+
+	t.Run("enter keeps it and esc clears it", func(t *testing.T) {
+		m := recipesModel(t)
+		if _, err := Drive(m, []string{"/", "text:glossary", "enter"}); err != nil {
+			t.Fatal(err)
+		}
+		if m.filterOpen {
+			t.Errorf("`enter` should close the line")
+		}
+		if m.filter != "glossary" {
+			t.Errorf("`enter` should keep the filter, got %q", m.filter)
+		}
+
+		if _, err := Drive(m, []string{"/", "text:glossary", "esc"}); err != nil {
+			t.Fatal(err)
+		}
+		if m.filterOpen {
+			t.Errorf("`esc` should close the line")
+		}
+		if m.filter != "" {
+			t.Errorf("`esc` should clear the filter, got %q", m.filter)
+		}
+	})
+
+	t.Run("a word with no line to go into says nothing", func(t *testing.T) {
+		m := recipesModel(t)
+		if _, err := Drive(m, []string{"text:glossary"}); err != nil {
+			t.Fatal(err)
+		}
+		if m.filter != "" {
+			t.Errorf("a text step with no filter line open should do nothing, got %q", m.filter)
+		}
+	})
+}
+
+// TestTheTextStepIsNotAKeyRun covers AC-06.
+//
+// A `text:` step is one word, not a run of key presses: outside the filter line it
+// must not press the console's keys — "q" quits, and a script that meant to name a
+// filter must not quit the console.
+func TestTheTextStepIsNotAKeyRun(t *testing.T) {
+	m := recipesModel(t)
+	if _, err := Drive(m, []string{"text:quit"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.filter != "" {
+		t.Errorf("the filter should be untouched, got %q", m.filter)
+	}
+	if m.tab != TabRecipes {
+		t.Errorf("the tab should be untouched, got %s", m.tab.Label())
+	}
+}

@@ -161,6 +161,19 @@ func (m *Model) handleFilterKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// handleText types a whole word.
+//
+// It is the script's way of naming a filter in one step. The word goes into the
+// filter when the filter line is open, and nowhere else: a word with no line to go
+// into says nothing, and it must not be read as a run of key presses.
+func (m *Model) handleText(t textMsg) (tea.Model, tea.Cmd) {
+	if !m.filterOpen {
+		return m, nil
+	}
+	m.setFilter(m.filter + string(t))
+	return m, nil
+}
+
 // setFilter applies a new filter text and puts the selection where it belongs.
 //
 // The selection **follows the item**: it stays on the same one when that one still
