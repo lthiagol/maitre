@@ -225,6 +225,17 @@ side branches, and blocked milestones forked at their dependency.
 Nothing is stored: the tree is a derived view (`core.TreeOf`), like every other thing
 the console draws.
 
+**Two drawings.** The width is the console's width. The membership does not change.
+
+| Width | The board |
+|---|---|
+| **< 160** | the vertical tree above. The connectors are `├─` and `└─` |
+| **≥ 160** | left to right. The trunk is the left column. A fork sits to the right of the recipe it waits on. A node shows the recipe's **title**, and what it waits on stays on the node |
+
+A node that does not fit is truncated, so the row stays one line and the footer stays the last row. An orphan and a recipe a cycle cannot reach are drawn in both.
+
+The wide board takes the width. A pane beside it would take the columns the forks need, so the detail opens on `enter` and on a click, in both drawings. The click's hit map is emitted by the render as it places the nodes.
+
 ---
 
 ## The screen
@@ -260,7 +271,8 @@ console's header, drawn inside the terminal, and it carries the same name.
 - A **resize** re-lays out.
 - At **160 columns and above** the detail pane appears beside the list; below that the
   list takes the whole terminal and `enter` opens the detail full screen. A split at 100
-  columns leaves neither side readable.
+  columns leaves neither side readable. The **Board** is the exception: at 160 and above
+  it uses the width for the tree, and the detail opens on `enter` or a click.
 
 ## Interaction
 
@@ -303,10 +315,11 @@ fast to aim with.
 layout** the detail is on screen beside the list, so the click selects and the detail
 follows the selection. In the **narrow layout** the detail is not on screen at all, so
 a click that only selected would show the chef nothing: there the click also opens
-the detail. The **Backlog** has a detail of its own — the item's, with its body, its
-scope, its tags and its dates — so a click on a backlog row opens it, exactly as a
-click on a recipe row opens the recipe. A click on a **theme** row selects it —
-`enter` applies the theme.
+the detail. A click on a **Board** node does that in both drawings: it selects the
+recipe and opens its detail, the same detail `enter` opens. The **Backlog** has a
+detail of its own — the item's, with its body, its scope, its tags and its dates — so
+a click on a backlog row opens it, exactly as a click on a recipe row opens the recipe.
+A click on a **theme** row selects it — `enter` applies the theme.
 
 **The mouse is drivable from a script.** `maitre --keys` takes the same steps the
 console takes:
@@ -605,4 +618,4 @@ different TUI framework, a local web shell, a native app — without touching th
 | Live updates | built: a cheap mtime scan, ~1 s, no new dependency — the console reloads the plan when a file on disk changes |
 | Prose | `glamour`, themed to our palette |
 | Running work | observe and steer; no agent spawning in v2 |
-| Names | decided: the title should lead and the id should be secondary and dim — **not applied**; the board still leads with the id |
+| Names | decided: the title should lead and the id should be secondary and dim — **not applied** on the vertical tree, which still leads with the id. At 160 columns and above the node shows the title |
