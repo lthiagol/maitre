@@ -61,7 +61,7 @@ in any order, and each one leaves the tree green.
 | **One commit per acceptance criterion, as it goes** | a commit is a landing place. A turn that ends leaves only what was committed |
 | **The state row is updated in the same session** | the row above *is* the resume record. A slice that closes without updating it has not finished |
 | **The gate is `make check`** | nobody runs `go test`, `go vet` or `gofmt` by hand |
-| **The receipt is written, committed, and *then* the nudge** | the file cannot be lost; the nudge is only the bell |
+| **The receipt is written, committed, and *then* the nudge** | the file cannot be lost; the nudge is only the bell. The nudge is `herdr pane send-text <pane> "<receipt>"` + `herdr pane send-keys <pane> enter` — `herdr agent prompt` refuses a lane that reports through the `mcode-herdr` bridge |
 | **The reviewer reads [work/questions.md](../questions.md) at every slice's close** | and says whether a question was **answered, missed, or newly raised**. A question that is not written there is a question that is lost |
 
 ### The receipt
@@ -110,8 +110,9 @@ herdr pane run "$SPLIT_PANE" mcode-herdr
 | **The split** | the runner on the left, the reviewer on the right. Neither `herdr pane run` nor the launch steals the chef's focus |
 | **The lane** | `mcode-herdr` — mcode plus the bridge that reports `working` / `idle` / `blocked` for the pane. A lane that waits goes **idle**, so herdr shows the wait instead of a spinner that never ends |
 | **The reviewer** | briefed **after** the runner's work lands, so it reads the code fresh. A reviewer briefed in advance would form its model of the code before the code existed |
-| **The dispatch** | the brief plus the notify block with the orchestrator's **real pane id** — `$HERDR_PANE_ID`, not a placeholder |
+| **The dispatch** | the brief plus the notify block with the orchestrator's **real pane id** — `$HERDR_PANE_ID`, not a placeholder. `herdr pane send-text <pane> "<text>"`, then `herdr pane send-keys <pane> enter` — `herdr agent prompt` answers `agent_not_ready` for a bridged lane |
 | **The delivery check** | one `herdr pane read --lines 40`, ~5 s after each dispatch. Activity lines mean delivered; the raw prompt above the spinner means a stuck draft — report it and ask the chef to press Enter, **never blind-resend** |
+| **The wait** | `herdr agent wait <pane> --until idle --timeout 600000`. The lane going **idle** is the signal that its turn is over — the orchestrator waits, it does not poll |
 
 **T7 is in flight.** Its lanes are `mcode-herdr` agents, so herdr sees each lane's state
 — a waiting lane goes **idle**, and the receipt is what carries the report back.

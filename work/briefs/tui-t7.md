@@ -108,8 +108,15 @@ cat > work/inbox/runner-tui-t7.md <<'EOF'
 Runner: T7 done. Commits: <n>. The line: <where it sits, the row the list lost, and that the footer is the last row>. The keys: <the live filter, enter keeps, esc clears>. The match: <the one rule, the fields, and that a recipe and an item share it>. The summary: <the filter line, N of M, and the section counts>. The selection: <it stays, it moves, it scrolls, and the tab switch>. The other tabs: <what Board, Log, Home and Settings say>. The scripts: <the steps you drove>. docs/05: <what it says>. The goldens: <what moved, and why>. DomainVersion: <7>. The gate: <make check, make check-race>. Notes: <anything the reviewer should know>.
 EOF
 git add work/inbox/runner-tui-t7.md && git commit -q -m "inbox: runner reports tui-t7"
-herdr agent prompt "w1H:p2" "<the receipt, as above>"
+herdr pane send-text "w1H:p2" "<the receipt, as above>"
+herdr pane send-keys "w1H:p2" enter
 ```
+
+**The nudge is `pane send-text`, not `agent prompt`.** `herdr agent prompt` refuses a
+lane that reports through the `mcode-herdr` bridge — it answers
+`agent_not_ready: agent w1H:p2 is not an active named agent`, because the bridge
+registers the pane's *state* and not a named session the prompt path can address.
+The receipt file is the record; the nudge is the bell.
 
 Write the receipt, commit it, and then nudge. If a file you did not write has
 changed, stop and report it. Stage by name. Then stop.
