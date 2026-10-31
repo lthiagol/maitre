@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/lthiagol/maitre/internal/core"
 )
@@ -180,9 +181,13 @@ func (m *Model) handleText(t textMsg) (tea.Model, tea.Cmd) {
 // matches, and it goes to the first match when it does not. An index would not do
 // it — the rows under the index change when the filter does, so the cursor would
 // jump to whatever took the old place.
+//
+// The text is sanitised on the way in, like every other text the console renders:
+// the filter is drawn on two rows — the line and the summary — and a paste with a
+// newline in it must not push the footer off the bottom of the screen.
 func (m *Model) setFilter(text string) {
 	selected := m.selectedID()
-	m.filter = text
+	m.filter = sanitize(text)
 	m.selectID(selected)
 	m.clampSelections()
 }
@@ -257,13 +262,27 @@ func (m *Model) filterRows() int {
 // filterSummary is what the summary says about the filter: what it is on, and how
 // many items it leaves.
 //
+// The filter's words are capped to the room the row has left. The summary is one
+// row, and a filter the chef typed can be longer than the terminal — a row that
+// wrapped would push the footer off the bottom of the screen.
+//
 // A filter the chef cannot see is a filter that loses items.
 func (m *Model) filterSummary() string {
 	if m.filter == "" || !m.filterApplies() {
 		return ""
 	}
 	shown, total := m.filterCounts()
-	return fmt.Sprintf("filter: %s · %d of %d", m.filter, shown, total)
+	tail := fmt.Sprintf(" · %d of %d", shown, total)
+	// The room is what the tab's own summary, the filter's own words, the count
+	// and the status on the right leave. The four is the summary row's own rule:
+	// the right side needs a column of air beside it.
+	const overhead = len(" · filter: ") + 4
+	room := m.width - lipgloss.Width(m.tabSummary()) - lipgloss.Width(tail) -
+		lipgloss.Width(m.summaryRight()) - overhead
+	if room < 1 {
+		room = 1
+	}
+	return "filter: " + truncate(m.filter, room) + tail
 }
 
 // filterCounts is how many items the tab holds, and how many the filter leaves.

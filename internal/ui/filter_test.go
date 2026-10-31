@@ -632,6 +632,55 @@ func TestTheFilterCoversTheReadyTab(t *testing.T) {
 	}
 }
 
+// TestTheFilterTextCannotBreakTheScreen covers AC-01.
+//
+// The filter is drawn on two rows — the line and the summary — so it is sanitised
+// on the way in, like every other text the console renders. A paste with a
+// newline in it must not push the footer off the bottom of the screen.
+func TestTheFilterTextCannotBreakTheScreen(t *testing.T) {
+	m := recipesModel(t)
+	m.width = 100
+	m.height = 24
+	rows := len(screenLines(plain(m)))
+
+	if _, err := Drive(m, []string{"/", "text:glossary\nmore"}); err != nil {
+		t.Fatal(err)
+	}
+	out := plain(m)
+
+	if strings.Contains(m.filter, "\n") {
+		t.Errorf("the filter should hold no newline: %q", m.filter)
+	}
+	if got := len(screenLines(out)); got != rows {
+		t.Errorf("the frame is %d rows, want %d:\n%s", got, rows, out)
+	}
+	if got := footerRow(out); got != len(screenLines(out))-1 {
+		t.Errorf("the footer is not the last row:\n%s", out)
+	}
+}
+
+// TestALongFilterDoesNotBreakTheScreen covers AC-01.
+//
+// The summary is one row, and a filter the chef typed can be longer than the
+// terminal. The filter's words are capped to the room the row has left: a row
+// that wrapped would push the footer off the bottom of the screen.
+func TestALongFilterDoesNotBreakTheScreen(t *testing.T) {
+	m := recipesModel(t)
+	m.width = 60
+	m.height = 20
+	rows := len(screenLines(plain(m)))
+
+	typeFilter(t, m, strings.Repeat("glossary", 20))
+	out := plain(m)
+
+	if got := len(screenLines(out)); got != rows {
+		t.Errorf("the frame is %d rows, want %d:\n%s", got, rows, out)
+	}
+	if got := footerRow(out); got != len(screenLines(out))-1 {
+		t.Errorf("the footer is not the last row:\n%s", out)
+	}
+}
+
 // filterGoldenPath is the checked-in snapshot of the Recipes tab with the filter
 // line open.
 //
