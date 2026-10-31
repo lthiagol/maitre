@@ -20,7 +20,7 @@
 | **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · cycle 2 ok · 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) · [cycle 2](../briefs/review-tui-t4-cycle2.md) |
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
-| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | 🔄 **fix 1 in** — 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) |
+| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | 🔄 **fix 1 in · cycle 2 in flight** — 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -31,21 +31,19 @@ last commit's body before redoing anything.
 **The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**The next session is T6** — the Board, left to right at 160 columns. T5 is closed.
-Two notes from its review, neither a finding: the note-cursor test's space-triage
-half does not run on the Board, and `docs/07` named the order tab Path — that row
-now says **Ready**, and the view and the CLI command stay `path`. T4 gave the
-console its landing place: **Home** is the first tab, it
-shows the plan's numbers and **no items** (a test holds it), the art moved there and
-sits beside the numbers, and the Sous-Chef dissolved into Home's automation block.
-The numbers are the domain's — `core.PlanStats`, a view with a row in `docs/03` § 8
-— and the console counts nothing. T3b left the backlog's moves in the console — the
-domain answers what an item's move is, and the console shapes, promotes, dismisses
-and creates. The **free edit** of an item's fields is **not built**: the three moves
-are what the chef needs, and the refusal pointed at exactly those. T4's cycle 2
-left two notes, neither of them a finding: a recipes row with a two-digit count in
-every section is 84 columns and wraps at 80, and `docs/05`'s Home sentence is held
-by no test.
+**Paused here, after T6's fix.** Do not start T7 until T6 is closed.
+
+| | |
+|---|---|
+| **T6** | fix 1 is in (`a5df3ce` space writes nothing, `df6d387` an 80-column row stays one line). Cycle 2 is in flight |
+| **The reviewer** | tab `w1H:tH`, pane `w1H:pX`, handle `reviewer-t6fix`. The brief is [review-tui-t6-cycle2.md](../briefs/review-tui-t6-cycle2.md) |
+| **The receipt** | `work/inbox/reviewer-tui-t6-cycle2.md`. Read it first. The nudge targets pane `w1H:pJ`, which was this session |
+| **Then** | close T6 from the verdict, or answer `changes-needed` with a new tab. A fresh lane, not this reviewer |
+| **The next slice** | **T7** — `/` filters the list. No brief yet. Write it from [plan.md](plan.md) § 6 just before the session |
+
+Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
+
+T4's cycle 2 left two notes, neither a finding: a recipes row with a two-digit count in every section is 84 columns and wraps at 80, and `docs/05`'s Home sentence is held by no test. The free edit of a backlog item stays unbuilt (Q8). Q11, Q12 and Q13 are still open, in [../questions.md](../questions.md), and they are the orchestrator's.
 
 **The commits** land in the table's own row as they happen: `T1 · 2 commits ·
 3f9c1a2, 8b0e441`. A row with commits under it and no `closed` is a session that
@@ -100,8 +98,8 @@ ROOT_PANE=$(echo "$RAW" | python3 -c "import json,sys; print(json.load(sys.stdin
 SPLIT_RAW=$(herdr pane split "$ROOT_PANE" --direction right --ratio 0.5 --cwd "$PWD")
 SPLIT_PANE=$(echo "$SPLIT_RAW" | python3 -c "import json,sys; print(json.load(sys.stdin)['result']['pane']['pane_id'])")
 
-herdr agent start runner   --kind opencode --pane "$ROOT_PANE"  --timeout 60000
-herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
+herdr agent start runner   --kind cursor --pane "$ROOT_PANE"  --timeout 60000 -- --trust --force
+herdr agent start reviewer --kind cursor --pane "$SPLIT_PANE" --timeout 60000 -- --trust --force
 ```
 
 | | |
@@ -118,8 +116,8 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 |---|---|
 | the **tab** | `w1H:tH` — *tui: T6 fix 1* |
 | the **runner** | pane `w1H:pW`, handle `runner-t6fix` |
-| the **reviewer** | pane `w1H:pX`, handle `reviewer-t6fix` — briefed for cycle 2 |
-| the **orchestrator** | pane `w1H:pJ` — the one they nudge |
+| the **reviewer** | pane `w1H:pX`, handle `reviewer-t6fix` — cycle 2 in flight. The nudge targets `w1H:pJ` |
+| the **orchestrator** | pane `w1H:pJ` — this session. A later session reads the receipt |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
 gone, the receipt in `work/inbox/` is the record of what it did, and the slice's
@@ -208,17 +206,20 @@ sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # the ledger
 
 **Then:**
 
-1. Find the first session in the table above that is not `closed`.
-2. If it is `planned`, it has no brief — **write the brief first**, from the plan's
+1. Read `work/inbox/`. If `reviewer-tui-t6-cycle2.md` is there, T6's re-review has
+   reported — close the slice from that verdict, or brief a **new** tab for another
+   fix. Do not start T7 while T6 is open. If the receipt is absent, the reviewer may
+   still be on `w1H:pX`; do not dispatch the review again.
+2. Find the first session in the table above that is not `closed`.
+3. If it is `planned`, it has no brief — **write the brief first**, from the plan's
    section for that slice, into `work/briefs/tui-t<N>.md`, and mark the row `briefed`.
-3. If it is `in progress`, read the last commit's body — it says where the session
+4. If it is `in progress`, read the last commit's body — it says where the session
    stopped — and continue from there. **Do not redo what landed.**
-4. If the row is `closed`, the next session is the next row that is not `closed`.
-5. If a slice was **in flight** when the session ended, its lanes may still be alive —
-   their tab and pane ids are in *The lanes* above. Nudge the runner with
-   `herdr agent prompt <runner-pane> "<the brief's notify command>"`, and **read
-   `work/inbox/` first: the receipt may already be there.**
-6. **The tree may be dirty, and that is by design.** A lane commits per acceptance
+5. If the row is `closed`, the next session is the next row that is not `closed`.
+6. If a slice was **in flight** when the session ended, its lanes may still be alive —
+   their tab and pane ids are in *The lanes* above. Read `work/inbox/` first. The
+   receipt may already be there.
+7. **The tree may be dirty, and that is by design.** A lane commits per acceptance
    criterion, so its work in flight is uncommitted — `git status` shows another
    lane's hands, not rubbish. **Check `git status` and the receipt before you touch
    anything**, and never `git checkout` a file you did not write.
