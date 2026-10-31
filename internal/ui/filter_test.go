@@ -446,3 +446,76 @@ func TestTheFilterSurvivesATabSwitch(t *testing.T) {
 		t.Errorf("the filter should apply to the new tab's list")
 	}
 }
+
+// withoutSummary is the frame without its summary row.
+//
+// The summary row is where the console puts its one-line message, so it is the one
+// row that is allowed to change when the console says something.
+func withoutSummary(s string) string {
+	lines := screenLines(s)
+	if len(lines) <= headerRows {
+		return s
+	}
+	kept := append([]string{}, lines[:3]...)
+	kept = append(kept, lines[4:]...)
+	return strings.Join(kept, "\n")
+}
+
+// TestTheFilterDoesNotApplyToTheOtherTabs covers AC-05.
+//
+// On Board, Log, Home and Settings, `/` says the filter does not apply here — and
+// nothing else changes. The Board is a tree: a hidden node misstates what waits
+// on what. The Log holds events, and Home and Settings hold numbers.
+//
+// **A key that does nothing must say so.** The console does not promise a filter
+// it will not honour.
+func TestTheFilterDoesNotApplyToTheOtherTabs(t *testing.T) {
+	for _, tab := range []Tab{TabHome, TabBoard, TabLog, TabSettings} {
+		m := newModel(t)
+		switchToTab(t, m, tab)
+		before := plain(m)
+
+		if _, err := Drive(m, []string{"/"}); err != nil {
+			t.Fatal(err)
+		}
+		out := plain(m)
+
+		if !strings.Contains(out, "the filter does not apply here") {
+			t.Errorf("the %s tab should say the filter does not apply here:\n%s", tab.Label(), out)
+		}
+		if m.filterOpen {
+			t.Errorf("the %s tab should not open a filter line", tab.Label())
+		}
+		if m.filter != "" {
+			t.Errorf("the %s tab should not set a filter, got %q", tab.Label(), m.filter)
+		}
+		// Nothing else moved: only the summary row changed.
+		if withoutSummary(out) != withoutSummary(before) {
+			t.Errorf("the %s tab changed more than its summary:\n--- before ---\n%s\n--- after ---\n%s",
+				tab.Label(), before, out)
+		}
+	}
+}
+
+// TestTheFilterDoesNotApplyToTheOpenDetail covers AC-05.
+//
+// The filter is a **list** thing: with the detail open there is no list on screen,
+// so there is nothing to filter.
+func TestTheFilterDoesNotApplyToTheOpenDetail(t *testing.T) {
+	m := recipesModel(t)
+	if _, err := Drive(m, []string{"enter"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.mode != ModeDetail {
+		t.Fatalf("the detail should be open")
+	}
+	if _, err := Drive(m, []string{"/"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.filterOpen {
+		t.Errorf("the open detail should not take a filter line")
+	}
+	if !strings.Contains(plain(m), "the filter does not apply here") {
+		t.Errorf("the console should say the filter does not apply here:\n%s", plain(m))
+	}
+}

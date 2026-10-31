@@ -82,18 +82,24 @@ func (m *Model) filterApplies() bool {
 	return false
 }
 
+// filterNotHere is what the console says where the filter does not reach.
+//
+// One message, one place: the tab that does not take the filter and the detail
+// that leaves no list to filter say the same thing.
+const filterNotHere = "the filter does not apply here"
+
 // openFilter opens the filter line.
 //
 // The filter is a **list** feature: it filters the rows the tab draws. On a tab it
 // does not reach, the console says so — a key that does nothing must say so.
 func (m *Model) openFilter() (tea.Model, tea.Cmd) {
 	if !m.filterApplies() {
-		m.status = "the filter does not apply here"
+		m.status = filterNotHere
 		return m, nil
 	}
 	if m.mode == ModeDetail {
 		// The list is not on screen: there is nothing to filter.
-		m.status = "the filter does not apply here — the detail is open"
+		m.status = filterNotHere + " — the detail is open"
 		return m, nil
 	}
 	m.filterOpen = true

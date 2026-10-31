@@ -1165,6 +1165,7 @@ func (m *Model) settingsLines() []listLine {
 		{"n / N", "move over the open tasting notes"},
 		{"1 2 3", "order: triage, lane, plain"},
 		{"c", "show or hide served recipes"},
+		{"/", "filter the list — Recipes, Backlog, Ready"},
 		{"r", "reload"},
 		{"q", "quit"},
 	} {
