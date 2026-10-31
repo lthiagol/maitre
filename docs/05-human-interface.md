@@ -288,6 +288,7 @@ console's header, drawn inside the terminal, and it carries the same name.
 | `a` | on the **Backlog**, write a new item down — it starts as an **idea**, the kind a hunch starts as |
 | `1` `2` `3` | list ordering: triage · lane · plain |
 | `c` | show or hide served recipes |
+| `/` | filter the list — on **Recipes**, **Backlog** and **Ready** |
 | `r` | reload |
 | `q` | quit |
 
@@ -422,6 +423,64 @@ the journal says which, so a reader can tell a human's verdict from a driven one
 `maitre --keys` writes under the `console-script` session. The interactive console
 writes under `console`. Nothing else changes: the actor is still the chef, because
 the console is the chef's surface either way.
+
+## The filter
+
+`/` filters the list of the tab the chef is on. It is the **console's** feature, not
+the plan's: nothing is written to the plan, and the plan's format does not move —
+`core.DomainVersion` stays **7**.
+
+| | |
+|---|---|
+| **Opens on** | **Recipes**, **Backlog** and **Ready** — the tabs that list plan items |
+| **The line** | one line under the summary, while the chef is typing in it |
+| **Live** | the list filters as the chef types. No second keypress to apply it |
+| **`enter`** | keeps the filter and closes the line |
+| **`esc`** | clears the filter and closes the line. The list is whole again |
+| **The match** | case-insensitive, over a **recipe's** id · title · intent (outcome and problem) · scope (in and out), and over a **backlog item's** id · title · body · scope · tags |
+| **The count** | the summary says the filter is on and on what: `filter: <text> · N of M` — N matches of M items |
+| **The selection** | stays on the same item when it still matches, goes to the first match when it does not, and the list scrolls to it |
+| **The tabs** | the filter **survives a tab switch** and applies to the new tab's list |
+
+**One rule, in one place.** The match is a single function, and every tab reads it: a
+recipe and a backlog item are matched by the same case-insensitive substring rule.
+Two implementations of "does this match" is this house's standing failure, and the
+count in the summary comes from the same computation as the list it counts.
+
+A recipe carries **no tags** today — the tags are a domain decision, taken with the
+CLI — and the filter does not invent one. The backlog's items carry tags, and the
+filter reaches them.
+
+**The section headers count what is shown.** A triage section with two matching
+recipes says `2`, not the whole section's count. A section with no match is not
+drawn at all — an empty section header is noise that says the plan has something it
+does not have.
+
+**The filter line takes exactly one row.** The list loses one row while the line is
+open, and the footer stays the last row of the screen. A line that pushed the footer
+off broke the screen.
+
+### The tabs the filter does not reach
+
+**Board**, **Log**, **Home** and **Settings**. `/` there says *the filter does not
+apply here*, and nothing else changes.
+
+The Board is a tree: a node is a relationship, and hiding one misstates what waits
+on what. The Log holds journal events, not plan items. Home holds numbers and
+Settings holds the plan's identity. **A key that does nothing must say so** — the
+console does not promise a filter it will not honour.
+
+### The filter from a script
+
+The filter is drivable, like every other key:
+
+```
+maitre --keys "/,text:glossary,enter"    # the line, the word, and keep the filter
+maitre --keys "/,g,l,o,s,s,a,r,y,enter"  # the same, one character at a time
+```
+
+`text:<string>` types a whole word in one step, in the colon style the mouse steps
+use. The single-character steps keep working.
 
 ## The Home tab
 
