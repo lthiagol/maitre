@@ -87,8 +87,10 @@ func TestReadinessDerivation(t *testing.T) {
 	if r := ReadinessOf(Recipe{Lifecycle: LifecycleReady}); r.Ready {
 		t.Fatal("a recipe awaiting sign-off must not be ready")
 	}
-	if r := ReadinessOf(Recipe{Lifecycle: LifecycleApproved, Overlays: Overlays{Blocked: &Overlay{Reason: "waiting"}}}); r.Ready {
-		t.Fatal("a blocked recipe must not be ready")
+	// EventStart has no blocked gate. A blocked recipe the claim accepts is ready.
+	blocked := Recipe{Lifecycle: LifecycleApproved, Overlays: Overlays{Blocked: &Overlay{Reason: "waiting"}}}
+	if !ReadinessOf(blocked).Ready {
+		t.Fatal("a blocked recipe the claim accepts must be ready")
 	}
 }
 

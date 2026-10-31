@@ -359,7 +359,7 @@ func (m *Model) sectionsByLane() []core.TriageSection {
 		}
 		sec := core.TriageSection{Name: l.Label()}
 		for i := range items {
-			sec.Items = append(sec.Items, core.SummaryOf(items[i]))
+			sec.Items = append(sec.Items, core.SummaryOf(items[i], m.recipes))
 		}
 		out = append(out, sec)
 	}
@@ -370,7 +370,7 @@ func (m *Model) sectionsByLane() []core.TriageSection {
 func (m *Model) sectionsPlain() []core.TriageSection {
 	sec := core.TriageSection{Name: "All recipes"}
 	for i := range m.recipes {
-		sec.Items = append(sec.Items, core.SummaryOf(m.recipes[i]))
+		sec.Items = append(sec.Items, core.SummaryOf(m.recipes[i], m.recipes))
 	}
 	if len(sec.Items) == 0 {
 		return nil

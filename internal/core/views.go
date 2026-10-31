@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -257,6 +258,7 @@ var DerivedViews = []DerivedView{
 	{Name: "review_state", Function: ReviewStateOf, Values: reviewStateValues()},
 	{Name: "lane", Function: LaneOf, Values: laneValues()},
 	{Name: "readiness", Function: ReadinessOf},
+	{Name: "adoptable", Function: Adoptable},
 	{Name: "coverage", Planned: true},
 	{Name: "evidence_summary", Function: EvidenceSummaryOf},
 	{Name: "staleness", Planned: true},
@@ -488,44 +490,123 @@ func ReviewStateOf(r Recipe) ReviewState {
 }
 
 // Readiness says whether a recipe can be picked up, and why not if it cannot.
+//
+// Ready is the claim's answer: true iff the recipe is adoptable. The reason names
+// the dependency when that is why the claim is refused.
 type Readiness struct {
 	Ready  bool
 	Reason string
 }
 
-// ReadinessOf derives whether a recipe is ready to be claimed.
+// Adoptable returns the recipes an agent could claim right now, in plan order.
+//
+// A recipe is adoptable iff EventStart would be accepted. The view asks that
+// transition on a copy — Transition mutates the recipe it is given — so a gate
+// added to the claim is a gate this view sees.
+//
+// The result is never nil: an empty plan is an empty list, and a client cannot
+// iterate null.
 // view
-func ReadinessOf(r Recipe) Readiness {
+func Adoptable(recipes []Recipe) []Recipe {
+	out := make([]Recipe, 0)
+	for _, r := range recipes {
+		if claimAccepted(r, recipes) == nil {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// ReadinessOf derives whether a recipe is ready to be claimed.
+//
+// Ready agrees with Adoptable. plan is the recipes the claim's dependency gate
+// reads; without one, a dependency cannot be closed.
+// view
+func ReadinessOf(r Recipe, plan ...[]Recipe) Readiness {
+	recipes := []Recipe{r}
+	if len(plan) > 0 && plan[0] != nil {
+		recipes = plan[0]
+	}
+	err := claimAccepted(r, recipes)
+	if err == nil {
+		return Readiness{Ready: true}
+	}
+	if dep := dependencyNamed(err); dep != "" {
+		return Readiness{Reason: "needs " + dep}
+	}
+	if why := readinessWhyNot(r); why != "" {
+		return Readiness{Reason: why}
+	}
+	return Readiness{Reason: err.Error()}
+}
+
+// claimAccepted asks EventStart on a copy. The caller's recipe is left as it was.
+func claimAccepted(r Recipe, plan []Recipe) error {
+	copy := r
+	closed := closedRecipes(plan)
+	return Transition(&copy, EventStart, TransitionContext{
+		Closed: func(id string) (bool, error) {
+			return closed[id], nil
+		},
+	})
+}
+
+// dependencyNamed is the dependency the claim named when it refused, if it named one.
+func dependencyNamed(err error) string {
+	var ge *GateError
+	if !errors.As(err, &ge) {
+		return ""
+	}
+	const marker = "dependency "
+	for _, g := range ge.Gates {
+		i := strings.Index(g, marker)
+		if i < 0 {
+			continue
+		}
+		rest := g[i+len(marker):]
+		id := rest
+		if sp := strings.IndexByte(rest, ' '); sp >= 0 {
+			id = rest[:sp]
+		}
+		if id != "" {
+			return id
+		}
+	}
+	return ""
+}
+
+// readinessWhyNot is the prose for a claim the lifecycle itself refuses.
+func readinessWhyNot(r Recipe) string {
 	if r.Overlays.Cancelled != nil {
-		return Readiness{false, "cancelled"}
+		return "cancelled"
 	}
 	if r.Overlays.Blocked != nil {
-		return Readiness{false, "blocked: " + r.Overlays.Blocked.Reason}
+		return "blocked: " + r.Overlays.Blocked.Reason
 	}
 	switch r.Lifecycle {
 	case LifecycleApproved:
-		return Readiness{true, ""}
+		return ""
 	case LifecycleReady:
-		return Readiness{false, "awaiting sign-off"}
+		return "awaiting sign-off"
 	case LifecycleExecuting:
-		return Readiness{false, "already on the line"}
+		return "already on the line"
 	case LifecycleExecuted, LifecycleRemediation, LifecycleReviewed:
 		if SelfReviewed(r) {
 			// Nobody but the executor has tasted this. The recipe cannot leave the
 			// stage until someone else looks at it, and that is the chef's move.
-			return Readiness{false, "awaiting an independent review"}
+			return "awaiting an independent review"
 		}
 		if r.Lifecycle == LifecycleReviewed && ChangesRequested(r) {
-			return Readiness{false, "changes requested — the agents have it"}
+			return "changes requested — the agents have it"
 		}
 		if r.Lifecycle == LifecycleReviewed {
-			return Readiness{false, "reviewed — it wants serving"}
+			return "reviewed — it wants serving"
 		}
-		return Readiness{false, "awaiting tasting"}
+		return "awaiting tasting"
 	case LifecycleClosed:
-		return Readiness{false, "served"}
+		return "served"
 	default:
-		return Readiness{false, "still being shaped"}
+		return "still being shaped"
 	}
 }
 
@@ -622,14 +703,17 @@ type Summary struct {
 }
 
 // SummaryOf projects a recipe into its board row.
-func SummaryOf(r Recipe) Summary {
+//
+// plan is the recipes the claim reads for dependencies. Without it, a dependency
+// cannot be closed, and the row's readiness says so.
+func SummaryOf(r Recipe, plan ...[]Recipe) Summary {
 	return Summary{
 		ID:           r.ID,
 		Title:        r.Title,
 		Lifecycle:    r.Lifecycle,
 		Lane:         LaneOf(r),
 		Review:       ReviewStateOf(r),
-		Readiness:    ReadinessOf(r),
+		Readiness:    ReadinessOf(r, plan...),
 		Evidence:     EvidenceSummaryOf(r),
 		OpenFindings: OpenFindings(&r),
 		Updated:      r.Updated,
@@ -638,9 +722,13 @@ func SummaryOf(r Recipe) Summary {
 
 // Summaries projects a lane into board rows.
 func (b Board) Summaries(l Lane) []Summary {
+	var plan []Recipe
+	for _, lane := range AllLanes {
+		plan = append(plan, b.Lanes[lane]...)
+	}
 	rows := make([]Summary, 0, len(b.Lanes[l]))
 	for _, r := range b.Lanes[l] {
-		rows = append(rows, SummaryOf(r))
+		rows = append(rows, SummaryOf(r, plan))
 	}
 	return rows
 }
@@ -679,7 +767,7 @@ var AllTriageSections = []string{
 func TriageSections(recipes []Recipe) []TriageSection {
 	byName := map[string][]Summary{}
 	for _, r := range recipes {
-		s := SummaryOf(r)
+		s := SummaryOf(r, recipes)
 		byName[TriageOf(r)] = append(byName[TriageOf(r)], s)
 	}
 
@@ -772,7 +860,7 @@ func Path(recipes []Recipe) (ready, waiting []PathEntry) {
 		if r.Lifecycle == LifecycleClosed || r.Overlays.Cancelled != nil {
 			continue
 		}
-		s := SummaryOf(r)
+		s := SummaryOf(r, recipes)
 		entry := PathEntry{Summary: s}
 		if deps := unmetDependencies(r, closed); len(deps) > 0 {
 			entry.WaitingFor = deps[0]
@@ -836,7 +924,7 @@ type TreeNode struct {
 
 // Tree is the plan as a dependency tree.
 type Tree struct {
-	// Roots are the recipes that can go now: the Path tab's ready list, in the same
+	// Roots are the recipes that can go now: Path's ready list, in the same
 	// order. Two views of one plan must not tell two stories.
 	Roots []TreeNode
 	// Orphans are the recipes that wait on something the plan does not have. They
@@ -851,7 +939,7 @@ type Tree struct {
 
 // TreeOf builds the plan's dependency tree.
 //
-// The trunk is the Path tab's ready list, in the same order — `Path` already computes
+// The trunk is Path's ready list, in the same order — `Path` already computes
 // the ready set and the first unmet dependency, so the tree reads that answer rather
 // than computing a second one.
 //
@@ -861,7 +949,7 @@ type Tree struct {
 // The walk starts at the trunk and stops at a recipe it has already drawn, so a
 // dependency cycle cannot make the tree infinite. What the walk cannot reach is
 // drawn anyway: a tree that silently drops a recipe tells the chef a story the plan
-// does not, and the Path tab would list what the tree had forgotten.
+// does not, and Path would list what the tree had forgotten.
 // view
 func TreeOf(recipes []Recipe) Tree {
 	closed := closedRecipes(recipes)
@@ -902,7 +990,7 @@ func TreeOf(recipes []Recipe) Tree {
 		r := byID[id]
 		deps := unmetDependencies(r, closed)
 		node := TreeNode{
-			Summary: SummaryOf(r),
+			Summary: SummaryOf(r, recipes),
 			Needs:   deps,
 		}
 		for _, dep := range deps {

@@ -177,7 +177,7 @@ func (m *Model) recipeDetail(r *core.Recipe, width int) []string {
 	// Why it needs the chef, when it does. "awaiting an independent review" says
 	// what to do next; "awaiting tasting" does not.
 	if core.TriageOf(*r) == core.TriageNeedsYou {
-		if reason := core.ReadinessOf(*r).Reason; reason != "" {
+		if reason := core.ReadinessOf(*r, m.recipes).Reason; reason != "" {
 			out = append(out, " "+m.styWarn.Render("→ "+reason))
 		}
 	}

@@ -782,7 +782,8 @@ variations of a handful of these. **One operation, one name.**
 | `status` | `Criterion.Status` | AC status derived from its latest evidence |
 | `review_state` | `ReviewStateOf` | `pending-review` · `open-findings` · `remediated` · `self-reviewed` · `reviewed-clean` |
 | `lane` | `LaneOf` | `grooming` · `approval` · `execution` · `review` · `blocked` · `done` — the UI's primary axis |
-| `readiness` | `ReadinessOf` | Can it be claimed? Why not, if not |
+| `readiness` | `ReadinessOf` | Can it be claimed? The same answer as `adoptable`; the reason names the dependency when that is why |
+| `adoptable` | `Adoptable` | The recipes an agent could claim now: `EventStart` would be accepted |
 | `coverage` | planned | **Planned.** The AC ↔ step matrix |
 | `evidence_summary` | `EvidenceSummaryOf` | Evidence attached, zero-match evidence, forced bypasses |
 | `staleness` | planned | **Planned.** Age since last activity; age since last human decision |
@@ -823,6 +824,11 @@ reached by leaving out a flag.
 The console had exactly that drift: the gate refused to close a self-reviewed recipe
 while the console filed it under *On the line* and counted *0 need you*. The chef was
 never told what was waiting.
+
+`readiness` and `adoptable` are the same question. `ReadinessOf.Ready` is true iff
+the recipe is in `Adoptable`. Both ask `EventStart` on a copy of the recipe, so a
+gate on the claim is a gate they see, and the reason names the dependency when the
+claim is refused because of one.
 
 ### 8.2 The invariant that catches the class
 
