@@ -332,15 +332,21 @@ func writeRetired(t *testing.T, root, dir, name, body string) {
 	}
 }
 
-func TestPathTabSeparatesReadyFromWaiting(t *testing.T) {
+func TestTheReadyTabShowsTheTwoBlocks(t *testing.T) {
 	m := newModel(t)
-	m.tab = TabPath
+	m.tab = TabReady
 	out := plain(m)
-	if !strings.Contains(out, "READY") || !strings.Contains(out, "WAITING") {
-		t.Errorf("the path is missing a group\n%s", out)
+	if !strings.Contains(out, "ADOPTABLE") || !strings.Contains(out, "SMALL TASKS") {
+		t.Errorf("the tab is missing a block\n%s", out)
 	}
-	if !strings.Contains(out, "needs RCP02") {
-		t.Errorf("the path should say what is blocking\n%s", out)
+	if !strings.Contains(out, "promote → sign off → run") {
+		t.Errorf("a small task's row should name the two further steps\n%s", out)
+	}
+	if strings.Contains(out, "RCP04") {
+		t.Errorf("an approved recipe with an open dependency is not on this tab\n%s", out)
+	}
+	if strings.Contains(out, "BL01") {
+		t.Errorf("an idea is not on this tab\n%s", out)
 	}
 }
 

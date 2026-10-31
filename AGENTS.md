@@ -30,7 +30,7 @@ The plan lives in `kitchen/`: `recipes/`, `courses/`, `backlog/`, plus
 
 The console's tabs: **Home** (the plan's numbers — recipes, evidence, tasting, backlog,
 automation) · **Recipes** (grouped by what needs the chef) · **Backlog** (ideas
-and small tasks) · **Path** (the execution order) · **Board** (the plan as a dependency
+and small tasks) · **Ready** (what an agent could claim now) · **Board** (the plan as a dependency
 tree) · **Log** (the journal) · **Settings**.
 
 ```bash
@@ -107,7 +107,7 @@ deviations and decisions. See [ADR-0007](docs/decisions/0007-operation-layer.md)
 so the fixture cannot drift from the model. `maitre-cli demo` seeds one; the console's tests
 use the same code.
 
-**Slice 4 — the console.** Five tabs (Recipes · Backlog · Path · Log · Settings), the
+**Slice 4 — the console.** Five tabs (Recipes · Backlog · the execution order · Log · Settings), the
 triage grouping, the served checkbox, the detail pane with `glamour` markdown, the
 primary action and the refusal banner. The lower rungs — the backlog's ideas and small
 tasks, with one-way promotion — came with it, so the Backlog tab has data.
@@ -179,7 +179,7 @@ across a reload: the recipe, the scroll, the note cursor, the theme, the order, 
 served checkbox and the tab. `--render` and `--keys` do not poll: they are not
 interactive programs.
 
-**Slice 12 — the Board.** The Path tab is the flat order; the Board is the same
+**Slice 12 — the Board.** The flat order is `core.Path`; the Board is the same
 plan as a **dependency tree** — the shape v1's `raul` had, with an execution trunk and
 labelled side branches. The trunk is `core.Path`'s ready list, in the same order (one
 fact, one answer); a recipe that waits on something forks at its first unmet

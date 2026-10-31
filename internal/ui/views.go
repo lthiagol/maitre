@@ -413,9 +413,11 @@ func (m *Model) summaryText() string {
 	case TabBacklog:
 		text := fmt.Sprintf("%d %s", len(m.items), plural(len(m.items), "item", "items"))
 		return text
-	case TabPath:
-		ready, waiting := core.Path(m.recipes)
-		return fmt.Sprintf("the path · %d ready · %d waiting", len(ready), len(waiting))
+	case TabReady:
+		recipes := core.Adoptable(m.recipes)
+		tasks := openSmallTasks(m.items)
+		return fmt.Sprintf("%d adoptable · %d %s",
+			len(recipes), len(tasks), plural(len(tasks), "small task", "small tasks"))
 	case TabBoard:
 		tree := core.TreeOf(m.recipes)
 		waiting := 0
@@ -530,12 +532,20 @@ func (m *Model) scrollIndicator() string {
 // primaryActionLabel names what `space` will do for the current selection.
 func (m *Model) primaryActionLabel() string {
 	switch m.tab {
-	case TabRecipes, TabPath:
+	case TabRecipes:
 		rec, ok := m.currentRecipe()
 		if !ok {
 			return ""
 		}
 		return core.ChefMoveOf(*rec).Label()
+	case TabReady:
+		// The footer asks the domain. An adoptable recipe has no move: the
+		// console does not claim.
+		item, ok := m.selectedReadyTask()
+		if !ok {
+			return ""
+		}
+		return core.BacklogMoveOf(item).Primary.Label()
 	case TabBacklog:
 		item, ok := m.selectedBacklogItem()
 		if !ok {
@@ -554,8 +564,8 @@ func (m *Model) listLines() []listLine {
 	switch m.tab {
 	case TabBacklog:
 		return m.backlogLines()
-	case TabPath:
-		return m.pathLines()
+	case TabReady:
+		return m.readyLines()
 	case TabBoard:
 		return m.boardTree().rows
 	case TabLog:
@@ -738,37 +748,56 @@ func (m *Model) backlogRow(index int, id, title, kind, status string, kindWidth 
 	return row
 }
 
-// pathLines renders the Path tab.
-func (m *Model) pathLines() []listLine {
-	ready, waiting := core.Path(m.recipes)
+// readyLines renders the Ready tab.
+//
+// Both blocks are always drawn. An empty block is an empty list, present.
+func (m *Model) readyLines() []listLine {
+	recipes := core.Adoptable(m.recipes)
+	tasks := openSmallTasks(m.items)
 	var out []listLine
 	item := 0
 
-	section := func(name string, entries []core.PathEntry) {
-		if len(entries) == 0 {
-			return
-		}
-		out = append(out, listLine{text: " " + m.stySec.Render(name) + strings.Repeat(" ", max(1, m.listColumn()-8)) + m.styDim.Render(fmt.Sprint(len(entries))), itemIdx: -1})
+	header := func(name string, n int) {
+		out = append(out, listLine{text: m.sectionHeader(name, n, m.listColumn()), itemIdx: -1})
 		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
-		for _, e := range entries {
-			out = append(out, listLine{text: m.pathRow(e), itemIdx: item})
-			item++
-		}
 	}
-	section("READY", ready)
-	section("WAITING", waiting)
+	header("ADOPTABLE", len(recipes))
+	for _, r := range recipes {
+		out = append(out, listLine{text: m.readyRecipeRow(r, m.selReady == item), itemIdx: item})
+		item++
+	}
+	header("SMALL TASKS", len(tasks))
+	for _, it := range tasks {
+		out = append(out, listLine{text: m.readyTaskRow(it, m.selReady == item), itemIdx: item})
+		item++
+	}
 	return out
 }
 
-// pathRow renders one entry in the execution order.
-func (m *Model) pathRow(e core.PathEntry) string {
+// readyRecipeRow renders one adoptable recipe.
+func (m *Model) readyRecipeRow(r core.Recipe, selected bool) string {
 	width := m.listColumn()
-	note := e.Note
-	if e.WaitingFor != "" {
-		note = "needs " + e.WaitingFor
+	title := padCol(r.Title, titleColumn(width, 0))
+	row := "  " + m.styFaint.Render(padRight(r.ID, 6)) + title
+	if selected {
+		return m.stySelected.Render(padRight(row, width))
 	}
-	title := padCol(e.Summary.Title, titleColumn(width, lipgloss.Width(note)))
-	return "  " + m.styFaint.Render(padRight(e.Summary.ID, 6)) + title + m.styDim.Render(note)
+	return row
+}
+
+// readyTaskRow renders one open small task.
+//
+// The words are the two steps after the promotion, so the row is not read as
+// one keystroke.
+func (m *Model) readyTaskRow(it core.BacklogItem, selected bool) string {
+	width := m.listColumn()
+	note := "promote → sign off → run"
+	title := padCol(it.Title, titleColumn(width, lipgloss.Width(note)))
+	row := "  " + m.styFaint.Render(padRight(it.ID, 6)) + title + m.styDim.Render(note)
+	if selected {
+		return m.stySelected.Render(padRight(row, width))
+	}
+	return row
 }
 
 // boardBuilder builds the Board's rows.

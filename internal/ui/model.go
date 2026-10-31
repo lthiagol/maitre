@@ -19,7 +19,7 @@ const (
 	TabHome Tab = iota
 	TabRecipes
 	TabBacklog
-	TabPath
+	TabReady
 	TabBoard
 	TabLog
 	TabSettings
@@ -28,9 +28,9 @@ const (
 // TabNames are the tab labels, in order.
 //
 // The Home tab is first: it is the landing place, and it holds the plan's numbers.
-// The Board sits next to the Path: the two are the same plan seen two ways — the
-// flat order, and the tree.
-var TabNames = []string{"Home", "Recipes", "Backlog", "Path", "Board", "Log", "Settings"}
+// Ready sits next to the Board: Ready is what an agent could claim now, and the
+// Board is the plan's shape.
+var TabNames = []string{"Home", "Recipes", "Backlog", "Ready", "Board", "Log", "Settings"}
 
 // Label is the tab's name.
 func (t Tab) Label() string { return TabNames[int(t)] }
@@ -123,9 +123,14 @@ type Model struct {
 	// the cursor sits on the nearest remaining row.
 	backlogFollow string
 	backlogLeave  string
-	selPath       int
-	selBoard      int
-	selLog        int
+	selReady      int
+	// readyID is the row the Ready cursor names.
+	// readyLeave is an id a promotion took off the tab: the cursor sits on the
+	// nearest remaining row, and it does not stay on the id that left.
+	readyID    string
+	readyLeave string
+	selBoard   int
+	selLog     int
 	// selTheme is the cursor over the theme list on the Settings tab.
 	selTheme int
 	// selNote is the cursor over the selected recipe's open tasting notes.
@@ -317,6 +322,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) applyReload(msg reloadMsg) {
 	follow, leave := m.backlogFollow, m.backlogLeave
 	m.backlogFollow, m.backlogLeave = "", ""
+	readyLeave := m.readyLeave
+	m.readyLeave = ""
 	// The row on screen is the item the chef was on, unless the write named
 	// another — a new id, or one that has left.
 	if follow == "" && leave == "" {
@@ -324,11 +331,17 @@ func (m *Model) applyReload(msg reloadMsg) {
 			m.backlogID = item.ID
 		}
 	}
+	if readyLeave == "" {
+		if e, ok := m.currentReadyEntry(); ok {
+			m.readyID = e.id
+		}
+	}
 	m.recipes = msg.recipes
 	m.items = msg.items
 	m.journal = msg.journal
 	m.sections = m.orderedSections()
 	m.placeBacklog(follow, leave)
+	m.placeReady(readyLeave)
 	m.clampSelections()
 }
 
@@ -399,14 +412,63 @@ func (m *Model) currentSummary() (core.Summary, bool) {
 	return rows[m.selRecipes], true
 }
 
-// currentPathEntry is the selected entry on the Path tab.
-func (m *Model) currentPathEntry() (core.PathEntry, bool) {
-	ready, waiting := core.Path(m.recipes)
-	all := append(append([]core.PathEntry{}, ready...), waiting...)
-	if m.selPath < 0 || m.selPath >= len(all) {
-		return core.PathEntry{}, false
+// readyEntry is one selectable row on the Ready tab.
+//
+// Adoptable recipes come first, then open small tasks. A task row carries the
+// backlog item; a recipe row does not.
+type readyEntry struct {
+	id   string
+	task bool
+}
+
+// readyEntries is the Ready tab's selectable rows, in the order it draws them.
+func (m *Model) readyEntries() []readyEntry {
+	out := make([]readyEntry, 0)
+	for _, r := range core.Adoptable(m.recipes) {
+		out = append(out, readyEntry{id: r.ID})
 	}
-	return all[m.selPath], true
+	for _, it := range openSmallTasks(m.items) {
+		out = append(out, readyEntry{id: it.ID, task: true})
+	}
+	return out
+}
+
+// openSmallTasks is the Ready tab's second block.
+//
+// The items come from BacklogGroups, and only the open ones stay: an idea is
+// filed with the ideas, and a promoted or dismissed item has left.
+func openSmallTasks(items []core.BacklogItem) []core.BacklogItem {
+	_, tasks := core.BacklogGroups(items)
+	out := make([]core.BacklogItem, 0)
+	for _, it := range tasks {
+		if it.Status == core.StatusOpen {
+			out = append(out, it)
+		}
+	}
+	return out
+}
+
+// currentReadyEntry is the row under the Ready cursor.
+func (m *Model) currentReadyEntry() (readyEntry, bool) {
+	all := m.readyEntries()
+	if m.selReady < 0 || m.selReady >= len(all) {
+		return readyEntry{}, false
+	}
+	return all[m.selReady], true
+}
+
+// selectedReadyTask is the small task under the cursor, when the cursor is on one.
+func (m *Model) selectedReadyTask() (core.BacklogItem, bool) {
+	e, ok := m.currentReadyEntry()
+	if !ok || !e.task {
+		return core.BacklogItem{}, false
+	}
+	for _, it := range m.items {
+		if it.ID == e.id {
+			return it, true
+		}
+	}
+	return core.BacklogItem{}, false
 }
 
 // board is the tree the Board tab shows.
@@ -456,9 +518,9 @@ func (m *Model) currentRecipe() (*core.Recipe, bool) {
 		if s, ok := m.currentSummary(); ok {
 			id = s.ID
 		}
-	case TabPath:
-		if e, ok := m.currentPathEntry(); ok {
-			id = e.Summary.ID
+	case TabReady:
+		if e, ok := m.currentReadyEntry(); ok && !e.task {
+			id = e.id
 		}
 	case TabBoard:
 		if r, ok := m.currentBoardRecipe(); ok {
@@ -492,8 +554,8 @@ func (m *Model) currentSel() int {
 		return m.selRecipes
 	case TabBacklog:
 		return m.selBacklog
-	case TabPath:
-		return m.selPath
+	case TabReady:
+		return m.selReady
 	case TabBoard:
 		return m.selBoard
 	case TabLog:
@@ -520,18 +582,89 @@ func (m *Model) clampSelections() {
 	}
 	clamp(&m.selRecipes, len(m.visibleRows()))
 	clamp(&m.selBacklog, m.backlogCount())
-	clamp(&m.selPath, len(m.pathEntries()))
+	clamp(&m.selReady, len(m.readyEntries()))
 	clamp(&m.selBoard, len(m.boardTree().recipe))
 	clamp(&m.selLog, len(m.logWindow()))
 	clamp(&m.selTheme, len(palettes()))
 	clamp(&m.selNote, len(m.openNotes()))
 	m.rememberBacklogRow()
+	m.rememberReadyRow()
 }
 
-// pathEntries is the Path tab's selectable items.
-func (m *Model) pathEntries() []core.PathEntry {
-	ready, waiting := core.Path(m.recipes)
-	return append(append([]core.PathEntry{}, ready...), waiting...)
+// placeReady resolves the Ready cursor after a reload.
+//
+// leave does not name that id: a promotion took the item off the tab, and the
+// cursor sits on the nearest remaining row. Otherwise the remembered id is
+// resolved to its row.
+func (m *Model) placeReady(leave string) {
+	all := m.readyEntries()
+	if leave != "" {
+		m.selReady = nearestReadyRow(all, m.selReady, leave)
+		m.readyID = readyIDAt(all, m.selReady)
+		return
+	}
+	if i := readyRowOf(all, m.readyID); m.readyID != "" && i >= 0 {
+		m.selReady = i
+		return
+	}
+	if len(all) == 0 {
+		m.selReady = 0
+		m.readyID = ""
+		return
+	}
+	if m.selReady < 0 {
+		m.selReady = 0
+	}
+	if m.selReady >= len(all) {
+		m.selReady = len(all) - 1
+	}
+	m.readyID = all[m.selReady].id
+}
+
+// rememberReadyRow stores the id of the row the index points at.
+func (m *Model) rememberReadyRow() {
+	m.readyID = readyIDAt(m.readyEntries(), m.selReady)
+}
+
+// readyRowOf is the index of id in the tab's order, or -1.
+func readyRowOf(all []readyEntry, id string) int {
+	for i, e := range all {
+		if e.id == id {
+			return i
+		}
+	}
+	return -1
+}
+
+// readyIDAt is the id at index, or empty when the index names no row.
+func readyIDAt(all []readyEntry, index int) string {
+	if index < 0 || index >= len(all) {
+		return ""
+	}
+	return all[index].id
+}
+
+// nearestReadyRow is the row nearest to index that is not left.
+func nearestReadyRow(all []readyEntry, index int, left string) int {
+	rest := make([]int, 0, len(all))
+	for i, e := range all {
+		if e.id != left {
+			rest = append(rest, i)
+		}
+	}
+	if len(rest) == 0 {
+		return 0
+	}
+	pos := 0
+	for _, i := range rest {
+		if i < index {
+			pos++
+		}
+	}
+	if pos >= len(rest) {
+		pos = len(rest) - 1
+	}
+	return rest[pos]
 }
 
 // handleKey dispatches a key press.
@@ -694,12 +827,12 @@ func (m *Model) openDetail() {
 // hasDetail reports whether the current selection has a detail to open.
 //
 // The console has **one** detail pane, and it follows the tab: a recipe on Recipes,
-// Path and Board, a backlog item on Backlog, a journal entry on Log. The pane and
+// Ready and Board, a backlog item on Backlog, a journal entry on Log. The pane and
 // the key read the same answer, so the key can never open something the pane does
 // not show — and a backlog item is not a recipe, so it needs its own answer here.
 func (m *Model) hasDetail() bool {
 	switch m.tab {
-	case TabRecipes, TabPath, TabBoard:
+	case TabRecipes, TabReady, TabBoard:
 		_, ok := m.currentRecipe()
 		return ok
 	case TabBacklog:
@@ -761,8 +894,8 @@ func (m *Model) move(delta int) {
 		m.selRecipes += delta
 	case TabBacklog:
 		m.selBacklog += delta
-	case TabPath:
-		m.selPath += delta
+	case TabReady:
+		m.selReady += delta
 	case TabBoard:
 		m.selBoard += delta
 	case TabLog:
@@ -781,8 +914,8 @@ func (m *Model) moveTo(index int) {
 		m.selRecipes = index
 	case TabBacklog:
 		m.selBacklog = index
-	case TabPath:
-		m.selPath = index
+	case TabReady:
+		m.selReady = index
 	case TabBoard:
 		m.selBoard = index
 	case TabLog:
@@ -801,8 +934,8 @@ func (m *Model) listCount() int {
 		return len(m.visibleRows())
 	case TabBacklog:
 		return m.backlogCount()
-	case TabPath:
-		return len(m.pathEntries())
+	case TabReady:
+		return len(m.readyEntries())
 	case TabBoard:
 		return len(m.boardTree().recipe)
 	case TabLog:
@@ -818,7 +951,13 @@ func (m *Model) primaryAction() (tea.Model, tea.Cmd) {
 	switch m.tab {
 	case TabBacklog:
 		return m.backlogPrimary()
-	case TabRecipes, TabPath, TabBoard:
+	case TabReady:
+		// An adoptable recipe has no move here. Claiming it is the agent's.
+		if it, ok := m.selectedReadyTask(); ok {
+			return m.promoteItem(it)
+		}
+		return m, nil
+	case TabRecipes, TabBoard:
 		return m.actOnRecipe()
 	}
 	return m, nil
@@ -1001,6 +1140,14 @@ func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
 		m.status = "nothing to promote here"
 		return m, nil
 	}
+	return m.promoteItem(item)
+}
+
+// promoteItem promotes a small task into a recipe.
+//
+// The console asks the domain before it acts. The cursor does not stay on the
+// id that left, on the backlog or on Ready, and the tab does not change.
+func (m *Model) promoteItem(item core.BacklogItem) (tea.Model, tea.Cmd) {
 	if p := core.PromotionOf(item); !p.Allowed {
 		m.refusal = refusalText(&core.RefusalError{Reason: p.Reason})
 		m.status = ""
@@ -1013,9 +1160,8 @@ func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
 	}
 	m.refusal = ""
 	m.status = fmt.Sprintf("promoted %s to recipe %s", item.ID, recipe.ID)
-	// The item has left the chef's hands. The cursor does not follow the new
-	// recipe, and it does not stay on the id that left.
 	m.backlogLeave = item.ID
+	m.readyLeave = item.ID
 	return m, m.reload()
 }
 

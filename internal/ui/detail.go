@@ -9,11 +9,11 @@ import (
 
 // detailLines renders the detail pane for the current tab's selection.
 //
-// The pane follows the tab: a recipe on Recipes, Path and Board, a backlog item
+// The pane follows the tab: a recipe on Recipes, Ready and Board, a backlog item
 // on Backlog, a journal entry on Log. One pane, whatever is selected.
 func (m *Model) detailLines(width int) []string {
 	switch m.tab {
-	case TabRecipes, TabPath, TabBoard:
+	case TabRecipes, TabReady, TabBoard:
 		rec, ok := m.currentRecipe()
 		if !ok {
 			return []string{m.styDim.Render("  (nothing selected)")}

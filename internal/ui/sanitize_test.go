@@ -32,7 +32,7 @@ func TestNothingRenderedCarriesControlCharacters(t *testing.T) {
 	}
 	m.height = 40
 
-	tabs := []Tab{TabRecipes, TabBacklog, TabPath, TabLog, TabSettings}
+	tabs := []Tab{TabRecipes, TabBacklog, TabReady, TabLog, TabSettings}
 	for _, tab := range tabs {
 		m.tab = tab
 		checkNoControlCharacters(t, "tab "+tab.Label(), m.View().Content)
@@ -83,7 +83,7 @@ func TestTheConsoleSurvivesThePathologicalPlan(t *testing.T) {
 	}
 	m.height = 30
 
-	for _, tab := range []Tab{TabRecipes, TabBacklog, TabPath, TabLog, TabSettings} {
+	for _, tab := range []Tab{TabRecipes, TabBacklog, TabReady, TabLog, TabSettings} {
 		m.tab = tab
 		out := StripANSI(m.View().Content)
 		lines := strings.Split(strings.TrimRight(out, "\n"), "\n")

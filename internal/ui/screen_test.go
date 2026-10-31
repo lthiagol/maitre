@@ -183,21 +183,14 @@ func TestTheLogTabSelectsEntries(t *testing.T) {
 	}
 }
 
-// The Path tab selects entries and the detail pane follows.
-func TestThePathTabSelectsEntries(t *testing.T) {
+// The Ready tab selects rows.
+func TestTheReadyTabSelectsEntries(t *testing.T) {
 	m := recipesModel(t)
-	m.tab = TabPath
+	m.tab = TabReady
 	m.height = 30
 	m.Update(tea.KeyPressMsg{Code: 'j'})
 	if m.currentSel() != 1 {
 		t.Fatalf("selection = %d, want 1", m.currentSel())
-	}
-	rec, ok := m.currentRecipe()
-	if !ok {
-		t.Fatal("the path tab should show the selected recipe in the detail pane")
-	}
-	if rec.ID == "" {
-		t.Fatal("no recipe selected")
 	}
 }
 
@@ -208,7 +201,7 @@ func TestEachTabHasASummary(t *testing.T) {
 	want := map[Tab]string{
 		TabRecipes:  "recipes",
 		TabBacklog:  "item",
-		TabPath:     "the path",
+		TabReady:    "adoptable",
 		TabLog:      "recent activity",
 		TabSettings: "the plan",
 	}

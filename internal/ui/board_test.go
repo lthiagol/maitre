@@ -105,7 +105,7 @@ func TestTheBoardSaysWhenItIsEmpty(t *testing.T) {
 // TestTheBoardDoesNotCallACycleEmpty covers the broken plan.
 //
 // "The tree is empty" means the plan has no recipes. A plan with a dependency cycle
-// has recipes — the Path tab lists them — and the tree must not say the same words
+// has recipes — Path lists them — and the tree must not say the same words
 // about both.
 func TestTheBoardDoesNotCallACycleEmpty(t *testing.T) {
 	m := cycleModel(t)

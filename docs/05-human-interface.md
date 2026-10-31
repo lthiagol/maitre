@@ -27,7 +27,7 @@ through `maitre-cli`.
 | **Home** | the plan's numbers — recipes, evidence, tasting, backlog, automation | see the plan at a glance |
 | **Recipes** | every recipe, triage-ordered | view · decide |
 | **Backlog** | backlog items — *Ideas* and *Small tasks*, derived from the kind | manage the backlog |
-| **Path** | the execution order, and what blocks what | run |
+| **Ready** | what an agent could claim now, and the open small tasks | see · promote |
 | **Board** | the same plan as a dependency tree — what waits on what | run |
 | **Log** | the activity journal | see the audit trail |
 | **Settings** | theme, keybinds, preferences | — |
@@ -192,9 +192,9 @@ applied:** the board still leads with the id.
 
 ### The Board — the plan as a tree
 
-The Path tab is the flat order; the **Board** is the same plan as a tree. It is the
-view v1's `raul` had: an execution trunk with labelled side branches, and blocked
-milestones forked at their dependency.
+**Ready** answers what an agent could claim now. The **Board** is the plan as a tree:
+what waits on what. It is the view v1's `raul` had: an execution trunk with labelled
+side branches, and blocked milestones forked at their dependency.
 
 ```
 ● RCP01   draft       Sharpen the AC gate                           0/2
@@ -206,9 +206,9 @@ milestones forked at their dependency.
    └─ RCP07   draft       Record the review protocol                    0/1 needs RCP05
 ```
 
-- **The trunk** is the Path tab's ready list, in the same order. Two tabs showing one
-  plan must not tell two stories, so the tree reads `core.Path`'s answer rather than
-  computing a second one.
+- **The trunk** is `core.Path`'s ready list, in the same order. The Ready tab answers
+  a different question — what an agent could claim now — so the tree keeps reading
+  `core.Path` rather than computing a second order.
 - **The branches** are the recipes that fork at a recipe — the ones waiting on it. A
   recipe with several unmet dependencies forks at the **first** one, the same rule
   `core.Path` uses, and its row says it needs them all: `needs RCP01, RCP02`.
@@ -235,7 +235,7 @@ title. Quitting restores the terminal exactly, and the shell's scrollback stays 
 ```
 row 0        maitre - <project>
 row 1        --------------------------------------------
-row 2        > Home   Recipes   Backlog   Path   Board   Log   Settings
+row 2        > Home   Recipes   Backlog   Ready   Board   Log   Settings
 row 3        7 recipes - 3 need you        refused - ac.covered
 row 4..      the list - scrollable, fills to the bottom
 row N-1      up/down move - tab switch - space sign off - q quit

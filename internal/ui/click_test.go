@@ -22,8 +22,8 @@ func click(t *testing.T, m *Model, x, y int) {
 // Two consoles in the same place have the same cursors: the click and the
 // keyboard must leave the same state behind.
 func selections(m *Model) string {
-	return fmt.Sprintf("recipes=%d backlog=%d path=%d board=%d log=%d theme=%d",
-		m.selRecipes, m.selBacklog, m.selPath, m.selBoard, m.selLog, m.selTheme)
+	return fmt.Sprintf("recipes=%d backlog=%d ready=%d board=%d log=%d theme=%d",
+		m.selRecipes, m.selBacklog, m.selReady, m.selBoard, m.selLog, m.selTheme)
 }
 
 // TestAClickOnATabLabelSwitchesTheTab covers the tab bar.
