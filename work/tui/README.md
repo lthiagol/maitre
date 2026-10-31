@@ -17,7 +17,7 @@
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | ✅ closed · 9 commits · 4dfd5a4, 187d706, f64e6a2, ac8df77, 588cf5f, 9c716ce, 0144216, 6bb7545, f8969ef | [tui-t2b.md](../briefs/tui-t2b.md) · [fix 1](../briefs/fix-tui-t2b-1.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ✅ closed · 9 commits · 4dc8079, 1b550c6, 1804ccc, b873821, 5edae71, aa4ba5f, da36146, 99a7576, 63964ce | [tui-t3a.md](../briefs/tui-t3a.md) · [fix 1](../briefs/fix-tui-t3a-1.md) · [fix 2](../briefs/fix-tui-t3a-2.md) |
 | **T3b** | the backlog moves | the domain answers the item's move; the console shapes · promotes · dismisses · creates | ✅ closed · 8 commits · 1297cdd, 35688a6, 4799b3b, 7de9a16, 4e14f19, 58069e7, c0f1624, 89eaecc | [tui-t3b.md](../briefs/tui-t3b.md) · [fix 1](../briefs/fix-tui-t3b-1.md) · [fix 2](../briefs/fix-tui-t2b-2.md) |
-| **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · 4 commits · 219b331, 79c7fb5, 36a1a35, dcaac47 | [tui-t4.md](../briefs/tui-t4.md) |
+| **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | 🔄 **review ok · fix cycle 1 in flight** — 4 commits · 219b331, 79c7fb5, 36a1a35, dcaac47 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ⏳ planned | — |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ⏳ planned | — |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
@@ -104,6 +104,19 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 | **The dispatch** | the brief plus the notify block with the orchestrator's **real pane id** — `$HERDR_PANE_ID`, not a placeholder |
 | **The delivery check** | one `herdr pane read --lines 40`, ~5 s after each dispatch. Activity lines mean delivered; the raw prompt above the spinner means a stuck draft — report it and ask the chef to press Enter, **never blind-resend** |
 
+**The lanes of the slice in flight**, so another session can reach them:
+
+| | |
+|---|---|
+| the **tab** | `w1H:t8` — *tui: T4* |
+| the **runner** | pane `w1H:pE`, handle `runner` |
+| the **reviewer** | pane `w1H:pF`, handle `reviewer` |
+| the **orchestrator** | pane `w1H:p1` — the one they nudge |
+
+A tab lives until it is closed, so these survive a session that ends. If a lane is
+gone, the receipt in `work/inbox/` is the record of what it did, and the slice's
+commits are in the log.
+
 ### The tree is shared
 
 Stage **by name** — never `git add -A`, never `git add .`. If a file you did not
@@ -170,6 +183,8 @@ make check                                  # the tree must be green
 cat work/tui/README.md                      # ← this file: the state
 cat work/tui/plan.md                        # the design, for the reasoning
 cat work/briefs/tui-t<N>.md                 # the contract for the next slice
+cat work/transcripts/tui-t<N>-*.md           # the lanes' scrollback for the slice
+sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # the ledger
 ```
 
 **Then:**
@@ -180,6 +195,10 @@ cat work/briefs/tui-t<N>.md                 # the contract for the next slice
 3. If it is `in progress`, read the last commit's body — it says where the session
    stopped — and continue from there. **Do not redo what landed.**
 4. If the row is `closed`, the next session is the next row that is not `closed`.
+5. If a slice was **in flight** when the session ended, its lanes may still be alive —
+   their tab and pane ids are in *The lanes* above. Nudge the runner with
+   `herdr agent prompt <runner-pane> "<the brief's notify command>"`, and **read
+   `work/inbox/` first: the receipt may already be there.**
 
 **A cold session needs three things and nothing else:** this file, the plan, and the
 brief. Everything else — the code, the docs, the history — is in the repository.
