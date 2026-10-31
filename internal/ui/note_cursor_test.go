@@ -29,6 +29,7 @@ func twoNoteModel(t *testing.T) *Model {
 	addExecutedRecipe(t, ops, chef, reviewer, "The second recipe", 1)
 
 	m := loadModel(t, store)
+	switchToTab(t, m, TabRecipes)
 	m.height = 30
 	return m
 }

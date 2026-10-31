@@ -15,7 +15,7 @@ import (
 // on the floor. Every view the console draws asks for it — the console's, the
 // error's and the opening one's.
 func TestTheMouseIsOn(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	if got := m.View().MouseMode; got != tea.MouseModeCellMotion {
 		t.Errorf("the console's mouse mode = %v, want cell motion", got)
 	}
@@ -38,7 +38,7 @@ func TestTheMouseIsOn(t *testing.T) {
 // The map is built by the render, so the boxes and the drawn row are the same
 // answer: the label is where the box says it is.
 func TestTheHitMapKnowsWhereTheTabsAre(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	rows := strings.Split(plain(m), "\n")
@@ -72,7 +72,7 @@ func TestTheHitMapKnowsWhereTheTabsAre(t *testing.T) {
 // A row holds an item, and the map says which: the index the tab's own selection
 // uses.
 func TestTheHitMapKnowsWhereTheRowsAre(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -109,7 +109,7 @@ func TestTheHitMapKnowsWhereTheRowsAre(t *testing.T) {
 // The banner sits between the summary and the list, so the list starts lower when
 // it is there. The map says so, and the map is what the mouse is answered against.
 func TestTheBannerPushesTheListDown(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 40
 	m.height = 30
 	m.refusal = "the gate said no"
@@ -132,7 +132,7 @@ func TestTheBannerPushesTheListDown(t *testing.T) {
 // It is one map, and the render is what fills it: a tab that shows other rows shows
 // other rows in the map.
 func TestTheMapFollowsTheFrame(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -159,7 +159,7 @@ func TestTheMapFollowsTheFrame(t *testing.T) {
 
 // TestTheWheelScrollsTheList covers the wheel over the list.
 func TestTheWheelScrollsTheList(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -184,7 +184,7 @@ func TestTheWheelScrollsTheList(t *testing.T) {
 // Two scrolls would be two answers to one question, so the wheel and the keyboard
 // must land in the same place.
 func TestTheWheelIsTheKeyboardsScroll(t *testing.T) {
-	wheeled := newModel(t)
+	wheeled := recipesModel(t)
 	wheeled.width = 120
 	wheeled.height = 12
 	wheeled.View()
@@ -194,7 +194,7 @@ func TestTheWheelIsTheKeyboardsScroll(t *testing.T) {
 	}
 	wheeled.View()
 
-	keyed := newModel(t)
+	keyed := recipesModel(t)
 	keyed.width = 120
 	keyed.height = 12
 	for i := 0; i < 2*wheelStep; i++ {
@@ -215,7 +215,7 @@ func TestTheWheelIsTheKeyboardsScroll(t *testing.T) {
 
 // TestTheWheelScrollsTheDetail covers the wheel over the detail pane.
 func TestTheWheelScrollsTheDetail(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -243,7 +243,7 @@ func TestTheWheelScrollsTheDetail(t *testing.T) {
 // The list is the console's one scrollable thing: where the pointer is not over the
 // detail, the list scrolls.
 func TestTheWheelOverTheHeaderScrollsTheList(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -261,7 +261,7 @@ func TestTheWheelOverTheHeaderScrollsTheList(t *testing.T) {
 // The full-screen detail has no list beside it, so there is nothing for the wheel to
 // scroll but the detail — and the header is not the detail.
 func TestTheWheelOverTheFullScreenHeaderDoesNothing(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -286,7 +286,7 @@ func TestTheWheelOverTheFullScreenHeaderDoesNothing(t *testing.T) {
 // The console is driven from a script by `maitre --keys`, and CI has no terminal, so
 // the mouse has to be drivable the way the keys are.
 func TestTheMouseIsDrivableFromAScript(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 12
 	before := m.selRecipes
@@ -306,7 +306,7 @@ func TestTheMouseIsDrivableFromAScript(t *testing.T) {
 // The position says where the pointer is, and the console answers what is under it:
 // the list on the left, the detail on the right.
 func TestTheScriptedMouseTakesAPosition(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 12
 	m.View()
@@ -333,7 +333,7 @@ func TestTheScriptedMouseTakesAPosition(t *testing.T) {
 
 // TestAnUnknownMouseStepIsRefused covers the driver's refusal.
 func TestAnUnknownMouseStepIsRefused(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	if _, err := Drive(m, []string{"wheel:sideways"}); err == nil {
 		t.Fatal("expected an unknown mouse step to be refused")
 	}
@@ -350,7 +350,7 @@ func TestAnUnknownMouseStepIsRefused(t *testing.T) {
 // While the prompt is open every input belongs to it — the console must not move
 // the selection out from under a half-typed answer.
 func TestTheWheelLeavesAnOpenPromptAlone(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 12
 	m.View()
@@ -382,7 +382,7 @@ func TestTheWheelLeavesAnOpenPromptAlone(t *testing.T) {
 // without looking at the offset, so the wheel moved the offset and the frame came
 // out the same.
 func TestTheWheelScrollsTheSplitDetail(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 20
 	before := StripANSI(m.View().Content)
@@ -419,7 +419,7 @@ func TestThePositionFormSurvivesTheCommandLine(t *testing.T) {
 
 // TestThePositionFormIsDrivable covers the command line's spelling, end to end.
 func TestThePositionFormIsDrivable(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 12
 	m.View()
@@ -439,7 +439,7 @@ func TestThePositionFormIsDrivable(t *testing.T) {
 // for nothing: the zero box answered for one cell at the origin, and the wheel at
 // the origin scrolled a pane that is not on screen.
 func TestTheOriginIsNotAPhantomDetail(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -467,7 +467,7 @@ func TestTheOriginIsNotAPhantomDetail(t *testing.T) {
 // The error view and the opening view draw no list and no detail, so the map is
 // cleared — and a cleared map answers nothing.
 func TestAClearedMapAnswersNothing(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()

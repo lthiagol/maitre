@@ -22,6 +22,17 @@ func newModel(t *testing.T) *Model {
 	return loadModel(t, store)
 }
 
+// recipesModel builds a console over a seeded plan, on the Recipes tab.
+//
+// The console lands on **Home** now — it is where the chef lands — so a test that
+// means the Recipes tab says so.
+func recipesModel(t *testing.T) *Model {
+	t.Helper()
+	m := newModel(t)
+	switchToTab(t, m, TabRecipes)
+	return m
+}
+
 // loadModel reads a plan into a console model.
 // loadModel builds a console over a plan, through the live path.
 //
@@ -69,7 +80,7 @@ func TestConsoleShowsTheTabs(t *testing.T) {
 }
 
 func TestRecipesTabGroupsByTriage(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	out := plain(m)
 	for _, section := range []string{core.TriageNeedsYou, core.TriageOnTheLine, core.TriageBeingShaped, core.TriageServed} {
 		if !strings.Contains(out, section) {
@@ -82,7 +93,7 @@ func TestRecipesTabGroupsByTriage(t *testing.T) {
 }
 
 func TestServedCheckboxHidesTheServedRecipes(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	if !strings.Contains(plain(m), "Draft the glossary") {
 		t.Fatal("the served recipe should be visible by default")
 	}
@@ -112,23 +123,27 @@ func TestOrderKeysSwitchTheOrdering(t *testing.T) {
 
 func TestTabKeySwitchesTabs(t *testing.T) {
 	m := newModel(t)
+	if m.tab != TabHome {
+		t.Fatal("the console should open on Home")
+	}
+	m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	if m.tab != TabRecipes {
-		t.Fatal("the console should open on Recipes")
+		t.Fatalf("tab = %v, want Recipes", m.tab)
 	}
 	m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	if m.tab != TabBacklog {
 		t.Fatalf("tab = %v, want Backlog", m.tab)
 	}
-	for i := 0; i < len(TabNames)-1; i++ {
+	for i := 0; i < len(TabNames)-2; i++ {
 		m.Update(tea.KeyPressMsg{Code: tea.KeyTab})
 	}
-	if m.tab != TabRecipes {
-		t.Fatalf("tab = %v, want Recipes after a full cycle", m.tab)
+	if m.tab != TabHome {
+		t.Fatalf("tab = %v, want Home after a full cycle", m.tab)
 	}
 }
 
 func TestSpaceSignsOffAReadyRecipe(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	// RCP02 is the ready one, and triage puts it first.
 	if s, ok := m.currentSummary(); !ok || s.ID != "RCP02" {
 		t.Fatalf("the first recipe should be RCP02, got %+v", s)
@@ -151,7 +166,7 @@ func TestSpaceSignsOffAReadyRecipe(t *testing.T) {
 }
 
 func TestSpaceDoesNotStartWork(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	// Move to RCP04, which is approved.
 	for {
 		s, _ := m.currentSummary()
@@ -177,7 +192,7 @@ func TestSpaceDoesNotStartWork(t *testing.T) {
 }
 
 func TestNothingToDoIsNotARefusal(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	// RCP07 is a draft — there is nothing for the chef to do.
 	for {
 		s, _ := m.currentSummary()
@@ -196,7 +211,7 @@ func TestNothingToDoIsNotARefusal(t *testing.T) {
 }
 
 func TestEnterOpensTheDetailFullScreen(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 	if m.mode != ModeDetail {
 		t.Fatalf("mode = %v, want detail", m.mode)

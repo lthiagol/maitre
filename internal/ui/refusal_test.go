@@ -14,7 +14,7 @@ import (
 // when the gap went negative — so the refusal was invisible at the default width. A
 // refused write that shows no banner reads as nothing happened.
 func TestALongRefusalIsVisible(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 80
 	m.height = 40
 	m.refusal = "refused — this plan was written under domain version 2 and this tool speaks version 1: upgrade the tool, or read the plan without writing to it"
@@ -35,7 +35,7 @@ func TestALongRefusalIsVisible(t *testing.T) {
 // A refusal that fits keeps the place it has always had: on the summary line, right
 // aligned, in the warning style.
 func TestAShortRefusalStaysOnTheSummaryLine(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.refusal = "refused — review.clean"
 
 	raw := m.View().Content
@@ -63,7 +63,7 @@ func TestAShortRefusalStaysOnTheSummaryLine(t *testing.T) {
 // The banner cannot be free: the screen is a fixed number of rows, and a banner that
 // overflowed it would push the footer off the screen.
 func TestTheRefusalBannerTakesRowsFromTheList(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 80
 	m.height = 40
 	m.refusal = strings.Repeat("a long reason ", 40)
@@ -94,7 +94,7 @@ func TestTheRefusalBannerTakesRowsFromTheList(t *testing.T) {
 // agent-written reviewer name, and the summary line does not neutralise it. A
 // refusal that arrives wrapped is still a refusal, so it has to be recognised.
 func TestAWrappedRefusalStillNamesTheGate(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	wrapped := fmt.Errorf("while closing: %w", &core.GateError{
 		Event: core.EventClose,
 		Gates: []string{"review.clean", "audit.documented (the audit trail has no documentation)"},

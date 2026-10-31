@@ -23,10 +23,10 @@ func (m *Model) detailLines(width int) []string {
 		return m.backlogDetail(width)
 	case TabLog:
 		return m.logDetail(width)
-	case TabSousChef:
-		// There is nothing to open: the Sous-Chef is not a list of recipes. Saying so is
+	case TabHome:
+		// There is nothing to open: Home shows numbers, not items. Saying so is
 		// better than an empty pane, which looks like a broken console.
-		return []string{m.styDim.Render("  Nothing to open here — the Sous-Chef is not a list of recipes.")}
+		return []string{m.styDim.Render("  Nothing to open here — Home shows the plan's numbers, not items.")}
 	}
 	return []string{m.styDim.Render("  (nothing to show here)")}
 }

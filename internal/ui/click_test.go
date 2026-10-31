@@ -28,7 +28,7 @@ func selections(m *Model) string {
 
 // TestAClickOnATabLabelSwitchesTheTab covers the tab bar.
 func TestAClickOnATabLabelSwitchesTheTab(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -83,7 +83,7 @@ func drawnRecipeID(t *testing.T, frame string, row int) string {
 // The row is the fourth recipe's row — deep enough that the row the pointer
 // went over and the recipe under the cursor are two different answers.
 func TestAClickOnARowSelectsIt(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -122,7 +122,7 @@ func TestAClickOnARowSelectsIt(t *testing.T) {
 // The cursor is somewhere else before the click, so a header click that moved
 // it — to item 0, say — is visible.
 func TestAClickOnAHeaderRowSelectsNothing(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -151,7 +151,7 @@ func TestAClickOnAHeaderRowSelectsNothing(t *testing.T) {
 // selected would show the chef nothing. The click also opens the detail: the
 // keyboard's `enter`.
 func TestAClickOnARowInTheNarrowLayoutOpensTheDetail(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()
@@ -182,7 +182,7 @@ func TestAClickOnARowInTheNarrowLayoutOpensTheDetail(t *testing.T) {
 // The detail is on screen there, beside the list, and it follows the selection —
 // so the click selects, and nothing else.
 func TestAClickOnARowInTheSplitLayoutOnlySelects(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 30
 	m.View()
@@ -215,7 +215,7 @@ func TestAClickOnARowInTheSplitLayoutOnlySelects(t *testing.T) {
 // The Backlog has a detail now: the item's own. In the narrow layout the detail is
 // not on screen, so the click opens it — the keyboard's `enter`.
 func TestAClickOnTheBacklogOpensTheItem(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.tab = TabBacklog
@@ -239,7 +239,7 @@ func TestAClickOnTheBacklogOpensTheItem(t *testing.T) {
 // The theme is applied by `enter`, and applying it is a write. A click selects
 // the theme under the pointer and stops there.
 func TestAClickOnAThemeRowSelectsItAndDoesNotApplyIt(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.tab = TabSettings
@@ -267,7 +267,7 @@ func TestAClickOnAThemeRowSelectsItAndDoesNotApplyIt(t *testing.T) {
 // A click inside the detail pane is the console's `enter` on that recipe: the
 // detail takes the screen, and `esc` brings it back.
 func TestAClickOnTheDetailPaneOpensIt(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 30
 	m.View()
@@ -284,7 +284,7 @@ func TestAClickOnTheDetailPaneOpensIt(t *testing.T) {
 // The detail already has the screen, and `enter` does nothing there — so the
 // click does nothing there too.
 func TestAClickOnTheFullScreenDetailDoesNothing(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 30
 	m.View()
@@ -308,7 +308,7 @@ func stepAt(verb string, x, y int) string {
 // The console is driven from a script by `maitre --keys`, and CI has no terminal,
 // so the click has to be drivable the way the keys are.
 func TestTheClickIsDrivableFromAScript(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 12
 	m.View()
@@ -325,7 +325,7 @@ func TestTheClickIsDrivableFromAScript(t *testing.T) {
 
 // TestTheScriptedClickTakesAPosition covers a click on a row.
 func TestTheScriptedClickTakesAPosition(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 12
 	m.View()
@@ -361,7 +361,7 @@ func TestTheClickSurvivesTheSplitter(t *testing.T) {
 
 // TestAnUnknownClickStepIsRefused covers the driver's refusal.
 func TestAnUnknownClickStepIsRefused(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	if _, err := Drive(m, []string{"click:sideways"}); err == nil {
 		t.Fatal("expected an unknown click to be refused")
 	}
@@ -379,7 +379,7 @@ func TestAnUnknownClickStepIsRefused(t *testing.T) {
 // fixed by writing the position, an unknown step by writing a step the console
 // knows — so the reader must be able to tell them apart.
 func TestTheRefusalsNameTheirCause(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 
 	// The bracket is never closed: the step is known, and the position is wrong.
 	_, err := Drive(m, []string{"click@(1,2"})
@@ -405,7 +405,7 @@ func TestTheRefusalsNameTheirCause(t *testing.T) {
 // While the prompt is open every input belongs to it — the console must not move
 // the selection out from under a half-typed answer.
 func TestTheClickLeavesAnOpenPromptAlone(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 12
 	m.View()
@@ -468,7 +468,7 @@ func TestTheClickOnATabIsTheKeyboardsSwitch(t *testing.T) {
 // inside its list. A click that set the tab and skipped the rest would be a
 // second answer to one question.
 func TestTheClickOnATabClampsTheCursors(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.status = "signed off RCP02"
@@ -491,7 +491,7 @@ func TestTheClickOnATabClampsTheCursors(t *testing.T) {
 // The tab bar joins its parts with a separator, and the separator belongs to no
 // tab: a click on it changes nothing.
 func TestAClickOnTheGapBetweenTabsDoesNothing(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 120
 	m.height = 30
 	m.View()

@@ -99,6 +99,7 @@ func TestTheStressPlanMatchesTheGolden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	m.tab = TabRecipes
 	m.height = 40
 	got := StripANSI(m.View().Content)
 

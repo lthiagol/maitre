@@ -26,6 +26,7 @@ func noteModel(t *testing.T) *Model {
 	addExecutedRecipe(t, ops, chef, reviewer, "The chef can triage a tasting note", 2)
 
 	m := loadModel(t, store)
+	switchToTab(t, m, TabRecipes)
 	m.height = 30
 	return m
 }

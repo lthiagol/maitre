@@ -71,7 +71,7 @@ func TestThePalettesAreThePublishedOnes(t *testing.T) {
 //
 // The golden snapshots are the real net for that; this says which palette they are.
 func TestKitchenIsTheDefault(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	if m.theme.name != "Kitchen" {
 		t.Fatalf("the default theme is %q, want Kitchen", m.theme.name)
 	}
@@ -81,7 +81,7 @@ func TestKitchenIsTheDefault(t *testing.T) {
 //
 // A theme that changed one corner of the screen would be a theme half applied.
 func TestTheThemeRepaintsTheConsole(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	before := m.View().Content
 
 	latte := paletteNamed(t, "Catppuccin Latte")
@@ -103,7 +103,7 @@ func TestTheThemeRepaintsTheConsole(t *testing.T) {
 // The console sets its background explicitly, so a light theme's ground has to be the
 // one it sets — otherwise the text is tuned for a ground it is not drawn on.
 func TestALightThemeIsLight(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	latte := paletteNamed(t, "Catppuccin Latte")
 	m.theme = newTheme(latte)
 
@@ -124,7 +124,7 @@ func TestALightThemeIsLight(t *testing.T) {
 // The Settings tab is the one tab with no cursor; now it has one, the active theme is
 // marked, and the footer says how to apply.
 func TestTheSettingsTabPicksTheTheme(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.tab = TabSettings
 	m.width = 100
 	m.height = 40
@@ -174,7 +174,7 @@ func TestTheSettingsTabPicksTheTheme(t *testing.T) {
 // The theme is the chef's setting, not the plan's: reloading the plan must not take it
 // away.
 func TestTheThemeSurvivesAReload(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	mocha := paletteNamed(t, "Catppuccin Mocha")
 	m.theme = newTheme(mocha)
 

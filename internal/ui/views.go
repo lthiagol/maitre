@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"charm.land/bubbletea/v2"
@@ -74,6 +73,11 @@ func (m *Model) renderLayout() string {
 
 	if m.mode == ModeDetail {
 		return m.renderDetailFull()
+	}
+	// The Home tab has no detail: it shows the plan's numbers, and the whole width
+	// is the numbers' column. A pane beside it would hold nothing.
+	if m.tab == TabHome {
+		return m.renderSingle(lines)
 	}
 	if m.width >= splitThreshold && m.mode == ModeSplit {
 		return m.renderSplit(lines)
@@ -239,28 +243,6 @@ func (m *Model) header() string {
 		m.styFaint.Render(" · ") + m.styAcc.Render(m.projectName())
 }
 
-// markFor is the drawing that fits a column of the given width.
-//
-// A drawing that does not fit **wraps**, and a wrapped row breaks the layout — so
-// the column chooses the form:
-//
-//	column fits 28 → the full form
-//	column fits 14 → the half form
-//	column fits neither → no art, and the tab is as it is now
-//
-// The one-space indent counts: the drawing is drawn one column in, like the rest of
-// the tab.
-func markFor(column int) []string {
-	switch {
-	case column >= brand.Width(brand.Full)+1:
-		return brand.Full
-	case column >= brand.Width(brand.Half)+1:
-		return brand.Half
-	default:
-		return nil
-	}
-}
-
 // ruleLine is the rule under the header.
 func (m *Model) ruleLine() string {
 	return m.styRule.Render(strings.Repeat("─", max(10, m.width)))
@@ -413,6 +395,8 @@ func wrapText(s string, width int) []string {
 // summaryText is the per-tab summary line.
 func (m *Model) summaryText() string {
 	switch m.tab {
+	case TabHome:
+		return "the plan at a glance · nothing to press here"
 	case TabRecipes:
 		text := fmt.Sprintf("%d %s · %d need you",
 			len(m.recipes), plural(len(m.recipes), "recipe", "recipes"), m.countNeedsYou())
@@ -451,8 +435,6 @@ func (m *Model) summaryText() string {
 			len(tree.Roots)+waiting, len(tree.Roots), waiting)
 	case TabLog:
 		return fmt.Sprintf("recent activity · %d events", len(m.journal.Events))
-	case TabSousChef:
-		return "the sous-chef · the orchestrator · not built yet"
 	default:
 		return "the plan"
 	}
@@ -475,6 +457,11 @@ func (m *Model) footer() string {
 	switch {
 	case m.mode == ModeDetail:
 		keys = append(keys, key{"↑↓", "scroll"}, key{"esc", "back"})
+	case m.tab == TabHome:
+		// The Home tab shows numbers and nothing to press: there is no item under
+		// the cursor, so the footer promises no move — not `space`, not `enter`,
+		// not the cursor.
+		keys = append(keys, key{"tab", "switch"})
 	case m.tab == TabSettings:
 		// The Settings tab has no recipe to open: `enter` applies the theme.
 		keys = append(keys, key{"↑↓", "move"}, key{"tab", "switch"}, key{"enter", "apply theme"})
@@ -567,8 +554,8 @@ func (m *Model) listLines() []listLine {
 		return m.boardTree().rows
 	case TabLog:
 		return m.logLines()
-	case TabSousChef:
-		return m.sousChefLines()
+	case TabHome:
+		return m.homeLines()
 	case TabSettings:
 		return m.settingsLines()
 	default:
@@ -981,105 +968,6 @@ func (m *Model) logRow(e core.JournalEntry) string {
 	}
 	return m.styFaint.Render(padRight(at, 10)) + padRight(e.Kind, 11) +
 		m.styFaint.Render(padRight(recipe, 5)) + m.styDim.Render(e.Actor)
-}
-
-// sousChefLines renders the Sous-Chef tab.
-//
-// The mark goes at the top, above the section — when there is room for it. The
-// decoration yields to the content, in both dimensions: the column chooses the
-// form, and the height decides whether there is a form at all.
-func (m *Model) sousChefLines() []listLine {
-	content := m.sousChefContent()
-	art := m.sousChefMark(len(content))
-	if len(art) == 0 {
-		return content
-	}
-
-	block := make([]listLine, 0, len(art)+1)
-	for _, line := range art {
-		block = append(block, listLine{text: " " + line, itemIdx: -1})
-	}
-	block = append(block, listLine{text: "", itemIdx: -1})
-
-	out := make([]listLine, 0, len(content)+len(block))
-	out = append(out, content[0])
-	out = append(out, block...)
-	out = append(out, content[1:]...)
-	return out
-}
-
-// sousChefMark is the mark for the tab, when the tab has room for it.
-//
-// The height rule is the content's rule. The tab's area is `height − 5` rows, the
-// content takes most of them, and the mark takes six more. When the content and
-// the mark do not both fit, the tab has **no mark** — a face is worthless if it
-// costs the chef the last thing that happened.
-func (m *Model) sousChefMark(contentRows int) []string {
-	art := markFor(m.listColumn())
-	if len(art) == 0 {
-		return nil
-	}
-	if contentRows+len(art)+1 > m.listAreaHeight() {
-		return nil
-	}
-	return art
-}
-
-// sousChefContent is the tab's content, without the mark.
-//
-// The Sous-Chef is the orchestrator agent: it calls the tickets, routes them, and
-// keeps the line moving. It is not built yet, and this tab says so — a tab that is
-// *waiting* must not look like a tab that is failing.
-//
-// What it shows for now is the automation's vital signs: the rules the plan was
-// last written under, the rules this build speaks, and the last thing that
-// happened. The recipe counts, the triage and the tree are the other tabs'
-// business.
-//
-// The mark is not part of it: the content is whole without the mark, and the mark
-// is only ever added to it.
-func (m *Model) sousChefContent() []listLine {
-	var out []listLine
-	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
-
-	add("")
-	add(" " + m.stySec.Render("SOUS-CHEF"))
-	add("  " + m.styDim.Render("The orchestrator agent. It calls the tickets, routes"))
-	add("  " + m.styDim.Render("them, and keeps the line moving."))
-	add("")
-	add("  " + m.styWarn.Render("Not built yet.") + m.styDim.Render(" This tab is where the chef"))
-	add("  " + m.styDim.Render("will watch the automation work."))
-
-	add("")
-	add(" " + m.stySec.Render("VITAL SIGNS"))
-	planVersion := core.PlanDomainVersion(m.journal)
-	add("  " + m.styDim.Render("plan written under  ") + m.styFaint.Render(strconv.Itoa(planVersion)))
-	add("  " + m.styDim.Render("this build speaks  ") + m.styFaint.Render(strconv.Itoa(core.DomainVersion)))
-	if planVersion == core.DomainVersion {
-		add("  " + m.styDim.Render("they agree"))
-	} else {
-		add("  " + m.styWarn.Render("they do not agree") +
-			m.styDim.Render(" — this build does not write plans written under another version"))
-	}
-
-	add("")
-	add(" " + m.stySec.Render("LAST EVENT"))
-	if len(m.journal.Events) == 0 {
-		add("  " + m.styDim.Render("the plan has no events"))
-		return out
-	}
-	e := m.journal.Events[len(m.journal.Events)-1]
-	at := e.At
-	if len(at) >= 19 {
-		at = at[11:19]
-	}
-	recipe := e.Recipe
-	if recipe == "" {
-		recipe = "·"
-	}
-	add("  " + m.styFaint.Render(padRight(e.Kind, 12)) + m.styFaint.Render(padRight(recipe, 6)) +
-		m.styDim.Render(padRight(e.Actor, 10)) + m.styDim.Render(at))
-	return out
 }
 
 // settingsLines renders the Settings tab.

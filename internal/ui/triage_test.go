@@ -65,6 +65,7 @@ func selfReviewedModel(t *testing.T) *Model {
 	}
 
 	m := loadModel(t, store)
+	switchToTab(t, m, TabRecipes)
 	m.height = 30
 	return m
 }

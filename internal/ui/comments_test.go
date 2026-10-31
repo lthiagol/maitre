@@ -45,7 +45,9 @@ func recipeWithComments(t *testing.T) *Model {
 	if _, err := ops.AddComment(r.ID, "chef", "the review as a whole looks fine", ""); err != nil {
 		t.Fatal(err)
 	}
-	return loadModel(t, store)
+	m := loadModel(t, store)
+	switchToTab(t, m, TabRecipes)
+	return m
 }
 
 // detail is the detail pane for the only recipe.

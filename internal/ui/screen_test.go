@@ -11,7 +11,7 @@ import (
 
 // The console owns the terminal.
 func TestTheConsoleUsesTheAltScreen(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 30
 	v := m.View()
 	if !v.AltScreen {
@@ -27,7 +27,7 @@ func TestTheConsoleUsesTheAltScreen(t *testing.T) {
 
 // The screen is filled to the bottom, with the footer pinned there.
 func TestTheFooterIsPinnedToTheBottom(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 30
 	out := StripANSI(m.View().Content)
 	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
@@ -44,7 +44,7 @@ func TestTheFooterIsPinnedToTheBottom(t *testing.T) {
 
 // The footer says what `space` will do, which depends on what is selected.
 func TestTheFooterIsContextual(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 30
 
 	// The first recipe is ready — space signs it off.
@@ -69,7 +69,7 @@ func TestTheFooterIsContextual(t *testing.T) {
 // TestTheConsoleDoesNotImpersonateAnAgent checks the console never records itself as
 // the runner. Claiming work is the CLI's job.
 func TestTheConsoleDoesNotImpersonateAnAgent(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 30
 
 	// RCP04 is approved. Space on it must not claim it.
@@ -96,7 +96,7 @@ func TestTheConsoleDoesNotImpersonateAnAgent(t *testing.T) {
 
 // The list scrolls to keep the selection visible.
 func TestTheListScrollsToTheSelection(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 12 // only a few rows of list
 
 	// The selection starts at the top.
@@ -128,7 +128,7 @@ func TestTheListScrollsToTheSelection(t *testing.T) {
 
 // Home and end jump to the ends of the list.
 func TestHomeAndEnd(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 12
 	m.Update(tea.KeyPressMsg{Code: 'G'})
 	if m.currentSel() == 0 {
@@ -142,7 +142,7 @@ func TestHomeAndEnd(t *testing.T) {
 
 // A resize re-lays out.
 func TestResizeRelaysOut(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 30
 	m.Update(tea.WindowSizeMsg{Width: 100, Height: 50})
 	out := StripANSI(m.View().Content)
@@ -154,7 +154,7 @@ func TestResizeRelaysOut(t *testing.T) {
 
 // The split appears on a wide terminal.
 func TestTheSplitAppearsOnAWideTerminal(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 40
 	m.Update(tea.WindowSizeMsg{Width: 180, Height: 40})
 	out := StripANSI(m.View().Content)
@@ -170,7 +170,7 @@ func TestTheSplitAppearsOnAWideTerminal(t *testing.T) {
 
 // The Log tab selects entries, newest first.
 func TestTheLogTabSelectsEntries(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.tab = TabLog
 	m.height = 30
 	m.Update(tea.KeyPressMsg{Code: 'j'})
@@ -185,7 +185,7 @@ func TestTheLogTabSelectsEntries(t *testing.T) {
 
 // The Path tab selects entries and the detail pane follows.
 func TestThePathTabSelectsEntries(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.tab = TabPath
 	m.height = 30
 	m.Update(tea.KeyPressMsg{Code: 'j'})
@@ -203,7 +203,7 @@ func TestThePathTabSelectsEntries(t *testing.T) {
 
 // A summary line says what the tab holds.
 func TestEachTabHasASummary(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.height = 30
 	want := map[Tab]string{
 		TabRecipes:  "recipes",

@@ -26,6 +26,7 @@ func TestTheConsoleShowsADeviation(t *testing.T) {
 	}
 	// The console reads the plan after the deviation was recorded.
 	m := loadModel(t, store)
+	switchToTab(t, m, TabRecipes)
 	for {
 		s, ok := m.currentSummary()
 		if ok && s.ID == "RCP01" {
@@ -47,7 +48,7 @@ func TestTheConsoleShowsADeviation(t *testing.T) {
 // newest events that fit, so the selection could point at an event that was not on
 // the screen — and the detail pane showed it anyway.
 func TestTheLogSelectionMatchesTheList(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.tab = TabLog
 	m.height = 30
 	m.Update(tea.KeyPressMsg{Code: 'G'})

@@ -47,6 +47,7 @@ func longDetailModel(t *testing.T) *Model {
 	}
 
 	m := loadModel(t, store)
+	switchToTab(t, m, TabRecipes)
 	m.width = 200
 	m.height = 20
 	return m

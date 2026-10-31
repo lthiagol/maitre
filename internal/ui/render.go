@@ -76,7 +76,7 @@ func snapshotModel(store *core.Store, width int, opts ...Option) (*Model, error)
 // renderAll renders every tab, one after another.
 func (m *Model) renderAll() string {
 	var b strings.Builder
-	for _, tab := range []Tab{TabRecipes, TabBacklog, TabPath, TabBoard, TabLog, TabSousChef, TabSettings} {
+	for _, tab := range []Tab{TabHome, TabRecipes, TabBacklog, TabPath, TabBoard, TabLog, TabSettings} {
 		m.tab = tab
 		b.WriteString(m.header() + "\n")
 		b.WriteString(m.styRule.Render(strings.Repeat("─", max(10, m.width))) + "\n")

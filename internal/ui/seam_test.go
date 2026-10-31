@@ -39,7 +39,7 @@ func TestEnterOpensTheLogEntry(t *testing.T) {
 //
 // A key that does nothing is a promise the console cannot keep. The footer offers
 // `enter detail` only where there is a detail to open — the Log's entry, the
-// backlog item's, a recipe's — and not where there is none: not on the Sous-Chef,
+// backlog item's, a recipe's — and not where there is none: not on Home,
 // and not on a tab with nothing selected.
 func TestTheFooterPromisesOnlyWhatItDoes(t *testing.T) {
 	m := newModel(t)
@@ -50,10 +50,10 @@ func TestTheFooterPromisesOnlyWhatItDoes(t *testing.T) {
 		t.Errorf("the footer does not offer the Log's detail\n%s", out)
 	}
 
-	// The Sous-Chef: there is nothing to open.
-	m.tab = TabSousChef
+	// Home: there is nothing to open.
+	m.tab = TabHome
 	if out := plain(m); strings.Contains(out, "enter detail") {
-		t.Errorf("the footer promises a detail the Sous-Chef does not have\n%s", out)
+		t.Errorf("the footer promises a detail Home does not have\n%s", out)
 	}
 
 	// The Recipes tab with nothing selected: nothing to open either.

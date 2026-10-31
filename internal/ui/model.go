@@ -15,21 +15,22 @@ import (
 type Tab int
 
 const (
-	TabRecipes Tab = iota
+	// TabHome is where the console lands: the plan's numbers, and nothing to press.
+	TabHome Tab = iota
+	TabRecipes
 	TabBacklog
 	TabPath
 	TabBoard
 	TabLog
-	TabSousChef
 	TabSettings
 )
 
 // TabNames are the tab labels, in order.
 //
+// The Home tab is first: it is the landing place, and it holds the plan's numbers.
 // The Board sits next to the Path: the two are the same plan seen two ways — the
-// flat order, and the tree. The Sous-Chef sits with the Log: the two are the automation's
-// running, seen two ways — the history, and the place that will watch it happen.
-var TabNames = []string{"Recipes", "Backlog", "Path", "Board", "Log", "Sous-Chef", "Settings"}
+// flat order, and the tree.
+var TabNames = []string{"Home", "Recipes", "Backlog", "Path", "Board", "Log", "Settings"}
 
 // Label is the tab's name.
 func (t Tab) Label() string { return TabNames[int(t)] }
@@ -654,7 +655,7 @@ func (m *Model) switchTab(t Tab) {
 // openDetail gives the detail the screen.
 //
 // It is the keyboard's `enter`: the detail takes the screen, and `esc` brings it
-// back. A tab that has nothing to open — the Settings, the Sous-Chef — has no
+// back. A tab that has nothing to open — the Settings, the Home — has no
 // detail to open, so the move does nothing there.
 func (m *Model) openDetail() {
 	if m.mode != ModeSplit {

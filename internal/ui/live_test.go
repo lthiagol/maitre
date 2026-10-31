@@ -64,6 +64,7 @@ func pollTick(t *testing.T, m *Model) (*Model, tea.Msg) {
 // The chef does not press `r`: the plan changed on disk, and the console sees it.
 func TestAChangeOnDiskAppears(t *testing.T) {
 	m, store := liveModel(t)
+	m.tab = TabRecipes
 
 	// An agent renames the recipe on disk.
 	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})

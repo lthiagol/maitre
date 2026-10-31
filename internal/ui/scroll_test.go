@@ -9,7 +9,7 @@ import (
 // nothing moved it, so the bottom of a recipe — its deviations, its review thread —
 // was unreachable.
 func TestTheDetailPaneScrolls(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 100
 	m.height = 14
 
@@ -41,7 +41,7 @@ func TestTheDetailPaneScrolls(t *testing.T) {
 
 // TestTheScrollIndicatorSaysWhereYouAre checks the pane does not lose its place.
 func TestTheScrollIndicatorSaysWhereYouAre(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 100
 	m.height = 14
 
@@ -60,7 +60,7 @@ func TestTheScrollIndicatorSaysWhereYouAre(t *testing.T) {
 
 // TestScrollingBackUpWorks checks the scroll is not a one-way trip.
 func TestScrollingBackUpWorks(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 100
 	m.height = 14
 
@@ -82,7 +82,7 @@ func TestScrollingBackUpWorks(t *testing.T) {
 // TestTheDetailPaneFitsTheTerminal covers a layout bug: the pane counted entries, not
 // rows, so a markdown paragraph that wrapped pushed the footer off the screen.
 func TestTheDetailPaneFitsTheTerminal(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 100
 	m.height = 20
 
@@ -98,7 +98,7 @@ func TestTheDetailPaneFitsTheTerminal(t *testing.T) {
 
 // TestTheSplitPaneFitsTheTerminal checks the same for the side-by-side layout.
 func TestTheSplitPaneFitsTheTerminal(t *testing.T) {
-	m := newModel(t)
+	m := recipesModel(t)
 	m.width = 200
 	m.height = 20
 
