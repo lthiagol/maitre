@@ -43,7 +43,7 @@ Two consequences that used to be accidents and are now rules:
 | The reviewer | `taster` | **reviewer** |
 | The orchestrator | `expo` | **orchestrator** |
 | The tree tab | `Chopboard` | **Board** — the plan's shape: what waits on what |
-| The order tab | `Path` | **Path** — the plan's order: what can go now |
+| The order tab | `Path` | **Ready** — what an agent could claim now. The view and the CLI command stay `path` |
 | The automation's tab | `Expo` | **Home** — the landing tab; the machine's vital signs live on it, and the tab itself comes back when the orchestrator does |
 | A criterion's record | `Proof` | **evidence** |
 | The recipe-level stamp | `Evidence` | **completion** |

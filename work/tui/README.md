@@ -19,8 +19,8 @@
 | **T3b** | the backlog moves | the domain answers the item's move; the console shapes · promotes · dismisses · creates | ✅ closed · 8 commits · 1297cdd, 35688a6, 4799b3b, 7de9a16, 4e14f19, 58069e7, c0f1624, 89eaecc | [tui-t3b.md](../briefs/tui-t3b.md) · [fix 1](../briefs/fix-tui-t3b-1.md) · [fix 2](../briefs/fix-tui-t2b-2.md) |
 | **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · cycle 2 ok · 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) · [cycle 2](../briefs/review-tui-t4-cycle2.md) |
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
-| **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ implemented · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) |
-| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ⏳ planned | — |
+| **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
+| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | 🔄 briefed | [tui-t6.md](../briefs/tui-t6.md) |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -28,11 +28,14 @@
 half-built slice is `in progress`, and its commits are already in the log — read the
 last commit's body before redoing anything.
 
-**The briefs that exist** are T1, T2a, T2b, T3a, T3b, T4, Q9 and T5. The rest are written **just
+**The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**The next session is T5** — the Ready tab. Q9 is closed: empty backlog lists are
-`[]`, and the selection follows the item. T4 gave the console its landing place: **Home** is the first tab, it
+**The next session is T6** — the Board, left to right at 160 columns. T5 is closed.
+Two notes from its review, neither a finding: the note-cursor test's space-triage
+half does not run on the Board, and `docs/07` named the order tab Path — that row
+now says **Ready**, and the view and the CLI command stay `path`. T4 gave the
+console its landing place: **Home** is the first tab, it
 shows the plan's numbers and **no items** (a test holds it), the art moved there and
 sits beside the numbers, and the Sous-Chef dissolved into Home's automation block.
 The numbers are the domain's — `core.PlanStats`, a view with a row in `docs/03` § 8
@@ -113,9 +116,9 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 
 | | |
 |---|---|
-| the **tab** | `w1H:tF` — *tui: T5* |
-| the **runner** | pane `w1H:pR`, handle `runner-t5` |
-| the **reviewer** | pane `w1H:pS`, handle `reviewer-t5` — briefed |
+| the **tab** | `w1H:tG` — *tui: T6* |
+| the **runner** | pane `w1H:pT`, handle `runner-t6` |
+| the **reviewer** | pane `w1H:pV`, handle `reviewer-t6` — started, not briefed |
 | the **orchestrator** | pane `w1H:pJ` — the one they nudge |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
