@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
@@ -254,5 +255,74 @@ func TestTheFilterFindsABacklogItemByItsTag(t *testing.T) {
 	}
 	if strings.Contains(out, "The chef wants a weekly digest") {
 		t.Errorf("the items that do not match should be gone:\n%s", out)
+	}
+}
+
+// sectionCount is the count a section header shows, or -1 when the header is not
+// on screen.
+func sectionCount(out, name string) int {
+	for _, line := range screenLines(out) {
+		trimmed := strings.TrimSpace(line)
+		if !strings.HasPrefix(trimmed, name) {
+			continue
+		}
+		fields := strings.Fields(trimmed)
+		n, err := strconv.Atoi(fields[len(fields)-1])
+		if err != nil {
+			continue
+		}
+		return n
+	}
+	return -1
+}
+
+// TestTheSummarySaysWhatTheFilterIsOn covers AC-03.
+//
+// The summary says the filter is on and on what: `filter: <text> · N of M` — N
+// matches of M items. A filter the chef cannot see is a filter that loses items.
+func TestTheSummarySaysWhatTheFilterIsOn(t *testing.T) {
+	m := recipesModel(t)
+	typeFilter(t, m, "menu")
+	out := plain(m)
+
+	if !strings.Contains(out, "filter: menu · 1 of 7") {
+		t.Errorf("the summary should say what the filter is on:\n%s", out)
+	}
+}
+
+// TestTheSectionHeadersCountWhatIsShown covers AC-03.
+//
+// The header counts the items **shown**, not the section's whole count, and a
+// section with no match is not drawn at all: an empty section header is noise that
+// says the plan has something it does not have.
+func TestTheSectionHeadersCountWhatIsShown(t *testing.T) {
+	m := recipesModel(t)
+	typeFilter(t, m, "menu")
+	out := plain(m)
+
+	// "Needs you" holds two recipes; only one of them matches.
+	if got := sectionCount(out, "Needs you"); got != 1 {
+		t.Errorf("the Needs you header says %d, want 1:\n%s", got, out)
+	}
+	// The sections with no match are not drawn.
+	for _, name := range []string{"On the line", "Being shaped", "Served"} {
+		if got := sectionCount(out, name); got != -1 {
+			t.Errorf("the %s header should not be drawn, got the count %d:\n%s", name, got, out)
+		}
+	}
+}
+
+// TestTheFilterCountsTheBacklogToo covers AC-03.
+//
+// The count is the tab's own: the backlog counts its items.
+func TestTheFilterCountsTheBacklogToo(t *testing.T) {
+	m := newModel(t)
+	switchToTab(t, m, TabBacklog)
+	typeFilter(t, m, "board")
+	out := plain(m)
+
+	// Three of the six items mention the board.
+	if !strings.Contains(out, "filter: board · 3 of 6") {
+		t.Errorf("the summary should count the backlog's items:\n%s", out)
 	}
 }

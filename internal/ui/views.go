@@ -406,6 +406,15 @@ func wrapText(s string, width int) []string {
 
 // summaryText is the per-tab summary line.
 func (m *Model) summaryText() string {
+	text := m.tabSummary()
+	if f := m.filterSummary(); f != "" {
+		text += " · " + f
+	}
+	return text
+}
+
+// tabSummary is the tab's own summary, without the filter.
+func (m *Model) tabSummary() string {
 	switch m.tab {
 	case TabHome:
 		return "the plan at a glance · nothing to press here"

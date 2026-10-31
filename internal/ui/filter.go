@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"charm.land/bubbletea/v2"
@@ -171,6 +172,34 @@ func (m *Model) filterRows() int {
 		return 1
 	}
 	return 0
+}
+
+// filterSummary is what the summary says about the filter: what it is on, and how
+// many items it leaves.
+//
+// A filter the chef cannot see is a filter that loses items.
+func (m *Model) filterSummary() string {
+	if m.filter == "" || !m.filterApplies() {
+		return ""
+	}
+	shown, total := m.filterCounts()
+	return fmt.Sprintf("filter: %s · %d of %d", m.filter, shown, total)
+}
+
+// filterCounts is how many items the tab holds, and how many the filter leaves.
+//
+// Both come from the same computation the list comes from, so the count in the
+// summary and the rows on the screen cannot disagree.
+func (m *Model) filterCounts() (shown, total int) {
+	switch m.tab {
+	case TabRecipes:
+		return len(m.shownRows(m.filter)), len(m.shownRows(""))
+	case TabBacklog:
+		return len(m.backlogItems(m.filter)), len(m.backlogItems(""))
+	case TabReady:
+		return len(m.readyItems(m.filter)), len(m.readyItems(""))
+	}
+	return 0, 0
 }
 
 // filterLine is the line the chef types the filter in.
