@@ -21,7 +21,7 @@
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
-| **T7** | the filter | `/` filters the list | 🔄 fix cycle 1 · 8 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) |
+| **T7** | the filter | `/` filters the list | 🔄 **fix 1 in** — 12 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba, 675b4cc, def86f3, 00c234e, 8c505d7 | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a

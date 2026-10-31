@@ -445,7 +445,14 @@ the plan's: nothing is written to the plan, and the plan's format does not move 
 **One rule, in one place.** The match is a single function, and every tab reads it: a
 recipe and a backlog item are matched by the same case-insensitive substring rule.
 Two implementations of "does this match" is this house's standing failure, and the
-count in the summary comes from the same computation as the list it counts.
+count in the summary comes from the same computation as the list it counts — the
+count is the number of rows the list draws.
+
+**A filter is a view of the plan; it does not change what the plan says about a
+recipe.** The readiness mark is derived from the **whole** plan, so the filter
+drops rows and not the plan the rows are read from: a recipe that waits on a
+closed dependency keeps its `●` when the filter hides that dependency, and the
+Ready tab still agrees about it.
 
 A recipe carries **no tags** today — the tags are a domain decision, taken with the
 CLI — and the filter does not invent one. The backlog's items carry tags, and the
@@ -469,6 +476,11 @@ The Board is a tree: a node is a relationship, and hiding one misstates what wai
 on what. The Log holds journal events, not plan items. Home holds numbers and
 Settings holds the plan's identity. **A key that does nothing must say so** — the
 console does not promise a filter it will not honour.
+
+**The message says so at every width.** It goes on the summary row's right, beside
+the tab's own summary; where it does not fit — the Board's summary is wide — it
+takes a row of its own, the way a refusal does. The list gives up that row, the
+frame keeps its height, and the footer stays the last row.
 
 ### The filter from a script
 
