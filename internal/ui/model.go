@@ -977,8 +977,11 @@ func (m *Model) primaryAction() (tea.Model, tea.Cmd) {
 			return m.promoteItem(it)
 		}
 		return m, nil
-	case TabRecipes, TabBoard:
+	case TabRecipes:
 		return m.actOnRecipe()
+	case TabBoard:
+		// The footer names no space here. The sign-off stays on Recipes.
+		return m, nil
 	}
 	return m, nil
 }

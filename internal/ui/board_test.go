@@ -11,6 +11,66 @@ import (
 	"github.com/lthiagol/maitre/internal/core"
 )
 
+// TestSpaceOnTheBoardWritesNothing covers the Board's key.
+//
+// The footer names no space, so space writes nothing — including on RCP02,
+// which is ready and which the Recipes tab signs off. The journal is the
+// same bytes afterwards, and the Recipes tab still signs that recipe off.
+func TestSpaceOnTheBoardWritesNothing(t *testing.T) {
+	m := newModel(t)
+	switchToTab(t, m, TabBoard)
+	if _, err := Drive(m, []string{"down"}); err != nil {
+		t.Fatal(err)
+	}
+	rec, ok := m.currentRecipe()
+	if !ok || rec.ID != "RCP02" {
+		t.Fatalf("down should land on RCP02, got %+v", rec)
+	}
+	if rec.Lifecycle != core.LifecycleReady {
+		t.Fatalf("RCP02 is %q, want ready", rec.Lifecycle)
+	}
+	if move := core.ChefMoveOf(*rec); move != core.MoveSignOff {
+		t.Fatalf("the Recipes tab would %q, want a sign-off", move)
+	}
+	lines := strings.Split(strings.TrimRight(plain(m), "\n"), "\n")
+	if strings.Contains(lines[len(lines)-1], "space") {
+		t.Errorf("the Board footer names a space:\n%s", lines[len(lines)-1])
+	}
+
+	before := activityChecksum(t, m.store.Root)
+	if _, err := Drive(m, []string{"space"}); err != nil {
+		t.Fatal(err)
+	}
+	if after := activityChecksum(t, m.store.Root); after != before {
+		t.Fatalf("space on the Board changed activity.json (%s -> %s)", before, after)
+	}
+	got, err := m.ops.GetRecipe("RCP02")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Lifecycle != core.LifecycleReady {
+		t.Fatalf("RCP02 is %q after space, want ready", got.Lifecycle)
+	}
+
+	switchToTab(t, m, TabRecipes)
+	if s, ok := m.currentSummary(); !ok || s.ID != "RCP02" {
+		t.Fatalf("Recipes should open on RCP02, got %+v", s)
+	}
+	if _, err := Drive(m, []string{"space"}); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(m.status, "signed off RCP02") {
+		t.Fatalf("Recipes did not sign off RCP02: %q", m.status)
+	}
+	got, err = m.ops.GetRecipe("RCP02")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Lifecycle != core.LifecycleApproved {
+		t.Fatalf("lifecycle = %q, want approved", got.Lifecycle)
+	}
+}
+
 // TestTheBoardShowsTheTree covers the tab.
 //
 // The chef switches to the Board, sees the tree, moves down it, and opens a
