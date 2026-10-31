@@ -115,7 +115,7 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 |---|---|
 | the **tab** | `w1H:tF` — *tui: T5* |
 | the **runner** | pane `w1H:pR`, handle `runner-t5` |
-| the **reviewer** | pane `w1H:pS`, handle `reviewer-t5` — started, not briefed |
+| the **reviewer** | pane `w1H:pS`, handle `reviewer-t5` — briefed |
 | the **orchestrator** | pane `w1H:pJ` — the one they nudge |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
