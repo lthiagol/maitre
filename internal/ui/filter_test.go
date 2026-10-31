@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -606,5 +608,70 @@ func TestTheTextStepIsNotAKeyRun(t *testing.T) {
 	}
 	if m.tab != TabRecipes {
 		t.Errorf("the tab should be untouched, got %s", m.tab.Label())
+	}
+}
+
+// TestTheFilterCoversTheReadyTab covers AC-01.
+//
+// The filter reaches the three tabs that list plan items, and the Ready tab is
+// one of them: adoptable recipes and open small tasks, filtered the same way.
+func TestTheFilterCoversTheReadyTab(t *testing.T) {
+	m := newModel(t)
+	switchToTab(t, m, TabReady)
+	typeFilter(t, m, "evidence")
+	out := plain(m)
+
+	if !strings.Contains(out, "Sharpen the evidence contract") {
+		t.Errorf("the matching task should be on screen:\n%s", out)
+	}
+	if strings.Contains(out, "Wire the review queue") {
+		t.Errorf("the tasks that do not match should be gone:\n%s", out)
+	}
+	if !strings.Contains(out, "filter: evidence · 1 of 2") {
+		t.Errorf("the summary should count the Ready tab's rows:\n%s", out)
+	}
+}
+
+// filterGoldenPath is the checked-in snapshot of the Recipes tab with the filter
+// line open.
+//
+// The filter is off by default, so the other goldens do not move: this one is
+// where the line, the summary's count and the section headers are pinned.
+const filterGoldenPath = "testdata/console-filter.golden"
+
+// TestTheFilterMatchesTheGolden pins the filter's screen.
+//
+// A golden catches the thing a unit test misses: a row that stops lining up. The
+// line sits under the summary, the summary carries the count, and the section
+// headers carry the items shown — one screen, one file.
+func TestTheFilterMatchesTheGolden(t *testing.T) {
+	store := goldenStore(t)
+	m, err := Snapshot(store, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.tab = TabRecipes
+	if _, err := Drive(m, []string{"/", "text:glossary"}); err != nil {
+		t.Fatal(err)
+	}
+	got := StripANSI(m.View().Content)
+
+	if *update {
+		if err := os.MkdirAll(filepath.Dir(filterGoldenPath), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filterGoldenPath, []byte(got), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		t.Log("filter golden updated")
+		return
+	}
+
+	want, err := os.ReadFile(filterGoldenPath)
+	if err != nil {
+		t.Fatalf("read filter golden: %v — run `make regen-goldens`", err)
+	}
+	if got != string(want) {
+		t.Errorf("the filter does not match the golden.\n--- got ---\n%s\n--- want ---\n%s", got, string(want))
 	}
 }
