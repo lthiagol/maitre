@@ -178,6 +178,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q10 | after a write, does the selection follow the item? | **yes** — the selection follows the item. The fix belongs in the model | 2026-10-31 |
 | Q14 | which tabs the filter covers | **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree (a hidden node misstates what waits on what); the Log holds events; Home and Settings hold numbers | 2026-10-31 |
 | Q15 | where the console says the filter exists | **the Settings tab's key list** — the footer names the move the *current selection* has, and `/` opens a mode, not a move. The footer's goldens do not move | 2026-10-31 |
+| Q16 | the orchestrator's tab's name | **Sous-Chef** — the tab's old name. The rows carry the glossary's job names (`orchestrator`, `runner`, `reviewer`), so the tab's name and the glossary's sous-chef stay two different things | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -193,6 +194,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q10 | **the model** — after a write, the selection follows the item |
 | Q14 | **T7** — the filter covers the plan-item lists, and the other tabs say so |
 | Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
+| Q16 | **T8** — the tab's name |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.

@@ -17,7 +17,7 @@ A tab that answers one question:
 
 | | |
 |---|---|
-| **The name** | **Q16 — open.** The candidates and the vocabulary reason are in § 5 |
+| **The name** | **Sous-Chef** — ruled 2026-10-31. The tab's old name: the automation's tab, when it was a placeholder that said so plainly |
 | **The rows** | one row per agent — the **job**, the **state**, and **what it is on** |
 | **The move** | **Q18 — open.** The default is read-only: the tab *names* the move and does not offer it |
 | **The facts** | four, each with one owner — § 2 |
@@ -108,13 +108,20 @@ happens. The runner's and the reviewer's work items are **not** lanes. (The
 orchestration protocol has been calling them lanes all evening; the glossary is the
 record, and the tab is where the word would become a product fact.)
 
-**The candidates** — Q16:
+**The candidates** — Q16, **ruled: Sous-Chef**.
 
 | name | for | against |
 |---|---|---|
-| **Crew** | the glossary's own word for the people and agents working the kitchen. The tab shows the orchestrator, the runner and the reviewer — the crew minus the chef | the chef is part of the crew, and the chef is not a row |
-| **Orchestrator** | the job that comes back, and the name both docs already use | the tab shows three agents, and only one of them is the orchestrator |
-| **Sous-Chef** | the tab's old name, and `docs/07`'s UI string | it names the wrong job — see above |
+| Crew | the glossary's own word for the people and agents working the kitchen. The tab shows the orchestrator, the runner and the reviewer — the crew minus the chef | the chef is part of the crew, and the chef is not a row |
+| Orchestrator | the job that comes back, and the name both docs already use | the tab shows three agents, and only one of them is the orchestrator |
+| **Sous-Chef** | **the tab's old name, and `docs/07`'s UI string. The chef's ruling** | the glossary's sous-chef is a different job — so the name is the **tab's** name, not a job's. The rows carry the job names: `orchestrator`, `runner`, `reviewer` |
+
+**What the ruling settles, and what it does not.** The tab is called **Sous-Chef**,
+the name it had when it was a placeholder that said plainly that the automation was
+not built. The rows are not re-branded to match: they carry the **job** names from
+the glossary, and the tab shows the automation's agents. The glossary's sous-chef —
+the agent that composes recipe cards, preps the line and runs the tasting — is a
+different job, and nothing in this slice is that agent.
 
 ## 6 — The domain work
 
@@ -151,7 +158,7 @@ the plan's own no-migration ruling makes cheap.
 
 | # | Question | Recommendation |
 |--:|---|---|
-| **Q16** | the tab's name | **Crew** — the glossary's word for the people and agents working the kitchen, and the tab shows the crew minus the chef |
+| **Q16** | the tab's name | **ruled: Sous-Chef** — the tab's old name. The rows carry the job names, so the tab and the glossary's sous-chef stay two different things |
 | **Q17** | the tab count and where it sits | **8 tabs**: Home · Recipes · Backlog · Ready · Board · **Crew** · Log · Settings. The crew sits with the plan's tabs, before the records and the settings |
 | **Q18** | does the tab offer the chef a move? | **no — it names the move.** A blocked agent says what it needs and where the move lives. A move the console cannot perform is a promise it must not make |
 | **Q19** | where the state comes from | deferred — § 7. The recommendation is **the plan**, when the chef rules |
