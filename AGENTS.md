@@ -49,6 +49,8 @@ scripts/console-shot.py --bin ./bin/maitre --cwd /tmp/kb   # capture the screen
 | **Agents** | Enough to execute, not enough to read comfortably. Exact paths, exact commands, exact names, the "why" when it changes what to do. |
 
 **Also:**
+- **Be concise.** Say it once; cut what a reader could reconstruct. Long text is
+  text nobody reads — and a rule buried in a table is a rule nobody sees.
 - State the target behaviour rather than the forbidden one. A prohibition drags the
   forbidden thing into context and half-reads as an instruction to do it.
 - Prefer a table to a bulleted list of prose.
