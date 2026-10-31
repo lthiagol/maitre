@@ -1,7 +1,7 @@
-# T8 — the orchestrator's tab
+# T8 — the Sous-Chef tab
 
 > **This is the design.** Nothing is built. The slice's brief is written *after* the
-> chef rules on the questions in § 8, and the brief wins over this file where they
+> chef rules on the questions in § 10, and the brief wins over this file where they
 > differ.
 >
 > The design the T1–T7 round followed is [plan.md](plan.md); the round's state is
@@ -11,163 +11,186 @@
 
 ## The answer
 
-A tab that answers one question:
-
-> **What is the automation doing, and what does it need from the chef?**
+A tab that **starts the automation** and then **shows it working**.
 
 | | |
 |---|---|
 | **The name** | **Sous-Chef** — ruled 2026-10-31. The tab's old name: the automation's tab, when it was a placeholder that said so plainly |
-| **The rows** | one row per agent — the **job**, the **state**, and **what it is on** |
-| **The move** | **Q18 — open.** The default is read-only: the tab *names* the move and does not offer it |
-| **The facts** | four, each with one owner — § 2 |
-| **The domain** | a view, registered in `core.DerivedViews` and written in `docs/03` § 8. The wire checks both directions |
-| **The source** | **deferred by the chef.** The three options and what each costs are in § 7 |
-| **The count** | **Q17 — open.** The tab count is 7 today, and the invariant says it stays |
+| **The place** | **between Board and Log** — ruled 2026-10-31. **8 tabs**: Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings |
+| **The move** | one: **start the automation**. `space` on the tab spawns the orchestrator |
+| **What it shows** | the crew — the **orchestrator**, the **runner**, the **reviewer** — each with its state and what it is on |
+| **Where the state comes from** | **herdr**, the runtime. The console asks it; the plan does not carry it |
+| **The blocked agent** | raises a message to the **orchestrator**, asking for directions. The orchestrator decides |
+| **The domain** | **no new view, no format change.** The console's action spawns a process and writes nothing to the plan — unless **Q20** says otherwise |
+| **`DomainVersion`** | **7** — unless Q20 says otherwise |
 
 ## 1 — Why the tab exists
-
-Three facts in the record, and they point at the same gap.
 
 | | |
 |---|---|
 | **The docs promise it** | `AGENTS.md`: *"the orchestrator's tab comes back when the orchestrator does"*. `docs/05`: *"The orchestrator comes back as a tab when the orchestrator does"*. `docs/07` records the automation's tab as **Home**, *"and the tab itself comes back when the orchestrator does"* |
-| **The orchestrator does** | it is the session that writes the briefs, opens the lanes, waits on them and closes the slice. It is not a placeholder anymore |
-| **The chef cannot see it** | the Home tab's automation block says **"the automation is not built"**, in the warning style, beside the version agreement. It is honest — and it is the console telling the chef there is nothing to look at |
+| **The orchestrator does** | it writes the briefs, opens the lanes, waits on them and closes the slice. It is not a placeholder anymore |
+| **The chef cannot see it** | the Home tab's automation block says **"the automation is not built"**, in the warning style. It was honest. The automation is built now |
 
-The block is honest because the automation was not built. **It is built now.** A tab
-that says so would be the console's way of saying *the chef can see the machine*.
+And the chef's own design (2026-10-31): *"i expect that the maitre tui spin up a new
+tab on herdr, it should detect if its running or not into a herdr session and if
+yes, open a new tab on the same space, if not, create a new space on herdr on the
+path where the tui is running and spawn a new tab with the orchestrator, it will
+take care if something is needed, in case of the runner or agent being blocked, they
+should raise back a message to the orchestrator asking for directions."*
 
-## 2 — The facts, and who owns each
+## 2 — Two states
 
-One fact, one answer. A number the console shows is computed in the domain, and a
-fact the console reads has one owner.
-
-| fact | owner | where it is today |
+| | the tab shows | the move |
 |---|---|---|
-| **the agents' states** — working · idle · blocked · done | the runtime, or a record of it | nowhere. **The source is Q19 — deferred** |
-| **what each agent is on** — a recipe, a slice | the plan | the journal: every event carries a `role` and an actor, and `core.AgentRoles` is `agent · sous-chef · runner · reviewer · orchestrator` |
-| **the version agreement** — the plan's version, this build's, whether they agree | the plan and the build | `core.AutomationStats`, on the Home tab |
-| **the last event** | the journal | `core.AutomationStats.LastEvent`, on the Home tab |
+| **not running** | that the automation is not running | **start the automation** |
+| **running** | the crew, each with its state and what it is on | none — the chef watches, and the crew asks the **orchestrator** |
 
-The last two are **computed** — they are a view, and they are already built. The
-first two are the new part.
+The footer names the move, as it does everywhere: *"space starts the automation"*.
 
-## 3 — The rows
+## 3 — The move
 
-| row | shows |
+`space` on the Sous-Chef tab **starts the automation**: it spawns the orchestrator
+in a herdr tab, on the plan's own directory.
+
+This is the console's **first action that is not a plan write**. Every other key
+either moves a cursor or asks the domain to do something to the plan. This one
+starts a process.
+
+That is management, not authorship (ADR-0003): the console still never writes a
+recipe, and the artifact is still the crew's work. But it is a new kind of action,
+and the house's rule — *the console offers no move the gates would refuse* — has
+nothing to say about it. The move is offered **once**: when the automation is not
+running. Once it is running, the tab has no move, and the footer says so.
+
+## 4 — How the console starts it
+
+**1 — is the console inside a herdr session?** herdr exports `HERDR_ENV=1` and
+`HERDR_SOCKET_PATH` into every pane it owns.
+
+**2 — open the tab.**
+
+| | |
 |---|---|
-| the **job** | the agent's name in the glossary's vocabulary: `orchestrator`, `runner`, `reviewer` |
-| the **state** | `working` · `idle` · `blocked` · `done` — the same words the runtime reports |
-| **what it is on** | the recipe's id, or the slice's name |
+| **inside a herdr session** | the tab joins the **chef's own workspace**, beside the chef:<br>`herdr tab create --workspace "$HERDR_WORKSPACE_ID" --label "maitre: orchestrator" --cwd <the plan's root> --no-focus` |
+| **not in one** | the console makes a **workspace for the plan**:<br>`herdr workspace create --cwd <the plan's root> --label "<the project>" --no-focus`<br>then a tab in it, as above |
 
-A row is **selectable**: the chef moves down the crew the way they move down a
-list. `enter` opens the detail pane — the agent's last report, when there is one.
+The cwd is **the plan's root** — the directory holding `kitchen/`. The automation
+works the plan, and a tab on the wrong directory is an automation on nobody's plan.
 
-**A blocked agent says what it needs.** *"waiting on the chef — RCP03 needs your
-sign-off"* — and the move stays where it belongs. The tab **names** the move; it
-does not offer it. The console offers no move the gates would refuse, and a move
-the console cannot perform is a promise it must not make. The Recipes tab signs
-RCP03 off. The crew tab says so.
+**3 — spawn the orchestrator in that tab.**
 
-## 4 — The split with Home
+```bash
+herdr pane run <the pane> mcode-herdr "<the startup task>"
+```
 
-Home's invariant is **numbers, never items** — no row on it is selectable, `space`
-does nothing, the item count is zero. A tab holds items, so the live state
-belongs there and Home keeps the vital signs.
+The startup task names the job and the path. What it says beyond that is **Q21**.
 
-| | Home | the crew tab |
+**4 — the console remembers nothing.** It does not write a file, and it does not
+keep the pane id in memory. It finds the crew again by asking herdr (§ 5), so a
+console that was closed and reopened still shows the running automation.
+
+## 5 — How the console finds the crew
+
+Every fact, one owner, one answer.
+
+| fact | owner | where it comes from |
 |---|---|---|
-| the version agreement | ✅ | — |
-| the last event | ✅ | — |
-| the agents and their states | — | ✅ |
-| what each agent is on | — | ✅ |
-| items | none | the agents |
+| **the crew exists** | herdr | `herdr agent list` — the agents whose `cwd` is **the plan's root**. A workspace's own listing carries no path, so the **agents'** cwd is the anchor |
+| **each one's state** | herdr | the agent's `agent_status`: `working` · `idle` · `blocked` · `done` |
+| **each one's job** | the tab's **label** | `herdr tab list`, matched by `tab_id`. The label is the crew's roster line |
+| **what it is on** | the tab's label | the same line: `maitre: runner · RCP03` |
 
-Home's automation block drops the *"the automation is not built"* line **when it is
-true** — the block said it because the automation was not built. A line that says
-"not built" over a built automation is the console lying.
+**The label is the roster, and the orchestrator writes it.** The console writes the
+first one, when it spawns the orchestrator. After that the orchestrator is the one
+dispatching, so the orchestrator keeps the labels current — it renames the runner's
+tab when the runner picks up RCP03. `herdr tab rename <TAB_ID> <LABEL>`.
 
-## 5 — The vocabulary, and the two collisions
+**Why the label and not the plan:** herdr knows an agent is an *mcode*, not which
+job it plays. The bridge registers the pane's **state**; it has no vocabulary for
+*runner*. The label is the one place the job can live without the plan's format
+moving.
+
+## 6 — When a crew member is blocked
+
+**A blocked agent raises a message to the orchestrator, asking for directions** —
+the chef's ruling, and the protocol this session ran:
+
+| | |
+|---|---|
+| **the record** | the receipt, written and committed — `work/inbox/<lane>-<slice>.md`. It cannot be lost |
+| **the bell** | `herdr pane send-text <the orchestrator's pane> "<the receipt>"` + `herdr pane send-keys <the orchestrator's pane> enter` |
+
+`herdr agent prompt` does not work here — the `mcode-herdr` bridge registers a
+pane's **state**, not a named session, so the agent-level path answers
+`agent_not_ready`. The pane-level path is the one that works, in both directions.
+
+**Then the orchestrator decides**: dispatch again, or escalate. And an escalation
+to the chef is the plan's own path — the recipe is filed under ***Needs you*** on
+the Recipes tab, and the chef signs off there. **The console gains no move for
+it.** The Sous-Chef tab shows the blocked agent's state, so the chef can see that
+the automation is waiting on *the orchestrator* rather than on the chef.
+
+## 7 — The vocabulary, and the two collisions
 
 **The glossary is the single source** ([GLOSSARY.md](../../GLOSSARY.md),
-[docs/07](../../docs/07-vocabulary.md)), and it settles two things that a first
-draft gets wrong.
+[docs/07](../../docs/07-vocabulary.md)).
 
 **"Sous-chef" and "orchestrator" are different jobs.** The sous-chef *composes
 recipe cards, preps the line and runs the tasting*. The orchestrator *calls the
 recipes, routes them and keeps the line moving*. The old tab was **called**
 Sous-Chef and carried the automation's vital signs — the tab's name and the job
-in it drifted apart, and `docs/07` records the automation's tab as **Home**. So
-naming the returning tab *Sous-Chef* names the wrong job.
+in it had drifted apart, and `docs/07` records the automation's tab as **Home**.
+
+**Ruled: the tab is called Sous-Chef.** The name is the **tab's** name, not a
+job's. The rows carry the glossary's **job** names — `orchestrator`, `runner`,
+`reviewer` — so the tab and the glossary's sous-chef stay two different things,
+and the glossary's sous-chef is not something this slice builds.
 
 **"Lane" is taken.** The glossary defines a **lane** as *where a recipe sits in the
-chef's workflow* — grooming, sign-off, on the line, tasting, on hold, served — and
-lists *lane* among the names to avoid for the **line**, the place where the work
-happens. The runner's and the reviewer's work items are **not** lanes. (The
-orchestration protocol has been calling them lanes all evening; the glossary is the
-record, and the tab is where the word would become a product fact.)
+chef's workflow*, and lists *lane* among the names to avoid for the **line**, the
+place where the work happens. The crew's members are not lanes.
 
-**The candidates** — Q16, **ruled: Sous-Chef**.
+## 8 — The domain work
 
-| name | for | against |
-|---|---|---|
-| Crew | the glossary's own word for the people and agents working the kitchen. The tab shows the orchestrator, the runner and the reviewer — the crew minus the chef | the chef is part of the crew, and the chef is not a row |
-| Orchestrator | the job that comes back, and the name both docs already use | the tab shows three agents, and only one of them is the orchestrator |
-| **Sous-Chef** | **the tab's old name, and `docs/07`'s UI string. The chef's ruling** | the glossary's sous-chef is a different job — so the name is the **tab's** name, not a job's. The rows carry the job names: `orchestrator`, `runner`, `reviewer` |
-
-**What the ruling settles, and what it does not.** The tab is called **Sous-Chef**,
-the name it had when it was a placeholder that said plainly that the automation was
-not built. The rows are not re-branded to match: they carry the **job** names from
-the glossary, and the tab shows the automation's agents. The glossary's sous-chef —
-the agent that composes recipe cards, preps the line and runs the tasting — is a
-different job, and nothing in this slice is that agent.
-
-## 6 — The domain work
-
-A view, like every other number the console shows:
-
-- the facts are computed in `internal/core` and **registered in `core.DerivedViews`**,
-  or the wire fails — the wire checks `docs/03` § 8 against the registry in **both**
-  directions, and a view that is not written down is a drift waiting to happen
-- `internal/core` and `internal/cli` stay **stdlib-only**; `internal/ui` keeps its
-  budget
-- `core.DomainVersion` moves **only** if the plan's format moves — which depends
-  on Q19 (§ 7)
-- a test holds the split: the Home tab shows numbers and no items; the crew tab
-  shows items
-
-## 7 — Where the state comes from — **Q19, deferred**
-
-The chef deferred this: *"for now, let's focus on the design of the tab. not really
-building it, i'll give instructions after these questions."* The design holds
-either way — the tab's **shape** is fixed, the **transport** is not.
-
-| option | the console reads | costs |
-|---|---|---|
-| **the plan** — the orchestrator writes the crew's state into the plan; the console reads only the plan | the plan directory, as it does now | the plan's format moves: a new file → **`DomainVersion` 7 → 8**, and the repo's own plan is stamped forward. The state is as fresh as the last write |
-| **the runtime** — the console asks for the live state | the runtime, outside the plan | the console gains a dependency on something that is not the plan. A plan read from disk says nothing about the crew, and the console's one rule — it reads the plan — is broken |
-| **both** | the plan's record and the runtime's live state | two sources for one fact, and the console must reconcile them |
-
-**The recommendation, for whenever the chef rules**: the **plan**. The console
-keeps its one dependency, the crew becomes part of the artifact, and the plan is
-the channel (ADR-0008). The cost is a format change and a version bump — which
-the plan's own no-migration ruling makes cheap.
-
-## 8 — The questions for the chef
-
-| # | Question | Recommendation |
-|--:|---|---|
-| **Q16** | the tab's name | **ruled: Sous-Chef** — the tab's old name. The rows carry the job names, so the tab and the glossary's sous-chef stay two different things |
-| **Q17** | the tab count and where it sits | **8 tabs**: Home · Recipes · Backlog · Ready · Board · **Crew** · Log · Settings. The crew sits with the plan's tabs, before the records and the settings |
-| **Q18** | does the tab offer the chef a move? | **no — it names the move.** A blocked agent says what it needs and where the move lives. A move the console cannot perform is a promise it must not make |
-| **Q19** | where the state comes from | deferred — § 7. The recommendation is **the plan**, when the chef rules |
-
-## 9 — Not in this slice
+**Almost none, and that is the point.**
 
 | | |
 |---|---|
-| **Starting or stopping a crew member** | the console manages the plan; it does not run the automation. A key that starts a lane is a new domain operation, and it belongs to the CLI |
-| **The chef's own row** | the chef is not a row on the crew tab. The tab is about the machine |
-| **The recipe rows' contents** | unchanged. The crew tab does not re-file the plan's items |
-| **`tags` on the recipe** | the plan's option A, later, with the CLI. `DomainVersion` 7 → 8 on its own account |
+| **no new view** | the tab's facts are **runtime** facts, not plan facts. Nothing is registered in `core.DerivedViews`, so `docs/03` § 8 does not move |
+| **no format change** | `core.DomainVersion` stays **7**. The plan's format does not move, and the repo's own plan is not stamped forward |
+| **the console gains a dependency** | the `herdr` binary, on the PATH. It is a runtime dependency, not a module — `internal/ui`'s budget is unchanged |
+| **the console's new action** | spawns a process. It writes **nothing** to the plan — unless **Q20** says otherwise |
+| **`internal/core`, `internal/cli`** | do not change |
+
+## 9 — Failure handling
+
+| | |
+|---|---|
+| **`herdr` is not on the PATH** | the tab says *"herdr is not here"* and offers **nothing**. The tab that cannot start the automation must not look like one that can |
+| **the spawn fails** | the tab says so, and the move stays. A failed start is not a running automation |
+| **the crew is gone** | every agent exited. The tab says the automation is not running, and the move comes back |
+| **the orchestrator is gone but the crew is not** | the tab says so. A crew with no orchestrator has nobody to ask for directions — the design's blocked-message path is broken, and the tab must not pretend otherwise |
+| **the plan's root moved** | the console finds the crew by cwd. A plan that moved is a plan with no automation |
+
+## 10 — The questions for the chef
+
+| # | Question | Recommendation |
+|--:|---|---|
+| **Q16** | the tab's name | **ruled: Sous-Chef** |
+| **Q17** | the count and the place | **ruled: 8 tabs, between Board and Log** |
+| **Q18** | does the tab offer the chef a move? | **ruled: it starts the automation.** The blocked agent asks the **orchestrator**, not the chef |
+| **Q19** | where the state comes from | **ruled by the design: herdr**, found by the agents' cwd. The plan carries no crew state |
+| **Q20** | does starting the automation leave a trace in the plan's journal? | **no** — the journal records what happened *to the plan*, and the crew's state is runtime state. The orchestrator's own writes are recorded through the CLI as usual. A trace would mean a new operation and a format change |
+| **Q21** | what does the startup task say? | **the job and the path** — *"you are the orchestrator of the plan at &lt;path&gt;"* — and nothing else. The orchestrator reads the plan and decides what is needed; the console does not tell it which slice to work on |
+
+## 11 — Not in this slice
+
+| | |
+|---|---|
+| **Starting or stopping a crew member** | the console starts the **orchestrator**, and the orchestrator dispatches the crew. The console is not the one that picks the runner's next recipe |
+| **The chef's own row** | the chef is not a row. The tab is about the machine |
+| **The recipe rows' contents** | unchanged. The Sous-Chef tab does not re-file the plan's items |
+| **The blocked agent's escalation to the chef** | the plan's own path: the recipe goes under *Needs you* and the chef signs off on the Recipes tab |
+| **`tags` on the recipe** | the plan's option A, later, with the CLI |
+| **The CLI's verbs** | the automation is started from the console. A CLI verb for it is later, and the CLI is the chef's own surface |
