@@ -326,3 +326,123 @@ func TestTheFilterCountsTheBacklogToo(t *testing.T) {
 		t.Errorf("the summary should count the backlog's items:\n%s", out)
 	}
 }
+
+// selectedRecipe is the recipe under the Recipes cursor.
+func selectedRecipe(t *testing.T, m *Model) string {
+	t.Helper()
+	s, ok := m.currentSummary()
+	if !ok {
+		t.Fatalf("there is no recipe under the cursor")
+	}
+	return s.ID
+}
+
+// TestTheSelectionStaysOnTheSameItem covers AC-04.
+//
+// The selection **follows the item**: it stays on the same recipe when that recipe
+// still matches, even when the filter moves it to another row.
+func TestTheSelectionStaysOnTheSameItem(t *testing.T) {
+	m := recipesModel(t)
+	// RCP01 is the fifth row of the triage list.
+	if _, err := Drive(m, []string{"down", "down", "down", "down"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := selectedRecipe(t, m); got != "RCP01" {
+		t.Fatalf("the cursor should be on RCP01, got %s", got)
+	}
+
+	// "RCP0" drops RCP07, so every row below the cursor moves up — but the
+	// cursor stays on the recipe it was on.
+	typeFilter(t, m, "RCP0")
+	if got := selectedRecipe(t, m); got != "RCP01" {
+		t.Errorf("the cursor should stay on RCP01, got %s", got)
+	}
+}
+
+// TestTheSelectionGoesToTheFirstMatch covers AC-04.
+//
+// When the selected recipe does not match any more, the cursor goes to the first
+// match — not to whatever took the old row.
+func TestTheSelectionGoesToTheFirstMatch(t *testing.T) {
+	m := recipesModel(t)
+	// RCP03 is the second row of the triage list.
+	if _, err := Drive(m, []string{"down"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := selectedRecipe(t, m); got != "RCP03" {
+		t.Fatalf("the cursor should be on RCP03, got %s", got)
+	}
+
+	// "Sharpen" matches RCP05 and RCP01, and the triage's order puts RCP05
+	// first — "On the line" comes before "Being shaped". RCP03 matches neither,
+	// so the cursor goes to that first match, and not to the row that took the
+	// old place, which an index left alone would have given.
+	typeFilter(t, m, "Sharpen")
+	if got := selectedRecipe(t, m); got != "RCP05" {
+		t.Errorf("the cursor should go to the first match, RCP05, got %s", got)
+	}
+}
+
+// TestTheListScrollsToTheSelection covers AC-04.
+//
+// The list scrolls to the selection, so the item the cursor names is on screen.
+func TestTheFilterScrollsToTheSelection(t *testing.T) {
+	m := recipesModel(t)
+	m.width = 100
+	m.height = 14
+
+	// The last recipe of the triage list.
+	if _, err := Drive(m, []string{"G"}); err != nil {
+		t.Fatal(err)
+	}
+	before := selectedRecipe(t, m)
+
+	// A filter that leaves the selection alone but takes rows off the list.
+	typeFilter(t, m, "RCP0")
+	if got := selectedRecipe(t, m); got != before {
+		t.Fatalf("the cursor should stay on %s, got %s", before, got)
+	}
+
+	// The row the cursor names is on screen.
+	lines := m.listLines()
+	line := -1
+	for i, l := range lines {
+		if l.itemIdx == m.selRecipes {
+			line = i
+			break
+		}
+	}
+	if line < 0 {
+		t.Fatalf("the selected row is not in the list")
+	}
+	if line < m.offset || line >= m.offset+m.listAreaHeight() {
+		t.Errorf("the selected row is on line %d and the window is %d..%d — the list did not scroll to it",
+			line, m.offset, m.offset+m.listAreaHeight()-1)
+	}
+}
+
+// TestTheFilterSurvivesATabSwitch covers AC-04.
+//
+// The filter is the console's, not a tab's: it survives the switch and applies to
+// the new tab's list.
+func TestTheFilterSurvivesATabSwitch(t *testing.T) {
+	m := recipesModel(t)
+	typeFilter(t, m, "the")
+
+	if _, err := Drive(m, []string{"tab"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.tab != TabBacklog {
+		t.Fatalf("the console should be on the Backlog tab, got %s", m.tab.Label())
+	}
+	if m.filter != "the" {
+		t.Errorf("the filter should survive the switch, got %q", m.filter)
+	}
+	out := plain(m)
+	if !strings.Contains(out, "filter: the") {
+		t.Errorf("the new tab's summary should say the filter is on:\n%s", out)
+	}
+	if len(m.backlogItems(m.filter)) == len(m.backlogItems("")) {
+		t.Errorf("the filter should apply to the new tab's list")
+	}
+}

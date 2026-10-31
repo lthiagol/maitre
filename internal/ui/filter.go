@@ -155,12 +155,73 @@ func (m *Model) handleFilterKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// setFilter applies a new filter text.
+// setFilter applies a new filter text and puts the selection where it belongs.
 //
-// The list filters **live**: there is no second keypress to apply it.
+// The selection **follows the item**: it stays on the same one when that one still
+// matches, and it goes to the first match when it does not. An index would not do
+// it — the rows under the index change when the filter does, so the cursor would
+// jump to whatever took the old place.
 func (m *Model) setFilter(text string) {
+	selected := m.selectedID()
 	m.filter = text
+	m.selectID(selected)
 	m.clampSelections()
+}
+
+// selectedID is the id of the item under the cursor, on the current tab.
+//
+// It is read **before** the filter changes: after it, the cursor points at a
+// different item.
+func (m *Model) selectedID() string {
+	switch m.tab {
+	case TabRecipes:
+		if s, ok := m.currentSummary(); ok {
+			return s.ID
+		}
+	case TabBacklog:
+		if it, ok := m.selectedBacklogItem(); ok {
+			return it.ID
+		}
+	case TabReady:
+		if e, ok := m.currentReadyEntry(); ok {
+			return e.id
+		}
+	}
+	return ""
+}
+
+// selectID puts the cursor on the item with that id.
+//
+// An item that is not there — it does not match the filter any more — leaves the
+// cursor on the first match: the first row of the list is the first thing that
+// matches.
+func (m *Model) selectID(id string) {
+	switch m.tab {
+	case TabRecipes:
+		m.selRecipes = 0
+		for i, r := range m.shownRows(m.filter) {
+			if r.ID == id {
+				m.selRecipes = i
+				return
+			}
+		}
+	case TabBacklog:
+		m.selBacklog = 0
+		for i, it := range m.backlogItems(m.filter) {
+			if it.ID == id {
+				m.selBacklog = i
+				return
+			}
+		}
+	case TabReady:
+		m.selReady = 0
+		for i, e := range m.readyItems(m.filter) {
+			if e.id == id {
+				m.selReady = i
+				return
+			}
+		}
+	}
 }
 
 // filterRows is how many rows the filter line takes.
