@@ -58,6 +58,7 @@ in any order, and each one leaves the tree green.
 | **The state row is updated in the same session** | the row above *is* the resume record. A slice that closes without updating it has not finished |
 | **The gate is `make check`** | nobody runs `go test`, `go vet` or `gofmt` by hand |
 | **The receipt is written, committed, and *then* the nudge** | the file cannot be lost; the nudge is only the bell |
+| **The reviewer reads [work/questions.md](../questions.md) at every slice's close** | and says whether a question was **answered, missed, or newly raised**. A question that is not written there is a question that is lost |
 
 ### The receipt
 
