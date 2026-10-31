@@ -432,6 +432,7 @@ touches anything.
   ideas 4 · small tasks 2
 
  THE AUTOMATION
+  the automation is not built
   plan written under 7 · this build speaks 7 · they agree
   last event created     ·     chef      00:27:27
 ```
@@ -482,11 +483,12 @@ is what it would be without the mark.
 
 ### The automation's vital signs
 
-The Sous-Chef tab dissolved into Home, and its content is the **automation** block:
-the version the plan was last written under, the version this build speaks, and
+The Sous-Chef tab dissolved into Home, and its content is the **automation** block.
+**The automation is not built**, and the block says so — the vital signs alone
+would read as a running automation. What the block carries besides that is the
+version the plan was last written under, the version this build speaks, and
 whether they agree — because a plan written by a different build of the tool is a
-plan the version guard will refuse to write — and the last thing that happened, so
-the chef can see the automation moving even before it can be watched.
+plan the version guard will refuse to write — and the last thing that happened.
 
 The orchestrator comes back as a tab when the orchestrator does.
 

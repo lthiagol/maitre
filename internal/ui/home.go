@@ -169,6 +169,10 @@ func (m *Model) homeContent() []string {
 	))
 
 	block("THE AUTOMATION")
+	// The Sous-Chef tab said the automation was not built, and that was its honesty.
+	// The tab dissolved into this block; the honesty comes with it, or the vital
+	// signs read as a running automation.
+	add("  " + m.styWarn.Render("the automation is not built"))
 	agree := m.styDim.Render("they agree")
 	if !stats.Automation.VersionsAgree {
 		agree = m.styWarn.Render("they do not agree")

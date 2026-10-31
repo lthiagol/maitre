@@ -85,14 +85,14 @@ func TestTheHomeTabShowsTheNumbers(t *testing.T) {
 
 // TestTheHomeTabShowsTheAutomation covers the vital signs.
 //
-// The Sous-Chef's content became Home's automation block: the chef can already see
-// whether the automation is running on the same rules as the plan, and when the
-// last thing happened.
+// The Sous-Chef's content became Home's automation block: the vital signs, and the
+// honesty the tab carried. The automation is not built, and the block says so —
+// the signs alone would read as a running automation.
 func TestTheHomeTabShowsTheAutomation(t *testing.T) {
 	m := newModel(t)
 	out := plain(m)
 
-	for _, want := range []string{"THE AUTOMATION", "plan written under", "this build speaks", "they agree", "last event"} {
+	for _, want := range []string{"THE AUTOMATION", "the automation is not built", "plan written under", "this build speaks", "they agree", "last event"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the tab should show %q:\n%s", want, out)
 		}
