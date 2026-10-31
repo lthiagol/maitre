@@ -13,9 +13,7 @@
 | **Q11** | one marker or two for *the domain's answer*? | T3b | orchestrator | **two** — the recipe's arrow *asks*, the item's *states* |
 | **Q12** | does the unbracketed position's message name its remedy? | T2b | orchestrator | **yes** — one line; each cause names its own remedy |
 | **Q13** | the kinds list is built on every call | T3b | orchestrator | **later** — a per-frame allocation on a path that redraws the whole screen |
-| **Q19** | where does the console read the automation's state from? | T8 | chef | **herdr** — the console asks the runtime, and finds the crew by the agents' cwd. The plan carries no crew state, so `DomainVersion` stays 7 |
-| **Q20** | does starting the automation leave a trace in the plan's journal? | T8 | chef | **no** — the journal records what happened to the plan; the crew's state is runtime state. A trace would mean a new operation and a format change |
-| **Q21** | what does the startup task say? | T8 | chef | **the job and the path** — "you are the orchestrator of the plan at <path>". The orchestrator reads the plan and decides what is needed |
+| **Q25** | Q11, Q12 and Q13 have been open since T2b and T3b — the TUI round is over. Close them, or keep them open? | T3b, T2b | orchestrator | **close them** — Q11 and Q12 are answered by what the console now does; Q13 is a per-frame allocation, and the T7 count has the same shape. The chef rules the two that have a product answer |
 
 ## The rules
 

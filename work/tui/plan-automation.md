@@ -200,8 +200,8 @@ place where the work happens. The crew's members are not lanes.
 | **Q20** | does starting the automation leave a trace in the plan's journal? | **ruled: no.** The journal records what happened *to the plan*; the crew's state is runtime state. The orchestrator's own writes are recorded through the CLI as usual |
 | **Q21** | what does the startup task say? | **ruled: it loads the role.** `maitre-cli skill load orchestrator-role`, plus the work. The skill carries the role's knowledge; the startup task carries the work |
 | **Q22** | can the chef stop the automation from the tab? | **ruled: no.** One move — start. Stopping is the chef's terminal business |
-| **Q23** | where do the skills live? | **the project, next to `kitchen/`** — the repo already has a `skills/` folder, and the skills belong to the plan's project, not to the tool's installation |
-| **Q24** | one slice or two? | **two** — **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. The tab's startup task loads the skill, so the skill must exist first |
+| **Q23** | where do the skills live? | **ruled: embedded in the binary.** The chef's reason: *"a way to guarantee that each version has the correct version of the skill."* The skill and the tool cannot drift, because the tool **carries** the skill |
+| **Q24** | one slice or two? | **ruled: two** — **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. The tab's startup task loads the skill, so the skill must exist first |
 
 ## 11 — The two slices
 
@@ -229,6 +229,13 @@ file and it would spit the skill content."*
 become an orchestrator: what the job is, what it must know, and the protocol it
 follows — brief the crew, open the lanes, wait, close the slice. The work itself
 is never in the skill; it arrives in the startup task.
+
+**The skills are embedded in the binary** — ruled 2026-10-31. They live in the
+source tree and are carried by the tool at build time, so **the skill and the
+tool's version cannot drift**: the orchestrator the tool spawns loads the role the
+tool carries. `maitre-cli` run from anywhere lists them — no directory, no `PATH`,
+no project, no file on disk. `embed` is stdlib, so `internal/cli` stays
+stdlib-only and `internal/core` does not change.
 
 **A skill is not a recipe.** A recipe is the plan's unit of work, signed off and
 tasted. A skill is the machine's own instruction sheet for a job — it is not

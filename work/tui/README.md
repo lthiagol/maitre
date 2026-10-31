@@ -22,7 +22,7 @@
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ✅ closed · cycle 2 ok, 0 blockers · 13 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba, 675b4cc, def86f3, 00c234e, 8c505d7, ad453df | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) · [cycle 2](../briefs/review-tui-t7-cycle2.md) |
-| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
+| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | 📌 briefed · design in [plan-automation.md](plan-automation.md) | [tui-t8.md](../briefs/tui-t8.md) |
 | **T9** | the Sous-Chef tab | the tab comes back: it starts the automation, and shows the crew | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -182,6 +182,12 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q16 | the orchestrator's tab's name | **Sous-Chef** — the tab's old name. The rows carry the glossary's job names (`orchestrator`, `runner`, `reviewer`), so the tab's name and the glossary's sous-chef stay two different things | 2026-10-31 |
 | Q17 | the orchestrator's tab: the count and the place | **8 tabs — Sous-Chef between Board and Log**. Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings | 2026-10-31 |
 | Q18 | does the Sous-Chef tab offer the chef a move? | **it starts the automation** — `space` spawns the orchestrator. A blocked agent raises a message to the **orchestrator**, asking for directions; the orchestrator decides | 2026-10-31 |
+| Q19 | where does the console read the automation's state from? | **herdr** — the console asks the runtime, and finds the crew by the agents' cwd. The plan carries no crew state, so `DomainVersion` stays 7 | 2026-10-31 |
+| Q20 | does starting the automation leave a trace in the plan's journal? | **no** — the journal records what happened to the plan; the crew's state is runtime state | 2026-10-31 |
+| Q21 | what does the startup task say? | **it loads the role** — `maitre-cli skill load orchestrator-role`, plus the work. The skill carries the role's knowledge; the startup task carries the work | 2026-10-31 |
+| Q22 | can the chef stop the automation from the tab? | **no** — one move, start. Stopping is the chef's terminal business | 2026-10-31 |
+| Q23 | where do the skills live? | **embedded in the binary** — so each version of the tool carries the right version of the skill | 2026-10-31 |
+| Q24 | one slice or two? | **two** — T8 the skills, then T9 the tab | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -200,6 +206,12 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q16 | **T8** — the tab's name |
 | Q17 | **T8** — 8 tabs, Sous-Chef between Board and Log |
 | Q18 | **T8** — the tab's move is to start the automation; a blocked agent asks the orchestrator |
+| Q19 | **T9** — the state comes from herdr; the plan carries no crew state |
+| Q20 | **T9** — the journal records the plan, not the runtime |
+| Q21 | **T9** — the startup task loads the role |
+| Q22 | **T9** — one move: start |
+| Q23 | **T8** — the skills are embedded in the binary |
+| Q24 | **T8** and **T9** — two slices, the skills first |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
