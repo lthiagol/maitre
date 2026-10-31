@@ -852,42 +852,14 @@ func (b *boardBuilder) stuck(node core.TreeNode) {
 // The plan is broken, and the marker says so: the row carries the warning, not the
 // whole line.
 func (m *Model) boardOrphanRow(node core.TreeNode, selected bool) string {
-	width := m.listColumn()
-	note := boardNote(node)
-	marks := evidenceMarks(node.Summary)
-	tail := marks
-	if note != "" {
-		tail += " " + note
-	}
-	title := padCol(node.Summary.Title, titleColumn(width, lipgloss.Width(tail)))
-	row := m.styWarn.Render("⚠ ") + m.styFaint.Render(padRight(node.Summary.ID, 6)) +
-		m.lifecycleStyle(string(node.Summary.Lifecycle)).Render(padRight(string(node.Summary.Lifecycle), 12)) +
-		title + m.styFaint.Render(marks) + m.styDim.Render(strings.TrimPrefix(tail, marks))
-	if selected {
-		return m.stySelected.Render(padRight(row, width))
-	}
-	return row
+	return m.fitTreeRow(m.styWarn.Render("⚠ "), node, selected)
 }
 
 // boardStuckRow renders a recipe a dependency cycle keeps out of the tree.
 //
 // The plan cannot be executed as written, and the row says so.
 func (m *Model) boardStuckRow(node core.TreeNode, selected bool) string {
-	width := m.listColumn()
-	note := boardNote(node)
-	marks := evidenceMarks(node.Summary)
-	tail := marks
-	if note != "" {
-		tail += " " + note
-	}
-	title := padCol(node.Summary.Title, titleColumn(width, lipgloss.Width(tail)))
-	row := m.styWarn.Render("⚠ ") + m.styFaint.Render(padRight(node.Summary.ID, 6)) +
-		m.lifecycleStyle(string(node.Summary.Lifecycle)).Render(padRight(string(node.Summary.Lifecycle), 12)) +
-		title + m.styFaint.Render(marks) + m.styDim.Render(strings.TrimPrefix(tail, marks))
-	if selected {
-		return m.stySelected.Render(padRight(row, width))
-	}
-	return row
+	return m.fitTreeRow(m.styWarn.Render("⚠ "), node, selected)
 }
 
 // branch draws the group of recipes that fork at a node.
@@ -903,7 +875,7 @@ func (b *boardBuilder) branch(node core.TreeNode, prefix string, last bool) {
 		connector = "└─ "
 	}
 	b.out = append(b.out, listLine{
-		text:    " " + b.m.styDim.Render(prefix+connector+"needs "+node.Summary.ID),
+		text:    b.m.fitBoardLine(" " + b.m.styDim.Render(prefix+connector+"needs "+node.Summary.ID)),
 		itemIdx: -1,
 	})
 
@@ -945,21 +917,123 @@ func boardNote(node core.TreeNode) string {
 // The row says what the console already says about a recipe — its lifecycle, its
 // evidence count, its open tasting notes — and what it waits on.
 func (m *Model) boardRow(node core.TreeNode, prefix string, selected bool) string {
-	width := m.listColumn()
-	note := boardNote(node)
+	return m.fitTreeRow(prefix, node, selected)
+}
+
+// fitTreeRow lays one recipe out so the row is one screen line.
+//
+// A row wider than the terminal wraps, and the wrap pushes the footer off
+// the last row. Rows that already fit are unchanged. A row that does not
+// keeps the title, gives up title padding, and then the tail of the note.
+func (m *Model) fitTreeRow(prefix string, node core.TreeNode, selected bool) string {
 	marks := evidenceMarks(node.Summary)
-	tail := marks
-	if note != "" {
-		tail += " " + note
+	note := boardNote(node)
+	titleW := titleColumn(m.listColumn(), lipgloss.Width(treeTail(marks, note)))
+	row := m.renderTreeRow(prefix, node, marks, note, titleW, selected)
+	limit := m.width
+	if limit < 1 || lipgloss.Width(row) <= limit {
+		return row
 	}
-	title := padCol(node.Summary.Title, titleColumn(width, lipgloss.Width(tail)))
-	row := prefix + m.styFaint.Render(padRight(node.Summary.ID, 6)) +
-		m.lifecycleStyle(string(node.Summary.Lifecycle)).Render(padRight(string(node.Summary.Lifecycle), 12)) +
-		title + m.styFaint.Render(marks) + m.styDim.Render(strings.TrimPrefix(tail, marks))
-	if selected {
-		return m.stySelected.Render(padRight(row, width))
+	natural := lipgloss.Width(node.Summary.Title)
+	// The title stays whole when the row was only over because the note is
+	// long. Title padding is what gives way when the title already fits.
+	if titleW < natural {
+		titleW = natural
+		row = m.renderTreeRow(prefix, node, marks, note, titleW, selected)
+	}
+	for lipgloss.Width(row) > limit && titleW > natural {
+		titleW--
+		row = m.renderTreeRow(prefix, node, marks, note, titleW, selected)
+	}
+	for lipgloss.Width(row) > limit && note != "" {
+		next := truncateHead(note, lipgloss.Width(note)-1)
+		if next == note || next == "" || next == "…" {
+			note = ""
+		} else {
+			note = next
+		}
+		row = m.renderTreeRow(prefix, node, marks, note, titleW, selected)
+	}
+	for lipgloss.Width(row) > limit && titleW > 0 {
+		titleW--
+		row = m.renderTreeRow(prefix, node, marks, note, titleW, selected)
+	}
+	if lipgloss.Width(row) > limit {
+		return truncateHeadStyled(row, limit)
 	}
 	return row
+}
+
+// renderTreeRow is one recipe row at a chosen title width.
+func (m *Model) renderTreeRow(prefix string, node core.TreeNode, marks, note string, titleW int, selected bool) string {
+	tail := treeTail(marks, note)
+	row := prefix + m.styFaint.Render(padRight(node.Summary.ID, 6)) +
+		m.lifecycleStyle(string(node.Summary.Lifecycle)).Render(padRight(string(node.Summary.Lifecycle), 12)) +
+		padCol(node.Summary.Title, titleW) + m.styFaint.Render(marks) +
+		m.styDim.Render(strings.TrimPrefix(tail, marks))
+	if selected {
+		return m.stySelected.Render(padRight(row, m.listColumn()))
+	}
+	return row
+}
+
+// treeTail is the marks and the note, in the order the row draws them.
+func treeTail(marks, note string) string {
+	if note == "" {
+		return marks
+	}
+	return marks + " " + note
+}
+
+// fitBoardLine keeps one Board line inside the terminal.
+//
+// The cut keeps the start — the connector, the id — and marks the end.
+func (m *Model) fitBoardLine(s string) string {
+	if m.width < 1 || lipgloss.Width(s) <= m.width {
+		return s
+	}
+	return truncateHeadStyled(s, m.width)
+}
+
+// truncateHeadStyled shortens a styled line to n columns, keeping the start.
+func truncateHeadStyled(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	if n == 1 {
+		return "…"
+	}
+	var b strings.Builder
+	visible := 0
+	runes := []rune(s)
+	for i := 0; i < len(runes); {
+		if runes[i] == 0x1b {
+			j := i + 1
+			if j < len(runes) && runes[j] == '[' {
+				j++
+				for j < len(runes) && (runes[j] < 0x40 || runes[j] > 0x7e) {
+					j++
+				}
+				if j < len(runes) {
+					j++
+				}
+			} else if j < len(runes) {
+				j++
+			}
+			b.WriteString(string(runes[i:j]))
+			i = j
+			continue
+		}
+		rw := lipgloss.Width(string(runes[i]))
+		if visible+rw > n-1 {
+			break
+		}
+		b.WriteRune(runes[i])
+		visible += rw
+		i++
+	}
+	b.WriteString("…\x1b[0m")
+	return b.String()
 }
 
 // cycleNote is what a recipe in a dependency cycle says about itself.

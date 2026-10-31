@@ -276,6 +276,74 @@ func treeModel(t *testing.T) *Model {
 	return m
 }
 
+// TestANarrowBoardRowStaysOneLine covers the row at 80 columns.
+//
+// A row wider than the screen wraps, and the footer stops being the last
+// row. The seeded plan and the cycle fixture both keep one line per row,
+// and the footer is that last row.
+func TestANarrowBoardRowStaysOneLine(t *testing.T) {
+	const width = 80
+	t.Run("seeded", func(t *testing.T) {
+		m := newModel(t)
+		assertBoardFits(t, m, width)
+		out := plain(m)
+		if !strings.Contains(out, "└─") {
+			t.Errorf("the connectors should stay:\n%s", out)
+		}
+		if !strings.Contains(out, "needs RCP02") {
+			t.Errorf("the fork should still name its dependency:\n%s", out)
+		}
+	})
+	t.Run("cycle", func(t *testing.T) {
+		m := shapeModel(t)
+		assertBoardFits(t, m, width)
+		out := plain(m)
+		if !strings.Contains(out, "└─") {
+			t.Errorf("the connectors should stay:\n%s", out)
+		}
+		if !strings.Contains(out, "dependency cycle") {
+			t.Errorf("the cycle should still be marked:\n%s", out)
+		}
+	})
+}
+
+// assertBoardFits checks that every line is one screen row and the footer is last.
+func assertBoardFits(t *testing.T, m *Model, width int) {
+	t.Helper()
+	m.width = width
+	m.height = 40
+	m.tab = TabBoard
+	out := plain(m)
+	lines := strings.Split(strings.TrimRight(out, "\n"), "\n")
+	if len(lines) != m.height {
+		t.Fatalf("the screen has %d rows, want %d — a wrapped row pushes the footer", len(lines), m.height)
+	}
+	if !strings.Contains(lines[len(lines)-1], "quit") {
+		t.Errorf("the footer should be the last row, got %q", lines[len(lines)-1])
+	}
+	maxW := 0
+	for i, line := range lines {
+		w := lipgloss.Width(line)
+		if w > maxW {
+			maxW = w
+		}
+		if w > width {
+			t.Errorf("row %d is %d columns, the screen is %d: %q", i, w, width, line)
+		}
+	}
+	for i, row := range m.boardTree().rows {
+		w := lipgloss.Width(row.text)
+		if w > maxW {
+			maxW = w
+		}
+		if w > width {
+			t.Errorf("board row %d is %d columns, the screen is %d: %q", i, w, width, StripANSI(row.text))
+		}
+		t.Logf("board row %d: %d columns: %s", i, w, StripANSI(row.text))
+	}
+	t.Logf("widest line %d, screen %d", maxW, width)
+}
+
 // TestTheWideBoardDrawsLeftToRight covers the drawing at 160 columns.
 //
 // The trunk's column is left of its fork's. The node shows the title, the
