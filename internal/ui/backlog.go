@@ -33,21 +33,45 @@ import (
 // nothing holds it.
 //
 // The letter that stands for a kind is the console's own affordance — the domain
-// owns the kind, not the key that picks it.
+// owns the kind, not the key that picks it. And the console's own rule is that the
+// keys it hands out **do not collide**: two kinds sharing an initial would leave one
+// of them unreachable.
 func shapeChoices(move core.BacklogMove) []promptChoice {
 	out := make([]promptChoice, 0, len(move.Kinds))
+	used := map[string]bool{}
 	for _, kind := range move.Kinds {
-		out = append(out, promptChoice{key: kindKey(kind), label: kind, value: kind})
+		key := kindKey(kind, used)
+		used[key] = true
+		out = append(out, promptChoice{key: key, label: kind, value: kind})
 	}
 	return out
 }
 
-// kindKey is the letter that picks a kind in the prompt.
-func kindKey(kind string) string {
+// kindKey is the key that picks a kind in the prompt.
+//
+// The kind's initial — and then the shortest prefix of the kind that no other kind
+// has taken. Two kinds sharing an initial must not leave one of them unreachable:
+// the domain's kinds are a `var`, and a kind whose name starts with the same letter
+// would silently vanish from the prompt.
+func kindKey(kind string, used map[string]bool) string {
 	if kind == "" {
 		return ""
 	}
-	return string(kind[0])
+	runes := []rune(kind)
+	for n := 1; n <= len(runes); n++ {
+		key := string(runes[:n])
+		if !used[key] {
+			return key
+		}
+	}
+	// Every prefix is taken, which means two kinds are the same word — the domain
+	// does not allow it. Take the first free letter, so no choice is unreachable.
+	for r := 'a'; r <= 'z'; r++ {
+		if !used[string(r)] {
+			return string(r)
+		}
+	}
+	return ""
 }
 
 // backlogPrimary does the move the domain says the selected item has.

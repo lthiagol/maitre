@@ -137,6 +137,59 @@ func TestShapingAnIdeaChangesItsKindAndScopeAndKeepsItsId(t *testing.T) {
 	}
 }
 
+// TestTheShapePromptGivesEveryKindItsOwnKey covers the prompt's keys.
+//
+// The domain owns the kind; the console owns the letter that picks it. And the
+// console's own rule is that the letters it hands out **do not collide**: two kinds
+// sharing an initial would leave one of them unreachable in the prompt.
+//
+// The domain's kinds are a `var`, so a kind whose name starts with the same letter
+// is a matter of time — and it would vanish silently.
+func TestTheShapePromptGivesEveryKindItsOwnKey(t *testing.T) {
+	// Two kinds sharing an initial.
+	kinds := []string{"feature", "funnel"}
+	choices := shapeChoices(core.BacklogMove{Kinds: kinds})
+	if len(choices) != len(kinds) {
+		t.Fatalf("the prompt offers %d kinds, want %d", len(choices), len(kinds))
+	}
+	seen := map[string]bool{}
+	for i, ch := range choices {
+		if ch.value != kinds[i] {
+			t.Errorf("the choice is %q, want %q", ch.value, kinds[i])
+		}
+		if seen[ch.key] {
+			t.Errorf("two kinds share the key %q — one of them is unreachable", ch.key)
+		}
+		seen[ch.key] = true
+	}
+}
+
+// TestTheShapePromptsKeysAreDistinct covers the prompt the chef sees.
+//
+// The kinds come from the domain, and the keys the console hands out are distinct.
+func TestTheShapePromptsKeysAreDistinct(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+
+	if _, err := Drive(m, []string{"space"}); err != nil {
+		t.Fatal(err)
+	}
+	if m.prompt == nil {
+		t.Fatal("the prompt should be open")
+	}
+	seen := map[string]bool{}
+	for _, ch := range m.prompt.choices {
+		if ch.key == "" {
+			t.Errorf("%q has no key — it is unreachable", ch.value)
+		}
+		if seen[ch.key] {
+			t.Errorf("two kinds share the key %q — one of them is unreachable", ch.key)
+		}
+		seen[ch.key] = true
+	}
+}
+
 // TestTheShapePromptOffersTheDomainsKinds covers the prompt's choices.
 //
 // The kinds are the **domain's**: `core.BacklogMoveOf` carries the kinds a shaping
