@@ -287,18 +287,34 @@ func (m *Model) filterSummary() string {
 
 // filterCounts is how many items the tab holds, and how many the filter leaves.
 //
-// Both come from the same computation the list comes from, so the count in the
-// summary and the rows on the screen cannot disagree.
+// **N is the number of rows the list draws.** It is counted from the list's own
+// lines — the same function that draws the screen — so the count and the screen
+// cannot disagree. A second pass over the plan would count a recipe the list does
+// not draw: with the served section hidden and the filter `glossary`, the list
+// draws nothing and the count must say zero.
 func (m *Model) filterCounts() (shown, total int) {
 	switch m.tab {
 	case TabRecipes:
-		return len(m.shownRows(m.filter)), len(m.shownRows(""))
+		return drawnRows(m.recipeLines(m.filter)), drawnRows(m.recipeLines(""))
 	case TabBacklog:
-		return len(m.backlogItems(m.filter)), len(m.backlogItems(""))
+		return drawnRows(m.backlogLines(m.filter)), drawnRows(m.backlogLines(""))
 	case TabReady:
-		return len(m.readyItems(m.filter)), len(m.readyItems(""))
+		return drawnRows(m.readyLines(m.filter)), drawnRows(m.readyLines(""))
 	}
 	return 0, 0
+}
+
+// drawnRows is how many selectable rows the list draws.
+//
+// A section header holds no item, and the count is of the items the chef can see.
+func drawnRows(lines []listLine) int {
+	n := 0
+	for _, l := range lines {
+		if l.itemIdx >= 0 {
+			n++
+		}
+	}
+	return n
 }
 
 // filterLine is the line the chef types the filter in.

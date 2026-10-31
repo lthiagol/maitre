@@ -600,9 +600,9 @@ func (m *Model) listLines() []listLine {
 	m.boardHits = nil
 	switch m.tab {
 	case TabBacklog:
-		return m.backlogLines()
+		return m.backlogLines(m.filter)
 	case TabReady:
-		return m.readyLines()
+		return m.readyLines(m.filter)
 	case TabBoard:
 		return m.boardTree().rows
 	case TabLog:
@@ -612,7 +612,7 @@ func (m *Model) listLines() []listLine {
 	case TabSettings:
 		return m.settingsLines()
 	default:
-		return m.recipeLines()
+		return m.recipeLines(m.filter)
 	}
 }
 
@@ -620,10 +620,10 @@ func (m *Model) listLines() []listLine {
 //
 // The header counts what is **shown**: a section with two matching recipes says
 // `2`, and a section with no match is not drawn at all.
-func (m *Model) recipeLines() []listLine {
+func (m *Model) recipeLines(filter string) []listLine {
 	var out []listLine
 	item := 0
-	for _, sec := range m.shownSections(m.filter) {
+	for _, sec := range m.shownSections(filter) {
 		if sec.Name == core.TriageServed && !m.showServed {
 			continue
 		}
@@ -736,9 +736,9 @@ func (m *Model) sectionHeader(name string, count, width int) string {
 // The two groups are **derived** from the item's kind — the kind is the only truth,
 // and a group is never stored. With a filter on, a group with no match is not drawn
 // at all, and the header counts the items that are shown.
-func (m *Model) backlogLines() []listLine {
+func (m *Model) backlogLines(filter string) []listLine {
 	var out []listLine
-	ideas, tasks := m.backlogGroups(m.filter)
+	ideas, tasks := m.backlogGroups(filter)
 	kindWidth := m.backlogKindWidth()
 
 	section := func(name string, items []core.BacklogItem, offset int) {
@@ -794,8 +794,8 @@ func (m *Model) backlogRow(index int, id, title, kind, status string, kindWidth 
 // With no filter both blocks are always drawn — an empty block is an empty list,
 // present. With a filter, a block with no match is not drawn at all, and the header
 // counts the items that are shown.
-func (m *Model) readyLines() []listLine {
-	recipes, tasks := m.readyBlocks(m.filter)
+func (m *Model) readyLines(filter string) []listLine {
+	recipes, tasks := m.readyBlocks(filter)
 	var out []listLine
 	item := 0
 

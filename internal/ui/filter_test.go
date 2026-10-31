@@ -587,6 +587,30 @@ func TestTheOtherTabsAreUndisturbedAtEighty(t *testing.T) {
 	}
 }
 
+// TestTheCountIsTheRowsTheListDraws covers AC-03.
+//
+// N is the number of rows the list draws, taken from the list's own computation.
+// With the served section hidden and the filter `glossary`, the list draws **no**
+// rows — the recipe that matches is in the hidden section — so the count must say
+// zero. A count computed by a second pass over the recipes says one, and this
+// test is what says no.
+func TestTheCountIsTheRowsTheListDraws(t *testing.T) {
+	m := recipesModel(t)
+	// Hide the served recipes: the recipe the filter matches is one of them.
+	if _, err := Drive(m, []string{"c"}); err != nil {
+		t.Fatal(err)
+	}
+	typeFilter(t, m, "glossary")
+	out := plain(m)
+
+	if !strings.Contains(out, "filter: glossary · 0 of 6") {
+		t.Errorf("the count should be the rows the list draws:\n%s", out)
+	}
+	if strings.Contains(out, "Draft the glossary") {
+		t.Errorf("the list should draw nothing:\n%s", out)
+	}
+}
+
 // TestTheFilterDoesNotApplyToTheOtherTabs covers AC-05.
 //
 // On Board, Log, Home and Settings, `/` says the filter does not apply here — and
