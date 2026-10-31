@@ -17,7 +17,8 @@
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | ✅ closed · 9 commits · 4dfd5a4, 187d706, f64e6a2, ac8df77, 588cf5f, 9c716ce, 0144216, 6bb7545, f8969ef | [tui-t2b.md](../briefs/tui-t2b.md) · [fix 1](../briefs/fix-tui-t2b-1.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ✅ closed · 9 commits · 4dc8079, 1b550c6, 1804ccc, b873821, 5edae71, aa4ba5f, da36146, 99a7576, 63964ce | [tui-t3a.md](../briefs/tui-t3a.md) · [fix 1](../briefs/fix-tui-t3a-1.md) · [fix 2](../briefs/fix-tui-t3a-2.md) |
 | **T3b** | the backlog moves | the domain answers the item's move; the console shapes · promotes · dismisses · creates | ✅ closed · 8 commits · 1297cdd, 35688a6, 4799b3b, 7de9a16, 4e14f19, 58069e7, c0f1624, 89eaecc | [tui-t3b.md](../briefs/tui-t3b.md) · [fix 1](../briefs/fix-tui-t3b-1.md) · [fix 2](../briefs/fix-tui-t2b-2.md) |
-| **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | 🔄 **fix 1 done · awaiting re-review** — 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) |
+| **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · cycle 2 ok · 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) · [cycle 2](../briefs/review-tui-t4-cycle2.md) |
+| **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | 🔄 briefed | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ⏳ planned | — |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ⏳ planned | — |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
@@ -27,18 +28,21 @@
 half-built slice is `in progress`, and its commits are already in the log — read the
 last commit's body before redoing anything.
 
-**The briefs that exist** are T1, T2a, T2b, T3a, T3b and T4. The rest are written **just
+**The briefs that exist** are T1, T2a, T2b, T3a, T3b, T4 and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**The next session is T5** — the Ready tab: `core.Adoptable`, the Path's new name,
-D-1 and D-4. T4 gave the console its landing place: **Home** is the first tab, it
+**The next session is Q9** — empty backlog lists are written `[]`, and the
+selection follows the item. T5 is the Ready tab after it. T4 gave the console its landing place: **Home** is the first tab, it
 shows the plan's numbers and **no items** (a test holds it), the art moved there and
 sits beside the numbers, and the Sous-Chef dissolved into Home's automation block.
 The numbers are the domain's — `core.PlanStats`, a view with a row in `docs/03` § 8
 — and the console counts nothing. T3b left the backlog's moves in the console — the
 domain answers what an item's move is, and the console shapes, promotes, dismisses
 and creates. The **free edit** of an item's fields is **not built**: the three moves
-are what the chef needs, and the refusal pointed at exactly those.
+are what the chef needs, and the refusal pointed at exactly those. T4's cycle 2
+left two notes, neither of them a finding: a recipes row with a two-digit count in
+every section is 84 columns and wraps at 80, and `docs/05`'s Home sentence is held
+by no test.
 
 **The commits** land in the table's own row as they happen: `T1 · 2 commits ·
 3f9c1a2, 8b0e441`. A row with commits under it and no `closed` is a session that
@@ -109,9 +113,9 @@ herdr agent start reviewer --kind opencode --pane "$SPLIT_PANE" --timeout 60000
 
 | | |
 |---|---|
-| the **tab** | `w1H:tD` — *tui: T4 fix 1* |
-| the **runner** | pane `w1H:pM`, handle `runner` |
-| the **reviewer** | pane `w1H:pN`, handle `reviewer` — briefed for cycle 2 |
+| the **tab** | `w1H:tE` — *tui: Q9* |
+| the **runner** | pane `w1H:pP`, handle `runner-q9` |
+| the **reviewer** | pane `w1H:pQ`, handle `reviewer-q9` — started, not briefed |
 | the **orchestrator** | pane `w1H:pJ` — the one they nudge |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
