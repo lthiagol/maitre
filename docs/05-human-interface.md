@@ -24,12 +24,12 @@ through `maitre-cli`.
 
 | Tab | Holds | Job |
 |---|---|---|
+| **Home** | the plan's numbers — recipes, evidence, tasting, backlog, automation | see the plan at a glance |
 | **Recipes** | every recipe, triage-ordered | view · decide |
 | **Backlog** | backlog items — *Ideas* and *Small tasks*, derived from the kind | manage the backlog |
 | **Path** | the execution order, and what blocks what | run |
 | **Board** | the same plan as a dependency tree — what waits on what | run |
 | **Log** | the activity journal | see the audit trail |
-| **Sous-Chef** | the automation's vital signs — and, one day, the automation | run |
 | **Settings** | theme, keybinds, preferences | — |
 
 v1's `raul` had **seven** lanes — Overview · Milestones · Path · Backlog · Ideas ·
@@ -41,6 +41,12 @@ Autopilot · Settings. Four are gone:
 | Milestones | → **Recipes**, our vocabulary |
 | Ideas | folded into **Backlog** — an idea is a backlog item of kind `idea` |
 | Autopilot | v2 has no orchestration; the running recipes are a section of the board |
+
+**Home is not the Overview.** The lane was dropped because it *restated the board* —
+a second list of the same recipes. Home shows **numbers and never items**: the
+counts the board does not carry (the evidence, the tasting, the backlog, the
+automation's vital signs), and no row on it is selectable. A test holds it — see
+[the Home tab](#the-home-tab).
 
 ## Lanes — the board's organising axis
 
@@ -228,7 +234,7 @@ title. Quitting restores the terminal exactly, and the shell's scrollback stays 
 ```
 row 0        maitre - <project>
 row 1        --------------------------------------------
-row 2        > Recipes   Backlog   Path   Board   Log   Sous-Chef   Settings
+row 2        > Home   Recipes   Backlog   Path   Board   Log   Settings
 row 3        7 recipes - 3 need you        refused - ac.covered
 row 4..      the list - scrollable, fills to the bottom
 row N-1      up/down move - tab switch - space sign off - q quit
@@ -403,39 +409,86 @@ the journal says which, so a reader can tell a human's verdict from a driven one
 writes under `console`. Nothing else changes: the actor is still the chef, because
 the console is the chef's surface either way.
 
-## The Sous-Chef
+## The Home tab
 
-**A placeholder, and it says so.** The Sous-Chef is the orchestrator agent: it calls the
-tickets, routes them, and keeps the line moving. It is not built, and the tab says
-that plainly — a tab that is *waiting* must not look like a tab that is failing, and a
-tab that is failing is worse than no tab at all.
+**The landing tab: the plan's numbers, and nothing to press.** The console opens on
+Home. It is the tab that answers *"where does this plan stand?"* before the chef
+touches anything.
 
 ```
- SOUS-CHEF
-  The orchestrator agent. It calls the tickets, routes
-  them, and keeps the line moving.
+ THE PLAN
+  name kb · path ~/Code/kitchen
 
-  Not built yet. This tab is where the chef
-  will watch the automation work.
+ THE RECIPES
+  total 7 · need you 2 · on the line 2 · served 1
 
- VITAL SIGNS
-  plan written under  2
-  this build speaks  2
-  they agree
+ THE EVIDENCE
+  criteria 12 · proven 6 · failed 2 · rejected 0 · unproven 0
 
- LAST EVENT
-  created     ·     chef      00:27:27
+ THE TASTING
+  open notes 1 · open findings 1
+
+ THE BACKLOG
+  ideas 4 · small tasks 2
+
+ THE AUTOMATION
+  plan written under 7 · this build speaks 7 · they agree
+  last event created     ·     chef      00:27:27
 ```
 
-**The vital signs are why the tab exists before the autopilot does.** The chef can
-already see whether the automation is running on the same rules as the plan: the
-version the plan was last written under, the version this build speaks, and whether
-they agree — because a plan written by a different build of the tool is a plan the
-version guard will refuse to write. And the last thing that happened, so the chef can
-see the automation moving even before it can be watched.
+### The invariant — numbers, never items
 
-Nothing else is here: the recipe counts, the triage and the tree are the Recipes and
-Board tabs' business. The Sous-Chef shows what only the Sous-Chef can show.
+> **The Home tab shows numbers; it shows no items.**
+>
+> No row on Home is selectable, `space` does nothing there, and the tab's item count
+> is zero. **A test holds it.**
+
+v1's **Overview** lane was dropped because it *restated the board* — a second list
+of the same recipes. The risk is the same one, and the difference is written down:
+Home shows what the board does **not** carry — the evidence, the tasting, the
+backlog's counts, the automation's vital signs — and it shows them as numbers. A
+second board would be a second story about the same plan.
+
+The footer on Home promises no move: there is no item under the cursor, so there is
+nothing to sign off, triage or serve.
+
+### Where the numbers come from
+
+Every number is the **domain's** — `core.PlanStats`, a derived view
+([`docs/03` § 8](03-domain-model.md#8-derived-views--computed-never-stored-c1)).
+A number the console counted itself is a number the CLI would count differently.
+
+| Block | The numbers | Where they come from |
+|---|---|---|
+| The plan | the name · the path | `core.Project` and the plan's root |
+| The recipes | total · need you · on the line · served | the triage's sections, counted |
+| The evidence | criteria · proven · failed · rejected · unproven | `core.EvidenceSummaryOf`, summed |
+| The tasting | open notes · open findings | `core.OpenFindingsOf` — the notes of any phase, and the ones the external tasting filed |
+| The backlog | ideas · small tasks | `core.BacklogGroups` |
+| The automation | the plan's version · this build's · the last event | the journal, and `core.DomainVersion` |
+
+### The mark
+
+The mark moved here from the Sous-Chef tab, and it sits **beside** the numbers —
+the point of moving it is that it can share the space.
+
+> **The decoration yields to the content, in both dimensions.** The mark is drawn
+> only when it fits, in width *and* in height.
+
+The numbers keep their column and the mark is drawn in what is left; the numbers
+must be whole on the screen, and a tab whose numbers are cut off has no room for a
+face. At **80×24** — the classic default — the numbers fill the width and the tab
+is what it would be without the mark.
+
+### The automation's vital signs
+
+The Sous-Chef tab dissolved into Home, and its content is the **automation** block:
+the version the plan was last written under, the version this build speaks, and
+whether they agree — because a plan written by a different build of the tool is a
+plan the version guard will refuse to write — and the last thing that happened, so
+the chef can see the automation moving even before it can be watched.
+
+The orchestrator comes back as a tab when the orchestrator does.
 
 ---
 

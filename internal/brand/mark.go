@@ -1,8 +1,8 @@
 // Package brand holds the mark — the artwork — and nothing else.
 //
-// Two surfaces need the mark: the console's header and the Sous-Chef tab, and the
-// CLI's help. Neither may import the other, and the domain must stay free of UI —
-// so the art lives in its own package, and every consumer reads it from here.
+// Two surfaces need the mark: the console's header and the console's Home tab, and
+// the CLI's help. Neither may import the other, and the domain must stay free of UI
+// — so the art lives in its own package, and every consumer reads it from here.
 //
 // The drawings are the source in `images/logo/ascii/`. The wire in `mark_test.go`
 // holds this code to them: change a character in the drawing and the suite says so.
@@ -28,6 +28,10 @@ var Full = []string{
 //
 // It is a **second drawing of the same emblem**, not a crop of the full form: the
 // halves are drawn at the halves' size, and the wire says so.
+//
+// The console's Home tab draws the **full** form or none — half a mark beside half a
+// screen is neither the emblem nor a number — so the half form waits for a surface
+// that needs it.
 var Half = []string{
 	"⣼⣿⣶⣤⡀⠀⠀⠀⠀⣀⣴⣶⣿",
 	"⢸⣿⣿⠙⠻⢰⣿⣿⣿⠸⠛⣹⣿⣿",

@@ -23,15 +23,15 @@ Every line is new. v1 contributes lessons and vocabulary, not code.
 | | |
 |---|---|
 | `maitre-cli` | the agent CLI — 42 commands: 36 verbs in 6 groups, plus 6 workspace commands |
-| `maitre` | the human console — 5 tabs, fullscreen, alt screen |
+| `maitre` | the human console — 7 tabs, fullscreen, alt screen |
 
 The plan lives in `kitchen/`: `recipes/`, `courses/`, `backlog/`, plus
 `activity.json` — the only event log — and `project.json`.
 
-The console's tabs: **Recipes** (grouped by what needs the chef) · **Backlog** (ideas
+The console's tabs: **Home** (the plan's numbers — recipes, evidence, tasting, backlog,
+automation) · **Recipes** (grouped by what needs the chef) · **Backlog** (ideas
 and small tasks) · **Path** (the execution order) · **Board** (the plan as a dependency
-tree) · **Log** (the journal) · **Sous-Chef** (the automation's vital signs) ·
-**Settings**.
+tree) · **Log** (the journal) · **Settings**.
 
 ```bash
 maitre-cli demo --dir /tmp/kb && cd /tmp/kb && maitre           # see it
@@ -195,8 +195,9 @@ build's, whether they agree, and the last event in the journal. That is why the 
 exists before the autopilot does — the chef can already see whether the automation is
 running on the same rules as the plan.
 
-**Open gaps:** Courses — ladder rung 3 — are not built. The Sous-Chef tab is a placeholder:
-the autopilot itself is not built.
+**Open gaps:** Courses — ladder rung 3 — are not built. The automation is not built:
+the Home tab's automation block holds its vital signs, and the orchestrator's tab
+comes back when the orchestrator does.
 
 **Slice 14 — the specification's table of derived views is checked.** `docs/03` § 8
 lists the views the domain computes, and it had drifted in both directions: the chef's

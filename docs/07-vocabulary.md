@@ -44,7 +44,7 @@ Two consequences that used to be accidents and are now rules:
 | The orchestrator | `expo` | **orchestrator** |
 | The tree tab | `Chopboard` | **Board** — the plan's shape: what waits on what |
 | The order tab | `Path` | **Path** — the plan's order: what can go now |
-| The automation's tab | `Expo` | **Sous-Chef** — the crew and the machine's vital signs |
+| The automation's tab | `Expo` | **Home** — the landing tab; the machine's vital signs live on it, and the tab itself comes back when the orchestrator does |
 | A criterion's record | `Proof` | **evidence** |
 | The recipe-level stamp | `Evidence` | **completion** |
 
@@ -133,7 +133,7 @@ The fingerprint is what makes sure the version is moved **by hand** when it shou
 
 | | |
 |---|---|
-| The tab bar | `Board` and `Sous-Chef` replace `Chopboard` and `Expo` |
+| The tab bar | `Board` and `Home` replace `Chopboard` and `Expo` |
 | The window title | *maitre* replaces *Kitchen Brigade* |
 | The CLI's help | `maitre-cli — the maitre agent CLI` |
 | The lane headers | they stay kitchen, and they read as sections, never as a second name for a state |
