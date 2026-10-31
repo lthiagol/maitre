@@ -174,6 +174,10 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
 
+**A question that is still open is not here** — it is in
+[work/questions.md](../questions.md), with its options and the orchestrator's
+recommendation. It moves here when it is answered.
+
 ## How to resume
 
 ```bash
@@ -183,6 +187,7 @@ make check                                  # the tree must be green
 cat work/tui/README.md                      # ← this file: the state
 cat work/tui/plan.md                        # the design, for the reasoning
 cat work/briefs/tui-t<N>.md                 # the contract for the next slice
+cat work/questions.md                       # ← the questions that wait on the chef
 cat work/transcripts/tui-t<N>-*.md           # the lanes' scrollback for the slice
 sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # the ledger
 ```
@@ -204,8 +209,10 @@ sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # the ledger
    lane's hands, not rubbish. **Check `git status` and the receipt before you touch
    anything**, and never `git checkout` a file you did not write.
 
-**A cold session needs three things and nothing else:** this file, the plan, and the
-brief. Everything else — the code, the docs, the history — is in the repository.
+**A cold session needs four things and nothing else:** this file, the plan, the
+brief, and **[work/questions.md](../questions.md)** — the questions that wait on the
+chef, with their options and the orchestrator's recommendation. Everything else — the
+code, the docs, the history — is in the repository.
 
 ## The briefs
 
