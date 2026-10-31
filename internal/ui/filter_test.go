@@ -343,21 +343,27 @@ func selectedRecipe(t *testing.T, m *Model) string {
 //
 // The selection **follows the item**: it stays on the same recipe when that recipe
 // still matches, even when the filter moves it to another row.
+//
+// The filter text is a **strict subset** of the plan, and it takes the row above
+// the cursor with it — so a cursor left on its old index would land on another
+// recipe and this test would say so. A filter that kept every recipe, or one that
+// only took rows from below the cursor, could not fail under any implementation.
 func TestTheSelectionStaysOnTheSameItem(t *testing.T) {
 	m := recipesModel(t)
-	// RCP01 is the fifth row of the triage list.
-	if _, err := Drive(m, []string{"down", "down", "down", "down"}); err != nil {
+	// RCP03 is the second row of the triage list.
+	if _, err := Drive(m, []string{"down"}); err != nil {
 		t.Fatal(err)
 	}
-	if got := selectedRecipe(t, m); got != "RCP01" {
-		t.Fatalf("the cursor should be on RCP01, got %s", got)
+	if got := selectedRecipe(t, m); got != "RCP03" {
+		t.Fatalf("the cursor should be on RCP03, got %s", got)
 	}
 
-	// "RCP0" drops RCP07, so every row below the cursor moves up — but the
-	// cursor stays on the recipe it was on.
-	typeFilter(t, m, "RCP0")
-	if got := selectedRecipe(t, m); got != "RCP01" {
-		t.Errorf("the cursor should stay on RCP01, got %s", got)
+	// "review" matches RCP03 and RCP07, and not RCP02 — the row above the
+	// cursor. The filtered list is two rows long, so a cursor left on its old
+	// index would name RCP07, and the cursor that follows its item names RCP03.
+	typeFilter(t, m, "review")
+	if got := selectedRecipe(t, m); got != "RCP03" {
+		t.Errorf("the cursor should stay on RCP03, got %s", got)
 	}
 }
 
