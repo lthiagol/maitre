@@ -31,12 +31,13 @@ last commit's body before redoing anything.
 **The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**Paused here.** T6 is closed. The next session is **T7** — briefed, and in flight.
+**Paused here.** T7 is implemented and under review. The runner landed 9 commits; the
+reviewer is in flight.
 
 | | |
 |---|---|
 | **T6** | closed. Cycle 2 ok, 0 blockers. Receipt: `work/inbox/reviewer-tui-t6-cycle2.md` (`7890f27`) |
-| **The next slice** | **T7** — `/` filters the list. Brief: [tui-t7.md](../briefs/tui-t7.md). The runner is in flight |
+| **T7** | implemented. The runner's receipt: `work/inbox/runner-tui-t7.md` (`2bae778`). The review is under way |
 | **The ruling** | the filter covers **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree, the Log holds events, Home and Settings hold numbers. Ruled 2026-10-31 |
 | **No lane is in flight** | the T6 fix tab can be closed. Nothing is waiting on a nudge |
 
