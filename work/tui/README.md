@@ -20,7 +20,7 @@
 | **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · cycle 2 ok · 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) · [cycle 2](../briefs/review-tui-t4-cycle2.md) |
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
-| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | 🔄 **fix 1 in · cycle 2 in flight** — 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
+| **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -31,15 +31,13 @@ last commit's body before redoing anything.
 **The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**Paused here, after T6's fix.** Do not start T7 until T6 is closed.
+**Paused here.** T6 is closed. The next session is **T7**.
 
 | | |
 |---|---|
-| **T6** | fix 1 is in (`a5df3ce` space writes nothing, `df6d387` an 80-column row stays one line). Cycle 2 is in flight |
-| **The reviewer** | tab `w1H:tH`, pane `w1H:pX`, handle `reviewer-t6fix`. The brief is [review-tui-t6-cycle2.md](../briefs/review-tui-t6-cycle2.md) |
-| **The receipt** | `work/inbox/reviewer-tui-t6-cycle2.md`. Read it first. The nudge targets pane `w1H:pJ`, which was this session |
-| **Then** | close T6 from the verdict, or answer `changes-needed` with a new tab. A fresh lane, not this reviewer |
-| **The next slice** | **T7** — `/` filters the list. No brief yet. Write it from [plan.md](plan.md) § 6 just before the session |
+| **T6** | closed. Cycle 2 ok, 0 blockers. Receipt: `work/inbox/reviewer-tui-t6-cycle2.md` (`7890f27`) |
+| **The next slice** | **T7** — `/` filters the list. No brief yet. Write it from [plan.md](plan.md) § 6 just before the session, on a fresh tab |
+| **No lane is in flight** | the T6 fix tab can be closed. Nothing is waiting on a nudge |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
 
@@ -110,14 +108,13 @@ herdr agent start reviewer --kind cursor --pane "$SPLIT_PANE" --timeout 60000 --
 | **The dispatch** | the brief plus the notify block with the orchestrator's **real pane id** — `$HERDR_PANE_ID`, not a placeholder |
 | **The delivery check** | one `herdr pane read --lines 40`, ~5 s after each dispatch. Activity lines mean delivered; the raw prompt above the spinner means a stuck draft — report it and ask the chef to press Enter, **never blind-resend** |
 
-**The lanes of the slice in flight**, so another session can reach them:
+**No slice is in flight.** The next one is T7, and its lanes do not exist yet.
 
 | | |
 |---|---|
-| the **tab** | `w1H:tH` — *tui: T6 fix 1* |
-| the **runner** | pane `w1H:pW`, handle `runner-t6fix` |
-| the **reviewer** | pane `w1H:pX`, handle `reviewer-t6fix` — cycle 2 in flight. The nudge targets `w1H:pJ` |
-| the **orchestrator** | pane `w1H:pJ` — this session. A later session reads the receipt |
+| the **tab** | none |
+| the **runner** | none |
+| the **reviewer** | none |
 
 A tab lives until it is closed, so these survive a session that ends. If a lane is
 gone, the receipt in `work/inbox/` is the record of what it did, and the slice's
@@ -206,20 +203,16 @@ sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # the ledger
 
 **Then:**
 
-1. Read `work/inbox/`. If `reviewer-tui-t6-cycle2.md` is there, T6's re-review has
-   reported — close the slice from that verdict, or brief a **new** tab for another
-   fix. Do not start T7 while T6 is open. If the receipt is absent, the reviewer may
-   still be on `w1H:pX`; do not dispatch the review again.
-2. Find the first session in the table above that is not `closed`.
-3. If it is `planned`, it has no brief — **write the brief first**, from the plan's
+1. Find the first session in the table above that is not `closed`. That is **T7**.
+2. If it is `planned`, it has no brief — **write the brief first**, from the plan's
    section for that slice, into `work/briefs/tui-t<N>.md`, and mark the row `briefed`.
-4. If it is `in progress`, read the last commit's body — it says where the session
+3. If it is `in progress`, read the last commit's body — it says where the session
    stopped — and continue from there. **Do not redo what landed.**
-5. If the row is `closed`, the next session is the next row that is not `closed`.
-6. If a slice was **in flight** when the session ended, its lanes may still be alive —
+4. If the row is `closed`, the next session is the next row that is not `closed`.
+5. If a slice was **in flight** when the session ended, its lanes may still be alive —
    their tab and pane ids are in *The lanes* above. Read `work/inbox/` first. The
    receipt may already be there.
-7. **The tree may be dirty, and that is by design.** A lane commits per acceptance
+6. **The tree may be dirty, and that is by design.** A lane commits per acceptance
    criterion, so its work in flight is uncommitted — `git status` shows another
    lane's hands, not rubbish. **Check `git status` and the receipt before you touch
    anything**, and never `git checkout` a file you did not write.
