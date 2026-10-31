@@ -35,14 +35,36 @@ func matchFilter(text string, fields ...string) bool {
 	return false
 }
 
-// recipeFields are the fields a recipe is matched on.
+// recipeFields are the fields a recipe is matched on: its id, its title, its
+// intent and its scope.
+//
+// The intent is the outcome and the problem; the scope is what goes in the pan and
+// what does not. A recipe the chef cannot find by what it *says* is a recipe the
+// filter does not reach.
 func recipeFields(r core.Recipe) []string {
-	return []string{r.ID, r.Title}
+	return []string{
+		r.ID,
+		r.Title,
+		r.Intent.Outcome,
+		r.Intent.Problem,
+		strings.Join(r.Scope.InScope, " "),
+		strings.Join(r.Scope.OutOfScope, " "),
+	}
 }
 
-// itemFields are the fields a backlog item is matched on.
+// itemFields are the fields a backlog item is matched on: its id, its title, its
+// body, its scope and its tags.
+//
+// The tags are the only labels a backlog item carries today. A recipe has none —
+// that is a domain decision taken with the CLI — and the filter does not invent one.
 func itemFields(it core.BacklogItem) []string {
-	return []string{it.ID, it.Title}
+	return []string{
+		it.ID,
+		it.Title,
+		it.Body,
+		strings.Join(it.Scope, " "),
+		strings.Join(it.Tags, " "),
+	}
 }
 
 // filterApplies reports whether the filter reaches the current tab.

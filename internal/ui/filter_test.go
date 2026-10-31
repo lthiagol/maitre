@@ -3,6 +3,8 @@ package ui
 import (
 	"strings"
 	"testing"
+
+	"github.com/lthiagol/maitre/internal/core"
 )
 
 // The filter — the console's answer to "which of these am I looking for?".
@@ -145,5 +147,112 @@ func TestTheFilterLineTakesOneRow(t *testing.T) {
 	if len(screenLines(open)) != len(screenLines(closed)) {
 		t.Errorf("the frame is %d rows with the line open and %d without:\n%s",
 			len(screenLines(open)), len(screenLines(closed)), open)
+	}
+}
+
+// TestTheMatchRuleHoldsForBothKinds covers AC-02.
+//
+// The rule is **one** rule: case-insensitive, a substring, over the fields the
+// filter names. A recipe and a backlog item are matched the same way — two
+// implementations of "does this match" is the house's standing failure.
+func TestTheMatchRuleHoldsForBothKinds(t *testing.T) {
+	recipe := core.Recipe{
+		ID:    "RCP01",
+		Title: "Sharpen the AC gate",
+		Intent: core.Intent{
+			Outcome: "A zero-match verification can never satisfy a gate",
+			Problem: "v1 marked criteria passed on empty filters",
+		},
+		Scope: core.Scope{
+			InScope:    []string{"the gate table", "the verifier"},
+			OutOfScope: []string{"web shell"},
+		},
+	}
+	item := core.BacklogItem{
+		ID:    "BL01",
+		Title: "The board needs a way to show evidence",
+		Body:  "Evidence the chef cannot read is a claim, not evidence.",
+		Scope: []string{"the board lane"},
+		Tags:  []string{"board", "reporting"},
+	}
+
+	recipeCases := []struct {
+		name   string
+		needle string
+		want   bool
+	}{
+		{"the recipe's id", "rcp01", true},
+		{"the recipe's title", "SHARPEN", true},
+		{"the recipe's outcome", "ZERO-MATCH", true},
+		{"the recipe's problem", "empty FILTERS", true},
+		{"the recipe's in-scope", "GATE TABLE", true},
+		{"the recipe's out-of-scope", "web shell", true},
+		{"a word the recipe does not have", "orchestration", false},
+	}
+	itemCases := []struct {
+		name   string
+		needle string
+		want   bool
+	}{
+		{"the item's id", "bl01", true},
+		{"the item's title", "BOARD", true},
+		{"the item's body", "CLAIM, NOT EVIDENCE", true},
+		{"the item's scope", "board lane", true},
+		{"the item's tags", "REPORTING", true},
+		{"a word the item does not have", "orchestration", false},
+	}
+
+	// The **same** function answers for both kinds. That is the point: two
+	// implementations of "does this match" is the house's standing failure.
+	for _, c := range recipeCases {
+		if got := matchFilter(c.needle, recipeFields(recipe)...); got != c.want {
+			t.Errorf("the recipe and %q: got %t, want %t", c.name, got, c.want)
+		}
+	}
+	for _, c := range itemCases {
+		if got := matchFilter(c.needle, itemFields(item)...); got != c.want {
+			t.Errorf("the backlog item and %q: got %t, want %t", c.name, got, c.want)
+		}
+	}
+
+	// An empty filter matches everything: the list is whole when no filter is on.
+	if !matchFilter("", recipeFields(recipe)...) {
+		t.Errorf("an empty filter should match every recipe")
+	}
+	if !matchFilter("", itemFields(item)...) {
+		t.Errorf("an empty filter should match every backlog item")
+	}
+}
+
+// TestTheFilterFindsARecipeByItsIntent covers AC-02.
+//
+// The filter reaches what the recipe **says**, not only what it is called.
+func TestTheFilterFindsARecipeByItsIntent(t *testing.T) {
+	m := recipesModel(t)
+	typeFilter(t, m, "manufactured")
+	out := plain(m)
+
+	if !strings.Contains(out, "Sharpen the AC gate") {
+		t.Errorf("the recipe whose intent matches should be on screen:\n%s", out)
+	}
+	if strings.Contains(out, "Draft the glossary") {
+		t.Errorf("the recipes that do not match should be gone:\n%s", out)
+	}
+}
+
+// TestTheFilterFindsABacklogItemByItsTag covers AC-02.
+//
+// The backlog's tags are the labels it carries, and the filter reaches them.
+func TestTheFilterFindsABacklogItemByItsTag(t *testing.T) {
+	m := newModel(t)
+	switchToTab(t, m, TabBacklog)
+	typeFilter(t, m, "trials")
+	out := plain(m)
+
+	if !strings.Contains(out, "Trying the board on a real project") {
+		t.Errorf("the item whose tag matches should be on screen:\n%s", out)
+	}
+	if strings.Contains(out, "The chef wants a weekly digest") {
+		t.Errorf("the items that do not match should be gone:\n%s", out)
 	}
 }
