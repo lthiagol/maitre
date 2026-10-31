@@ -21,7 +21,7 @@
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
-| **T7** | the filter | `/` filters the list | ✅ implemented · 8 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba | [tui-t7.md](../briefs/tui-t7.md) |
+| **T7** | the filter | `/` filters the list | 🔄 fix cycle 1 · 8 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
@@ -31,15 +31,15 @@ last commit's body before redoing anything.
 **The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**Paused here.** T7 is implemented and under review. The runner landed 9 commits; the
-reviewer is in flight.
+**Paused here.** T7 is in **fix cycle 1**. The review filed two blockers and one low;
+the fix is in flight.
 
 | | |
 |---|---|
 | **T6** | closed. Cycle 2 ok, 0 blockers. Receipt: `work/inbox/reviewer-tui-t6-cycle2.md` (`7890f27`) |
-| **T7** | implemented. The runner's receipt: `work/inbox/runner-tui-t7.md` (`2bae778`). The review is under way |
-| **The ruling** | the filter covers **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree, the Log holds events, Home and Settings hold numbers. Ruled 2026-10-31 |
-| **No lane is in flight** | the T6 fix tab can be closed. Nothing is waiting on a nudge |
+| **T7** | the runner landed 9 commits (`2bae778`); the review said **changes-needed** — F-128 and F-129 are blockers, F-130 is low (`1242d9f`, ledger `f9b1b61`) |
+| **The fix** | **F-128** the filter changed a row's *content* — the `●` mark vanished when the filter hid a dependency, and the Ready tab disagreed. **F-129** at 80 columns the Board said nothing at all. **F-130** the count's own rule was held by nothing. Brief: [fix-tui-t7-1.md](../briefs/fix-tui-t7-1.md) |
+| **The rulings** | the filter covers **Recipes, Backlog and Ready** (Q14); the filter key lives in **Settings' key list**, not the footer (Q15). Both ruled 2026-10-31 |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
 
@@ -175,6 +175,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q9 | a backlog item's empty `scope` and `tags` | **`[]`** — one rule for every record. `DomainVersion` stays 7 | 2026-10-31 |
 | Q10 | after a write, does the selection follow the item? | **yes** — the selection follows the item. The fix belongs in the model | 2026-10-31 |
 | Q14 | which tabs the filter covers | **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree (a hidden node misstates what waits on what); the Log holds events; Home and Settings hold numbers | 2026-10-31 |
+| Q15 | where the console says the filter exists | **the Settings tab's key list** — the footer names the move the *current selection* has, and `/` opens a mode, not a move. The footer's goldens do not move | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -189,6 +190,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q9 | **the backlog writer** — an empty `scope` or `tags` is `[]`. `DomainVersion` stays 7 |
 | Q10 | **the model** — after a write, the selection follows the item |
 | Q14 | **T7** — the filter covers the plan-item lists, and the other tabs say so |
+| Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
