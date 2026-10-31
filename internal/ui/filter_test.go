@@ -521,6 +521,72 @@ func TestTheFilterDoesNotChangeTheRow(t *testing.T) {
 	}
 }
 
+// TestTheBoardSaysTheFilterDoesNotApplyAtEighty covers AC-02.
+//
+// A key that does nothing must say so, **at every width**. At 80 columns the
+// Board's own summary is 47 columns wide, and the 30-column message does not fit
+// beside it — so the message takes a row of its own, the list gives up that row,
+// and the frame stays 24 rows with the footer as the last one.
+func TestTheBoardSaysTheFilterDoesNotApplyAtEighty(t *testing.T) {
+	m := newModel(t)
+	m.width = 80
+	m.height = 24
+	switchToTab(t, m, TabBoard)
+	area := m.listAreaHeight()
+
+	if _, err := Drive(m, []string{"/"}); err != nil {
+		t.Fatal(err)
+	}
+	out := plain(m)
+
+	if !strings.Contains(out, "the filter does not apply here") {
+		t.Errorf("the Board should say the filter does not apply here:\n%s", out)
+	}
+	if got := len(screenLines(out)); got != 24 {
+		t.Errorf("the frame is %d rows, want 24:\n%s", got, out)
+	}
+	if got := footerRow(out); got != 23 {
+		t.Errorf("the footer is on row %d, want 23:\n%s", got, out)
+	}
+	if got := m.listAreaHeight(); got != area-1 {
+		t.Errorf("the list took %d rows, want %d — the message takes exactly one", got, area-1)
+	}
+}
+
+// TestTheOtherTabsAreUndisturbedAtEighty covers AC-02.
+//
+// Home, Log and Settings have summaries short enough to hold the message beside
+// them, so nothing moves there: the message lands on the summary row and the list
+// keeps every row it had.
+func TestTheOtherTabsAreUndisturbedAtEighty(t *testing.T) {
+	for _, tab := range []Tab{TabHome, TabLog, TabSettings} {
+		m := newModel(t)
+		m.width = 80
+		m.height = 24
+		switchToTab(t, m, tab)
+		area := m.listAreaHeight()
+
+		if _, err := Drive(m, []string{"/"}); err != nil {
+			t.Fatal(err)
+		}
+		out := plain(m)
+
+		if !strings.Contains(out, "the filter does not apply here") {
+			t.Errorf("the %s tab should say the filter does not apply here:\n%s", tab.Label(), out)
+		}
+		lines := screenLines(out)
+		if !strings.Contains(lines[3], "the filter does not apply here") {
+			t.Errorf("the %s tab's message should sit on the summary row:\n%s", tab.Label(), out)
+		}
+		if got := m.listAreaHeight(); got != area {
+			t.Errorf("the %s tab's list took %d rows, want %d", tab.Label(), got, area)
+		}
+		if got := len(lines); got != 24 {
+			t.Errorf("the %s tab's frame is %d rows, want 24:\n%s", tab.Label(), got, out)
+		}
+	}
+}
+
 // TestTheFilterDoesNotApplyToTheOtherTabs covers AC-05.
 //
 // On Board, Log, Home and Settings, `/` says the filter does not apply here — and

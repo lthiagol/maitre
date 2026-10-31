@@ -287,8 +287,9 @@ func (m *Model) tabBar() (string, []hitBox) {
 
 // summaryLine is the per-tab summary, with the status or refusal on the right.
 //
-// A refusal that does not fit beside the summary text moves to rows of its own — see
-// bannerLines. A refusal the chef cannot see is a refusal that did not happen.
+// A message that does not fit beside the summary text moves to a row of its own
+// — see bannerLines. A message the chef cannot see is a message that was never
+// said.
 func (m *Model) summaryLine() string {
 	left := m.summaryText()
 	right := m.summaryRight()
@@ -299,11 +300,7 @@ func (m *Model) summaryLine() string {
 	if gap < 1 {
 		return " " + truncate(left, max(1, m.width-4))
 	}
-	style := m.styAcc
-	if m.refusal != "" {
-		style = m.styWarn
-	}
-	return " " + left + strings.Repeat(" ", gap) + style.Render(right)
+	return " " + left + strings.Repeat(" ", gap) + m.messageStyle().Render(right)
 }
 
 // summaryRight is what goes on the right of the summary line.
@@ -317,6 +314,17 @@ func (m *Model) summaryRight() string {
 	return m.status
 }
 
+// messageStyle is the style a message wears where it lands.
+//
+// A refusal is a warning; a status is the console talking. The message wears the
+// same style on the summary row and on a row of its own — one message, one look.
+func (m *Model) messageStyle() lipgloss.Style {
+	if m.refusal != "" {
+		return m.styWarn
+	}
+	return m.styAcc
+}
+
 // summaryFits reports whether the right of the summary line fits beside the left.
 func (m *Model) summaryFits() bool {
 	right := m.summaryRight()
@@ -326,16 +334,21 @@ func (m *Model) summaryFits() bool {
 	return m.width-lipgloss.Width(m.summaryText())-lipgloss.Width(right)-3 >= 1
 }
 
-// bannerLines are the rows a refusal takes under the summary line.
+// bannerLines are the rows a message takes under the summary line.
 //
-// A refusal that does not fit beside the summary text takes rows of its own, so the
-// chef always reads it. The reason wraps; it is never truncated away.
+// A message that does not fit beside the summary text takes rows of its own, so
+// the chef always reads it: a refusal that did not happen, a status that was never
+// said. The reason wraps; it is never truncated away.
+//
+// **The list gives up the row.** A message that pushed the footer off the screen
+// would be the same defect as the one it is fixing.
 func (m *Model) bannerLines() []string {
-	if m.refusal == "" || m.summaryFits() {
+	right := m.summaryRight()
+	if right == "" || m.summaryFits() {
 		return nil
 	}
 	width := max(20, m.width-2)
-	rows := wrapText(refusalMarker+m.refusal, width)
+	rows := wrapText(right, width)
 	room := m.bannerRoom()
 	if len(rows) > room {
 		// The screen is too short for the whole reason: keep what fits and say that
@@ -345,7 +358,7 @@ func (m *Model) bannerLines() []string {
 	}
 	out := make([]string, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, " "+m.styWarn.Render(r))
+		out = append(out, " "+m.messageStyle().Render(r))
 	}
 	return out
 }
