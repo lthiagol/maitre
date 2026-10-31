@@ -17,7 +17,7 @@
 | **T2b** | the mouse, part 2 | the clicks: a tab, a row, a detail; the mouse drivable from a script | ✅ closed · 9 commits · 4dfd5a4, 187d706, f64e6a2, ac8df77, 588cf5f, 9c716ce, 0144216, 6bb7545, f8969ef | [tui-t2b.md](../briefs/tui-t2b.md) · [fix 1](../briefs/fix-tui-t2b-1.md) |
 | **T3a** | the backlog is readable | the detail pane; `space` stops being a trap on an idea; D-3, D-5 | ✅ closed · 9 commits · 4dc8079, 1b550c6, 1804ccc, b873821, 5edae71, aa4ba5f, da36146, 99a7576, 63964ce | [tui-t3a.md](../briefs/tui-t3a.md) · [fix 1](../briefs/fix-tui-t3a-1.md) · [fix 2](../briefs/fix-tui-t3a-2.md) |
 | **T3b** | the backlog moves | the domain answers the item's move; the console shapes · promotes · dismisses · creates | ✅ closed · 8 commits · 1297cdd, 35688a6, 4799b3b, 7de9a16, 4e14f19, 58069e7, c0f1624, 89eaecc | [tui-t3b.md](../briefs/tui-t3b.md) · [fix 1](../briefs/fix-tui-t3b-1.md) · [fix 2](../briefs/fix-tui-t2b-2.md) |
-| **T4** | the Home tab | the landing tab; the art; the Sous-Chef dissolves; D-2 | ⏳ planned | — |
+| **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | 🔄 **briefed** | [tui-t4.md](../briefs/tui-t4.md) |
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ⏳ planned | — |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ⏳ planned | — |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
