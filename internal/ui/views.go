@@ -124,10 +124,11 @@ func (m *Model) renderSingle(lines []listLine) string {
 	bar, tabs := m.tabBar()
 	b.WriteString(bar + "\n")
 	b.WriteString(m.summaryLine() + "\n")
+	filterRows := m.writeFilterLine(&b)
 	bannerRows := m.writeBanner(&b)
 
 	h := m.listAreaHeight()
-	start := headerRows + bannerRows
+	start := headerRows + filterRows + bannerRows
 	for i := 0; i < h; i++ {
 		idx := m.offset + i
 		if idx < len(lines) {
@@ -174,12 +175,13 @@ func (m *Model) renderSplit(lines []listLine) string {
 	bar, tabs := m.tabBar()
 	b.WriteString(bar + "\n")
 	b.WriteString(m.summaryLine() + "\n")
+	filterRows := m.writeFilterLine(&b)
 	bannerRows := m.writeBanner(&b)
 	b.WriteString(joinColumns(left, right, listWidth))
 
 	// The detail sits beside the list: the list's column, one column of air, and
 	// the rest of the terminal.
-	start := headerRows + bannerRows
+	start := headerRows + filterRows + bannerRows
 	m.hits = m.hitMapOf(tabs, bannerRows, lines, start, h,
 		newHitBox(listWidth+1, m.width-1, start, start+h-1))
 	return b.String() + m.footer()
@@ -188,9 +190,9 @@ func (m *Model) renderSplit(lines []listLine) string {
 // listAreaHeight is how many rows the list gets.
 //
 // A refusal banner takes rows from the list: the banner is the one thing the chef
-// must not miss, and the list can give up a row.
+// must not miss, and the list can give up a row. So does the filter line.
 func (m *Model) listAreaHeight() int {
-	h := m.height - headerRows - len(m.bannerLines()) - footerRows
+	h := m.height - headerRows - len(m.bannerLines()) - footerRows - m.filterRows()
 	if h < 1 {
 		h = 1
 	}
@@ -463,6 +465,12 @@ func (m *Model) footer() string {
 	if m.prompt != nil {
 		return m.promptFooter()
 	}
+	// So does the open filter line: the chef is typing, and the footer says what
+	// the two keys that close the line do.
+	if m.filterOpen {
+		return " " + m.styKey.Render("⏎") + m.styDim.Render(" keep · ") +
+			m.styKey.Render("esc") + m.styDim.Render(" clear · the list filters as you type")
+	}
 
 	type key struct{ k, what string }
 	var keys []key
@@ -587,10 +595,13 @@ func (m *Model) listLines() []listLine {
 }
 
 // recipeLines renders the Recipes tab, grouped by triage section.
+//
+// The header counts what is **shown**: a section with two matching recipes says
+// `2`, and a section with no match is not drawn at all.
 func (m *Model) recipeLines() []listLine {
 	var out []listLine
 	item := 0
-	for _, sec := range m.sections {
+	for _, sec := range m.shownSections(m.filter) {
 		if sec.Name == core.TriageServed && !m.showServed {
 			continue
 		}
@@ -701,10 +712,11 @@ func (m *Model) sectionHeader(name string, count, width int) string {
 // backlogLines renders the Backlog tab.
 //
 // The two groups are **derived** from the item's kind — the kind is the only truth,
-// and a group is never stored.
+// and a group is never stored. With a filter on, a group with no match is not drawn
+// at all, and the header counts the items that are shown.
 func (m *Model) backlogLines() []listLine {
 	var out []listLine
-	ideas, tasks := core.BacklogGroups(m.items)
+	ideas, tasks := m.backlogGroups(m.filter)
 	kindWidth := m.backlogKindWidth()
 
 	section := func(name string, items []core.BacklogItem, offset int) {
@@ -757,10 +769,11 @@ func (m *Model) backlogRow(index int, id, title, kind, status string, kindWidth 
 
 // readyLines renders the Ready tab.
 //
-// Both blocks are always drawn. An empty block is an empty list, present.
+// With no filter both blocks are always drawn — an empty block is an empty list,
+// present. With a filter, a block with no match is not drawn at all, and the header
+// counts the items that are shown.
 func (m *Model) readyLines() []listLine {
-	recipes := core.Adoptable(m.recipes)
-	tasks := openSmallTasks(m.items)
+	recipes, tasks := m.readyBlocks(m.filter)
 	var out []listLine
 	item := 0
 
@@ -768,12 +781,18 @@ func (m *Model) readyLines() []listLine {
 		out = append(out, listLine{text: m.sectionHeader(name, n, m.listColumn()), itemIdx: -1})
 		out = append(out, listLine{text: m.styRule.Render(strings.Repeat("─", m.listColumn())), itemIdx: -1})
 	}
-	header("ADOPTABLE", len(recipes))
+	block := func(name string, n int) {
+		if m.filter != "" && n == 0 {
+			return
+		}
+		header(name, n)
+	}
+	block("ADOPTABLE", len(recipes))
 	for _, r := range recipes {
 		out = append(out, listLine{text: m.readyRecipeRow(r, m.selReady == item), itemIdx: item})
 		item++
 	}
-	header("SMALL TASKS", len(tasks))
+	block("SMALL TASKS", len(tasks))
 	for _, it := range tasks {
 		out = append(out, listLine{text: m.readyTaskRow(it, m.selReady == item), itemIdx: item})
 		item++

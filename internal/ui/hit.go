@@ -146,7 +146,9 @@ func (h hitMap) defaultPoint() (int, int) {
 func (m *Model) hitMapOf(tabs []hitBox, bannerRows int, lines []listLine, start, height int, detail hitBox) hitMap {
 	hits := hitMap{tabs: tabs, detail: detail}
 	for i := 0; i < bannerRows; i++ {
-		row := headerRows + i
+		// The banner sits under the summary, and the filter line sits under the
+		// summary too — so the banner starts lower when the line is open.
+		row := headerRows + m.filterRows() + i
 		hits.banner = append(hits.banner, newHitBox(0, m.width-1, row, row))
 	}
 	width := m.listColumn()

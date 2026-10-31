@@ -102,6 +102,14 @@ type Model struct {
 	mode       Mode
 	showServed bool
 
+	// filter is the text the list is filtered by, and filterOpen says whether the
+	// line is open for typing.
+	//
+	// The filter is the console's own: nothing is written to the plan, and the
+	// plan's format does not move.
+	filter     string
+	filterOpen bool
+
 	recipes  []core.Recipe
 	sections []core.TriageSection
 
@@ -345,28 +353,28 @@ func (m *Model) applyReload(msg reloadMsg) {
 	m.recipes = msg.recipes
 	m.items = msg.items
 	m.journal = msg.journal
-	m.sections = m.orderedSections()
+	m.sections = m.orderedSections(m.recipes)
 	m.placeBacklog(follow, leave)
 	m.placeReady(readyLeave)
 	m.clampSelections()
 }
 
 // orderedSections applies the current ordering.
-func (m *Model) orderedSections() []core.TriageSection {
+func (m *Model) orderedSections(recipes []core.Recipe) []core.TriageSection {
 	switch m.order {
 	case OrderTriage:
-		return core.TriageSections(m.recipes)
+		return core.TriageSections(recipes)
 	case OrderLane:
-		return m.sectionsByLane()
+		return m.sectionsByLane(recipes)
 	default:
-		return m.sectionsPlain()
+		return m.sectionsPlain(recipes)
 	}
 }
 
 // sectionsByLane groups by the lifecycle lane.
-func (m *Model) sectionsByLane() []core.TriageSection {
+func (m *Model) sectionsByLane(recipes []core.Recipe) []core.TriageSection {
 	byLane := map[core.Lane][]core.Recipe{}
-	for _, r := range m.recipes {
+	for _, r := range recipes {
 		l := core.LaneOf(r)
 		byLane[l] = append(byLane[l], r)
 	}
@@ -378,7 +386,7 @@ func (m *Model) sectionsByLane() []core.TriageSection {
 		}
 		sec := core.TriageSection{Name: l.Label()}
 		for i := range items {
-			sec.Items = append(sec.Items, core.SummaryOf(items[i], m.recipes))
+			sec.Items = append(sec.Items, core.SummaryOf(items[i], recipes))
 		}
 		out = append(out, sec)
 	}
@@ -386,10 +394,10 @@ func (m *Model) sectionsByLane() []core.TriageSection {
 }
 
 // sectionsPlain is a single section, by id.
-func (m *Model) sectionsPlain() []core.TriageSection {
+func (m *Model) sectionsPlain(recipes []core.Recipe) []core.TriageSection {
 	sec := core.TriageSection{Name: "All recipes"}
-	for i := range m.recipes {
-		sec.Items = append(sec.Items, core.SummaryOf(m.recipes[i], m.recipes))
+	for i := range recipes {
+		sec.Items = append(sec.Items, core.SummaryOf(recipes[i], recipes))
 	}
 	if len(sec.Items) == 0 {
 		return nil
@@ -399,12 +407,42 @@ func (m *Model) sectionsPlain() []core.TriageSection {
 
 // visibleRows is the flat list of recipes the selection moves through.
 func (m *Model) visibleRows() []core.Summary {
+	return m.shownRows(m.filter)
+}
+
+// shownRows is the flat list of recipes, with the given filter applied.
+//
+// The filter is a **parameter** because the rows on the screen and the count in the
+// summary come from the same call — the two cannot disagree.
+func (m *Model) shownRows(filter string) []core.Summary {
 	var out []core.Summary
-	for _, s := range m.sections {
+	for _, s := range m.shownSections(filter) {
 		if s.Name == core.TriageServed && !m.showServed {
 			continue
 		}
 		out = append(out, s.Items...)
+	}
+	return out
+}
+
+// shownSections is the Recipes tab's sections, with the given filter applied.
+//
+// A section with no match is not drawn: an empty section header is noise that says
+// the plan has something it does not have.
+func (m *Model) shownSections(filter string) []core.TriageSection {
+	if filter == "" {
+		return m.sections
+	}
+	return m.orderedSections(m.filteredRecipes(filter))
+}
+
+// filteredRecipes is the plan's recipes that match the filter.
+func (m *Model) filteredRecipes(filter string) []core.Recipe {
+	out := make([]core.Recipe, 0, len(m.recipes))
+	for _, r := range m.recipes {
+		if matchFilter(filter, recipeFields(r)...) {
+			out = append(out, r)
+		}
 	}
 	return out
 }
@@ -429,14 +467,38 @@ type readyEntry struct {
 
 // readyEntries is the Ready tab's selectable rows, in the order it draws them.
 func (m *Model) readyEntries() []readyEntry {
-	out := make([]readyEntry, 0)
-	for _, r := range core.Adoptable(m.recipes) {
+	return m.readyItems(m.filter)
+}
+
+// readyItems is the Ready tab's selectable rows, with the given filter applied.
+func (m *Model) readyItems(filter string) []readyEntry {
+	recipes, tasks := m.readyBlocks(filter)
+	out := make([]readyEntry, 0, len(recipes)+len(tasks))
+	for _, r := range recipes {
 		out = append(out, readyEntry{id: r.ID})
 	}
-	for _, it := range openSmallTasks(m.items) {
+	for _, it := range tasks {
 		out = append(out, readyEntry{id: it.ID, task: true})
 	}
 	return out
+}
+
+// readyBlocks is the Ready tab's two blocks, with the given filter applied.
+//
+// Adoptable recipes come first, then open small tasks. A task row carries the
+// backlog item; a recipe row does not.
+func (m *Model) readyBlocks(filter string) (recipes []core.Recipe, tasks []core.BacklogItem) {
+	for _, r := range core.Adoptable(m.recipes) {
+		if matchFilter(filter, recipeFields(r)...) {
+			recipes = append(recipes, r)
+		}
+	}
+	for _, it := range openSmallTasks(m.items) {
+		if matchFilter(filter, itemFields(it)...) {
+			tasks = append(tasks, it)
+		}
+	}
+	return
 }
 
 // openSmallTasks is the Ready tab's second block.
@@ -694,6 +756,11 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	if m.prompt != nil {
 		return m.handlePromptKey(k)
 	}
+	// So does an open filter line: the chef is typing a filter, and the list is
+	// filtering as they type.
+	if m.filterOpen {
+		return m.handleFilterKey(k)
+	}
 
 	switch k.String() {
 	case "q", "ctrl+c":
@@ -776,10 +843,13 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 
 	case "1", "2", "3":
 		m.order = Order(int(k.String()[0]) - '1')
-		m.sections = m.orderedSections()
+		m.sections = m.orderedSections(m.recipes)
 		m.clampSelections()
 		m.status = "order: " + OrderNames[int(m.order)]
 		return m, nil
+
+	case "/":
+		return m.openFilter()
 
 	case "c":
 		m.showServed = !m.showServed
@@ -823,6 +893,11 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 func (m *Model) switchTab(t Tab) {
 	m.tab = t
 	m.status = ""
+	// The filter survives the switch — but a tab it does not reach has no line to
+	// type in, so the line closes there. The text is kept.
+	if !m.filterApplies() {
+		m.filterOpen = false
+	}
 	// The tab changes the recipe, and the note cursor belongs to the recipe.
 	// A footer that promises a triage the space refuses is a lie.
 	m.clampSelections()
@@ -840,6 +915,9 @@ func (m *Model) openDetail() {
 	if !m.hasDetail() {
 		return
 	}
+	// The detail takes the screen, and the filter line is a **list** thing: the
+	// line closes, and the filter it holds stays.
+	m.filterOpen = false
 	m.mode = ModeDetail
 	m.detailScroll = 0
 }
@@ -1035,8 +1113,36 @@ func (m *Model) actOnRecipe() (tea.Model, tea.Cmd) {
 // Ideas first, then small tasks. The cursor, the row and the reload all read
 // this one slice, so the highlighted row is the item the cursor names.
 func (m *Model) backlogRows() []core.BacklogItem {
-	ideas, tasks := core.BacklogGroups(m.items)
-	return append(append([]core.BacklogItem{}, ideas...), tasks...)
+	return m.backlogItems(m.filter)
+}
+
+// backlogItems is the Backlog tab's rows, with the given filter applied.
+func (m *Model) backlogItems(filter string) []core.BacklogItem {
+	ideas, tasks := m.backlogGroups(filter)
+	out := make([]core.BacklogItem, 0, len(ideas)+len(tasks))
+	out = append(out, ideas...)
+	out = append(out, tasks...)
+	return out
+}
+
+// backlogGroups is the Backlog tab's two groups, with the given filter applied.
+//
+// The two groups are **derived** from the item's kind — the kind is the only truth,
+// and a group is never stored.
+func (m *Model) backlogGroups(filter string) (ideas, tasks []core.BacklogItem) {
+	allIdeas, allTasks := core.BacklogGroups(m.items)
+	return filterItems(allIdeas, filter), filterItems(allTasks, filter)
+}
+
+// filterItems keeps the items that match the filter.
+func filterItems(items []core.BacklogItem, filter string) []core.BacklogItem {
+	out := make([]core.BacklogItem, 0, len(items))
+	for _, it := range items {
+		if matchFilter(filter, itemFields(it)...) {
+			out = append(out, it)
+		}
+	}
+	return out
 }
 
 // backlogCount is the number of rows in the Backlog tab.
