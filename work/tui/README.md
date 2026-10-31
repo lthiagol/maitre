@@ -27,7 +27,7 @@
 half-built slice is `in progress`, and its commits are already in the log — read the
 last commit's body before redoing anything.
 
-**The briefs that exist** are T1, T2a, T2b, T3a and T3b. The rest are written **just
+**The briefs that exist** are T1, T2a, T2b, T3a, T3b and T4. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
 **The next session is T5** — the Ready tab: `core.Adoptable`, the Path's new name,
