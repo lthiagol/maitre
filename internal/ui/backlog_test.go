@@ -79,6 +79,9 @@ func TestTheBacklogDetailShowsWhereTheItemWent(t *testing.T) {
 		t.Fatalf("the promotion was refused: %s", m.refusal)
 	}
 	m.Update(m.reload()())
+	// The cursor leaves the promoted item. The detail's claim is about that
+	// item, so the check sits on it.
+	m.selBacklog = 4
 
 	m.width = 200
 	out := plain(m)
@@ -184,6 +187,9 @@ func TestTheFooterAsksTheDomainAboutPromotability(t *testing.T) {
 		t.Fatalf("the promotion was refused: %s", m.refusal)
 	}
 	m.Update(m.reload()())
+	// The cursor leaves the promoted item. The footer's claim is about that
+	// item, so the check sits on it.
+	m.selBacklog = 4
 
 	// The item is a promoted small task now. The domain refuses it; the kind does
 	// not.

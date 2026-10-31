@@ -111,9 +111,21 @@ type Model struct {
 
 	selRecipes int
 	selBacklog int
-	selPath    int
-	selBoard   int
-	selLog     int
+	// backlogID is the item the backlog cursor names.
+	//
+	// selBacklog is that item's row. A reload resolves the id to the row, so a
+	// shaping that moves an idea into Small tasks does not leave the cursor on
+	// the idea that slid into the old index.
+	backlogID string
+	// backlogFollow is the id a write asked the cursor to land on.
+	// backlogLeave is an id the cursor must not name after the next reload:
+	// a dismissal and a promotion take the item out of the chef's hands, and
+	// the cursor sits on the nearest remaining row.
+	backlogFollow string
+	backlogLeave  string
+	selPath       int
+	selBoard      int
+	selLog        int
 	// selTheme is the cursor over the theme list on the Settings tab.
 	selTheme int
 	// selNote is the cursor over the selected recipe's open tasting notes.
@@ -303,10 +315,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // happen — a console that shows the chef a plan it is not looking at is worse than a
 // console that crashes.
 func (m *Model) applyReload(msg reloadMsg) {
+	follow, leave := m.backlogFollow, m.backlogLeave
+	m.backlogFollow, m.backlogLeave = "", ""
+	// The row on screen is the item the chef was on, unless the write named
+	// another — a new id, or one that has left.
+	if follow == "" && leave == "" {
+		if item, ok := m.selectedBacklogItem(); ok {
+			m.backlogID = item.ID
+		}
+	}
 	m.recipes = msg.recipes
 	m.items = msg.items
 	m.journal = msg.journal
 	m.sections = m.orderedSections()
+	m.placeBacklog(follow, leave)
 	m.clampSelections()
 }
 
@@ -503,6 +525,7 @@ func (m *Model) clampSelections() {
 	clamp(&m.selLog, len(m.logWindow()))
 	clamp(&m.selTheme, len(palettes()))
 	clamp(&m.selNote, len(m.openNotes()))
+	m.rememberBacklogRow()
 }
 
 // pathEntries is the Path tab's selectable items.
@@ -845,13 +868,18 @@ func (m *Model) actOnRecipe() (tea.Model, tea.Cmd) {
 	return m, m.reload()
 }
 
-// backlogCount is the number of rows in the Backlog tab.
+// backlogRows is the Backlog tab's rows, in the order the tab draws them.
 //
-// It is the ideas first, then the small tasks. The order is the order the tab draws
-// them in, so the cursor and the row always agree.
-func (m *Model) backlogCount() int {
+// Ideas first, then small tasks. The cursor, the row and the reload all read
+// this one slice, so the highlighted row is the item the cursor names.
+func (m *Model) backlogRows() []core.BacklogItem {
 	ideas, tasks := core.BacklogGroups(m.items)
-	return len(ideas) + len(tasks)
+	return append(append([]core.BacklogItem{}, ideas...), tasks...)
+}
+
+// backlogCount is the number of rows in the Backlog tab.
+func (m *Model) backlogCount() int {
+	return len(m.backlogRows())
 }
 
 // selectedBacklogItem is the backlog item under the cursor.
@@ -859,12 +887,100 @@ func (m *Model) backlogCount() int {
 // The second value says whether there is one: the cursor can sit past the last row,
 // and then there is nothing under it.
 func (m *Model) selectedBacklogItem() (core.BacklogItem, bool) {
-	ideas, tasks := core.BacklogGroups(m.items)
-	all := append(append([]core.BacklogItem{}, ideas...), tasks...)
+	all := m.backlogRows()
 	if m.selBacklog < 0 || m.selBacklog >= len(all) {
 		return core.BacklogItem{}, false
 	}
 	return all[m.selBacklog], true
+}
+
+// placeBacklog resolves the backlog cursor after a reload.
+//
+// follow lands on that id — a create, or a shape that kept its id and changed
+// its row. leave does not name that id: the item has left the chef's hands, and
+// the cursor sits on the nearest remaining row. Otherwise the remembered id is
+// resolved to its row. An id that is gone is not kept; the index names the
+// nearest row, and that row's id is the one remembered.
+func (m *Model) placeBacklog(follow, leave string) {
+	all := m.backlogRows()
+	if follow != "" {
+		if i := backlogRowOf(all, follow); i >= 0 {
+			m.selBacklog = i
+			m.backlogID = follow
+			return
+		}
+	}
+	if leave != "" {
+		m.selBacklog = nearestBacklogRow(all, m.selBacklog, leave)
+		m.backlogID = backlogIDAt(all, m.selBacklog)
+		return
+	}
+	if i := backlogRowOf(all, m.backlogID); m.backlogID != "" && i >= 0 {
+		m.selBacklog = i
+		return
+	}
+	if len(all) == 0 {
+		m.selBacklog = 0
+		m.backlogID = ""
+		return
+	}
+	if m.selBacklog < 0 {
+		m.selBacklog = 0
+	}
+	if m.selBacklog >= len(all) {
+		m.selBacklog = len(all) - 1
+	}
+	m.backlogID = all[m.selBacklog].ID
+}
+
+// rememberBacklogRow stores the id of the row the index points at.
+func (m *Model) rememberBacklogRow() {
+	m.backlogID = backlogIDAt(m.backlogRows(), m.selBacklog)
+}
+
+// backlogRowOf is the index of id in the tab's order, or -1.
+func backlogRowOf(all []core.BacklogItem, id string) int {
+	for i, it := range all {
+		if it.ID == id {
+			return i
+		}
+	}
+	return -1
+}
+
+// backlogIDAt is the id at index, or empty when the index names no row.
+func backlogIDAt(all []core.BacklogItem, index int) string {
+	if index < 0 || index >= len(all) {
+		return ""
+	}
+	return all[index].ID
+}
+
+// nearestBacklogRow is the row nearest to index that is not left.
+//
+// The next row is the one that would sit at this index if left had gone. The
+// previous row is that one when this was the last. The only row is itself:
+// there is nowhere else to sit.
+func nearestBacklogRow(all []core.BacklogItem, index int, left string) int {
+	rest := make([]int, 0, len(all))
+	for i, it := range all {
+		if it.ID != left {
+			rest = append(rest, i)
+		}
+	}
+	if len(rest) == 0 {
+		return 0
+	}
+	pos := 0
+	for _, i := range rest {
+		if i < index {
+			pos++
+		}
+	}
+	if pos >= len(rest) {
+		pos = len(rest) - 1
+	}
+	return rest[pos]
 }
 
 // promoteSelected promotes the selected backlog item into a recipe.
@@ -897,6 +1013,9 @@ func (m *Model) promoteSelected() (tea.Model, tea.Cmd) {
 	}
 	m.refusal = ""
 	m.status = fmt.Sprintf("promoted %s to recipe %s", item.ID, recipe.ID)
+	// The item has left the chef's hands. The cursor does not follow the new
+	// recipe, and it does not stay on the id that left.
+	m.backlogLeave = item.ID
 	return m, m.reload()
 }
 

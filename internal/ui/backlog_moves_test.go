@@ -51,6 +51,9 @@ func TestTheFooterNamesTheMoveTheDomainGives(t *testing.T) {
 		t.Fatalf("the promotion was refused: %s", m.refusal)
 	}
 	m.Update(m.reload()())
+	// The cursor leaves the promoted item. The footer's claim is about that
+	// item, so the check sits on it.
+	m.selBacklog = 4
 	out = plain(m)
 	if strings.Contains(out, "space promote to recipe") || strings.Contains(out, "space shape it") {
 		t.Errorf("a settled item has no move — the footer must not offer one:\n%s", out)
@@ -72,6 +75,9 @@ func TestTheFooterAsksTheDomainForTheMove(t *testing.T) {
 		t.Fatalf("the promotion was refused: %s", m.refusal)
 	}
 	m.Update(m.reload()())
+	// The cursor leaves the promoted item. The footer's claim is about that
+	// item, so the check sits on it.
+	m.selBacklog = 4
 
 	// The domain's answer, read directly: no move.
 	item, err := m.store.LoadBacklogItem("BL05")
@@ -358,6 +364,9 @@ func TestTheFooterOffersTheDismissOnlyWhileTheDomainSaysSo(t *testing.T) {
 	if _, err := Drive(m, steps); err != nil {
 		t.Fatal(err)
 	}
+	// The cursor leaves the dismissed item. The footer's claim is about that
+	// item, so the check sits on it.
+	m.selBacklog = 0
 	out = plain(m)
 	if strings.Contains(out, "d dismiss") {
 		t.Errorf("the footer offers a dismissal the domain refuses:\n%s", out)
@@ -451,6 +460,111 @@ func TestAnItemWithNoTitleIsNotWritten(t *testing.T) {
 	if len(items) != 6 {
 		t.Fatalf("the backlog holds %d items, want 6 — nothing was written", len(items))
 	}
+}
+
+// TestTheBacklogCursorFollowsTheItem covers the selection.
+//
+// The cursor remembers the item's id. After a shape it is on that id, on its
+// new row. After a create it is on the new id. After a dismiss and a promote
+// it does not name the id that left: it sits on the nearest remaining row, it
+// stays on the Backlog tab, and it does not follow a promotion into the recipe.
+// A reload that does not remove the id leaves that id selected.
+func TestTheBacklogCursorFollowsTheItem(t *testing.T) {
+	m := newModel(t)
+	m.tab = TabBacklog
+	m.selBacklog = 0
+	m.selRecipes = 2
+
+	steps := append([]string{"space", "f"}, typed("the evidence lane")...)
+	steps = append(steps, "enter")
+	if _, err := Drive(m, steps); err != nil {
+		t.Fatal(err)
+	}
+	item, ok := m.selectedBacklogItem()
+	if !ok || item.ID != "BL01" {
+		t.Fatalf("after the shape the cursor is on %q, want BL01", idOrNone(item, ok))
+	}
+	if m.selBacklog == 0 {
+		t.Fatal("the cursor stayed on the old index — that row is another idea")
+	}
+	if m.tab != TabBacklog {
+		t.Fatalf("the tab is %v, want the backlog", m.tab)
+	}
+
+	steps = append([]string{"a"}, typed("A weekly digest of what changed")...)
+	steps = append(steps, "enter")
+	if _, err := Drive(m, steps); err != nil {
+		t.Fatal(err)
+	}
+	item, ok = m.selectedBacklogItem()
+	if !ok || item.Title != "A weekly digest of what changed" {
+		t.Fatalf("after the create the cursor is on %q, want the new item", idOrNone(item, ok))
+	}
+	created := item.ID
+	if m.tab != TabBacklog {
+		t.Fatal("a create switched tabs")
+	}
+	if m.selRecipes != 2 {
+		t.Fatalf("the recipe cursor is %d, want 2", m.selRecipes)
+	}
+
+	ops := core.NewOperations(m.store, core.AuditContext{Actor: "runner", Session: "s-9", Role: "runner"})
+	if _, err := ops.DocumentRecipe("RCP01", "the plan moved on"); err != nil {
+		t.Fatal(err)
+	}
+	m.Update(m.reload()())
+	item, ok = m.selectedBacklogItem()
+	if !ok || item.ID != created {
+		t.Fatalf("the reload left the cursor on %q, want %s", idOrNone(item, ok), created)
+	}
+	if m.tab != TabBacklog || m.selRecipes != 2 {
+		t.Fatalf("the reload moved the chef: tab %v, recipe %d", m.tab, m.selRecipes)
+	}
+
+	steps = append([]string{"d"}, typed("not this one")...)
+	steps = append(steps, "enter")
+	if _, err := Drive(m, steps); err != nil {
+		t.Fatal(err)
+	}
+	item, ok = m.selectedBacklogItem()
+	if !ok || item.ID == created {
+		t.Fatalf("after the dismissal the cursor is on %q, want the nearest remaining row", idOrNone(item, ok))
+	}
+	if m.tab != TabBacklog {
+		t.Fatal("a dismissal switched tabs")
+	}
+
+	// BL05 is the open small task the seed filed. Promoting it must not leave
+	// the cursor on it, and must not chase the new recipe.
+	if i := backlogRowOf(m.backlogRows(), "BL05"); i >= 0 {
+		m.selBacklog = i
+	}
+	m.Update(tea.KeyPressMsg{Code: ' '})
+	if m.refusal != "" {
+		t.Fatalf("the promotion was refused: %s", m.refusal)
+	}
+	m.Update(m.reload()())
+	item, ok = m.selectedBacklogItem()
+	if !ok || item.ID == "BL05" {
+		t.Fatalf("after the promotion the cursor is on %q, want the nearest remaining row", idOrNone(item, ok))
+	}
+	if item.ID != "BL06" {
+		t.Fatalf("after the promotion the cursor is on %q, want BL06", item.ID)
+	}
+	if m.tab != TabBacklog {
+		t.Fatal("a promotion switched tabs")
+	}
+	if m.selRecipes != 2 {
+		t.Fatalf("the cursor followed the recipe: selRecipes = %d, want 2", m.selRecipes)
+	}
+}
+
+// idOrNone is the id under the cursor, for a failure.
+func idOrNone(item core.BacklogItem, ok bool) string {
+	if !ok {
+		return "(none)"
+	}
+	return item.ID
 }
 
 // planFiles is every file in the plan, by relative path, with its content's digest.

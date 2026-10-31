@@ -130,6 +130,7 @@ func (m *Model) recordShape(p *chefPrompt) (tea.Model, tea.Cmd) {
 	}
 	m.refusal = ""
 	m.status = fmt.Sprintf("shaped %s — it is a small task now, with a scope", shaped.ID)
+	m.backlogFollow = shaped.ID
 	return m, m.reload()
 }
 
@@ -170,6 +171,7 @@ func (m *Model) recordDismiss(p *chefPrompt) (tea.Model, tea.Cmd) {
 	}
 	m.refusal = ""
 	m.status = fmt.Sprintf("dismissed %s — %s", item.ID, reason)
+	m.backlogLeave = item.ID
 	return m, m.reload()
 }
 
@@ -211,5 +213,6 @@ func (m *Model) recordCreate(p *chefPrompt) (tea.Model, tea.Cmd) {
 	}
 	m.refusal = ""
 	m.status = fmt.Sprintf("wrote down %s — an idea; shape it when it is ready", item.ID)
+	m.backlogFollow = item.ID
 	return m, m.reload()
 }
