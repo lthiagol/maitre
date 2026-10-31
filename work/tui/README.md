@@ -199,6 +199,10 @@ sed -n '/## Open findings/,/## Closed findings/p' docs/audit.md   # the ledger
    their tab and pane ids are in *The lanes* above. Nudge the runner with
    `herdr agent prompt <runner-pane> "<the brief's notify command>"`, and **read
    `work/inbox/` first: the receipt may already be there.**
+6. **The tree may be dirty, and that is by design.** A lane commits per acceptance
+   criterion, so its work in flight is uncommitted — `git status` shows another
+   lane's hands, not rubbish. **Check `git status` and the receipt before you touch
+   anything**, and never `git checkout` a file you did not write.
 
 **A cold session needs three things and nothing else:** this file, the plan, and the
 brief. Everything else — the code, the docs, the history — is in the repository.
