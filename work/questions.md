@@ -13,6 +13,9 @@
 | **Q11** | one marker or two for *the domain's answer*? | T3b | orchestrator | **two** — the recipe's arrow *asks*, the item's *states* |
 | **Q12** | does the unbracketed position's message name its remedy? | T2b | orchestrator | **yes** — one line; each cause names its own remedy |
 | **Q13** | the kinds list is built on every call | T3b | orchestrator | **later** — a per-frame allocation on a path that redraws the whole screen |
+| **Q17** | the orchestrator's tab: how many tabs, and where does it sit? | T8 | chef | **8 tabs** — Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings. The crew sits with the plan's tabs, before the records and the settings |
+| **Q18** | does the Sous-Chef tab offer the chef a move, or only name it? | T8 | chef | **names it** — a blocked agent says what it needs and where the move lives. A move the console cannot perform is a promise it must not make |
+| **Q19** | where does the console read the automation's state from? | T8 | chef | **the plan** — the orchestrator writes the crew's state into the plan and the console reads only the plan, as it does now. The cost is a format change: `DomainVersion` 7 → 8 |
 
 ## The rules
 
