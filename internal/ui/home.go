@@ -140,20 +140,27 @@ func (m *Model) homeContent() []string {
 	add(m.planRow())
 
 	block("THE RECIPES")
+	// Every triage section, so the parts add up to the total. A section left out
+	// is a number the row does not make.
 	add("  " + join(
 		stat("total", strconv.Itoa(stats.Recipes.Total)),
 		stat("need you", strconv.Itoa(stats.Recipes.NeedsYou)),
 		stat("on the line", strconv.Itoa(stats.Recipes.OnTheLine)),
+		stat("being shaped", strconv.Itoa(stats.Recipes.BeingShaped)),
+		stat("on hold", strconv.Itoa(stats.Recipes.OnHold)),
 		stat("served", strconv.Itoa(stats.Recipes.Served)),
 	))
 
 	block("THE EVIDENCE")
+	// Every evidence state, so the parts add up to the criteria. Pending is a
+	// state the summary carries.
 	add("  " + join(
 		stat("criteria", strconv.Itoa(stats.Evidence.Criteria)),
 		stat("proven", strconv.Itoa(stats.Evidence.Proven)),
 		stat("failed", strconv.Itoa(stats.Evidence.Failed)),
 		stat("rejected", strconv.Itoa(stats.Evidence.Rejected)),
 		stat("unproven", strconv.Itoa(stats.Evidence.Unproven)),
+		stat("pending", strconv.Itoa(stats.Evidence.Pending)),
 	))
 
 	block("THE TASTING")

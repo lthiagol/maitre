@@ -23,6 +23,10 @@ type PlanStats struct {
 // The sections are the triage's own — the same answer the Recipes tab's groups come
 // from — so the tab's numbers and the board's rows cannot disagree about what needs
 // the chef.
+//
+// **The sections are a partition**: every recipe is filed under exactly one, and
+// the counts add up to the total. A row that names some of them and not the rest
+// misleads — the parts beside it do not make the number.
 type RecipeStats struct {
 	// Total is every recipe in the plan.
 	Total int
@@ -30,6 +34,10 @@ type RecipeStats struct {
 	NeedsYou int
 	// OnTheLine is the recipes filed under `On the line`.
 	OnTheLine int
+	// BeingShaped is the recipes filed under `Being shaped`.
+	BeingShaped int
+	// OnHold is the recipes filed under `On hold`.
+	OnHold int
 	// Served is the recipes filed under `Served`.
 	Served int
 }
@@ -99,6 +107,10 @@ func PlanStatsOf(recipes []Recipe, items []BacklogItem, journal Journal) PlanSta
 			stats.Recipes.NeedsYou = len(sec.Items)
 		case TriageOnTheLine:
 			stats.Recipes.OnTheLine = len(sec.Items)
+		case TriageBeingShaped:
+			stats.Recipes.BeingShaped = len(sec.Items)
+		case TriageOnHold:
+			stats.Recipes.OnHold = len(sec.Items)
 		case TriageServed:
 			stats.Recipes.Served = len(sec.Items)
 		}

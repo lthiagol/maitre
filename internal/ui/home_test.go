@@ -64,12 +64,15 @@ func TestTheHomeTabShowsTheNumbers(t *testing.T) {
 		"total " + strconv.Itoa(stats.Recipes.Total),
 		"need you " + strconv.Itoa(stats.Recipes.NeedsYou),
 		"on the line " + strconv.Itoa(stats.Recipes.OnTheLine),
+		"being shaped " + strconv.Itoa(stats.Recipes.BeingShaped),
+		"on hold " + strconv.Itoa(stats.Recipes.OnHold),
 		"served " + strconv.Itoa(stats.Recipes.Served),
 		"criteria " + strconv.Itoa(stats.Evidence.Criteria),
 		"proven " + strconv.Itoa(stats.Evidence.Proven),
 		"failed " + strconv.Itoa(stats.Evidence.Failed),
 		"rejected " + strconv.Itoa(stats.Evidence.Rejected),
 		"unproven " + strconv.Itoa(stats.Evidence.Unproven),
+		"pending " + strconv.Itoa(stats.Evidence.Pending),
 		"open notes " + strconv.Itoa(stats.Tasting.OpenNotes),
 		"open findings " + strconv.Itoa(stats.Tasting.OpenFindings),
 		"ideas " + strconv.Itoa(stats.Backlog.Ideas),
@@ -217,8 +220,11 @@ func TestTheHomeKeepsItsNumbersAt80x24(t *testing.T) {
 	for _, want := range []string{
 		"total " + strconv.Itoa(stats.Recipes.Total),
 		"need you " + strconv.Itoa(stats.Recipes.NeedsYou),
+		"being shaped " + strconv.Itoa(stats.Recipes.BeingShaped),
+		"on hold " + strconv.Itoa(stats.Recipes.OnHold),
 		"criteria " + strconv.Itoa(stats.Evidence.Criteria),
 		"proven " + strconv.Itoa(stats.Evidence.Proven),
+		"pending " + strconv.Itoa(stats.Evidence.Pending),
 		"open notes " + strconv.Itoa(stats.Tasting.OpenNotes),
 		"ideas " + strconv.Itoa(stats.Backlog.Ideas),
 		"plan written under " + strconv.Itoa(stats.Automation.PlanVersion),
@@ -229,6 +235,39 @@ func TestTheHomeKeepsItsNumbersAt80x24(t *testing.T) {
 	}
 	if hasMark(out) {
 		t.Errorf("at 80x24 the mark should be absent:\n%s", out)
+	}
+}
+
+// TestTheHomeRowsAddUpOnOneLine holds the two rows whose parts are the states.
+//
+// A row that names some of the states and not the rest misleads: the parts beside
+// the number do not make it. The sections are a partition, and each row stays one
+// line — a wrap would push the footer off the bottom.
+func TestTheHomeRowsAddUpOnOneLine(t *testing.T) {
+	m := newModel(t)
+	m.width, m.height = 80, 24
+	stats := core.PlanStatsOf(m.recipes, m.items, m.journal)
+
+	sections := stats.Recipes.NeedsYou + stats.Recipes.OnTheLine +
+		stats.Recipes.BeingShaped + stats.Recipes.OnHold + stats.Recipes.Served
+	if sections != stats.Recipes.Total {
+		t.Errorf("the sections sum to %d and the plan holds %d recipes: %+v", sections, stats.Recipes.Total, stats.Recipes)
+	}
+	states := stats.Evidence.Proven + stats.Evidence.Failed +
+		stats.Evidence.Rejected + stats.Evidence.Unproven + stats.Evidence.Pending
+	if states != stats.Evidence.Criteria {
+		t.Errorf("the states sum to %d and the plan holds %d criteria: %+v", states, stats.Evidence.Criteria, stats.Evidence)
+	}
+
+	for _, line := range strings.Split(StripANSI(m.View().Content), "\n") {
+		recipes := strings.Contains(line, "total ") && strings.Contains(line, "being shaped ")
+		evidence := strings.Contains(line, "criteria ") && strings.Contains(line, "pending ")
+		if !recipes && !evidence {
+			continue
+		}
+		if w := lipgloss.Width(line); w > m.width {
+			t.Errorf("the row is %d columns and the terminal is %d: %q", w, m.width, line)
+		}
 	}
 }
 

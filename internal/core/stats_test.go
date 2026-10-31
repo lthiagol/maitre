@@ -139,6 +139,71 @@ func TestPlanStatsOfAnEmptyPlan(t *testing.T) {
 	}
 }
 
+// TestThePlanStatsPartsAddUp holds the partition.
+//
+// The Home tab shows the triage's sections and the evidence's states, and the parts
+// beside a number must add up to it: a row that names some of the states and not the
+// rest misleads — the parts do not make the number.
+//
+// The recipe on hold is the case that matters: a plan with a blocked recipe is the
+// one where a row that leaves `On hold` out stops adding up.
+func TestThePlanStatsPartsAddUp(t *testing.T) {
+	ops, store := newOps(t)
+
+	// A recipe the chef must act on.
+	ready, err := ops.CreateRecipe(readySpec())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ev := range []Event{EventGroom, EventSpecify} {
+		if _, err := ops.Advance(ready.ID, ev); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// A recipe on hold — the chef put it aside.
+	held, err := ops.CreateRecipe(readySpec())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ops.BlockRecipe(held.ID, "waiting for the vendor"); err != nil {
+		t.Fatal(err)
+	}
+
+	// A recipe being shaped — created, and not advanced.
+	shaped, err := ops.CreateRecipe(readySpec())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := TriageOf(*shaped); got != TriageBeingShaped {
+		t.Fatalf("the unadvanced recipe is filed under %q, want %q", got, TriageBeingShaped)
+	}
+
+	recipes, err := store.ListRecipes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	stats := PlanStatsOf(recipes, nil, Journal{})
+
+	parts := stats.Recipes.NeedsYou + stats.Recipes.OnTheLine +
+		stats.Recipes.BeingShaped + stats.Recipes.OnHold + stats.Recipes.Served
+	if parts != stats.Recipes.Total {
+		t.Errorf("the sections sum to %d and the plan holds %d recipes: %+v", parts, stats.Recipes.Total, stats.Recipes)
+	}
+	if stats.Recipes.OnHold != 1 {
+		t.Errorf("on hold = %d, want 1 — the blocked recipe is filed under `On hold`", stats.Recipes.OnHold)
+	}
+	if stats.Recipes.BeingShaped != 1 {
+		t.Errorf("being shaped = %d, want 1", stats.Recipes.BeingShaped)
+	}
+
+	states := stats.Evidence.Proven + stats.Evidence.Failed +
+		stats.Evidence.Rejected + stats.Evidence.Unproven + stats.Evidence.Pending
+	if states != stats.Evidence.Criteria {
+		t.Errorf("the evidence's states sum to %d and the plan holds %d criteria: %+v", states, stats.Evidence.Criteria, stats.Evidence)
+	}
+}
+
 // TestThePlanStatsViewIsHeldInBothDirections covers the wire.
 //
 // The view is registered in `core.DerivedViews` **and** written down in `docs/03`

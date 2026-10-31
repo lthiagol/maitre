@@ -420,10 +420,10 @@ touches anything.
   name kb · path ~/Code/kitchen
 
  THE RECIPES
-  total 7 · need you 2 · on the line 2 · served 1
+  total 7 · need you 2 · on the line 2 · being shaped 2 · on hold 0 · served 1
 
  THE EVIDENCE
-  criteria 12 · proven 6 · failed 2 · rejected 0 · unproven 0
+  criteria 12 · proven 6 · failed 2 · rejected 0 · unproven 0 · pending 4
 
  THE TASTING
   open notes 1 · open findings 1
@@ -462,8 +462,8 @@ A number the console counted itself is a number the CLI would count differently.
 | Block | The numbers | Where they come from |
 |---|---|---|
 | The plan | the name · the path | `core.Project` and the plan's root |
-| The recipes | total · need you · on the line · served | the triage's sections, counted |
-| The evidence | criteria · proven · failed · rejected · unproven | `core.EvidenceSummaryOf`, summed |
+| The recipes | total · need you · on the line · being shaped · on hold · served | the triage's sections — a partition, so the parts add up to the total |
+| The evidence | criteria · proven · failed · rejected · unproven · pending | `core.EvidenceSummaryOf`, summed — every state, so the parts add up to the criteria |
 | The tasting | open notes · open findings | `core.OpenFindingsOf` — the notes of any phase, and the ones the external tasting filed |
 | The backlog | ideas · small tasks | `core.BacklogGroups` |
 | The automation | the plan's version · this build's · the last event | the journal, and `core.DomainVersion` |
