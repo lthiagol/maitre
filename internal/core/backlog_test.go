@@ -1,8 +1,10 @@
 package core
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -217,6 +219,97 @@ func TestAnUnknownKindIsRefused(t *testing.T) {
 	if _, err := ops.UpdateBacklogItem(item.ID, "", "", nil, "hunch", nil); err == nil {
 		t.Fatal("an unknown kind must be refused on update too")
 	}
+}
+
+// TestAnEmptyBacklogListIsWritten covers the file.
+//
+// The evidence is the raw file, not the loaded struct. A created item with no
+// scope and no tags carries both keys, each `[]`. An update that clears the lists
+// does too. A nil list saved directly is the same record. A file that lacks the
+// keys still loads, the lists read as empty, and the next save writes the keys.
+func TestAnEmptyBacklogListIsWritten(t *testing.T) {
+	ops, store := newOps(t)
+
+	item, err := ops.CreateBacklogItem("A hunch", "worth noticing", nil, KindIdea, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertEmptyLists(t, backlogRaw(t, store, item.ID))
+
+	if _, err := ops.UpdateBacklogItem(item.ID, "", "", []string{"the work"}, "", []string{"one"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ops.UpdateBacklogItem(item.ID, "", "", []string{}, "", []string{}); err != nil {
+		t.Fatal(err)
+	}
+	assertEmptyLists(t, backlogRaw(t, store, item.ID))
+
+	// A caller that passes nil. The writer is the place that cannot forget.
+	bare := &BacklogItem{
+		ID: "BL02", Title: "Bare", Kind: KindIdea, Status: StatusOpen,
+		Created: item.Created, Updated: item.Updated,
+	}
+	if err := store.SaveBacklogItem(bare); err != nil {
+		t.Fatal(err)
+	}
+	assertEmptyLists(t, backlogRaw(t, store, bare.ID))
+
+	// A file that lacks the keys still loads. The next save writes them.
+	missing := filepath.Join(store.BacklogDir(), "BL03-a-gap.json")
+	body := []byte(`{"id":"BL03","title":"A gap","kind":"idea","status":"open","created":"2026-10-31T00:00:00Z","updated":"2026-10-31T00:00:00Z"}`)
+	if err := os.WriteFile(missing, body, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := store.LoadBacklogItem("BL03")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(loaded.Scope) != 0 || len(loaded.Tags) != 0 {
+		t.Fatalf("the lists read as %v and %v, want empty", loaded.Scope, loaded.Tags)
+	}
+	if err := store.SaveBacklogItem(loaded); err != nil {
+		t.Fatal(err)
+	}
+	assertEmptyLists(t, backlogRaw(t, store, "BL03"))
+}
+
+// assertEmptyLists checks the raw document carries both lists, each empty.
+func assertEmptyLists(t *testing.T, raw []byte) {
+	t.Helper()
+	var doc map[string]any
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatal(err)
+	}
+	for _, key := range []string{"scope", "tags"} {
+		list, ok := doc[key].([]any)
+		if !ok {
+			t.Fatalf("%s is %v, want []", key, doc[key])
+		}
+		if len(list) != 0 {
+			t.Fatalf("%s holds %v, want none", key, list)
+		}
+	}
+}
+
+// backlogRaw is the item's file, as it was written.
+func backlogRaw(t *testing.T, store *Store, id string) []byte {
+	t.Helper()
+	entries, err := os.ReadDir(store.BacklogDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	prefix := id + "-"
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), prefix) {
+			raw, err := os.ReadFile(filepath.Join(store.BacklogDir(), e.Name()))
+			if err != nil {
+				t.Fatal(err)
+			}
+			return raw
+		}
+	}
+	t.Fatalf("no file for %s", id)
+	return nil
 }
 
 // TestTheBacklogUpdateLeavesTheListsAlone covers the list rule.

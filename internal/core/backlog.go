@@ -54,9 +54,9 @@ type BacklogItem struct {
 	ID         string   `json:"id"`
 	Title      string   `json:"title"`
 	Body       string   `json:"body,omitempty"`
-	Scope      []string `json:"scope,omitempty"`
+	Scope      []string `json:"scope"`
 	Kind       string   `json:"kind"`
-	Tags       []string `json:"tags,omitempty"`
+	Tags       []string `json:"tags"`
 	Status     string   `json:"status"`
 	Created    string   `json:"created"`
 	Updated    string   `json:"updated"`
@@ -243,6 +243,9 @@ func (s *Store) SaveBacklogItem(v *BacklogItem) error {
 	if v.ID == "" {
 		return fmt.Errorf("backlog item has no id")
 	}
+	// One place, so a caller that passes nil cannot forget it. A nil list and an
+	// empty list are the same record: both are `[]`.
+	v.normaliseLists()
 	dir := filepathJoin(s.Root, DirBacklog)
 	name := fmt.Sprintf("%s-%s.json", v.ID, v.Slug())
 	if err := writeJSONAtomic(filepathJoin(dir, name), v); err != nil {
@@ -433,6 +436,16 @@ func setList(dst *[]string, given []string) {
 	if given != nil {
 		*dst = given
 	}
+}
+
+// normaliseLists makes the item's lists lists.
+//
+// A recipe's empty lists are written `[]`. The backlog's scope and tags are the
+// same record: an empty one is `[]`, and a nil one is that same empty list. The
+// writer calls this, so the file says it whether or not the caller remembered.
+func (v *BacklogItem) normaliseLists() {
+	v.Scope = emptyIfNil(v.Scope)
+	v.Tags = emptyIfNil(v.Tags)
 }
 
 // emptyIfNil makes a list a list: never nil.
