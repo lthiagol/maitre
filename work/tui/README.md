@@ -19,7 +19,7 @@
 | **T3b** | the backlog moves | the domain answers the item's move; the console shapes · promotes · dismisses · creates | ✅ closed · 8 commits · 1297cdd, 35688a6, 4799b3b, 7de9a16, 4e14f19, 58069e7, c0f1624, 89eaecc | [tui-t3b.md](../briefs/tui-t3b.md) · [fix 1](../briefs/fix-tui-t3b-1.md) · [fix 2](../briefs/fix-tui-t2b-2.md) |
 | **T4** | the Home tab | the landing tab with numbers and no items; the art moves there; the Sous-Chef dissolves into it; D-2 lands | ✅ closed · cycle 2 ok · 8 commits · 219b331, 79c7fb5, 36a1a35, dcaac47, 446fd27, a29935c, 7488e02, a75d867 | [tui-t4.md](../briefs/tui-t4.md) · [fix 1](../briefs/fix-tui-t4-1.md) · [cycle 2](../briefs/review-tui-t4-cycle2.md) |
 | **Q9** | the backlog's lists, and the selection | empty `scope` and `tags` are `[]`; after a write the selection follows the item | ✅ closed · 2 commits · 6714558, cfb94aa | [tui-q9.md](../briefs/tui-q9.md) |
-| **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | 🔄 briefed | [tui-t5.md](../briefs/tui-t5.md) |
+| **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ implemented · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ⏳ planned | — |
 | **T7** | the filter | `/` filters the list | ⏳ planned | — |
 
