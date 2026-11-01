@@ -1,0 +1,159 @@
+package cli
+
+import (
+	"embed"
+	"fmt"
+	"io/fs"
+	"path"
+	"sort"
+	"strings"
+)
+
+// The skills ship inside the binary.
+//
+// The orchestrator is spawned by the tool, and it loads the role the tool carries: a
+// skill read from disk would drift from the tool that spawns the agent. `embed` is
+// stdlib, so `internal/cli` stays stdlib-only and `internal/core` does not change.
+//
+//go:embed skills
+var embeddedSkills embed.FS
+
+// A skill is a directory with a SKILL.md inside, and the directory's name is the
+// skill's name.
+type skill struct {
+	// Name is the skill's name, taken from its frontmatter.
+	Name string
+	// Description says what the skill is for and when an agent should load it.
+	Description string
+	// Content is the SKILL.md, byte for byte.
+	Content []byte
+}
+
+// skillsFrom reads the skills in the tree.
+//
+// The list is computed, not written: a skill's name and description come from the
+// skill itself, so a new embedded skill appears in the list with no other edit.
+func skillsFrom(fsys fs.FS) []skill {
+	entries, err := fs.ReadDir(fsys, "skills")
+	if err != nil {
+		return nil
+	}
+	var out []skill
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		raw, err := fs.ReadFile(fsys, path.Join("skills", e.Name(), "SKILL.md"))
+		if err != nil {
+			continue
+		}
+		meta, err := parseSkill(raw)
+		if err != nil {
+			continue
+		}
+		out = append(out, skill{
+			Name:        meta.Name,
+			Description: meta.Description,
+			Content:     raw,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
+}
+
+// skillMeta is what a skill's frontmatter says.
+type skillMeta struct {
+	// Name is the skill's name.
+	Name string
+	// Description says what the skill is for and when to load it.
+	Description string
+}
+
+// parseSkill reads a skill's frontmatter.
+//
+// The frontmatter is the block between two `---` lines, and it carries the name and
+// the description. A file without one is not a skill the CLI can serve.
+func parseSkill(raw []byte) (skillMeta, error) {
+	lines := strings.Split(string(raw), "\n")
+	if len(lines) == 0 || lines[0] != "---" {
+		return skillMeta{}, fmt.Errorf("the file has no frontmatter")
+	}
+	end := -1
+	for i := 1; i < len(lines); i++ {
+		if lines[i] == "---" {
+			end = i
+			break
+		}
+	}
+	if end < 0 {
+		return skillMeta{}, fmt.Errorf("the frontmatter is not closed")
+	}
+	fields := frontmatterFields(lines[1:end])
+	meta := skillMeta{
+		Name:        fields["name"],
+		Description: fields["description"],
+	}
+	if meta.Name == "" {
+		return skillMeta{}, fmt.Errorf("the frontmatter has no name")
+	}
+	return meta, nil
+}
+
+// frontmatterFields reads the frontmatter's keys.
+//
+// A value is either on the line — `name: orchestrator-role` — or a block under it:
+// `description: |` and the indented lines that follow. A literal block (`|`) keeps
+// its line breaks; a folded one (`>`) joins its lines with spaces.
+func frontmatterFields(lines []string) map[string]string {
+	out := map[string]string{}
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		if line != strings.TrimLeft(line, " \t") {
+			// An indented line belongs to the block above it.
+			continue
+		}
+		key, value, ok := strings.Cut(line, ":")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+		switch value {
+		case "|", "|-", "|+":
+			block, next := blockLines(lines, i+1)
+			out[key] = strings.Join(block, "\n")
+			i = next - 1
+		case ">", ">-", ">+":
+			block, next := blockLines(lines, i+1)
+			out[key] = strings.Join(block, " ")
+			i = next - 1
+		default:
+			out[key] = strings.Trim(value, `"'`)
+		}
+	}
+	return out
+}
+
+// blockLines collects the indented lines under a block scalar.
+//
+// It returns the lines, without their indentation, and the index of the first line
+// that is not part of the block.
+func blockLines(lines []string, from int) ([]string, int) {
+	var out []string
+	i := from
+	for ; i < len(lines); i++ {
+		line := lines[i]
+		if strings.TrimSpace(line) == "" {
+			out = append(out, "")
+			continue
+		}
+		if line == strings.TrimLeft(line, " \t") {
+			break
+		}
+		out = append(out, strings.TrimSpace(line))
+	}
+	return out, i
+}
