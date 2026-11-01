@@ -345,6 +345,38 @@ func TestTheCLIDoesNotServeASkillThatDisagrees(t *testing.T) {
 	}
 }
 
+// TestTheDescriptionRoutes holds the skill's description.
+//
+// An agent reads the description before it decides, so a description that says only
+// "the orchestrator skill" is a description that cannot route. It says what the
+// skill is for, when to load it, and what it is not for.
+func TestTheDescriptionRoutes(t *testing.T) {
+	raw, err := fs.ReadFile(embeddedSkills, path.Join("skills", "orchestrator-role", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	description := frontmatterOf(t, raw)["description"]
+	if len(strings.TrimSpace(description)) < 80 {
+		t.Errorf("the description should route, not title:\n%s", description)
+	}
+	for _, want := range []string{
+		// What it is for.
+		"What:",
+		"the orchestrator's role",
+		// When to load it.
+		"When:",
+		"load it when you are about to act as the orchestrator",
+		// What it is not for.
+		"Near misses:",
+		"authoring a recipe",
+		"answering the open questions",
+	} {
+		if !strings.Contains(description, want) {
+			t.Errorf("the description should carry %q:\n%s", want, description)
+		}
+	}
+}
+
 // frontmatterOf reads a skill's frontmatter, without the production's parser.
 //
 // A test that reuses the code it is testing proves nothing.

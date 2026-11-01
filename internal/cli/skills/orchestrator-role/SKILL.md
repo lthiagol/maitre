@@ -1,6 +1,14 @@
 ---
 name: orchestrator-role
-description: The orchestrator's role and the protocol it follows.
+description: |
+  What: the orchestrator's role — what the job is, what it must know, and the
+  protocol it follows to brief the crew, open the lanes, wait, close the slice.
+  When: load it when you are about to act as the orchestrator — the agent that
+  calls the recipes, routes them and keeps the line moving.
+  Near misses: not for authoring a recipe (the crew writes the artifact), not for
+  answering the open questions (the chef answers those), and not for an agent that
+  only wants to open a lane for someone else — that is a step of this protocol, not
+  a role.
 ---
 
 # The orchestrator
