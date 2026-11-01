@@ -44,7 +44,7 @@ Two consequences that used to be accidents and are now rules:
 | The orchestrator | `expo` | **orchestrator** |
 | The tree tab | `Chopboard` | **Board** — the plan's shape: what waits on what |
 | The order tab | `Path` | **Ready** — what an agent could claim now. The view and the CLI command stay `path` |
-| The automation's tab | `Expo` | **Home** — the landing tab; the machine's vital signs live on it, and the tab itself comes back when the orchestrator does |
+| The automation's tab | `Expo` | **Sous-Chef** — between Board and Log. The tab's name is the tab's name, not a job's: the rows carry the glossary's job names (orchestrator, runner, reviewer) |
 | A criterion's record | `Proof` | **evidence** |
 | The recipe-level stamp | `Evidence` | **completion** |
 

@@ -22,7 +22,8 @@
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ✅ closed · cycle 2 ok, 0 blockers · 13 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba, 675b4cc, def86f3, 00c234e, 8c505d7, ad453df | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) · [cycle 2](../briefs/review-tui-t7-cycle2.md) |
-| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | 📌 briefed · design in [plan-automation.md](plan-automation.md) | [tui-t8.md](../briefs/tui-t8.md) |
+| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | ⏳ planned — the brief was withdrawn, so it is to be written again · design in [plan-automation.md](plan-automation.md) | — |
+| **T9** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | 📌 designed · [plan-automation.md § 14](plan-automation.md) | — |
 | **T9** | the Sous-Chef tab | the tab comes back: it starts the automation, and shows the crew | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -42,6 +43,7 @@ is over: T1 through T7 are all closed.
 | **T7** | closed. The review filed two blockers and one low; the fix closed all three; cycle 2 said **ok**, 0 blockers (`d8a6a08`, ledger `61a910b`) |
 | **The fix** | 5 commits (`ad7be4d`). **F-128** the filter drops the *rows*, not the plan they are read from — the `●` survives. **F-129** a message that does not fit takes a row of its own, the way a refusal does. **F-130** `N` is the rows the list draws. The blind *stay-on-the-item* test filters a strict subset now |
 | **The round** | T1–T7 are closed. `plan.md` is the design this round followed; the state is this table |
+| **The next work** | out of the round. **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. Both designed in [plan-automation.md](plan-automation.md); T8's brief is to be written again |
 | **The rulings** | the filter covers **Recipes, Backlog and Ready** (Q14); the filter key lives in **Settings' key list**, not the footer (Q15). Both ruled 2026-10-31 |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
@@ -178,6 +180,12 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q9 | a backlog item's empty `scope` and `tags` | **`[]`** — one rule for every record. `DomainVersion` stays 7 | 2026-10-31 |
 | Q10 | after a write, does the selection follow the item? | **yes** — the selection follows the item. The fix belongs in the model | 2026-10-31 |
 | Q14 | which tabs the filter covers | **Recipes, Backlog and Ready** — the plan-item lists. The Board is a tree (a hidden node misstates what waits on what); the Log holds events; Home and Settings hold numbers | 2026-10-31 |
+| Q11 | one marker or two for *the domain's answer*? | **two** — the recipe's arrow *asks*, the item's *states*. Closed 2026-11-01 |
+| Q12 | does the unbracketed position's message name its remedy? | **yes** — one line; each cause names its own remedy. Closed 2026-11-01 |
+| Q13 | the kinds list is built on every call | **later** — a per-frame allocation on a path that redraws the whole screen. Closed 2026-11-01; T7's count has the same shape |
+| Q26 | the Sous-Chef tab's design | **the ticket** — an order (harness · crew · sources · budget), the queue under it, and a stamp at the foot | 2026-11-01 |
+| Q27 | can the chef stop the automation from the tab? | **yes** — `space` stops the crew, and the footer names which key does what. It revises Q22 | 2026-11-01 |
+| Q28 | where do the console's settings live? | **in the plan's folder, in a new file** — `kitchen/settings.json`, owned by the domain. The format moves: `DomainVersion` **7 → 8**, and the repo's own plan is stamped forward | 2026-11-01 |
 | Q15 | where the console says the filter exists | **the Settings tab's key list** — the footer names the move the *current selection* has, and `/` opens a mode, not a move. The footer's goldens do not move | 2026-10-31 |
 | Q16 | the orchestrator's tab's name | **Sous-Chef** — the tab's old name. The rows carry the glossary's job names (`orchestrator`, `runner`, `reviewer`), so the tab's name and the glossary's sous-chef stay two different things | 2026-10-31 |
 | Q17 | the orchestrator's tab: the count and the place | **8 tabs — Sous-Chef between Board and Log**. Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings | 2026-10-31 |
@@ -202,6 +210,10 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q9 | **the backlog writer** — an empty `scope` or `tags` is `[]`. `DomainVersion` stays 7 |
 | Q10 | **the model** — after a write, the selection follows the item |
 | Q14 | **T7** — the filter covers the plan-item lists, and the other tabs say so |
+| Q11, Q12, Q13 | **closed** — answered by what the console now does |
+| Q26 | **T9** — the tab is the ticket |
+| Q27 | **T9** — the tab offers a stop, and says which key does what |
+| Q28 | **T9** — the settings are a plan record, `kitchen/settings.json`; the format moves, `DomainVersion` 7 → 8 |
 | Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
 | Q16 | **T8** — the tab's name |
 | Q17 | **T8** — 8 tabs, Sous-Chef between Board and Log |

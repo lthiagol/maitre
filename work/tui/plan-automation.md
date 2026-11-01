@@ -28,7 +28,9 @@ A tab that **starts the automation** and then **shows it working**.
 | **The blocked agent** | raises a message to the **orchestrator**, asking for directions. The orchestrator decides |
 | **The domain** | **no new view, no format change.** The console's action spawns a process and writes nothing to the plan |
 | **The CLI** | gains a **skills menu**: `maitre-cli skill help` · `list` · `load <name>` |
-| **`DomainVersion`** | **7** — unless Q20 says otherwise |
+| **The design** | **the ticket** — an order, the queue under it, and a stamp at the foot. Ruled 2026-11-01, § 14 |
+| **The settings** | **in the plan's folder** — `kitchen/settings.json`, owned by the domain. The format moves: `DomainVersion` 7 → 8, § 15 |
+| **`DomainVersion`** | **8** — the settings are a plan record, and the format moves with them. Q28 |
 
 ## 1 — Why the tab exists
 
@@ -49,8 +51,8 @@ should raise back a message to the orchestrator asking for directions."*
 
 | | the tab shows | the move |
 |---|---|---|
-| **not running** | that the automation is not running | **start the automation** |
-| **running** | the crew, each with its state and what it is on | none — the chef watches, and the crew asks the **orchestrator** |
+| **not running** | the **order**, unsigned: the harness, the crew, the sources, the budget, and the queue | **start the automation** |
+| **running** | the **stamp**: the round, the interactions, the vital signs, and each agent's state and what it is on | **stop the automation** — § 14 |
 
 The footer names the move, as it does everywhere: *"space starts the automation"*.
 
@@ -66,8 +68,11 @@ starts a process.
 That is management, not authorship (ADR-0003): the console still never writes a
 recipe, and the artifact is still the crew's work. But it is a new kind of action,
 and the house's rule — *the console offers no move the gates would refuse* — has
-nothing to say about it. The move is offered **once**: when the automation is not
-running. Once it is running, the tab has no move, and the footer says so.
+nothing to say about it.
+
+**The move is offered twice**, and the footer says which: `space` **starts** the
+crew when it is not running, and **stops** it when it is. That revises Q22 — see
+§ 10.
 
 ## 4 — How the console starts it
 
@@ -173,9 +178,9 @@ place where the work happens. The crew's members are not lanes.
 | | |
 |---|---|
 | **no new view** | the tab's facts are **runtime** facts, not plan facts. Nothing is registered in `core.DerivedViews`, so `docs/03` § 8 does not move |
-| **no format change** | `core.DomainVersion` stays **7**. The plan's format does not move, and the repo's own plan is not stamped forward |
+| **the format moves** | the settings are a **plan record** — `kitchen/settings.json`, written by `core` and read by `core`. `core.DomainVersion` goes **7 → 8**, and the repo's own plan is stamped forward with `scripts/stamp-plan/`. Q28 |
 | **the console gains a dependency** | the `herdr` binary, on the PATH. It is a runtime dependency, not a module — `internal/ui`'s budget is unchanged |
-| **the console's new action** | spawns a process. It writes **nothing** to the plan — unless **Q20** says otherwise |
+| **the console's new action** | spawns a process. It writes **nothing** to the plan — Q20. The *settings* it writes are a plan record, written through `core` like every other write |
 | **`internal/core`** | does not change. The skills are **files**, and the CLI reads them; the domain computes nothing new |
 | **`internal/cli`** | gains three verbs — `skill help`, `skill list`, `skill load <name>` — and the file reading behind them. Still **stdlib-only** |
 
@@ -199,9 +204,12 @@ place where the work happens. The crew's members are not lanes.
 | **Q19** | where the state comes from | **ruled by the design: herdr**, found by the agents' cwd. The plan carries no crew state |
 | **Q20** | does starting the automation leave a trace in the plan's journal? | **ruled: no.** The journal records what happened *to the plan*; the crew's state is runtime state. The orchestrator's own writes are recorded through the CLI as usual |
 | **Q21** | what does the startup task say? | **ruled: it loads the role.** `maitre-cli skill load orchestrator-role`, plus the work. The skill carries the role's knowledge; the startup task carries the work |
-| **Q22** | can the chef stop the automation from the tab? | **ruled: no.** One move — start. Stopping is the chef's terminal business |
+| **Q22** | can the chef stop the automation from the tab? | **superseded by Q27.** It was *no*; the approved ticket offers a stop, and the footer names which key does what |
 | **Q23** | where do the skills live? | **ruled: embedded in the binary.** The chef's reason: *"a way to guarantee that each version has the correct version of the skill."* The skill and the tool cannot drift, because the tool **carries** the skill |
 | **Q24** | one slice or two? | **ruled: two** — **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. The tab's startup task loads the skill, so the skill must exist first |
+| **Q26** | the tab's design | **ruled: the ticket** — an order, the queue under it, and a stamp at the foot. § 14 |
+| **Q27** | can the chef stop the automation from the tab? | **ruled: yes.** `space` stops the crew, and the footer says which. It revises Q22 |
+| **Q28** | where do the console's settings live — the view's and the crew's? | **ruled: in the plan's folder, in a new file** — `kitchen/settings.json`. The domain owns it, so the format moves: `DomainVersion` **7 → 8**, and the repo's own plan is stamped forward. § 15 |
 
 ## 11 — The two slices
 
@@ -258,3 +266,137 @@ skills' home is ruled (Q23).
 | **The blocked agent's escalation to the chef** | the plan's own path: the recipe goes under *Needs you* and the chef signs off on the Recipes tab |
 | **`tags` on the recipe** | the plan's option A, later, with the CLI |
 | **The CLI's verbs** | the automation is started from the console. A CLI verb for it is later, and the CLI is the chef's own surface |
+
+## 14 — The tab's design: the ticket
+
+**Ruled 2026-11-01.** The mockup is
+[sous-chef-mockups.html](sous-chef-mockups.html) — it carries a simulator, so the
+chef can drive the configuration and watch the tab redraw. The rejected designs are
+[sous-chef-mockups-archived.html](sous-chef-mockups-archived.html).
+
+The tab is a **ticket**: an order at the top, what is queued under it, and a stamp at
+the foot saying where the work stands.
+
+```
+ ⋈ maitre · kb
+──────────────────────────────────────────────────────────────────────────────
+  Home    Recipes    Backlog    Ready    Board  ▸ Sous-Chef    Log    Settings
+  THE ORDER
+ ─────────────────────────────────────────────────────────────────────────────
+  harness  ▸ opencode        pi         custom
+            command: opencode
+  crew     ▸ 3 · orchestrator, runner, reviewer
+           2 · runner, and the orchestrator reviews
+           1 · one agent, and the chef reviews
+  sources  ▸ ready (4)       recipes (6)     backlog (4)
+  budget   3 rounds · 12 interactions
+ ─────────────────────────────────────────────────────────────────────────────
+  THE QUEUE
+  BL05   Wire the review queue                         next
+  BL06   Sharpen the evidence contract
+  BL11   Wire the review queue
+  BL12   Sharpen the evidence contract
+ ─────────────────────────────────────────────────────────────────────────────
+  THE STAMP · round 2 of 3 · 6 of 12 interactions · plan 7 · build 7 · they agree
+  working  orchestrator  routing RCP04
+  working  runner        BL05 · 2 of 3 criteria proven
+  idle     reviewer      waiting on the runner
+ space stop the crew · ←→ choose · enter apply · q quit
+```
+
+### The four controls, and what each one says
+
+| control | says |
+|---|---|
+| **harness** | `opencode` · `pi` · `custom` — and the **command** it will run, so `custom` is never a mystery |
+| **crew** | `3` · `2` · `1`, each with **who reviews** |
+| **sources** | `ready (4)` · `recipes (6)` · `backlog (4)` — where the work comes from |
+| **budget** | `3 rounds · 12 interactions` — the **cap** the chef sets |
+
+**The count is a composition, not a number.** Three agents, one per role · two, and
+the orchestrator reviews the runner · one, and **the chef reviews**. A lone agent
+cannot review itself — the close gate refuses a self-reviewed recipe
+(`core.SelfReviewed`) — so the one-agent crew is the one where the chef holds the
+reviewer's chair.
+
+### Policy above, progress below
+
+The order says the budget as a **policy** — "3 rounds · 12 interactions". The stamp
+says the **progress** — "round 2 of 3 · 6 of 12". Two different facts, two different
+words, neither one repeated.
+
+### The vital signs
+
+The stamp carries the plan's domain version, this build's, and whether they agree.
+When they do not, the stamp says so: the tab that starts the automation has to be able
+to report that it is not speaking the plan's rules.
+
+### The blocked agent
+
+The stamp shows `reviewer asked the orchestrator · the orchestrator has it`. The
+console gains **no move** for it (Q18): the chef watches, the orchestrator decides.
+
+### One task at a time
+
+Three sous-chefs is not three tasks in parallel. The roles are sequential — one works,
+the others wait — and the stamp shows exactly one of them working.
+
+## 15 — Where the settings live
+
+**The question the chef asked**: how the configurations on this tab, and the
+preferences on the Settings tab, are persisted.
+
+The console has two sets of choices that are not the plan's work: the **view**
+(theme, order, show served) and the **crew** (harness, count, sources, budget).
+Today they live in memory and die with the console — `docs/05` records the theme's
+choice as *for the session*.
+
+**Ruled 2026-11-01: in the plan's folder, in a new file.**
+
+```
+kitchen/settings.json
+```
+
+**And the domain owns it.** The console never writes a plan's files directly —
+every write goes through `core.Operations`, and `docs/03` holds the rule: *the
+tool never writes a record it will not read*. A file in the plan's folder that the
+domain does not read would break that rule from the other side. So `core` reads
+and writes the settings, the console asks `core`, and the settings are a **plan
+record** like any other.
+
+**The price, stated plainly: the plan's format moves.** A new root file name joins
+`planFormatFacts()` — the fingerprint that holds the format honest — so:
+
+| | |
+|---|---|
+| **the shape** | moves. `FileSettings` joins `FileProject`, `FileActivity`, `FileDecisions` |
+| **the version** | moves with it: `core.DomainVersion` **7 → 8**. `docs/03`: *a format change moves both* |
+| **the repo's own plan** | stamped forward with `scripts/stamp-plan/` — the script exists for exactly this, and the chef's standing answer is that a migration is cheap |
+| **the file's own version** | the settings carry `"version": 1` — their schema has a version of its own, the way the plan's does |
+
+```json
+{
+  "version": 1,
+  "view": { "theme": "Kitchen", "order": "triage", "showServed": true },
+  "crew": { "harness": "opencode", "count": 3, "sources": "ready", "rounds": 3, "interactions": 12 }
+}
+```
+
+| | |
+|---|---|
+| **the shape** | two sections, and nothing else. `view` is what the chef is looking at; `crew` is how the automation is set up |
+| **never runtime state** | the settings hold what the chef **chose**. The crew's *state* is what **herdr** knows (§ 5). A pane id is never written |
+| **it travels with the plan** | the folder is the plan's folder, so the settings travel with it — the team works the plan the same way. A checkout that wants its own keeps it out of git |
+| **forward compatible** | unknown keys are ignored, so an older build reads a newer file |
+| **an unknown version** | the console says so and uses the defaults. It does not guess — the house's *silent enum fallback* lesson |
+| **atomic** | written to a temporary file and renamed, so a half-written file cannot lose the chef's choices |
+| **the poll already watches it** | `core.DiskFingerprint` hashes every `.json` in the plan's folder, so a settings write is seen by the console's reload scan |
+
+**What the domain gains**, in the slice that lands it:
+
+| | |
+|---|---|
+| **a record** | `core.Settings` — the two sections, read and written through the operation layer |
+| **an operation** | the write the console makes when the chef changes a setting, and the read it makes on load |
+| **a CLI verb** | the chef's own surface for the same settings — the CLI is the chef's surface, the console is the operator's |
+| **a version bump** | `DomainVersion` 7 → 8, and the repo's plan stamped |

@@ -29,6 +29,7 @@ through `maitre-cli`.
 | **Backlog** | backlog items — *Ideas* and *Small tasks*, derived from the kind | manage the backlog |
 | **Ready** | what an agent could claim now, and the open small tasks | see · promote |
 | **Board** | the same plan as a dependency tree — what waits on what | run |
+| **Sous-Chef** | the automation — its order, its queue, and the crew's stamp *(T9 — planned)* | start · stop |
 | **Log** | the activity journal | see the audit trail |
 | **Settings** | theme, keybinds, preferences | — |
 
@@ -677,6 +678,10 @@ different TUI framework, a local web shell, a native app — without touching th
 3. **How does the console know what the primary action is?** It is derived from the
    recipe's state, so it is another derived view. The set of actions per state is not
    written down yet.
+4. **Where do the console's settings live?** **Ruled: in the plan's folder, in a
+   new file** — `kitchen/settings.json`, owned by the domain, so the plan's format
+   moves and `DomainVersion` goes 7 → 8. See
+   [work/tui/plan-automation.md § 15](../work/tui/plan-automation.md).
 
 ### Decided
 
@@ -685,7 +690,8 @@ different TUI framework, a local web shell, a native app — without touching th
 | Frame | list + detail, split, with a full-screen toggle |
 | Ordering | triage first; `1` `2` `3` switch to lane and plain |
 | Served recipes | shown by default, `c` toggles, shown as a checkbox in the header |
-| Theme | the chef picks it in Settings; Kitchen is the default; the choice is for the session |
+| Theme | the chef picks it in Settings; Kitchen is the default. The choice was *for the session*; it is now persisted in the plan's `settings.json` |
+| Settings | the view's preferences and the crew's configuration live in `kitchen/settings.json` — a plan record, so the format moves and `DomainVersion` goes 7 → 8 |
 | Live updates | built: a cheap mtime scan, ~1 s, no new dependency — the console reloads the plan when a file on disk changes |
 | Prose | `glamour`, themed to our palette |
 | Running work | observe and steer; no agent spawning in v2 |
