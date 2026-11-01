@@ -157,7 +157,7 @@ by reading the journal, and that requires every write to carry its session.
 ## The CLI surface
 
 `maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases.
-**42 commands**: 36 verbs in 6 groups, plus 6 workspace commands. (v1: 47 top-level
+**43 commands**: 37 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
 commands, 265 subcommands.)
 
 | Group | Verbs |
@@ -168,6 +168,7 @@ commands, 265 subcommands.)
 | `maitre-cli step` | add · start · done · skip · fail · deviate |
 | `maitre-cli finding` | add · resolve · dismiss · reopen |
 | `maitre-cli backlog` | list · create · update · dismiss · promote |
+| `maitre-cli skill` | help |
 | workspace | `init` · `demo` · `plan` · `path` · `log` (`--since <seq>`) · `gates` |
 
 The backlog is **one noun**. It was two file types for one list, and two file types for

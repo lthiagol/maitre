@@ -113,6 +113,10 @@ func (r *Runner) Run() int {
 			"resume":          r.cmdRecipeResume,
 			"cancel":          r.cmdRecipeCancel,
 		})
+	case "skill":
+		return r.dispatch(args[1:], "skill", map[string]func([]string) int{
+			"help": r.cmdSkillHelp,
+		})
 	case "ac":
 		return r.dispatch(args[1:], "ac", map[string]func([]string) int{
 			"add":     r.cmdACAdd,
@@ -207,6 +211,7 @@ Usage:
   maitre-cli step <verb>         guidance steps
   maitre-cli finding <verb>      review findings
   maitre-cli backlog <verb>      the backlog: ideas and small tasks
+  maitre-cli skill <verb>        the skills that ship inside the binary
 
 Identity (who is acting, and in which session):
   --actor <name>    default: $MAITRE_CLI_ACTOR, else "agent"

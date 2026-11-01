@@ -61,6 +61,35 @@ func skillsFrom(fsys fs.FS) []skill {
 	return out
 }
 
+// cmdSkillHelp prints what the skills menu is.
+//
+// Text, like the top-level help: the help is read, not parsed.
+func (r *Runner) cmdSkillHelp(args []string) int {
+	fs := newFlagSet("skill help")
+	if err := fs.parse(args); err != nil {
+		r.fail("bad flags", err.Error())
+		return ExitError
+	}
+	fmt.Fprint(r.Stdout, `maitre-cli skill — the skills that ship inside the binary
+
+A skill is the machine's own instruction sheet for a job: the role, and the protocol
+it follows. The skills ship inside the binary — they are embedded at build time — so
+the skill and the tool's version cannot drift. The orchestrator the tool spawns
+loads the role the tool carries. There is no directory, no PATH and no file on disk:
+the menu works from anywhere.
+
+Usage:
+  maitre-cli skill help            what this menu is
+  maitre-cli skill list            every embedded skill: its name and its description
+  maitre-cli skill load <name>     the skill's content, on stdout, as embedded
+
+list prints a JSON document, like every other list the CLI prints. load prints the
+skill's content, byte for byte — it is meant to be read, not parsed. help prints
+this text.
+`)
+	return ExitOK
+}
+
 // skillMeta is what a skill's frontmatter says.
 type skillMeta struct {
 	// Name is the skill's name.

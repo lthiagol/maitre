@@ -91,6 +91,32 @@ func TestTheSkillCarriesNoWork(t *testing.T) {
 	}
 }
 
+// TestTheSkillHelpSaysWhatTheMenuIs holds the menu's help.
+//
+// The help is text — it is read, not parsed. And it says what the menu is, what the
+// three verbs do, and that the skills ship inside the binary.
+func TestTheSkillHelpSaysWhatTheMenuIs(t *testing.T) {
+	res := cli(t, t.TempDir(), "skill", "help")
+	if res.Code != ExitOK {
+		t.Fatalf("skill help failed:\n%s", res.Stderr)
+	}
+	if strings.HasPrefix(strings.TrimSpace(res.Stdout), "{") {
+		t.Fatalf("the help should be text, not a document:\n%s", res.Stdout)
+	}
+	for _, want := range []string{
+		"maitre-cli skill",
+		"maitre-cli skill help",
+		"maitre-cli skill list",
+		"maitre-cli skill load",
+		"inside the binary",
+		"embedded",
+	} {
+		if !strings.Contains(res.Stdout, want) {
+			t.Errorf("the help should say %q:\n%s", want, res.Stdout)
+		}
+	}
+}
+
 // embeddedSkill is one embedded skill, and the test fails when it is missing.
 func embeddedSkill(t *testing.T, name string) skill {
 	t.Helper()
