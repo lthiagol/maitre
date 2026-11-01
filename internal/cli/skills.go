@@ -18,6 +18,12 @@ import (
 //go:embed skills
 var embeddedSkills embed.FS
 
+// skillsFS is where the skills are read from.
+//
+// It is a variable so a test can put another tree in front of it — one with a skill
+// whose directory and frontmatter disagree, which the real tree never has.
+var skillsFS fs.FS = embeddedSkills
+
 // A skill is a directory with a SKILL.md inside, and the directory's name is the
 // skill's name.
 type skill struct {
@@ -88,6 +94,27 @@ skill's content, byte for byte — it is meant to be read, not parsed. help prin
 this text.
 `)
 	return ExitOK
+}
+
+// cmdSkillList lists the embedded skills.
+//
+// The list is computed from the skills themselves: a skill's name and description
+// come from the skill, so a new embedded skill appears in the list with no other
+// edit.
+func (r *Runner) cmdSkillList(args []string) int {
+	fs := newFlagSet("skill list")
+	if err := fs.parse(args); err != nil {
+		r.fail("bad flags", err.Error())
+		return ExitError
+	}
+	items := make([]map[string]string, 0)
+	for _, s := range skillsFrom(skillsFS) {
+		items = append(items, map[string]string{
+			"name":        s.Name,
+			"description": s.Description,
+		})
+	}
+	return r.emit(map[string]any{"ok": true, "count": len(items), "skills": items})
 }
 
 // skillMeta is what a skill's frontmatter says.

@@ -116,6 +116,7 @@ func (r *Runner) Run() int {
 	case "skill":
 		return r.dispatch(args[1:], "skill", map[string]func([]string) int{
 			"help": r.cmdSkillHelp,
+			"list": r.cmdSkillList,
 		})
 	case "ac":
 		return r.dispatch(args[1:], "ac", map[string]func([]string) int{

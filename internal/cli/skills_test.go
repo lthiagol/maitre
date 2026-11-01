@@ -1,8 +1,11 @@
 package cli
 
 import (
+	"io/fs"
+	"path"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 // TestTheOrchestratorRoleSkillIsEmbedded holds the first skill in place.
@@ -115,6 +118,138 @@ func TestTheSkillHelpSaysWhatTheMenuIs(t *testing.T) {
 			t.Errorf("the help should say %q:\n%s", want, res.Stdout)
 		}
 	}
+}
+
+// TestTheSkillListIsTheEmbeddedTree holds the list against the tree.
+//
+// The list is computed, not written: every skill in the embedded tree is in the list,
+// and nothing else is.
+func TestTheSkillListIsTheEmbeddedTree(t *testing.T) {
+	entries, err := fs.ReadDir(embeddedSkills, "skills")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := 0
+	for _, e := range entries {
+		if e.IsDir() {
+			want++
+		}
+	}
+
+	res := cli(t, t.TempDir(), "skill", "list")
+	if !res.ok(t) {
+		t.Fatalf("skill list failed:\n%s", res.Stderr)
+	}
+	doc := res.doc(t)
+	items, ok := doc["skills"].([]any)
+	if !ok {
+		t.Fatalf("the list should carry the skills: %v", doc)
+	}
+	if len(items) != want {
+		t.Fatalf("got %d skills, want %d — the tree has %d", len(items), want, want)
+	}
+	if doc["count"] != float64(want) {
+		t.Errorf("count = %v, want %d", doc["count"], want)
+	}
+}
+
+// TestTheSkillListTakesTheNameAndDescriptionFromTheSkill holds where the list's
+// facts come from.
+//
+// A skill's name and description come from the skill itself — there is no second
+// list to keep in step.
+func TestTheSkillListTakesTheNameAndDescriptionFromTheSkill(t *testing.T) {
+	res := cli(t, t.TempDir(), "skill", "list")
+	if !res.ok(t) {
+		t.Fatalf("skill list failed:\n%s", res.Stderr)
+	}
+	items := res.doc(t)["skills"].([]any)
+	if len(items) == 0 {
+		t.Fatal("the list is empty")
+	}
+	for _, item := range items {
+		entry := item.(map[string]any)
+		name, _ := entry["name"].(string)
+		if name == "" {
+			t.Fatalf("every skill needs a name: %v", entry)
+		}
+		raw, err := fs.ReadFile(embeddedSkills, path.Join("skills", name, "SKILL.md"))
+		if err != nil {
+			t.Fatalf("the skill %s is not in the embedded tree: %v", name, err)
+		}
+		fields := frontmatterOf(t, raw)
+		if fields["name"] != name {
+			t.Errorf("the skill %s says its name is %q", name, fields["name"])
+		}
+		if got := strings.TrimSpace(entry["description"].(string)); got != strings.TrimSpace(fields["description"]) {
+			t.Errorf("the skill %s lists the description %q, and the skill says %q",
+				name, got, strings.TrimSpace(fields["description"]))
+		}
+	}
+}
+
+// TestANewSkillAppearsInTheListWithNoOtherEdit holds the rule that there is no
+// second list.
+//
+// A skill is a directory with a SKILL.md inside. Adding one adds it to the list —
+// nothing else has to change.
+func TestANewSkillAppearsInTheListWithNoOtherEdit(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/first/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: first\ndescription: The first skill.\n---\nThe body.\n"),
+		},
+		"skills/second/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: second\ndescription: The second skill.\n---\nThe body.\n"),
+		},
+	}
+	skills := skillsFrom(tree)
+	got := skillNames(skills)
+	if len(got) != 2 || got[0] != "first" || got[1] != "second" {
+		t.Fatalf("the list should hold both skills, in order: %v", got)
+	}
+}
+
+// frontmatterOf reads a skill's frontmatter, without the production's parser.
+//
+// A test that reuses the code it is testing proves nothing.
+func frontmatterOf(t *testing.T, raw []byte) map[string]string {
+	t.Helper()
+	out := map[string]string{}
+	lines := strings.Split(string(raw), "\n")
+	inFrontmatter := false
+	key := ""
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "---" {
+			if inFrontmatter {
+				break
+			}
+			inFrontmatter = true
+			continue
+		}
+		if !inFrontmatter {
+			continue
+		}
+		if key != "" {
+			if strings.TrimSpace(line) == "" || strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t") {
+				out[key] += "\n" + strings.TrimSpace(line)
+				continue
+			}
+			key = ""
+		}
+		name, value, ok := strings.Cut(line, ":")
+		if !ok {
+			continue
+		}
+		name = strings.TrimSpace(name)
+		value = strings.TrimSpace(value)
+		if value == "|" || value == ">" {
+			key = name
+			out[name] = ""
+			continue
+		}
+		out[name] = value
+	}
+	return out
 }
 
 // embeddedSkill is one embedded skill, and the test fails when it is missing.
