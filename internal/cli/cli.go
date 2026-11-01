@@ -199,7 +199,7 @@ func (r *Runner) usage() {
 		fmt.Fprintln(r.Stdout, line)
 	}
 	fmt.Fprint(r.Stdout, "\n")
-	fmt.Fprint(r.Stdout, `maitre-cli — the maitre agent CLI
+	fmt.Fprintf(r.Stdout, `maitre-cli — the maitre agent CLI
 
 Usage:
   maitre-cli init                create the plan directory
@@ -223,9 +223,8 @@ Identity (who is acting, and in which session):
   The old $SCALE_* names still work, with a warning on stderr.
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
-fails. Two commands print text instead — this help, and `+"`skill load <name>`"+`, whose
-content is meant to be read.
-`)
+fails. %s
+`, textCommandsSentence())
 }
 
 // ---------------------------------------------------------------------------

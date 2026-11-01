@@ -179,9 +179,9 @@ step: an idea becomes a small task by being made a `feature` or a `bug` and gain
 kind: an idea, a feature and a bug are all things the chef can decide against.
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
-fails. Two commands print text instead: `help`, and `skill load <name>`, whose content
-is meant to be read. Exit 0 on success, **2 on a gate refusal** (the command was understood, the
-plan said no), 1 on anything else.
+fails. Three commands print text instead: `help`, `skill help` and `skill load <name>`.
+A skill's content is meant to be read, not parsed. Exit 0 on success, **2 on a gate
+refusal** (the command was understood, the plan said no), 1 on anything else.
 
 A list is always a list: an empty one is `[]`, never `null`. The standard readers —
 `jq`, a JSON parser in any language — break on `null`, and the plan is read by agents.
