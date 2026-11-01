@@ -35,36 +35,61 @@ type skill struct {
 	Content []byte
 }
 
+// A refusal is a skill the CLI will not serve.
+type refusal struct {
+	// Dir is the directory the skill is in.
+	Dir string
+	// Name is the name the skill claims, when it claims one.
+	Name string
+	// Reason says why it is not served.
+	Reason string
+}
+
 // skillsFrom reads the skills in the tree.
 //
 // The list is computed, not written: a skill's name and description come from the
 // skill itself, so a new embedded skill appears in the list with no other edit.
-func skillsFrom(fsys fs.FS) []skill {
+//
+// A skill whose directory and frontmatter disagree is **refused**. That is a
+// mistake, not a variant — the name is the directory's, and a skill that answers to
+// two names is a skill nobody can address.
+func skillsFrom(fsys fs.FS) ([]skill, []refusal) {
 	entries, err := fs.ReadDir(fsys, "skills")
 	if err != nil {
-		return nil
+		return nil, nil
 	}
-	var out []skill
+	var skills []skill
+	var refused []refusal
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
 		}
 		raw, err := fs.ReadFile(fsys, path.Join("skills", e.Name(), "SKILL.md"))
 		if err != nil {
+			refused = append(refused, refusal{Dir: e.Name(), Reason: "it has no SKILL.md"})
 			continue
 		}
 		meta, err := parseSkill(raw)
 		if err != nil {
+			refused = append(refused, refusal{Dir: e.Name(), Reason: err.Error()})
 			continue
 		}
-		out = append(out, skill{
+		if meta.Name != e.Name() {
+			refused = append(refused, refusal{
+				Dir:    e.Name(),
+				Name:   meta.Name,
+				Reason: "its directory is " + e.Name() + " and its frontmatter says its name is " + meta.Name,
+			})
+			continue
+		}
+		skills = append(skills, skill{
 			Name:        meta.Name,
 			Description: meta.Description,
 			Content:     raw,
 		})
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
-	return out
+	sort.Slice(skills, func(i, j int) bool { return skills[i].Name < skills[j].Name })
+	return skills, refused
 }
 
 // cmdSkillHelp prints what the skills menu is.
@@ -108,7 +133,11 @@ func (r *Runner) cmdSkillList(args []string) int {
 		return ExitError
 	}
 	items := make([]map[string]string, 0)
-	for _, s := range skillsFrom(skillsFS) {
+	skills, refused := skillsFrom(skillsFS)
+	for _, ref := range refused {
+		r.warn("the skill " + ref.Dir + " is not served: " + ref.Reason)
+	}
+	for _, s := range skills {
 		items = append(items, map[string]string{
 			"name":        s.Name,
 			"description": s.Description,
@@ -132,7 +161,10 @@ func (r *Runner) cmdSkillLoad(args []string) int {
 		return ExitError
 	}
 	name := fs.arg(0)
-	skills := skillsFrom(skillsFS)
+	skills, refused := skillsFrom(skillsFS)
+	for _, ref := range refused {
+		r.warn("the skill " + ref.Dir + " is not served: " + ref.Reason)
+	}
 	for _, s := range skills {
 		if s.Name != name {
 			continue
@@ -143,6 +175,12 @@ func (r *Runner) cmdSkillLoad(args []string) int {
 		}
 		r.flushWarnings()
 		return ExitOK
+	}
+	for _, ref := range refused {
+		if ref.Name == name {
+			r.fail("the skill is not served", ref.Reason)
+			return ExitError
+		}
 	}
 	known := make([]string, 0, len(skills))
 	for _, s := range skills {

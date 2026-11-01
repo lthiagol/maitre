@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"io/fs"
 	"path"
 	"strings"
@@ -13,7 +14,7 @@ import (
 // The skill is the role the spawned orchestrator loads, and it ships inside the
 // binary — so it is here that it has to be, in the embedded tree and not on disk.
 func TestTheOrchestratorRoleSkillIsEmbedded(t *testing.T) {
-	skills := skillsFrom(embeddedSkills)
+	skills, _ := skillsFrom(embeddedSkills)
 	var found *skill
 	for i := range skills {
 		if skills[i].Name == "orchestrator-role" {
@@ -202,7 +203,7 @@ func TestANewSkillAppearsInTheListWithNoOtherEdit(t *testing.T) {
 			Data: []byte("---\nname: second\ndescription: The second skill.\n---\nThe body.\n"),
 		},
 	}
-	skills := skillsFrom(tree)
+	skills, _ := skillsFrom(tree)
 	got := skillNames(skills)
 	if len(got) != 2 || got[0] != "first" || got[1] != "second" {
 		t.Fatalf("the list should hold both skills, in order: %v", got)
@@ -241,6 +242,106 @@ func TestTheSkillLoadRefusesWhatIsNotThere(t *testing.T) {
 	}
 	if !strings.Contains(res.Stderr, "orchestrator-role") {
 		t.Fatalf("the refusal should list what there is: %s", res.Stderr)
+	}
+}
+
+// TestTheEmbeddedSkillsAgreeWithTheirDirectories holds the rule on the real tree.
+//
+// Every embedded skill's frontmatter must carry the name of the directory it is in.
+// A skill that answers to two names is a skill nobody can address.
+func TestTheEmbeddedSkillsAgreeWithTheirDirectories(t *testing.T) {
+	skills, refused := skillsFrom(embeddedSkills)
+	if len(refused) > 0 {
+		for _, ref := range refused {
+			t.Errorf("the embedded skill %s is not served: %s", ref.Dir, ref.Reason)
+		}
+	}
+	for _, s := range skills {
+		raw, err := fs.ReadFile(embeddedSkills, path.Join("skills", s.Name, "SKILL.md"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := frontmatterOf(t, raw)["name"]; got != s.Name {
+			t.Errorf("the skill in %s says its name is %q", s.Name, got)
+		}
+	}
+}
+
+// TestASkillThatDisagreesWithItsDirectoryIsRefused holds the rule itself.
+//
+// The directory's name is the skill's name. A skill whose frontmatter says another
+// one is a mistake, and the CLI will not serve it.
+func TestASkillThatDisagreesWithItsDirectoryIsRefused(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/wrong-name/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: other-name\ndescription: It disagrees.\n---\nThe body.\n"),
+		},
+	}
+	skills, refused := skillsFrom(tree)
+	if len(skills) != 0 {
+		t.Fatalf("the skill should not be served: %v", skillNames(skills))
+	}
+	if len(refused) != 1 {
+		t.Fatalf("got %d refusals, want 1", len(refused))
+	}
+	if refused[0].Dir != "wrong-name" {
+		t.Errorf("the refusal should name the directory: %v", refused[0])
+	}
+	if !strings.Contains(refused[0].Reason, "other-name") {
+		t.Errorf("the refusal should say what the frontmatter says: %v", refused[0])
+	}
+}
+
+// TestTheCLIDoesNotServeASkillThatDisagrees holds the rule at the surface.
+//
+// The list does not carry it, and the load refuses it — by the name it claims, and
+// by the name of its directory.
+func TestTheCLIDoesNotServeASkillThatDisagrees(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/wrong-name/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: other-name\ndescription: It disagrees.\n---\nThe body.\n"),
+		},
+		"skills/right-name/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: right-name\ndescription: It agrees.\n---\nThe body.\n"),
+		},
+	}
+	old := skillsFS
+	skillsFS = tree
+	t.Cleanup(func() { skillsFS = old })
+
+	res := cli(t, t.TempDir(), "skill", "list")
+	if !res.ok(t) {
+		t.Fatalf("skill list failed:\n%s", res.Stderr)
+	}
+	for _, item := range res.doc(t)["skills"].([]any) {
+		if name := item.(map[string]any)["name"]; name == "other-name" {
+			t.Errorf("the list should not carry the refused skill: %v", item)
+		}
+	}
+	if !strings.Contains(res.Stderr, "not served") {
+		t.Errorf("the list should say the skill is not served:\n%s", res.Stderr)
+	}
+
+	// And the load refuses it, by the name it claims.
+	res = cli(t, t.TempDir(), "skill", "load", "other-name")
+	if res.Code != ExitError {
+		t.Fatalf("exit = %d, want %d", res.Code, ExitError)
+	}
+	var doc map[string]any
+	if err := json.Unmarshal([]byte(res.Stderr), &doc); err != nil {
+		t.Fatalf("the refusal should be a document: %v\n%s", err, res.Stderr)
+	}
+	if doc["error"] != "the skill is not served" {
+		t.Errorf("the refusal should say the skill is not served: %v", doc)
+	}
+	if !strings.Contains(res.Stderr, "other-name") {
+		t.Errorf("the refusal should say what the frontmatter says:\n%s", res.Stderr)
+	}
+
+	// And the skill that agrees is served.
+	res = cli(t, t.TempDir(), "skill", "load", "right-name")
+	if res.Code != ExitOK {
+		t.Fatalf("the skill that agrees should be served:\n%s", res.Stderr)
 	}
 }
 
@@ -287,10 +388,21 @@ func frontmatterOf(t *testing.T, raw []byte) map[string]string {
 	return out
 }
 
+// embeddedSkillsList is every embedded skill, and the test fails when there is
+// none.
+func embeddedSkillsList(t *testing.T) []skill {
+	t.Helper()
+	skills, _ := skillsFrom(embeddedSkills)
+	if len(skills) == 0 {
+		t.Fatal("no skill is embedded")
+	}
+	return skills
+}
+
 // embeddedSkill is one embedded skill, and the test fails when it is missing.
 func embeddedSkill(t *testing.T, name string) skill {
 	t.Helper()
-	for _, s := range skillsFrom(embeddedSkills) {
+	for _, s := range embeddedSkillsList(t) {
 		if s.Name == name {
 			return s
 		}
