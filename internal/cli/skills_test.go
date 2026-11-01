@@ -209,6 +209,41 @@ func TestANewSkillAppearsInTheListWithNoOtherEdit(t *testing.T) {
 	}
 }
 
+// TestTheSkillLoadPrintsTheContentByteForByte holds what the load prints.
+//
+// The content is meant to be read, not parsed — so it is printed as embedded, byte
+// for byte, and it is not a JSON document.
+func TestTheSkillLoadPrintsTheContentByteForByte(t *testing.T) {
+	res := cli(t, t.TempDir(), "skill", "load", "orchestrator-role")
+	if res.Code != ExitOK {
+		t.Fatalf("skill load failed:\n%s", res.Stderr)
+	}
+	raw, err := fs.ReadFile(embeddedSkills, path.Join("skills", "orchestrator-role", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Stdout != string(raw) {
+		t.Errorf("the load should print the skill, byte for byte:\n%s", res.Stdout)
+	}
+	if strings.HasPrefix(strings.TrimSpace(res.Stdout), "{") {
+		t.Errorf("the load should not print a document:\n%s", res.Stdout)
+	}
+}
+
+// TestTheSkillLoadRefusesWhatIsNotThere holds the typo.
+func TestTheSkillLoadRefusesWhatIsNotThere(t *testing.T) {
+	res := cli(t, t.TempDir(), "skill", "load", "no-such-skill")
+	if res.Code != ExitError {
+		t.Fatalf("exit = %d, want %d", res.Code, ExitError)
+	}
+	if !strings.Contains(res.Stderr, "no-such-skill") {
+		t.Fatalf("the refusal should name the skill: %s", res.Stderr)
+	}
+	if !strings.Contains(res.Stderr, "orchestrator-role") {
+		t.Fatalf("the refusal should list what there is: %s", res.Stderr)
+	}
+}
+
 // frontmatterOf reads a skill's frontmatter, without the production's parser.
 //
 // A test that reuses the code it is testing proves nothing.

@@ -157,7 +157,7 @@ by reading the journal, and that requires every write to carry its session.
 ## The CLI surface
 
 `maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases.
-**44 commands**: 38 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
+**45 commands**: 39 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
 commands, 265 subcommands.)
 
 | Group | Verbs |
@@ -168,7 +168,7 @@ commands, 265 subcommands.)
 | `maitre-cli step` | add · start · done · skip · fail · deviate |
 | `maitre-cli finding` | add · resolve · dismiss · reopen |
 | `maitre-cli backlog` | list · create · update · dismiss · promote |
-| `maitre-cli skill` | help · list |
+| `maitre-cli skill` | help · list · load |
 | workspace | `init` · `demo` · `plan` · `path` · `log` (`--since <seq>`) · `gates` |
 
 The backlog is **one noun**. It was two file types for one list, and two file types for
@@ -179,7 +179,8 @@ step: an idea becomes a small task by being made a `feature` or a `bug` and gain
 kind: an idea, a feature and a bug are all things the chef can decide against.
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
-fails. Exit 0 on success, **2 on a gate refusal** (the command was understood, the
+fails. Two commands print text instead: `help`, and `skill load <name>`, whose content
+is meant to be read. Exit 0 on success, **2 on a gate refusal** (the command was understood, the
 plan said no), 1 on anything else.
 
 A list is always a list: an empty one is `[]`, never `null`. The standard readers —

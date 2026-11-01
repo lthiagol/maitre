@@ -117,6 +117,7 @@ func (r *Runner) Run() int {
 		return r.dispatch(args[1:], "skill", map[string]func([]string) int{
 			"help": r.cmdSkillHelp,
 			"list": r.cmdSkillList,
+			"load": r.cmdSkillLoad,
 		})
 	case "ac":
 		return r.dispatch(args[1:], "ac", map[string]func([]string) int{
@@ -222,7 +223,8 @@ Identity (who is acting, and in which session):
   The old $SCALE_* names still work, with a warning on stderr.
 
 Every command prints one JSON document: on stdout when it succeeds, on stderr when it
-fails. This help is the one exception — it prints text.
+fails. Two commands print text instead — this help, and `+"`skill load <name>`"+`, whose
+content is meant to be read.
 `)
 }
 

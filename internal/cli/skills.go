@@ -117,6 +117,41 @@ func (r *Runner) cmdSkillList(args []string) int {
 	return r.emit(map[string]any{"ok": true, "count": len(items), "skills": items})
 }
 
+// cmdSkillLoad prints a skill's content.
+//
+// It is the one command that does not print a JSON document: the content is meant to
+// be read, not parsed. It is printed byte for byte, as embedded.
+func (r *Runner) cmdSkillLoad(args []string) int {
+	fs := newFlagSet("skill load")
+	if err := fs.parse(args); err != nil {
+		r.fail("bad flags", err.Error())
+		return ExitError
+	}
+	if fs.nArg() != 1 {
+		r.fail("usage: maitre-cli skill load <name>")
+		return ExitError
+	}
+	name := fs.arg(0)
+	skills := skillsFrom(skillsFS)
+	for _, s := range skills {
+		if s.Name != name {
+			continue
+		}
+		if _, err := r.Stdout.Write(s.Content); err != nil {
+			r.fail("write the skill", err.Error())
+			return ExitError
+		}
+		r.flushWarnings()
+		return ExitOK
+	}
+	known := make([]string, 0, len(skills))
+	for _, s := range skills {
+		known = append(known, s.Name)
+	}
+	r.fail("no such skill", name, "known skills: "+strings.Join(known, ", "))
+	return ExitError
+}
+
 // skillMeta is what a skill's frontmatter says.
 type skillMeta struct {
 	// Name is the skill's name.
