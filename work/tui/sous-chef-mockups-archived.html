@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Sous-Chef tab — archived designs</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#1a1a2e;--frame:#303446;--ink:#c6d0f5;--dim:#a5adce;--faint:#737994;
+    --accent:#ca9ee6;--good:#a6d189;--warn:#e5c890;--bad:#e78284;--rule:#51576d;
+    --sel:#414559;--card:#242438;--line:rgba(202,158,230,.16);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:'Outfit',sans-serif;font-size:15px;line-height:1.6}
+  .wrap{max-w-5xl;margin:0 auto;padding:48px 24px 96px}
+  h1{font-size:34px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px;line-height:1.15}
+  .lede{color:var(--dim);font-size:16px;max-width:62ch;margin:0 0 32px}
+  h2{font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+  .idea{color:var(--dim);margin:0 0 6px;max-width:70ch;font-size:15px}
+  .from{color:var(--faint);font-size:13px;margin:0 0 18px;max-width:70ch}
+  .from b{color:var(--dim);font-weight:500}
+  .sec{margin-bottom:56px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    border-radius:7px;background:var(--accent);color:#1a1a2e;font-size:13px;font-weight:700;margin-right:10px;vertical-align:2px}
+  .term{background:var(--frame);border:1px solid var(--rule);border-radius:12px;padding:20px 22px;
+    overflow-x:auto;box-shadow:0 8px 28px -8px rgba(0,0,0,.55)}
+  .term pre{margin:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.42;white-space:pre;color:var(--ink)}
+  .c-acc{color:var(--accent)}.c-good{color:var(--good)}.c-warn{color:var(--warn)}.c-bad{color:var(--bad)}
+  .c-dim{color:var(--dim)}.c-faint{color:var(--faint)}.c-rule{color:var(--rule)}.c-sel{background:var(--sel);color:var(--ink)}
+  .b{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
+  @media(max-width:768px){.b{grid-template-columns:1fr}}
+  .note{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--card)}
+  .note h4{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+  .note p{margin:0;color:var(--dim);font-size:14px}
+  .lead-in{border-left:2px solid var(--accent);padding-left:16px;margin:0 0 36px}
+  .lead-in p{margin:0 0 10px}.lead-in p:last-child{margin:0}
+  code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:rgba(202,158,230,.1);
+       padding:1px 6px;border-radius:5px;color:var(--accent)}
+  a{color:var(--accent)}
+  .idx{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:0 0 36px}
+  .idx a{display:block;border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--card);
+    text-decoration:none;color:var(--dim);font-size:13.5px;transition:all .16s ease}
+  .idx a:hover{border-color:var(--accent);color:var(--ink);transform:translateY(-1px)}
+  .idx b{display:block;color:var(--ink);font-weight:600;margin-bottom:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>The Sous-Chef tab — archived designs</h1>
+  <p class="lede">Nine designs that were not taken forward, kept whole. They are here because the
+  reasoning behind them is still worth having — and because a design that was rejected once may be
+  the right answer to a different question later.</p>
+
+  <div class="lead-in">
+    <p><strong>The live design is the ticket</strong> — <a href="sous-chef-mockups.html">sous-chef-mockups.html</a>,
+    which carries a simulator: the harness, the crew, the sources, the budget and the phase are all
+    pickable, and the tab redraws itself.</p>
+    <p><strong>The tab's fixed ground</strong> — the tab is <strong>Sous-Chef</strong>, between
+    <strong>Board</strong> and <strong>Log</strong> (Q16, Q17). Its move is <strong>it starts the
+    automation</strong>: <code>space</code> spawns the crew (Q18). The rows carry the glossary's job
+    names — orchestrator, runner, reviewer.</p>
+    <p><strong>The four required controls</strong> — harness (opencode · pi · custom) · crew
+    (1 · 2 · 3, default 3) · tasks (recipes or backlog items, from Ready) · status (who is working,
+    and how many execution/review interactions have happened).</p>
+  </div>
+
+  <div class="idx">
+    <a href="#d1"><b>1 · The panel</b>a sectioned form</a>
+    <a href="#d2"><b>2 · The crew</b>a roster</a>
+    <a href="#d3"><b>3 · The round</b>the Board's tree language</a>
+    <a href="#d4"><b>4 · The feed</b>the journal, live</a>
+    <a href="#d5"><b>5 · The deck</b>setup left, state right</a>
+    <a href="#d7"><b>7 · The bench</b>the crew as columns</a>
+    <a href="#d8"><b>8 · The booth</b>a status band and an ASKED block</a>
+    <a href="#d9"><b>9 · The hour</b>status first</a>
+    <a href="#d10"><b>10 · The table</b>the crew as data</a>
+  </div>
+
+  <!-- 1 -->
+  <div class="sec" id="d1">
+    <h2><span class="num">1</span>The panel</h2>
+    <p class="idea">A sectioned form. Four blocks, each a selector, the status at the bottom. The tab is a
+    control panel you set up once, then watch.</p>
+    <p class="from"><b>Liked by the chef</b> — the shape the ticket grew out of.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ 3 sous-chefs · opencode · 4 tasks queued
+ <span class="c-acc">HARNESS</span>
+  <span class="c-sel">▸ opencode</span>        pi         custom
+ <span class="c-acc">SOUS-CHEFS</span>
+  <span class="c-sel">▸ 3   orchestrator · runner · reviewer</span>
+    2   orchestrator + reviewer
+    1   all three roles
+ <span class="c-acc">TASKS</span>
+  <span class="c-sel">▸ ready (4)</span>    recipes (6)   backlog (4)
+ <span class="c-acc">STATUS</span>
+  orchestrator   <span class="c-good">working</span>   round 2 of 3 · routing RCP04
+  runner         <span class="c-good">working</span>   BL05 · 2 of 3 criteria proven
+  reviewer       <span class="c-dim">idle</span>      waiting on the runner
+  interactions   6 of 12
+ <span class="c-dim">space</span> <span class="c-acc">start the crew</span> · <span class="c-dim">←→</span> choose · <span class="c-dim">enter</span> apply · <span class="c-dim">q</span> quit</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>Every control is visible at once, in the order the chef sets them up. Nothing is hidden behind a mode, and the composition under each count is spelled out — so "2" is never a bare number.</p></div>
+      <div class="note"><h4>Costs</h4><p>The status is a footnote under a form. Three sous-chefs read as three lines of text, not as agents — the tab never shows <em>who</em> is doing what. And it is a second form tab, next to Settings.</p></div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="sec" id="d2">
+    <h2><span class="num">2</span>The crew</h2>
+    <p class="idea">A roster. One row per sous-chef, carrying its role, its harness, its state and its current
+    work. The tab's list <em>is</em> the status; the selectors sit in a strip above it.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ <span class="c-dim">harness</span> opencode   <span class="c-dim">crew</span> 3   <span class="c-dim">tasks</span> ready (4)   <span class="c-dim">interactions</span> 6 of 12
+ <span class="c-sel"> ORCHESTRATOR                                          working    opencode</span>
+   round 2 of 3 · routing RCP04 · asked the runner once
+   <span class="c-good">RUNNER</span>                                            working    opencode
+   implementing BL05 · 2 of 3 criteria proven
+   <span class="c-dim">REVIEWER</span>                                              idle       opencode
+   waiting on the runner
+ <span class="c-acc">TASKS · READY</span>                                              queued
+   BL05   Wire the review queue                          next
+   BL06   Sharpen the evidence contract
+   BL11   Wire the review queue
+   BL12   Sharpen the evidence contract</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>"Who is working now, on what, and for how long" is the first thing on screen — the chef never hunts for it. Selecting a row puts a sous-chef under the cursor, so the detail pane has something to show.</p></div>
+      <div class="note"><h4>Costs</h4><p>The three selectors are demoted to a strip, so changing the crew mid-run is less obvious than it should be. And a roster of agents is a new kind of list for this console — every other list holds plan items.</p></div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="sec" id="d3">
+    <h2><span class="num">3</span>The round</h2>
+    <p class="idea">The automation as a tree, in the Board's own language. The crew hangs off the round it is
+    working on, and the queue hangs off the round that is next.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ opencode · 3 sous-chefs · ready (4) · round 2 of 3 · interactions 6 of 12
+ <span class="c-acc">ROUND 2</span> · RCP04
+ ├─ orchestrator        <span class="c-good">working</span>   routing the round · asked once
+ ├─ runner              <span class="c-good">working</span>   BL05 · 2 of 3 criteria proven
+ └─ reviewer            <span class="c-dim">idle</span>      waiting on the runner
+ <span class="c-acc">QUEUE</span>
+ ├─ RCP02  Sign off the menu              queued
+ ├─ RCP03  Wire the review queue          queued
+ └─ BL05   Wire the review queue          next</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>It reuses a language the console already speaks, so the tab needs no new vocabulary. The crew visibly belongs to a round, and the queue visibly belongs to the next one — the "interactions" count is the tree's depth, not a number in a corner.</p></div>
+      <div class="note"><h4>Costs</h4><p>A tree is a picture of a <em>shape</em>, and a shape is static — it cannot show a blocked agent asking a question, or a harness that changed mid-run. It is also the least direct way to change a setting.</p></div>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="sec" id="d4">
+    <h2><span class="num">4</span>The feed</h2>
+    <p class="idea">A live journal of the automation, like the Log tab. The status is the last event, and the
+    counters sit in the summary.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ 3 sous-chefs · opencode · interactions 6 of 12 · <span class="c-warn">1 asking</span>
+ 16:44  reviewer      <span class="c-warn">asked the orchestrator</span> — the scope is ambiguous
+ 16:43  runner        BL05 · 2 of 3 criteria proven
+ 16:41  orchestrator  routed RCP04 to the runner
+ 16:40  runner        started BL05
+ 16:38  reviewer      RCP04 reviewed · changes needed
+ 16:37  runner        RCP04 implemented · 3 of 3 proven
+ 16:35  orchestrator  round 1 of 3 opened
+ 16:33  orchestrator  crew started · opencode · 3 sous-chefs</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>The audit trail <em>is</em> the status: who did what, in what order, and how many interactions it took. A blocked agent's question is visible where it happened, not in a summary. Nothing here is invented — it is the journal.</p></div>
+      <div class="note"><h4>Costs</h4><p>It answers "what happened" and never "what is happening now" — the chef reads the last line to learn the crew is idle. And the Log tab already does exactly this for the plan, so the tab risks being a second Log.</p></div>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="sec" id="d5">
+    <h2><span class="num">5</span>The deck</h2>
+    <p class="idea">Two columns: the setup on the left, the live state on the right. Dense, keyboard-first —
+    everything the tab knows, on one screen, without scrolling.</p>
+    <p class="from"><b>Liked by the chef</b> — the second shape the ticket grew out of.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ <span class="c-acc">HARNESS</span>                    <span class="c-acc">LIVE</span>
+  <span class="c-sel">▸ opencode</span>                 orchestrator  <span class="c-good">working</span>   round 2 of 3
+    pi                     runner        <span class="c-good">working</span>   BL05 · 2 of 3 proven
+    custom                 reviewer      <span class="c-dim">idle</span>      waiting on the runner
+                          <span class="c-acc">INTERACTIONS</span>
+ <span class="c-acc">SOUS-CHEFS</span>                 <span class="c-good">████████████</span><span class="c-rule">░░░░░░░░░░░</span>  6 of 12
+  <span class="c-sel">▸ 3   orch · runner · rev</span>   rounds used  2 of 3
+    2   orch + reviewer
+    1   all three roles
+                          <span class="c-warn">ASKED</span>
+ <span class="c-acc">TASKS</span>                      reviewer: the scope is ambiguous
+  <span class="c-sel">▸ ready (4)</span>               <span class="c-sel">▸ answer</span>
+    recipes (6)
+    backlog (4)</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>Nothing is hidden and nothing needs scrolling — the whole configuration and the whole state at once, which is what an operator wants. The <strong>ASKED</strong> block gives a blocked agent's question a home, which is where the chef's attention is actually needed (Q18).</p></div>
+      <div class="note"><h4>Costs</h4><p>Two columns in 80 columns is 38 each, and the left column is a form of short labels — it reads like a settings sheet. The busiest thing on the tab, the live state, gets the smaller half of the screen on the right.</p></div>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="sec" id="d7">
+    <h2><span class="num">7</span>The bench</h2>
+    <p class="idea">The crew as columns. The composition is not a number in a list — it is the shape of the
+    screen. Three sous-chefs, three columns. Two, two. One, one column and a note that the chef reviews.</p>
+    <p class="from"><b>From the deck (5)</b> — the right column grows until the crew is laid out sideways.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ opencode · round 2 of 3 · 6 of 12 · plan 7 · build 7 · they agree
+ <span class="c-acc">ORCHESTRATOR</span>      <span class="c-rule">│</span> <span class="c-acc">RUNNER</span>         <span class="c-rule">│</span> <span class="c-acc">REVIEWER</span>
+ <span class="c-good">working</span>          <span class="c-rule">│</span> <span class="c-good">working</span>        <span class="c-rule">│</span> <span class="c-dim">idle</span>
+                  <span class="c-rule">│</span>                 <span class="c-rule">│</span>
+ routing RCP04    <span class="c-rule">│</span> BL05           <span class="c-rule">│</span> waiting on the
+ asked once       <span class="c-rule">│</span> 2 of 3 proven  <span class="c-rule">│</span> runner
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+  <span class="c-sel">▸ 3  orchestrator · runner · reviewer</span>   harness opencode
+    2  runner · orchestrator reviews          budget 3 rounds
+    1  one agent · the chef reviews           tasks ready (4)
+ <span class="c-dim">space</span> <span class="c-acc">start the crew</span> · <span class="c-dim">←→</span> choose · <span class="c-dim">q</span> quit</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>The strongest version of "the count is a composition". Choosing 2 makes the orchestrator's column grow to hold both its jobs and the reviewer's; choosing 1 leaves one column and says the chef holds the review. The chef sees the crew's shape before starting it.</p></div>
+      <div class="note"><h4>Costs</h4><p>Three columns in 80 columns is 26 each — too narrow for "waiting on the runner" without wrapping. It wants the split layout at 160, so the tab would have two different shapes, and the narrow one would be the one most chefs use. Also, the columns are a picture of a moment: a blocked agent has nowhere to put its question.</p></div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="sec" id="d8">
+    <h2><span class="num">8</span>The booth</h2>
+    <p class="idea">A one-screen control booth. The crew's live state is a band at the top, the configuration a
+    strip under it, and a pinned <strong>ASKED</strong> block at the foot that only earns space when an agent
+    is actually asking.</p>
+    <p class="from"><b>From the deck (5)</b> — the state moves to the top, the form shrinks, and the question gets its own room.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ <span class="c-acc">CREW</span>
+  <span class="c-good">working</span>  orchestrator   routing RCP04 · round 2 of 3 · 6 of 12 interactions
+  <span class="c-good">working</span>  runner         BL05 · 2 of 3 proven
+  <span class="c-dim">idle</span>     reviewer       waiting on the runner
+  plan 7 · build 7 · they agree · last event 16:44
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+  harness opencode   crew 3 · orchestrator runner reviewer   budget 3 rounds
+  tasks ready (4)   <span class="c-dim">⇄ change</span>
+ <span class="c-warn">ASKED</span>
+  reviewer · the scope is ambiguous — may the item include the writer?
+  <span class="c-sel">▸ answer</span>
+ <span class="c-dim">space</span> <span class="c-acc">start the crew</span> · <span class="c-dim">enter</span> answer · <span class="c-dim">q</span> quit</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>The live state is the first thing on the tab, always, and the vital signs ride with it — the chef never has to ask whether the automation is speaking the plan's rules. The configuration is a strip, because it is set once. And the ASKED block is the only thing that grows, so the chef's attention lands where it is needed.</p></div>
+      <div class="note"><h4>Costs</h4><p>The configuration is compressed to the point of being hard to change — three selectors on one line. And "answer" puts the chef in the middle of a conversation between two agents, which is a move this tab may not want: Q18 gives that job to the orchestrator.</p></div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="sec" id="d9">
+    <h2><span class="num">9</span>The hour</h2>
+    <p class="idea">The panel turned upside down. The tab opens with <em>now</em> — the round, the crew, the
+    counters, the vital signs — and the configuration sits below it, for when the chef wants to change
+    something.</p>
+    <p class="from"><b>From the panel (1)</b> — the status moves from the foot to the head, and the form follows.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ <span class="c-acc">NOW</span>
+  round 2 of 3 · 6 of 12 interactions · 1 of 4 tasks done
+  orchestrator  <span class="c-good">working</span>   routing RCP04
+  runner        <span class="c-good">working</span>   BL05 · 2 of 3 proven
+  reviewer      <span class="c-dim">idle</span>      waiting on the runner
+  plan 7 · build 7 · they agree
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+ <span class="c-acc">CONFIGURE</span>
+  harness   opencode       pi       custom
+  crew      <span class="c-sel">3 · orchestrator, runner, reviewer</span>
+  budget    3 rounds       12 interactions
+  sources   ready (4)     recipes (6)     backlog (4)
+  queue     BL05 next · BL06 · BL11 · BL12
+ <span class="c-dim">space</span> <span class="c-acc">start the crew</span> · <span class="c-dim">↓</span> configure · <span class="c-dim">q</span> quit</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>The tab's first line answers the chef's first question — "what is happening?" — and never stops answering it. Configuration is explicitly the thing you scroll down to, which is the honest relationship between the two: one is watched, one is set.</p></div>
+      <div class="note"><h4>Costs</h4><p>Two bands on one screen is a compromise the console has never had to make elsewhere — every other tab is one thing. And a tab that can be scrolled has a state the chef has to remember.</p></div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="sec" id="d10">
+    <h2><span class="num">10</span>The table</h2>
+    <p class="idea">The crew as data. One row per sous-chef, one column per fact — the console's own house
+    style, the way a recipe row is a table. The configuration is a single strip above it.</p>
+    <p class="from"><b>From the deck (5)</b> — the live column gives up its column and becomes a full-width table.</p>
+    <div class="term"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">────────────────────────────────────────────────────────────────────────────────</span>
+  Home    Recipes    Backlog    Ready    Board  <span class="c-acc">▸ Sous-Chef</span>    Log    Settings
+ harness opencode · crew 3 · ready (4) · budget 3 rounds · plan 7 · build 7
+ <span class="c-acc">ROLE</span>          <span class="c-acc">STATE</span>     <span class="c-acc">HARNESS</span>   <span class="c-acc">WORK</span>                  <span class="c-acc">ROUND</span>
+ orchestrator  <span class="c-good">working</span>   opencode  routing RCP04                2 of 3
+ runner        <span class="c-good">working</span>   opencode  BL05 · 2 of 3 proven          2 of 3
+ reviewer      <span class="c-dim">idle</span>      opencode  waiting on the runner        —
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+ <span class="c-acc">TASKS · READY (4)</span>                              <span class="c-acc">STATE</span>      <span class="c-acc">OWNER</span>
+ BL05  Wire the review queue                        queued     next
+ BL06  Sharpen the evidence contract                queued
+ BL11  Wire the review queue                        queued
+ BL12  Sharpen the evidence contract                queued
+ <span class="c-dim">space</span> <span class="c-acc">start the crew</span> · <span class="c-dim">←→</span> choose · <span class="c-dim">q</span> quit</pre></div>
+    <div class="b">
+      <div class="note"><h4>Makes easy</h4><p>Nothing is prose, so nothing is ambiguous: the chef can see at a glance that the reviewer is idle and the runner is not, that everyone is on the same harness, and that the round is 2 of 3. A table is also the easiest thing in this console to extend — a new column is a new fact, not a new layout.</p></div>
+      <div class="note"><h4>Costs</h4><p>Tables are for comparing things of the same kind, and a sous-chef is not a plan item — the tab would be the first in the console to list something that is not in the plan. It also has no room for a blocked agent's question, which is the one thing on this tab that is not tabular.</p></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

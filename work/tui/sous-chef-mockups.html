@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Sous-Chef tab — the ticket</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#1a1a2e;--frame:#303446;--ink:#c6d0f5;--dim:#a5adce;--faint:#737994;
+    --accent:#ca9ee6;--good:#a6d189;--warn:#e5c890;--bad:#e78284;--rule:#51576d;
+    --sel:#414559;--card:#242438;--line:rgba(202,158,230,.16);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:'Outfit','Helvetica Neue',system-ui,sans-serif;font-size:15px;line-height:1.6}
+  .wrap{max-w-5xl;margin:0 auto;padding:48px 24px 96px}
+  h1{font-size:34px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px;line-height:1.15}
+  .lede{color:var(--dim);font-size:16px;max-width:64ch;margin:0 0 32px}
+  h2{font-size:22px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
+  h3{font-size:15px;font-weight:600;margin:0 0 10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+  .sec{margin-bottom:56px}
+  .idea{color:var(--dim);margin:0 0 18px;max-width:72ch;font-size:15px}
+  .term{background:var(--frame);border:1px solid var(--rule);border-radius:12px;padding:20px 22px;
+    overflow-x:auto;box-shadow:0 8px 28px -8px rgba(0,0,0,.55)}
+  .term pre{margin:0;font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-size:12.5px;line-height:1.42;white-space:pre;color:var(--ink)}
+  .c-acc{color:var(--accent)}.c-good{color:var(--good)}.c-warn{color:var(--warn)}.c-bad{color:var(--bad)}
+  .c-dim{color:var(--dim)}.c-faint{color:var(--faint)}.c-rule{color:var(--rule)}
+  .c-sel{background:var(--sel);color:var(--ink)}
+  .c-ink{color:var(--ink)}
+  .b{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}
+  @media(max-width:900px){.b{grid-template-columns:1fr}}
+  .note{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--card)}
+  .note h4{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+  .note p{margin:0;color:var(--dim);font-size:14px}
+  .note p+p{margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--accent);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+  td:first-child{color:var(--ink);font-weight:500;white-space:nowrap}
+  td{color:var(--dim)}
+  .lead-in{border-left:2px solid var(--accent);padding-left:16px;margin:0 0 36px}
+  .lead-in p{margin:0 0 10px}.lead-in p:last-child{margin:0}
+  code{font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-size:12.5px;background:rgba(202,158,230,.1);
+       padding:1px 6px;border-radius:5px;color:var(--accent)}
+  a{color:var(--accent)}
+
+  /* simulator */
+  .sim{display:grid;grid-template-columns:280px 1fr;gap:22px;align-items:start}
+  html:not(.js) .sim{grid-template-columns:1fr}
+  .rail{display:none}
+  html.js .rail{display:block}
+  .nojs-note{margin:0 0 14px;border:1px solid var(--line);border-radius:10px;padding:11px 14px;
+    background:var(--card);color:var(--dim);font-size:13.5px}
+  html.js .nojs-note{display:none}
+  @media(max-width:900px){.sim{grid-template-columns:1fr}}
+  .rail{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:16px}
+  .rail h4{margin:0 0 12px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  .grp{margin-bottom:18px}
+  .grp>span{display:block;color:var(--faint);font-size:11px;letter-spacing:.09em;text-transform:uppercase;margin-bottom:7px}
+  .opts{display:flex;flex-wrap:wrap;gap:6px}
+  .opt{font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-size:12px;padding:5px 10px;border-radius:7px;
+    border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--dim);cursor:pointer;
+    transition:all .16s ease;user-select:none}
+  .opt:hover{border-color:var(--accent);color:var(--ink);transform:translateY(-1px)}
+  .opt[aria-pressed="true"]{background:var(--accent);color:#1a1a2e;border-color:var(--accent);font-weight:500}
+  .opt small{display:block;font-size:10px;color:var(--faint);margin-top:2px}
+  .opt[aria-pressed="true"] small{color:rgba(26,26,46,.72)}
+  .hint{color:var(--faint);font-size:12.5px;margin-top:6px}
+  .live{border:1px solid var(--rule);border-radius:12px;background:var(--frame);padding:20px 22px;
+    overflow-x:auto;box-shadow:0 8px 28px -8px rgba(0,0,0,.55)}
+  .live pre{margin:0;font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-size:12.5px;line-height:1.42;white-space:pre;color:var(--ink)}
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){.gallery{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+  .card .cap{display:flex;align-items:baseline;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+  .card .cap b{color:var(--ink);font-weight:600;font-size:14px}
+  .card .cap span{color:var(--faint);font-size:12.5px}
+  .card .shot{background:var(--frame);padding:14px 16px;overflow-x:auto}
+  .card .shot pre{margin:0;font-family:'JetBrains Mono','SF Mono',Menlo,monospace;font-size:11px;line-height:1.38;white-space:pre;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>The Sous-Chef tab — the ticket</h1>
+  <p class="lede">One design, and a simulator to drive it. Pick the harness, the crew, the sources, the
+  budget and the phase on the left; the tab on the right is the tab. Every mockup here is written by
+  <code>render_ticket.py</code> — the gallery is static HTML and the simulator assembles the same parts,
+  so the two can never drift apart, and the page still reads with scripts blocked.</p>
+
+  <div class="lead-in">
+    <p><strong>Fixed by the rulings</strong> — the tab is <strong>Sous-Chef</strong>, between <strong>Board</strong> and <strong>Log</strong> (Q16, Q17). Its move is <strong>it starts the automation</strong>: <code>space</code> spawns the crew (Q18). The rows carry the glossary's job names — orchestrator, runner, reviewer.</p>
+    <p><strong>Everything else is on the archive</strong> — <a href="sous-chef-mockups-archived.html">sous-chef-mockups-archived.html</a> holds the panel, the deck, the crew, the round, the feed, the bench, the booth, the hour and the table.</p>
+  </div>
+
+  <!-- SIMULATOR -->
+  <div class="sec">
+    <h2>The simulator</h2>
+    <p class="idea">The tab is a <strong>ticket</strong>: an order at the top, what is queued under it, and a stamp at
+    the foot saying where the work stands. Every pick below changes the tab.</p>
+    <div class="sim">
+      <div class="rail">
+        <h4>Configure</h4>
+        <div class="grp">
+          <span>Harness</span>
+          <div class="opts" id="harness"></div>
+        </div>
+        <div class="grp">
+          <span>Crew</span>
+          <div class="opts" id="crew"></div>
+          <p class="hint" id="crewhint"></p>
+        </div>
+        <div class="grp">
+          <span>Sources</span>
+          <div class="opts" id="sources"></div>
+        </div>
+        <div class="grp">
+          <span>Budget</span>
+          <div class="opts" id="budget"></div>
+        </div>
+        <div class="grp">
+          <span>Phase</span>
+          <div class="opts" id="phase"></div>
+        </div>
+        <div class="grp">
+          <span>The plan</span>
+          <div class="opts" id="plan"></div>
+        </div>
+      </div>
+      <div class="live">
+        <p class="nojs-note" id="simnote">The simulator needs JavaScript. The tab below is the same ticket, drawn by hand — and every variation is in the gallery further down.</p>
+        <pre id="tab">
+<!--DEFAULT-->
+<span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc">next</span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  orchestrator  </span><span class="c-dim">routing RCP04</span>
+<span class="c-good">working</span><span class="c-dim">  runner        </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+<span class="c-dim">idle   </span><span class="c-dim">  reviewer      </span><span class="c-dim">waiting on the runner</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span>
+<!--/DEFAULT-->
+</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- VARIATIONS -->
+  <div class="sec">
+    <h2>The variations</h2>
+    <p class="idea">Nine states of the same ticket. Between them they cover every choice the tab
+    offers, and the two states that are not the chef's choice at all — a blocked agent, and a plan the
+    build does not agree with.</p>
+    <div class="gallery" id="gallery">
+<!--GALLERY-->
+<div class="card"><div class="cap"><b>Three sous-chefs</b><span>opencode · running</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc">next</span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  orchestrator  </span><span class="c-dim">routing RCP04</span>
+<span class="c-good">working</span><span class="c-dim">  runner        </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+<span class="c-dim">idle   </span><span class="c-dim">  reviewer      </span><span class="c-dim">waiting on the runner</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>The same, on pi</b><span>pi · running</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-faint">   opencode  </span><span class="c-sel">▸ pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: pi --model sonnet</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc">next</span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  orchestrator  </span><span class="c-dim">routing RCP04</span>
+<span class="c-good">working</span><span class="c-dim">  runner        </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+<span class="c-dim">idle   </span><span class="c-dim">  reviewer      </span><span class="c-dim">waiting on the runner</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>A custom harness</b><span>the command is shown</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-faint">   opencode  </span><span class="c-faint">   pi  </span><span class="c-sel">▸ custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: claude --dangerously-skip-permissions</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc">next</span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  orchestrator  </span><span class="c-dim">routing RCP04</span>
+<span class="c-good">working</span><span class="c-dim">  runner        </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+<span class="c-dim">idle   </span><span class="c-dim">  reviewer      </span><span class="c-dim">waiting on the runner</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>Two sous-chefs</b><span>the orchestrator reviews</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc">next</span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  orchestrator  </span><span class="c-dim">routing RCP04 · reviews the runner</span>
+<span class="c-good">working</span><span class="c-dim">  runner        </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>One sous-chef</b><span>the chef reviews</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 1 · one agent, and the chef reviews</span>
+<span class="c-dim">           </span><span class="c-faint">3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc">next</span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  one agent     </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+<span class="c-warn">reviews </span><span class="c-dim">  the chef      </span><span class="c-dim">the chef holds the review</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>An agent is blocked</b><span>the orchestrator has the question</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-faint">  ready (4)  </span><span class="c-sel">▸ recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  RCP02 </span><span class="c-ink">Sign off the menu                         </span><span class="c-acc"></span>
+<span class="c-dim">  RCP03 </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  RCP04 </span><span class="c-dim">Add the backlog view                      </span><span class="c-acc"></span>
+<span class="c-dim">  RCP05 </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-faint">  and 2 more</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 2 of 3 · 6 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">working</span><span class="c-dim">  orchestrator  </span><span class="c-dim">routing RCP04</span>
+<span class="c-good">working</span><span class="c-dim">  runner        </span><span class="c-dim">BL05 · 2 of 3 criteria proven</span>
+<span class="c-dim">idle   </span><span class="c-dim">  reviewer      </span><span class="c-dim">waiting on the runner</span>
+<span class="c-warn">asked   </span><span class="c-dim">  reviewer      </span><span class="c-warn">the scope is ambiguous — the orchestrator has it</span>
+
+<span class="c-dim"> space </span><span class="c-acc">stop the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>The order, unsigned</b><span>the crew has not started</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-faint">   opencode  </span><span class="c-sel">▸ pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: pi --model sonnet</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-faint">  ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-sel">▸ backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">5 rounds · 24 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL01  </span><span class="c-ink">The board needs a way to show evidence    </span><span class="c-acc"></span>
+<span class="c-dim">  BL02  </span><span class="c-dim">A recipe with no ACs is probably an idea  </span><span class="c-acc"></span>
+<span class="c-dim">  BL03  </span><span class="c-dim">The chef wants a weekly digest            </span><span class="c-acc"></span>
+<span class="c-dim">  BL04  </span><span class="c-dim">Trying the board on a real project        </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-faint"> · the crew has not started</span>
+<span class="c-faint">  press space to start it</span>
+
+<span class="c-dim"> space </span><span class="c-acc">start the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>The build disagrees</b><span>the stamp says so</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 3 of 3 · 11 of 12 interactions · </span><span class="c-bad">plan 7 · build 8 · they disagree</span>
+<span class="c-good">closed  </span><span class="c-dim">  the round     </span><span class="c-dim">3 of 3 criteria proven · signed off</span>
+
+<span class="c-dim"> space </span><span class="c-acc">start the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<div class="card"><div class="cap"><b>The round closed</b><span>the crew is not still working</span></div><div class="shot"><pre><span class="c-acc"> ⋈ maitre · kb</span>
+<span class="c-rule">──────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  Home    Recipes    Backlog    Ready    Board  </span><span class="c-acc">▸ Sous-Chef</span><span class="c-dim">    Log    Settings</span>
+<span class="c-acc">  THE ORDER</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-dim">  harness  </span><span class="c-sel">▸ opencode  </span><span class="c-faint">   pi  </span><span class="c-faint">   custom  </span>
+<span class="c-dim">            </span><span class="c-faint">command: opencode</span>
+<span class="c-dim">  crew     </span><span class="c-sel">▸ 3 · orchestrator, runner, reviewer</span>
+<span class="c-dim">           </span><span class="c-faint">2 · runner, and the orchestrator reviews</span>
+<span class="c-dim">           </span><span class="c-faint">1 · one agent, and the chef reviews</span>
+<span class="c-dim">  sources  </span><span class="c-sel">▸ ready (4)  </span><span class="c-faint">  recipes (6)  </span><span class="c-faint">  backlog (4)  </span>
+<span class="c-dim">  budget   </span><span class="c-dim">3 rounds · 12 interactions</span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE QUEUE</span>
+<span class="c-dim">  BL05  </span><span class="c-ink">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL06  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-dim">  BL11  </span><span class="c-dim">Wire the review queue                     </span><span class="c-acc"></span>
+<span class="c-dim">  BL12  </span><span class="c-dim">Sharpen the evidence contract             </span><span class="c-acc"></span>
+<span class="c-rule"> ─────────────────────────────────────────────────────────────────────────────</span>
+<span class="c-acc">  THE STAMP</span><span class="c-dim"> · round 3 of 3 · 11 of 12 interactions · </span><span class="c-dim">plan 7 · build 7 · they agree</span>
+<span class="c-good">closed  </span><span class="c-dim">  the round     </span><span class="c-dim">3 of 3 criteria proven · signed off</span>
+
+<span class="c-dim"> space </span><span class="c-acc">start the crew</span><span class="c-dim"> · ←→ choose · enter apply · q quit</span></pre></div></div>
+<!--/GALLERY-->
+    </div>
+  </div>
+
+  <!-- OPTIMISATIONS -->
+  <div class="sec">
+    <h2>What I changed in the ticket</h2>
+    <p class="idea">The shape was right; six things were not. Each of these is visible in the simulator.</p>
+    <div class="b">
+      <div class="note"><h4>1 · One selection per row</h4><p>The row marks what is chosen and dims what is not, the way a selected console row is marked. Before, all three crew options looked equally live, and "3" was only a number.</p></div>
+      <div class="note"><h4>2 · The crew row states the consequence</h4><p>"2 · runner, and the orchestrator reviews" · "1 · one agent, and <strong>the chef reviews</strong>". A lone agent cannot review itself — the close gate refuses a self-reviewed recipe — so the one-agent crew is the one where the chef holds the reviewer's chair.</p></div>
+      <div class="note"><h4>3 · The queue moved inside the order</h4><p>What is queued is what is being cooked. It was a separate band, as if it were another fact about the plan rather than part of the order.</p></div>
+      <div class="note"><h4>4 · Policy above, progress below</h4><p>The order says the budget as a <em>policy</em> — "3 rounds · 12 interactions". The stamp says the <em>progress</em> — "round 2 of 3 · 6 of 12". Two different facts, two different words, neither one repeated.</p></div>
+      <div class="note"><h4>5 · The vital signs can disagree</h4><p>The stamp carries the plan's domain version, this build's, and whether they agree. When they do not, the stamp says so instead of hiding it — the tab that starts the automation has to be able to report that it is not speaking the plan's rules.</p></div>
+      <div class="note"><h4>6 · The footer names the move</h4><p><code>space</code> starts the crew; once the crew runs, the same key stops it, and the footer says which. A key whose meaning changes must say so.</p></div>
+    </div>
+  </div>
+
+  <!-- CARRIES -->
+  <div class="sec">
+    <h2>What the ticket carries</h2>
+    <table>
+      <thead><tr><th>Addition</th><th>Where it lands</th><th>What it says</th></tr></thead>
+      <tbody>
+        <tr><td>The count is a composition</td><td>the crew row</td><td>3 · 2 · 1, each with who reviews</td></tr>
+        <tr><td>The vital signs stay</td><td>the stamp</td><td>plan 7 · build 7 · they agree</td></tr>
+        <tr><td>A cap, not just a count</td><td>the order · the stamp</td><td>3 rounds · 12 interactions · round 2 of 3 · 6 of 12</td></tr>
+        <tr><td>A home for the blocked agent</td><td>the stamp</td><td>reviewer asked the orchestrator · waiting for an answer</td></tr>
+        <tr><td>The harness, per role</td><td>the harness row</td><td>"custom" shows the command it will run</td></tr>
+        <tr><td>The queue is visible</td><td>the order</td><td>the four items, and which is next</td></tr>
+        <tr><td>Start and stop differ</td><td>the footer</td><td>space starts the crew · space stops the crew</td></tr>
+        <tr><td>One task at a time</td><td>the stamp</td><td>one role working, the rest waiting</td></tr>
+        <tr><td>Survives a restart</td><td>the stamp</td><td>the last event, and the round it was in</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  try{
+    document.documentElement.className += ' js';
+    var G = /*GROUPS*/{"harness:opencode": ["<span class=\"c-dim\">  harness  </span><span class=\"c-sel\">▸ opencode  </span><span class=\"c-faint\">   pi  </span><span class=\"c-faint\">   custom  </span>", "<span class=\"c-dim\">            </span><span class=\"c-faint\">command: opencode</span>"], "harness:pi": ["<span class=\"c-dim\">  harness  </span><span class=\"c-faint\">   opencode  </span><span class=\"c-sel\">▸ pi  </span><span class=\"c-faint\">   custom  </span>", "<span class=\"c-dim\">            </span><span class=\"c-faint\">command: pi --model sonnet</span>"], "harness:custom": ["<span class=\"c-dim\">  harness  </span><span class=\"c-faint\">   opencode  </span><span class=\"c-faint\">   pi  </span><span class=\"c-sel\">▸ custom  </span>", "<span class=\"c-dim\">            </span><span class=\"c-faint\">command: claude --dangerously-skip-permissions</span>"], "crew:3": ["<span class=\"c-dim\">  crew     </span><span class=\"c-sel\">▸ 3 · orchestrator, runner, reviewer</span>", "<span class=\"c-dim\">           </span><span class=\"c-faint\">2 · runner, and the orchestrator reviews</span>", "<span class=\"c-dim\">           </span><span class=\"c-faint\">1 · one agent, and the chef reviews</span>"], "crew:2": ["<span class=\"c-dim\">  crew     </span><span class=\"c-sel\">▸ 2 · runner, and the orchestrator reviews</span>", "<span class=\"c-dim\">           </span><span class=\"c-faint\">3 · orchestrator, runner, reviewer</span>", "<span class=\"c-dim\">           </span><span class=\"c-faint\">1 · one agent, and the chef reviews</span>"], "crew:1": ["<span class=\"c-dim\">  crew     </span><span class=\"c-sel\">▸ 1 · one agent, and the chef reviews</span>", "<span class=\"c-dim\">           </span><span class=\"c-faint\">3 · orchestrator, runner, reviewer</span>", "<span class=\"c-dim\">           </span><span class=\"c-faint\">2 · runner, and the orchestrator reviews</span>"], "sources:ready": ["<span class=\"c-dim\">  sources  </span><span class=\"c-sel\">▸ ready (4)  </span><span class=\"c-faint\">  recipes (6)  </span><span class=\"c-faint\">  backlog (4)  </span>"], "queue:ready:run": ["<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-acc\">  THE QUEUE</span>", "<span class=\"c-dim\">  BL05  </span><span class=\"c-ink\">Wire the review queue                     </span><span class=\"c-acc\">next</span>", "<span class=\"c-dim\">  BL06  </span><span class=\"c-dim\">Sharpen the evidence contract             </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL11  </span><span class=\"c-dim\">Wire the review queue                     </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL12  </span><span class=\"c-dim\">Sharpen the evidence contract             </span><span class=\"c-acc\"></span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"], "queue:ready:idle": ["<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-acc\">  THE QUEUE</span>", "<span class=\"c-dim\">  BL05  </span><span class=\"c-ink\">Wire the review queue                     </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL06  </span><span class=\"c-dim\">Sharpen the evidence contract             </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL11  </span><span class=\"c-dim\">Wire the review queue                     </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL12  </span><span class=\"c-dim\">Sharpen the evidence contract             </span><span class=\"c-acc\"></span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"], "sources:recipes": ["<span class=\"c-dim\">  sources  </span><span class=\"c-faint\">  ready (4)  </span><span class=\"c-sel\">▸ recipes (6)  </span><span class=\"c-faint\">  backlog (4)  </span>"], "queue:recipes:run": ["<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-acc\">  THE QUEUE</span>", "<span class=\"c-dim\">  RCP02 </span><span class=\"c-ink\">Sign off the menu                         </span><span class=\"c-acc\">next</span>", "<span class=\"c-dim\">  RCP03 </span><span class=\"c-dim\">Wire the review queue                     </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  RCP04 </span><span class=\"c-dim\">Add the backlog view                      </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  RCP05 </span><span class=\"c-dim\">Sharpen the evidence contract             </span><span class=\"c-acc\"></span>", "<span class=\"c-faint\">  and 2 more</span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"], "queue:recipes:idle": ["<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-acc\">  THE QUEUE</span>", "<span class=\"c-dim\">  RCP02 </span><span class=\"c-ink\">Sign off the menu                         </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  RCP03 </span><span class=\"c-dim\">Wire the review queue                     </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  RCP04 </span><span class=\"c-dim\">Add the backlog view                      </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  RCP05 </span><span class=\"c-dim\">Sharpen the evidence contract             </span><span class=\"c-acc\"></span>", "<span class=\"c-faint\">  and 2 more</span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"], "sources:backlog": ["<span class=\"c-dim\">  sources  </span><span class=\"c-faint\">  ready (4)  </span><span class=\"c-faint\">  recipes (6)  </span><span class=\"c-sel\">▸ backlog (4)  </span>"], "queue:backlog:run": ["<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-acc\">  THE QUEUE</span>", "<span class=\"c-dim\">  BL01  </span><span class=\"c-ink\">The board needs a way to show evidence    </span><span class=\"c-acc\">next</span>", "<span class=\"c-dim\">  BL02  </span><span class=\"c-dim\">A recipe with no ACs is probably an idea  </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL03  </span><span class=\"c-dim\">The chef wants a weekly digest            </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL04  </span><span class=\"c-dim\">Trying the board on a real project        </span><span class=\"c-acc\"></span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"], "queue:backlog:idle": ["<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-acc\">  THE QUEUE</span>", "<span class=\"c-dim\">  BL01  </span><span class=\"c-ink\">The board needs a way to show evidence    </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL02  </span><span class=\"c-dim\">A recipe with no ACs is probably an idea  </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL03  </span><span class=\"c-dim\">The chef wants a weekly digest            </span><span class=\"c-acc\"></span>", "<span class=\"c-dim\">  BL04  </span><span class=\"c-dim\">Trying the board on a real project        </span><span class=\"c-acc\"></span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"], "budget:0": ["<span class=\"c-dim\">  budget   </span><span class=\"c-dim\">2 rounds · 8 interactions</span>"], "stamphead:0:yes": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 2 · 4 of 8 interactions · </span><span class=\"c-dim\">plan 7 · build 7 · they agree</span>"], "stamphead-done:0:yes": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 2 · 7 of 8 interactions · </span><span class=\"c-dim\">plan 7 · build 7 · they agree</span>"], "stamphead:0:no": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 2 · 4 of 8 interactions · </span><span class=\"c-bad\">plan 7 · build 8 · they disagree</span>"], "stamphead-done:0:no": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 2 · 7 of 8 interactions · </span><span class=\"c-bad\">plan 7 · build 8 · they disagree</span>"], "budget:1": ["<span class=\"c-dim\">  budget   </span><span class=\"c-dim\">3 rounds · 12 interactions</span>"], "stamphead:1:yes": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 3 · 6 of 12 interactions · </span><span class=\"c-dim\">plan 7 · build 7 · they agree</span>"], "stamphead-done:1:yes": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 3 of 3 · 11 of 12 interactions · </span><span class=\"c-dim\">plan 7 · build 7 · they agree</span>"], "stamphead:1:no": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 3 · 6 of 12 interactions · </span><span class=\"c-bad\">plan 7 · build 8 · they disagree</span>"], "stamphead-done:1:no": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 3 of 3 · 11 of 12 interactions · </span><span class=\"c-bad\">plan 7 · build 8 · they disagree</span>"], "budget:2": ["<span class=\"c-dim\">  budget   </span><span class=\"c-dim\">5 rounds · 24 interactions</span>"], "stamphead:2:yes": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 5 · 12 of 24 interactions · </span><span class=\"c-dim\">plan 7 · build 7 · they agree</span>"], "stamphead-done:2:yes": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 5 of 5 · 23 of 24 interactions · </span><span class=\"c-dim\">plan 7 · build 7 · they agree</span>"], "stamphead:2:no": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 2 of 5 · 12 of 24 interactions · </span><span class=\"c-bad\">plan 7 · build 8 · they disagree</span>"], "stamphead-done:2:no": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-dim\"> · round 5 of 5 · 23 of 24 interactions · </span><span class=\"c-bad\">plan 7 · build 8 · they disagree</span>"], "stamprows:3:idle": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-faint\"> · the crew has not started</span>", "<span class=\"c-faint\">  press space to start it</span>"], "stamprows:3:running": ["<span class=\"c-good\">working</span><span class=\"c-dim\">  orchestrator  </span><span class=\"c-dim\">routing RCP04</span>", "<span class=\"c-good\">working</span><span class=\"c-dim\">  runner        </span><span class=\"c-dim\">BL05 · 2 of 3 criteria proven</span>", "<span class=\"c-dim\">idle   </span><span class=\"c-dim\">  reviewer      </span><span class=\"c-dim\">waiting on the runner</span>"], "stamprows:3:waiting": ["<span class=\"c-good\">working</span><span class=\"c-dim\">  orchestrator  </span><span class=\"c-dim\">routing RCP04</span>", "<span class=\"c-good\">working</span><span class=\"c-dim\">  runner        </span><span class=\"c-dim\">BL05 · 2 of 3 criteria proven</span>", "<span class=\"c-dim\">idle   </span><span class=\"c-dim\">  reviewer      </span><span class=\"c-dim\">waiting on the runner</span>", "<span class=\"c-warn\">asked   </span><span class=\"c-dim\">  reviewer      </span><span class=\"c-warn\">the scope is ambiguous — the orchestrator has it</span>"], "stamprows:3:done": ["<span class=\"c-good\">closed  </span><span class=\"c-dim\">  the round     </span><span class=\"c-dim\">3 of 3 criteria proven · signed off</span>"], "stamprows:2:idle": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-faint\"> · the crew has not started</span>", "<span class=\"c-faint\">  press space to start it</span>"], "stamprows:2:running": ["<span class=\"c-good\">working</span><span class=\"c-dim\">  orchestrator  </span><span class=\"c-dim\">routing RCP04 · reviews the runner</span>", "<span class=\"c-good\">working</span><span class=\"c-dim\">  runner        </span><span class=\"c-dim\">BL05 · 2 of 3 criteria proven</span>"], "stamprows:2:waiting": ["<span class=\"c-good\">working</span><span class=\"c-dim\">  orchestrator  </span><span class=\"c-dim\">routing RCP04 · reviews the runner</span>", "<span class=\"c-good\">working</span><span class=\"c-dim\">  runner        </span><span class=\"c-dim\">BL05 · 2 of 3 criteria proven</span>", "<span class=\"c-warn\">asked   </span><span class=\"c-dim\">  reviewer      </span><span class=\"c-warn\">the scope is ambiguous — the orchestrator has it</span>"], "stamprows:2:done": ["<span class=\"c-good\">closed  </span><span class=\"c-dim\">  the round     </span><span class=\"c-dim\">3 of 3 criteria proven · signed off</span>"], "stamprows:1:idle": ["<span class=\"c-acc\">  THE STAMP</span><span class=\"c-faint\"> · the crew has not started</span>", "<span class=\"c-faint\">  press space to start it</span>"], "stamprows:1:running": ["<span class=\"c-good\">working</span><span class=\"c-dim\">  one agent     </span><span class=\"c-dim\">BL05 · 2 of 3 criteria proven</span>", "<span class=\"c-warn\">reviews </span><span class=\"c-dim\">  the chef      </span><span class=\"c-dim\">the chef holds the review</span>"], "stamprows:1:waiting": ["<span class=\"c-good\">working</span><span class=\"c-dim\">  one agent     </span><span class=\"c-dim\">BL05 · 2 of 3 criteria proven</span>", "<span class=\"c-warn\">reviews </span><span class=\"c-dim\">  the chef      </span><span class=\"c-dim\">the chef holds the review</span>", "<span class=\"c-warn\">asked   </span><span class=\"c-dim\">  reviewer      </span><span class=\"c-warn\">the scope is ambiguous — the orchestrator has it</span>"], "stamprows:1:done": ["<span class=\"c-good\">closed  </span><span class=\"c-dim\">  the round     </span><span class=\"c-dim\">3 of 3 criteria proven · signed off</span>"], "footer:idle": ["<span class=\"c-dim\"> space </span><span class=\"c-acc\">start the crew</span><span class=\"c-dim\"> · ←→ choose · enter apply · q quit</span>"], "footer:running": ["<span class=\"c-dim\"> space </span><span class=\"c-acc\">stop the crew</span><span class=\"c-dim\"> · ←→ choose · enter apply · q quit</span>"], "footer:waiting": ["<span class=\"c-dim\"> space </span><span class=\"c-acc\">stop the crew</span><span class=\"c-dim\"> · ←→ choose · enter apply · q quit</span>"], "footer:done": ["<span class=\"c-dim\"> space </span><span class=\"c-acc\">start the crew</span><span class=\"c-dim\"> · ←→ choose · enter apply · q quit</span>"], "head": ["<span class=\"c-acc\"> ⋈ maitre · kb</span>", "<span class=\"c-rule\">──────────────────────────────────────────────────────────────────────────────</span>", "<span class=\"c-dim\">  Home    Recipes    Backlog    Ready    Board  </span><span class=\"c-acc\">▸ Sous-Chef</span><span class=\"c-dim\">    Log    Settings</span>", "<span class=\"c-acc\">  THE ORDER</span>", "<span class=\"c-rule\"> ─────────────────────────────────────────────────────────────────────────────</span>"]};
+    var S = {harness:'opencode', crew:3, source:'ready', bi:1, phase:'running', agree:true};
+    var HARNESS=[{label:'opencode'},{label:'pi'},{label:'custom'}];
+    var CREW=[{n:3,label:'3',desc:'one per role'},
+              {n:2,label:'2',desc:'the orchestrator reviews'},
+              {n:1,label:'1',desc:'the chef reviews'}];
+    var SOURCES=[{label:'ready (4)'},{label:'recipes (6)'},{label:'backlog (4)'}];
+    var BUDGETS=[{label:'2 rounds'},{label:'3 rounds'},{label:'5 rounds'}];
+    var PHASES=[{id:'idle',label:'not started'},{id:'running',label:'running'},
+                {id:'waiting',label:'waiting'},{id:'done',label:'closed'}];
+    var HIDS=['opencode','pi','custom'], SIDS=['ready','recipes','backlog'];
+
+    function draw(){
+      var parts = G['head'].slice();
+      parts = parts.concat(G['harness:'+S.harness]);
+      parts = parts.concat(G['crew:'+S.crew]);
+      parts = parts.concat(G['sources:'+S.source]);
+      parts = parts.concat(G['budget:'+S.bi]);
+      parts = parts.concat(G['queue:'+S.source+':'+(S.phase==='running'?'run':'idle')]);
+      if(S.phase==='idle'){
+        parts = parts.concat(G['stamprows:'+S.crew+':idle']);
+      } else {
+        var key = (S.phase==='done'?'stamphead-done:':'stamphead:')+S.bi+':'+(S.agree?'yes':'no');
+        parts = parts.concat(G[key]);
+        parts = parts.concat(G['stamprows:'+S.crew+':'+S.phase]);
+      }
+      parts = parts.concat(['']);
+      parts = parts.concat(G['footer:'+S.phase]);
+      document.getElementById('tab').innerHTML = parts.join('\n');
+    }
+
+    function rail(host, items, current, onPick){
+      host.innerHTML = items.map(function(it,i){
+        return '<button class="opt" data-i="'+i+'" aria-pressed="'+(i===current)+'">'+it.label+
+               (it.desc?'<small>'+it.desc+'</small>':'')+'</button>';
+      }).join('');
+      host.querySelectorAll('.opt').forEach(function(b){
+        b.addEventListener('click', function(){ onPick(parseInt(b.dataset.i,10)); });
+      });
+    }
+
+    function build(){
+      rail(document.getElementById('harness'), HARNESS, HIDS.indexOf(S.harness),
+        function(i){ S.harness=HIDS[i]; build(); draw(); });
+      rail(document.getElementById('crew'), CREW, S.crew-1,
+        function(i){ S.crew=CREW[i].n; build(); draw(); });
+      rail(document.getElementById('sources'), SOURCES, SIDS.indexOf(S.source),
+        function(i){ S.source=SIDS[i]; build(); draw(); });
+      rail(document.getElementById('budget'), BUDGETS, S.bi,
+        function(i){ S.bi=i; build(); draw(); });
+      rail(document.getElementById('phase'), PHASES, PHASES.map(function(p){return p.id;}).indexOf(S.phase),
+        function(i){ S.phase=PHASES[i].id; build(); draw(); });
+      rail(document.getElementById('plan'), [{label:'versions agree'},{label:'versions disagree'}], S.agree?0:1,
+        function(i){ S.agree=(i===0); build(); draw(); });
+      document.getElementById('crewhint').textContent =
+        {3:'Three agents, one per role. The crew reviews.',
+         2:'Two agents. The orchestrator reviews the runner.',
+         1:'One agent. The chef reviews — a lone agent cannot review itself.'}[S.crew];
+    }
+
+    build();
+    draw();
+  }catch(e){
+    document.documentElement.className = document.documentElement.className.replace(/ js/g,'');
+    var n = document.getElementById('simnote');
+    if(n){ n.textContent = 'The simulator could not start ('+e.message+'). The tab below is the same ticket, drawn by hand — and every variation is in the gallery further down.'; }
+  }
+})();
+</script>
+</body>
+</html>
