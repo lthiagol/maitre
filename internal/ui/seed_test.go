@@ -585,32 +585,57 @@ func TestTheStressPlanIsItsOwnTemplate(t *testing.T) {
 // The template file is the only place in the package a plan is seeded.
 const templateFile = "seed_test.go"
 
+// A call to the seeder.
+//
+// The wire is about the **call**, not about one spelling of it: a qualifier, an
+// alias, a space before the parenthesis, a newline before it — none of them may
+// slip past. What the wire forbids is a test file *calling* a seeder, and it says
+// so by the name it calls it by.
+//
+// The pattern does not match its own source: the `\b` before `Seed` is preceded by
+// a word character there, so a wire that counted itself would count a call that is
+// not there.
+var seedCall = regexp.MustCompile(`\bSeed(Stress)?\s*\(`)
+
 // TestNoTestSeedsItsOwnPlan proves the package does not seed its own plans.
 //
 // The seeder costs 0.608s and writes fifteen files, and a suite that seeds per test
 // pays it per test — that was two minutes of the run. The template is seeded once,
 // in `TestMain`, and every test takes a copy.
 //
-// The wire is the package's own sources: a test file that calls the seeder is a file
-// that pays for a plan again, and the cost comes back without anything going red.
+// The wire is the package's own sources, and it asks two questions: **which** files
+// call the seeder — only the template's file may — and **how many** times. The count
+// must agree with the **counter**, which is what the suite actually did.
+//
+// So the two are one fact: a seeder call smuggled into the template's file is caught
+// as well, because the sources would call the seeder three times while the suite
+// seeded twice. The counter covers the cost; the wire says where.
 func TestNoTestSeedsItsOwnPlan(t *testing.T) {
 	entries, err := os.ReadDir(".")
 	if err != nil {
 		t.Fatalf("read the package: %v", err)
 	}
+	calls := 0
 	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), "_test.go") || e.Name() == templateFile {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), "_test.go") {
 			continue
 		}
 		raw, err := os.ReadFile(e.Name())
 		if err != nil {
 			t.Fatalf("read %s: %v", e.Name(), err)
 		}
-		for _, call := range []string{"core.Seed(", "core.SeedStress("} {
-			if strings.Contains(string(raw), call) {
-				t.Errorf("%s seeds its own plan: %s — a test takes a copy, not a seed", e.Name(), call)
-			}
+		found := seedCall.FindAllString(string(raw), -1)
+		if len(found) == 0 {
+			continue
 		}
+		if e.Name() != templateFile {
+			t.Errorf("%s calls the seeder: %q — a test takes a copy, not a seed", e.Name(), found[0])
+			continue
+		}
+		calls += len(found)
+	}
+	if calls != int(seeds.Load()) {
+		t.Errorf("the sources call the seeder %d times, but the suite seeded %d — every call is a plan the suite pays for", calls, seeds.Load())
 	}
 }
 
