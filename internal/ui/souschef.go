@@ -278,15 +278,29 @@ func (m *Model) stopCrew() tea.Cmd {
 	return m.refreshCrew()
 }
 
+// rosterExample is the console's copy of the format the roster's lines carry.
+//
+// **The skill's table is the specification** — the roster's table in
+// `internal/cli/skills/orchestrator-role/SKILL.md` — and this constant is the
+// console's copy of it. The startup task hands it to the orchestrator at spawn,
+// and the wire test holds the two together: a drift in either one turns a test
+// red.
+//
+// The parser is the third copy of the format, and it is the one that reads them.
+const rosterExample = "maitre: orchestrator · round <N> · <M> interactions"
+
 // startupTask is what the orchestrator is given when the crew starts.
 //
 // **The skill carries the role; the startup task carries the work.** The task is
 // short because the role is not in it: the orchestrator runs
 // `maitre-cli skill load orchestrator-role` and follows it.
+//
+// The task's copy of the format is **an example**, not the specification: it
+// follows the skill's table, and the wire test holds it to it.
 func (m *Model) startupTask() string {
 	return fmt.Sprintf(
-		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s. Keep your tab's label current — the console reads the crew's progress from it: `herdr tab rename <TAB_ID> \"maitre: orchestrator · round <N> · <M> interactions\"` (your own tab's id is in `herdr pane current`).",
-		m.store.ProjectRoot(), m.sousWork())
+		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s. Keep your tab's label current — the console reads the crew's progress from it: `herdr tab rename <TAB_ID> %q` (your own tab's id is in `herdr pane current`).",
+		m.store.ProjectRoot(), m.sousWork(), rosterExample)
 }
 
 // sousWork is the work the crew is given: the queue's items, up to the budget's
