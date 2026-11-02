@@ -679,8 +679,9 @@ different TUI framework, a local web shell, a native app — without touching th
    recipe's state, so it is another derived view. The set of actions per state is not
    written down yet.
 4. **Where do the console's settings live?** **Ruled: in the plan's folder, in a
-   new file** — `kitchen/settings.json`, owned by the domain, so the plan's format
-   moves and `DomainVersion` goes 7 → 8. See
+   new file** — `kitchen/settings.json`, owned by the **tool**. The settings are not
+   a plan *record* and carry no rules, so the plan's format does not move and
+   `DomainVersion` stays 7. The file carries its own `version`. See
    [work/tui/plan-automation.md § 15](../work/tui/plan-automation.md).
 
 ### Decided
@@ -691,7 +692,7 @@ different TUI framework, a local web shell, a native app — without touching th
 | Ordering | triage first; `1` `2` `3` switch to lane and plain |
 | Served recipes | shown by default, `c` toggles, shown as a checkbox in the header |
 | Theme | the chef picks it in Settings; Kitchen is the default. The choice was *for the session*; it is now persisted in the plan's `settings.json` |
-| Settings | the view's preferences and the crew's configuration live in `kitchen/settings.json` — a plan record, so the format moves and `DomainVersion` goes 7 → 8 |
+| Settings | the view's preferences live in `kitchen/settings.json` — the tool's own file, in the plan's folder. It carries its own `version`; the plan's format does not move |
 | Live updates | built: a cheap mtime scan, ~1 s, no new dependency — the console reloads the plan when a file on disk changes |
 | Prose | `glamour`, themed to our palette |
 | Running work | observe and steer; no agent spawning in v2 |

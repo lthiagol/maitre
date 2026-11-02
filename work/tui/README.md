@@ -23,7 +23,8 @@
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ✅ closed · cycle 2 ok, 0 blockers · 13 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba, 675b4cc, def86f3, 00c234e, 8c505d7, ad453df | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) · [cycle 2](../briefs/review-tui-t7-cycle2.md) |
 | **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | ✅ closed · cycle 2 ok · 11 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86, 706560c, dc4f4e4, 6d48c1f, 1801999, 27483df | [tui-t8.md](../briefs/tui-t8.md) |
-| **T9** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | 📌 designed · [plan-automation.md § 14](plan-automation.md) | — |
+| **T9** | the settings record | `kitchen/settings.json` — the tool's file, the console's VIEW preferences; `maitre-cli settings show` | 📌 briefed · [plan-automation.md § 15](plan-automation.md) | [tui-t9.md](../briefs/tui-t9.md) |
+| **T10** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | 📌 designed · [plan-automation.md § 14](plan-automation.md) | — |
 | **T9** | the Sous-Chef tab | the tab comes back: it starts the automation, and shows the crew | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
@@ -44,7 +45,7 @@ is over: T1 through T7 are all closed.
 | **The fix** | 5 commits (`ad7be4d`). **F-128** the filter drops the *rows*, not the plan they are read from — the `●` survives. **F-129** a message that does not fit takes a row of its own, the way a refusal does. **F-130** `N` is the rows the list draws. The blind *stay-on-the-item* test filters a strict subset now |
 | **The round** | T1–T7 are closed. `plan.md` is the design this round followed; the state is this table |
 | **T8** | closed. Cycle 2 ok, 0 blockers. The menu, the embedded skill, the refusal — and the six findings of cycle 1 closed, each with a witness of its own. Receipt: `work/inbox/reviewer-tui-t8-cycle2.md` (`048c710`) |
-| **The next work** | out of the round. **T9** the Sous-Chef tab and the settings that hold its configuration. Designed in [plan-automation.md](plan-automation.md) § 14–§ 15 |
+| **The next work** | out of the round, in **two slices**: **T9** the settings record, then **T10** the Sous-Chef tab that writes through it. Designed in [plan-automation.md](plan-automation.md) § 14–§ 15 |
 | **The rulings** | the filter covers **Recipes, Backlog and Ready** (Q14); the filter key lives in **Settings' key list**, not the footer (Q15). Both ruled 2026-10-31 |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
@@ -186,7 +187,8 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q13 | the kinds list is built on every call | **later** — a per-frame allocation on a path that redraws the whole screen. Closed 2026-11-01; T7's count has the same shape |
 | Q26 | the Sous-Chef tab's design | **the ticket** — an order (harness · crew · sources · budget), the queue under it, and a stamp at the foot | 2026-11-01 |
 | Q27 | can the chef stop the automation from the tab? | **yes** — `space` stops the crew, and the footer names which key does what. It revises Q22 | 2026-11-01 |
-| Q28 | where do the console's settings live? | **in the plan's folder, in a new file** — `kitchen/settings.json`, owned by the domain. The format moves: `DomainVersion` **7 → 8**, and the repo's own plan is stamped forward | 2026-11-01 |
+| Q28 | where do the console's settings live? | **in the plan's folder, in a new file** — `kitchen/settings.json` | 2026-11-01 |
+| Q29 | who owns that file — the domain, or the tool? | **the tool.** The settings are not a plan *record* and carry no rules, so the plan's format does not move: `DomainVersion` stays **7**, no stamp | 2026-11-01 |
 | Q15 | where the console says the filter exists | **the Settings tab's key list** — the footer names the move the *current selection* has, and `/` opens a mode, not a move. The footer's goldens do not move | 2026-10-31 |
 | Q16 | the orchestrator's tab's name | **Sous-Chef** — the tab's old name. The rows carry the glossary's job names (`orchestrator`, `runner`, `reviewer`), so the tab's name and the glossary's sous-chef stay two different things | 2026-10-31 |
 | Q17 | the orchestrator's tab: the count and the place | **8 tabs — Sous-Chef between Board and Log**. Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings | 2026-10-31 |
@@ -214,7 +216,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q11, Q12, Q13 | **closed** — answered by what the console now does |
 | Q26 | **T9** — the tab is the ticket |
 | Q27 | **T9** — the tab offers a stop, and says which key does what |
-| Q28 | **T9** — the settings are a plan record, `kitchen/settings.json`; the format moves, `DomainVersion` 7 → 8 |
+| Q28, Q29 | **T9** — the settings are the tool's file, `kitchen/settings.json`; the plan's format does not move |
 | Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
 | Q16 | **T8** — the tab's name |
 | Q17 | **T8** — 8 tabs, Sous-Chef between Board and Log |
