@@ -27,14 +27,26 @@ import (
 type crewRuntime interface {
 	// available reports whether the runtime is here.
 	available() bool
-	// agents lists the runtime's agents.
-	agents() ([]herdrAgent, error)
-	// tabs lists the runtime's tabs.
-	tabs() ([]herdrTab, error)
+	// crew asks the runtime for the crew: the agents, and the tabs they are on.
+	//
+	// **One call answers both.** The crew's state and the crew's jobs come from
+	// the runtime, and a read that forked twice was a read that waited twice.
+	crew() (herdrCrew, error)
 	// start opens the crew's tab and runs the orchestrator in it.
 	start(planRoot, project, harness, task string) error
 	// stop closes the given tabs.
 	stop(tabIDs []string) error
+}
+
+// herdrCrew is what the runtime knows, in one answer.
+//
+// The **agents** are the crew's states; the **tabs** are the crew's jobs —
+// the roster's line is a tab's label.
+type herdrCrew struct {
+	// Agents are the runtime's agents.
+	Agents []herdrAgent
+	// Tabs are the runtime's tabs.
+	Tabs []herdrTab
 }
 
 // herdrAgent is one agent herdr knows.
@@ -93,38 +105,36 @@ func (h *herdrRuntime) available() bool {
 	return err == nil
 }
 
-// herdrList is the shape every herdr listing answers with.
-type herdrList struct {
+// herdrSnapshot is what `herdr api snapshot` answers with.
+//
+// The snapshot carries the **agents** and the **tabs** in one document, so one
+// process answers both questions the crew read asks.
+type herdrSnapshot struct {
 	Result struct {
-		Agents []herdrAgent `json:"agents"`
-		Tabs   []herdrTab   `json:"tabs"`
+		Snapshot struct {
+			Agents []herdrAgent `json:"agents"`
+			Tabs   []herdrTab   `json:"tabs"`
+		} `json:"snapshot"`
 	} `json:"result"`
 }
 
-// agents lists the runtime's agents.
-func (h *herdrRuntime) agents() ([]herdrAgent, error) {
-	raw, err := h.run("agent", "list")
+// crew asks the runtime for the crew.
+//
+// **One process.** The agents and the tabs come from the same answer, so the
+// read forks once and not twice.
+func (h *herdrRuntime) crew() (herdrCrew, error) {
+	raw, err := h.run("api", "snapshot")
 	if err != nil {
-		return nil, err
+		return herdrCrew{}, err
 	}
-	var doc herdrList
+	var doc herdrSnapshot
 	if err := json.Unmarshal(raw, &doc); err != nil {
-		return nil, fmt.Errorf("read the agents: %w", err)
+		return herdrCrew{}, fmt.Errorf("read the crew: %w", err)
 	}
-	return doc.Result.Agents, nil
-}
-
-// tabs lists the runtime's tabs.
-func (h *herdrRuntime) tabs() ([]herdrTab, error) {
-	raw, err := h.run("tab", "list")
-	if err != nil {
-		return nil, err
-	}
-	var doc herdrList
-	if err := json.Unmarshal(raw, &doc); err != nil {
-		return nil, fmt.Errorf("read the tabs: %w", err)
-	}
-	return doc.Result.Tabs, nil
+	return herdrCrew{
+		Agents: doc.Result.Snapshot.Agents,
+		Tabs:   doc.Result.Snapshot.Tabs,
+	}, nil
 }
 
 // herdrTabCreated is what `herdr tab create` answers with.

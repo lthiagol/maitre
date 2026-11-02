@@ -55,14 +55,13 @@ func (m *Model) readCrew() ([]crewRow, error) {
 	if !m.runtime.available() {
 		return nil, errNoRuntime
 	}
-	agents, err := m.runtime.agents()
+	// **One call.** The agents and the tabs come from the same answer, so the
+	// read costs one process and not two.
+	found, err := m.runtime.crew()
 	if err != nil {
 		return nil, err
 	}
-	tabs, err := m.runtime.tabs()
-	if err != nil {
-		return nil, err
-	}
+	agents, tabs := found.Agents, found.Tabs
 
 	labels := make(map[string]string, len(tabs))
 	for _, t := range tabs {

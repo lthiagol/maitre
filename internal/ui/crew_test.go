@@ -29,11 +29,13 @@ type fakeRuntime struct {
 // available reports whether the runtime is here.
 func (f *fakeRuntime) available() bool { return f.here }
 
-// agents lists the runtime's agents.
-func (f *fakeRuntime) agents() ([]herdrAgent, error) { return f.knownAgents, nil }
-
-// tabs lists the runtime's tabs.
-func (f *fakeRuntime) tabs() ([]herdrTab, error) { return f.knownTabs, nil }
+// crew answers with what the runtime knows, in one call.
+//
+// The seam is the console's own: the agents and the tabs come from the same
+// answer, the way the runtime's snapshot carries both.
+func (f *fakeRuntime) crew() (herdrCrew, error) {
+	return herdrCrew{Agents: f.knownAgents, Tabs: f.knownTabs}, nil
+}
 
 // start records the start.
 func (f *fakeRuntime) start(planRoot, project, harness, task string) error {

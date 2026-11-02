@@ -37,7 +37,7 @@ func herdrOnPath(t *testing.T, answer any) *fakeHerdr {
 	log := filepath.Join(dir, "calls.log")
 	script := "#!/bin/sh\n" +
 		"printf '%s\\n' \"$*\" >> '" + log + "'\n" +
-		"cat '" + filepath.Join(dir, "answer.json") + "'\n"
+		"while IFS= read -r line; do printf '%s\\n' \"$line\"; done < '" + filepath.Join(dir, "answer.json") + "'\n"
 	if err := os.WriteFile(filepath.Join(dir, "herdr"), []byte(script), 0o755); err != nil {
 		t.Fatalf("write the fake herdr: %v", err)
 	}
@@ -45,7 +45,7 @@ func herdrOnPath(t *testing.T, answer any) *fakeHerdr {
 	if err != nil {
 		t.Fatalf("write the fake herdr's answer: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "answer.json"), raw, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "answer.json"), append(raw, '\n'), 0o644); err != nil {
 		t.Fatalf("write the fake herdr's answer: %v", err)
 	}
 	return &fakeHerdr{dir: dir, log: log}
@@ -218,6 +218,42 @@ func TestTheGoldensRenderWithHerdrOffThePath(t *testing.T) {
 			t.Errorf("%s does not render with herdr off the PATH.\n--- got ---\n%s\n--- want ---\n%s",
 				golden.path, got, want)
 		}
+	}
+}
+
+// TestTheCrewReadCostsOneSpawn covers the read's cost.
+//
+// The crew read is **one** process: the agents and the tabs come from the same
+// answer, so the read forks once and not twice. The fake herdr on the PATH
+// counts the forks, and the one answer carries both questions — who is the
+// crew, and what is each one's job.
+func TestTheCrewReadCostsOneSpawn(t *testing.T) {
+	store := goldenStore(t)
+	herdr := herdrOnPath(t, herdrAnswer(store.ProjectRoot()))
+	t.Setenv("PATH", herdr.dir)
+
+	m, err := Snapshot(store, 100)
+	if err != nil {
+		t.Fatalf("the snapshot: %v", err)
+	}
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	if len(rows) != 1 {
+		t.Fatalf("the crew has %d members, want 1:\n%+v", len(rows), rows)
+	}
+	// The one answer carries the state and the job.
+	if rows[0].State != "working" || rows[0].Job != "orchestrator" {
+		t.Errorf("the member is %+v, want the working orchestrator", rows[0])
+	}
+
+	calls := herdr.calls(t)
+	if len(calls) != 1 {
+		t.Fatalf("the crew read forked %d times, want 1: %v", len(calls), calls)
+	}
+	if calls[0] != "api snapshot" {
+		t.Errorf("the read asked for %q, want the snapshot that carries both answers", calls[0])
 	}
 }
 
