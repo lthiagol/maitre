@@ -215,6 +215,9 @@ type crewRow struct {
 	State string
 	Job   string
 	On    string
+	// TabID is the tab the member is on. The console keeps it so it can close
+	// the crew's own tabs — and only those — when the chef stops the crew.
+	TabID string
 }
 
 // sousItem is one item of the queue.
@@ -382,7 +385,7 @@ func (m *Model) sousCrewLines() []listLine {
 			note = "asked the orchestrator · the orchestrator has it"
 		}
 		out = append(out, listLine{
-			text: m.sousCrewRow(state, row.Job, note),
+			text:    m.sousCrewRow(state, row.Job, note),
 			itemIdx: -1,
 		})
 	}
@@ -439,16 +442,6 @@ func crewProgress(j core.Journal) (rounds, interactions int) {
 // on the plan was written by an agent — the crew.
 func writtenByChef(e core.JournalEntry) bool {
 	return e.Actor == "chef" || e.Role == "chef"
-}
-
-// planVersion is the version of the rules the plan was last written under.
-func (m *Model) planVersion() int {
-	return core.PlanDomainVersion(m.journal)
-}
-
-// versionsAgree reports whether the plan and this build speak the same rules.
-func (m *Model) versionsAgree() bool {
-	return m.planVersion() == core.DomainVersion
 }
 
 // sousOrderLines renders the order: the four controls.

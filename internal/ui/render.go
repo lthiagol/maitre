@@ -36,6 +36,13 @@ func snapshot(store *core.Store, width int, m *Model) (*Model, error) {
 	m.width = width
 	m.height = 40
 	m.ready = true
+	// The crew is runtime state: the snapshot asks for it, so the tab shows
+	// what is running and not what it would show if nothing were.
+	if rows, err := m.readCrew(); err == nil {
+		m.crew = rows
+	} else {
+		m.crewErr = err
+	}
 	return m, nil
 }
 

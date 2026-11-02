@@ -118,6 +118,19 @@ type Model struct {
 	// has it: the plan carries no crew state.
 	crew []crewRow
 
+	// crewErr is why the crew could not be read.
+	//
+	// It is the tab's own error: the runtime is not here, or it did not answer.
+	// The tab says which, and a tab that cannot start the automation must not
+	// look like one that can.
+	crewErr error
+
+	// runtime is where the crew lives.
+	//
+	// **herdr is a runtime dependency, not a module**: the binary is on the
+	// PATH, and the console asks it. The dependency budget does not move.
+	runtime crewRuntime
+
 	// selSous is the cursor over the order's four controls.
 	//
 	// It is the tab's own cursor: the Sous-Chef tab holds no selectable item, so
@@ -261,6 +274,9 @@ func newConsole(store *core.Store, session string, opts ...Option) *Model {
 		// The order a console nobody told otherwise has. The record may say
 		// otherwise — the read below replaces it.
 		picks: defaultSousPicks(),
+		// The runtime that holds the crew. A test replaces it: the console's own
+		// tests must not depend on a binary being on the PATH.
+		runtime: newHerdrRuntime(),
 	}
 	for _, opt := range opts {
 		opt(m)
@@ -347,10 +363,20 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.applyReload(msg)
 		m.err = nil
 		m.disk = msg.disk
+		// The crew is runtime state, and the tab shows it: the plan's reload
+		// is also the moment the crew is asked for again.
+		if m.tab == TabSousChef {
+			return m, tea.Batch(m.poll(), m.refreshCrew())
+		}
 		return m, m.poll()
 
 	case pollMsg:
 		return m.checkDisk()
+
+	case crewMsg:
+		m.crew = msg.rows
+		m.crewErr = msg.err
+		return m, nil
 
 	case tea.KeyPressMsg:
 		return m.handleKey(msg)
@@ -838,12 +864,10 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "tab":
-		m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
-		return m, nil
+		return m, m.switchTabCmd(Tab((int(m.tab) + 1) % len(TabNames)))
 
 	case "shift+tab":
-		m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
-		return m, nil
+		return m, m.switchTabCmd(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 
 	case "right", "l":
 		// On the Sous-Chef tab the horizontal keys choose a pick. Everywhere
@@ -852,16 +876,14 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.choosePick(1)
 			return m, nil
 		}
-		m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
-		return m, nil
+		return m, m.switchTabCmd(Tab((int(m.tab) + 1) % len(TabNames)))
 
 	case "left", "h":
 		if m.tab == TabSousChef {
 			m.choosePick(-1)
 			return m, nil
 		}
-		m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
-		return m, nil
+		return m, m.switchTabCmd(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 
 	case "up", "k":
 		if m.mode == ModeDetail {
@@ -967,6 +989,19 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m.primaryAction()
 	}
 	return m, nil
+}
+
+// switchTabCmd goes to another tab, and asks for the crew when the tab is the
+// Sous-Chef one.
+//
+// The crew is runtime state, and the runtime is the only one that has it: the
+// tab shows the crew, so the tab asks for it when it comes on screen.
+func (m *Model) switchTabCmd(t Tab) tea.Cmd {
+	m.switchTab(t)
+	if t == TabSousChef {
+		return m.refreshCrew()
+	}
+	return nil
 }
 
 // switchTab goes to another tab.

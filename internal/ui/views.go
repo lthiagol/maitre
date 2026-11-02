@@ -484,7 +484,13 @@ func (m *Model) tabSummary() string {
 	case TabLog:
 		return fmt.Sprintf("recent activity · %d events", len(m.journal.Events))
 	case TabSousChef:
-		return "the automation · the order, the queue and the crew's stamp"
+		queue := len(m.sousQueue(m.picks.Sources))
+		state := "not running"
+		if m.crewRunning() {
+			state = "running"
+		}
+		return fmt.Sprintf("the automation · %s · %d %s queued",
+			state, queue, plural(queue, "item", "items"))
 	default:
 		return "the plan"
 	}
