@@ -609,6 +609,7 @@ func TestTheSkillSaysTheOrchestratorKeepsTheLabelsCurrent(t *testing.T) {
 		"round <N>",
 		"<M> interactions",
 		"maitre: runner",
+		"This table is the specification",
 		"herdr tab rename",
 		"herdr pane current",
 		"You write the progress",

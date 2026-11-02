@@ -50,6 +50,10 @@ is not on the roster, and the console shows no such agent.
 | **the runner** | `maitre: runner · <the work>` |
 | **the reviewer** | `maitre: reviewer · <the work>` |
 
+**This table is the specification.** The console's parser and the startup task's
+example follow it — when the format changes, this table changes first, and the
+wire test holds the other two to it.
+
 **You write the progress.** You are the one dispatching the crew, so you are the
 one that knows the round and the interaction count. Keep your own label current:
 
