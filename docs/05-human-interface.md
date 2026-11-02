@@ -658,14 +658,22 @@ The crew is **runtime state**, and the runtime is the only one that has it.
 
 | fact | owner | where it comes from |
 |---|---|---|
-| **the crew exists** | herdr | `herdr agent list` — the agents whose `cwd` is **the plan's root** |
+| **the crew exists** | herdr | `herdr api snapshot` — the agents whose `cwd` is **the plan's root** |
 | **each one's state** | herdr | the agent's `agent_status`: `working` · `idle` · `blocked` · `done` |
-| **each one's job** | the tab's **label** | `herdr tab list`, matched by `tab_id` — `maitre: runner · RCP03` |
+| **each one's job** | the tab's **label** | the same snapshot's tabs, matched by `tab_id` — `maitre: runner · RCP03` |
 
 The label is the roster's line, and the **orchestrator keeps it current** — it
 renames the runner's tab when the runner picks up a recipe. The console writes the
 first one, when it spawns the orchestrator. A tab that is not on the roster is not
 a member of the crew, so the chef's own pane is not the crew's to manage.
+
+**One read, one process.** The snapshot carries the agents and the tabs in one
+document, so the read forks once and not twice.
+
+**A frame never waits on a process.** The console asks the runtime in a
+**command** — the poll, and the switch that brings the tab on screen — and the
+answer arrives as a message. The render path forks nothing: a frame draws what it
+already knows, and the tab shows what it last heard.
 
 **herdr is a runtime dependency, not a module**: the binary is on the PATH, and the
 UI's dependency budget does not move.
@@ -691,6 +699,7 @@ closed and reopened still finds the running crew.
 
 | | the tab |
 |---|---|
+| **the console has not asked yet** | *"the crew has not been asked"*, and it offers **nothing** — a guess is a move that can start a second crew |
 | **`herdr` is not on the PATH** | *"herdr is not here"* and offers **nothing** |
 | **the spawn fails** | says so, and the **move stays** |
 | **the crew is gone** | the automation is not running, and the move comes back |
