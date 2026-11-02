@@ -156,49 +156,69 @@ func TestUnknownKeysAreIgnored(t *testing.T) {
 	}
 }
 
-// TestTheWriteIsAtomic covers the write.
+// TestAWriteLeavesNothingBehind covers the tidiness of a write.
 //
-// The bytes go to a temporary file and are renamed over the old one, so a
-// half-written file cannot lose the chef's choices. The write leaves nothing
-// behind, and a write that cannot happen leaves the old file alone.
-func TestTheWriteIsAtomic(t *testing.T) {
+// A write leaves the plan's folder holding **the record and nothing else** —
+// the successful one and the failed one alike. It is not only tidiness: the
+// plan's fingerprint hashes every file in that folder, so a leftover is the
+// plan's own scan to answer.
+//
+// **The witness bites.** A write that does not remove its temporary file leaves
+// one behind, and this test says so.
+func TestAWriteLeavesNothingBehind(t *testing.T) {
 	dir := planDir(t)
 	path := Path(dir)
 
+	// A successful write.
 	if err := Write(path, Defaults()); err != nil {
 		t.Fatalf("write: %v", err)
 	}
+	assertOnlyTheRecord(t, dir)
+
+	// A failed one: the bytes go half way into the temporary file, and the
+	// write fails. The temporary file goes with it.
+	restore := writeTemp
+	writeTemp = func(f *os.File, data []byte) error {
+		if len(data) > 1 {
+			if _, err := f.Write(data[:len(data)/2]); err != nil {
+				return err
+			}
+		}
+		return errors.New("the disk is full")
+	}
+	defer func() { writeTemp = restore }()
+
 	rec := Defaults()
 	rec.View.Theme = "Dracula"
-	if err := Write(path, rec); err != nil {
-		t.Fatalf("write: %v", err)
+	if err := Write(path, rec); err == nil {
+		t.Fatal("the write should have failed — the fault was injected into it")
 	}
+	assertOnlyTheRecord(t, dir)
+}
 
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(entries) != 1 || entries[0].Name() != FileName {
-		names := make([]string, 0, len(entries))
-		for _, e := range entries {
-			names = append(names, e.Name())
-		}
-		t.Fatalf("the directory holds %v, want only %s — a write leaves nothing behind", names, FileName)
-	}
+// TestAWriteIntoAFolderThatIsNotThereIsRefused covers the refusal.
+//
+// The record lives in the plan's folder, and the write does not make a folder
+// that is not there: a write that cannot happen is refused, and the file that
+// was there before is left alone.
+//
+// **The witness bites.** A write that creates the folder it was asked for
+// succeeds, and this test says so.
+func TestAWriteIntoAFolderThatIsNotThereIsRefused(t *testing.T) {
+	dir := planDir(t)
+	path := Path(dir)
+	whole := writeRecord(t, path, Defaults())
 
-	// A write that cannot happen leaves the file as it was: the old bytes are
-	// still the whole file, not half of it.
+	rec := Defaults()
+	rec.View.Theme = "Dracula"
 	missing := Path(filepath.Join(dir, "nowhere", FileName))
 	if err := Write(missing, rec); err == nil {
 		t.Fatal("a write into a directory that is not there should fail")
 	}
-	got, err := Read(path)
-	if err != nil {
-		t.Fatalf("read: %v", err)
-	}
-	if got.View.Theme != "Dracula" {
-		t.Fatalf("the file is %+v, want the theme Dracula", got.View)
-	}
+
+	// And the file that was there before is as it was: the old bytes are still
+	// the whole file, not half of it.
+	assertWhole(t, path, whole)
 }
 
 // TestAHalfWrittenFileCannotLoseTheChefsChoices is the witness for the atomic write.
@@ -236,8 +256,6 @@ func TestAHalfWrittenFileCannotLoseTheChefsChoices(t *testing.T) {
 
 	// The chef's file is whole.
 	assertWhole(t, path, whole)
-	// And the half-written temporary file went with it.
-	assertOnlyTheRecord(t, dir)
 }
 
 // TestARenameThatFailsCannotLoseTheChefsChoices is the second half of the witness.
@@ -268,8 +286,6 @@ func TestARenameThatFailsCannotLoseTheChefsChoices(t *testing.T) {
 
 	// The chef's file is whole.
 	assertWhole(t, path, whole)
-	// And the staged bytes went with the fault.
-	assertOnlyTheRecord(t, dir)
 }
 
 // writeRecord writes the record and returns the bytes that are on the disk.
