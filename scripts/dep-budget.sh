@@ -25,6 +25,7 @@ go_bin=${GO:-go}
 # package, expected count, ceiling
 BUDGET='internal/core 0 0
 internal/cli 0 0
+internal/settings 0 0
 internal/ui 28 30'
 
 status=0

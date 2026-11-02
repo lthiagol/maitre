@@ -31,6 +31,24 @@ func writeRecord(t *testing.T, store *core.Store, view settings.View) {
 	}
 }
 
+// TestTheRecordsDefaultsAreTheConsolesDefaults holds the tie between the record
+// and the console.
+//
+// The record names the console's default theme and the console's default order: the
+// CLI prints the record, and the CLI does not know the console's vocabulary. So the
+// two names are written twice, and this holds them together — a rename of either
+// must come with the other.
+func TestTheRecordsDefaultsAreTheConsolesDefaults(t *testing.T) {
+	if settings.DefaultTheme != palettes()[0].name {
+		t.Errorf("the record's default theme is %q, want the console's %q",
+			settings.DefaultTheme, palettes()[0].name)
+	}
+	if settings.DefaultOrder != OrderNames[0] {
+		t.Errorf("the record's default order is %q, want the console's %q",
+			settings.DefaultOrder, OrderNames[0])
+	}
+}
+
 // TestTheConsoleReadsTheSettingsRecord covers the read at the start.
 //
 // The chef's choices are in the file, so the console starts with them.

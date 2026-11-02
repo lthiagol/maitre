@@ -251,6 +251,7 @@ cmd/maitre-cli/  the agent CLI
 cmd/maitre/     the human console
 internal/core/  domain model · lifecycle · gates · store · views · verifier   ← stdlib only
 internal/cli/   the maitre-cli command surface                                   ← stdlib only
+internal/settings/  the tool's settings record — the schema, the read, the atomic write   ← stdlib only
 internal/ui/    the maitre console (bubbletea v2)
 skills/         vendored third-party skills, pinned to an upstream commit
 templates/      our own skills (to come)
@@ -311,6 +312,7 @@ go get charm.land/bubbletea/v2 charm.land/lipgloss/v2 charm.land/bubbles/v2 char
 |---|---|---|---|
 | `internal/core` | stdlib only | 0 | 0 |
 | `internal/cli` | stdlib only | 0 | 0 |
+| `internal/settings` | stdlib only | 0 | 0 |
 | `internal/ui` | external modules | 30 | 28 |
 
 A dependency needs a written reason. The core keeps its zero.
