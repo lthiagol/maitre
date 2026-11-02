@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/lthiagol/maitre/internal/core"
@@ -41,12 +42,17 @@ var (
 	// seeds counts the seeding the suite did. It is the witness that the seed
 	// happens once: the tests run twice under `-count=2`, and the count does not
 	// move.
-	seeds int
+	//
+	// The counters are shared state, so they are **atomic**: a test that calls
+	// `t.Parallel()` must not race them. The race would be a flake and not a
+	// failure — the wrong number in a witness, sometimes — and a flake is the
+	// kind of bug nobody looks for twice.
+	seeds atomic.Int64
 
 	// copies counts the copies the suite made. It moves with the runs — a copy per
 	// test, every time the suite runs — and it is the other half of the witness:
 	// the copies grow, the seed does not.
-	copies int
+	copies atomic.Int64
 )
 
 // TestMain seeds the templates once and removes them when the suite ends.
@@ -69,7 +75,7 @@ func TestMain(m *testing.M) {
 		os.RemoveAll(dir)
 		os.Exit(1)
 	}
-	seeds++
+	seeds.Add(1)
 
 	// The pathological plan is a **second** template. `core.SeedStress` is a
 	// different plan — it adds the recipes that break a layout — and it does not
@@ -80,7 +86,7 @@ func TestMain(m *testing.M) {
 		os.RemoveAll(dir)
 		os.Exit(1)
 	}
-	seeds++
+	seeds.Add(1)
 
 	// The templates name nothing, so every copy takes its name from the directory
 	// it lands in.
@@ -99,7 +105,7 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "maitre: remove the templates: %v\n", err)
 		code = 1
 	} else if _, err := os.Stat(dir); !os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "maitre: the template directory survived: %s\n", dir)
+		fmt.Fprintf(os.Stderr, "maitre: the cleanup did not remove the template directory: %s is still there\n", dir)
 		code = 1
 	}
 	os.Exit(code)
@@ -245,7 +251,7 @@ func copyTemplate(t *testing.T, template, parent, name string) *core.Store {
 	if err := copyTree(template, root); err != nil {
 		t.Fatalf("copy the template: %v", err)
 	}
-	copies++
+	copies.Add(1)
 	return core.Open(root)
 }
 
@@ -409,8 +415,8 @@ func TestTheCopyIsTheTemplate(t *testing.T) {
 // The count is the witness: the tests run twice under `-count=2`, and a suite that
 // seeded per test would count two per run — and four for two templates.
 func TestTheTemplateIsSeededOnce(t *testing.T) {
-	if seeds != 2 {
-		t.Errorf("the suite seeded %d times, want 2 — one per template", seeds)
+	if got := seeds.Load(); got != 2 {
+		t.Errorf("the suite seeded %d times, want 2 — one per template", got)
 	}
 }
 
@@ -425,14 +431,45 @@ func TestTheTemplateIsSeededOnce(t *testing.T) {
 // order: a suite that seeded per test would count four under `-count=2`, and two
 // here.
 func TestTheCopiesGrowAndTheSeedDoesNot(t *testing.T) {
-	before := copies
+	before := copies.Load()
 	_ = seededPlan(t)
 	_ = seededPlan(t)
-	if copies != before+2 {
-		t.Errorf("two draws made %d copies, want 2 — a copy per draw", copies-before)
+	if got := copies.Load(); got != before+2 {
+		t.Errorf("two draws made %d copies, want 2 — a copy per draw", got-before)
 	}
-	if seeds != 2 {
-		t.Errorf("the suite seeded %d times, want 2 — one per template, whatever the run count", seeds)
+	if got := seeds.Load(); got != 2 {
+		t.Errorf("the suite seeded %d times, want 2 — one per template, whatever the run count", got)
+	}
+}
+
+// TestTheCountersAreSafeUnderAParallelTest proves the counters are shared state that
+// a parallel test cannot race.
+//
+// The counters are shared numbers, and no test in this package called `t.Parallel()`
+// — so the race gate had nothing to catch. A test that does call it would race them,
+// and the race would be a **flake**, not a failure: the wrong number in a witness,
+// sometimes, and a flake is the kind of bug nobody looks for twice.
+//
+// So the counters are atomic, and this is the witness: two subtests run in parallel
+// and draw plans at the same time. Under `-race` a plain counter would be caught
+// here.
+func TestTheCountersAreSafeUnderAParallelTest(t *testing.T) {
+	before := copies.Load()
+
+	// The cleanup runs after the parallel subtests are done — a parallel subtest
+	// resumes when its parent returns, so the parent cannot wait for it inside.
+	t.Cleanup(func() {
+		if got := copies.Load(); got < before+4 {
+			t.Errorf("the parallel tests made %d copies, want at least 4", got-before)
+		}
+	})
+
+	for i := 0; i < 2; i++ {
+		t.Run("parallel", func(t *testing.T) {
+			t.Parallel()
+			_ = seededPlan(t)
+			_ = seededPlan(t)
+		})
 	}
 }
 
@@ -493,7 +530,7 @@ func TestTheTemplatesAreRemoved(t *testing.T) {
 		t.Fatalf("remove the templates: %v", err)
 	}
 	if _, err := os.Stat(scratch); !os.IsNotExist(err) {
-		t.Errorf("the template directory survived the cleanup: %v", err)
+		t.Errorf("the cleanup did not remove the template directory: %s is still there", scratch)
 	}
 }
 
