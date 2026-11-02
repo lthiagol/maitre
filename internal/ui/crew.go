@@ -61,10 +61,9 @@ func (m *Model) readCrew() ([]crewRow, error) {
 	if err != nil {
 		return nil, err
 	}
-	agents, tabs := found.Agents, found.Tabs
 
-	labels := make(map[string]string, len(tabs))
-	for _, t := range tabs {
+	labels := make(map[string]string, len(found.Tabs))
+	for _, t := range found.Tabs {
 		// The label is **agent-written text**: the console writes the first one,
 		// and the orchestrator writes it from then on. It is sanitised **where it
 		// enters** — a newline in it would put a line of the agent's text where
@@ -75,7 +74,7 @@ func (m *Model) readCrew() ([]crewRow, error) {
 
 	root := filepath.Clean(m.store.ProjectRoot())
 	var rows []crewRow
-	for _, a := range agents {
+	for _, a := range found.Agents {
 		cwd := a.Cwd
 		if cwd == "" {
 			cwd = a.ForegroundCwd
