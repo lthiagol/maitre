@@ -29,7 +29,7 @@ through `maitre-cli`.
 | **Backlog** | backlog items — *Ideas* and *Small tasks*, derived from the kind | manage the backlog |
 | **Ready** | what an agent could claim now, and the open small tasks | see · promote |
 | **Board** | the same plan as a dependency tree — what waits on what | run |
-| **Sous-Chef** | the automation — its order, its queue, and the crew's stamp *(T9 — planned)* | start · stop |
+| **Sous-Chef** | the automation — its order, its queue, and the crew's stamp *(T10 — planned)* | start · stop |
 | **Log** | the activity journal | see the audit trail |
 | **Settings** | theme, keybinds, preferences | — |
 
@@ -696,7 +696,7 @@ different TUI framework, a local web shell, a native app — without touching th
 | Frame | list + detail, split, with a full-screen toggle |
 | Ordering | triage first; `1` `2` `3` switch to lane and plain |
 | Served recipes | shown by default, `c` toggles, shown as a checkbox in the header |
-| Theme | the chef picks it in Settings; Kitchen is the default. The choice was *for the session*; it is now persisted in the plan's `settings.json` |
+| Theme | the chef picks it in Settings; Kitchen is the default. The choice was *for the session*; it is now persisted in `kitchen/settings.json` — the **tool's** file, in the plan's folder |
 | Settings | the view's preferences live in `kitchen/settings.json` — the tool's own file, in the plan's folder. It carries its own `version`; the plan's format does not move |
 | Live updates | built: a cheap mtime scan, ~1 s, no new dependency — the console reloads the plan when a file on disk changes |
 | Prose | `glamour`, themed to our palette |
