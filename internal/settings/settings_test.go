@@ -1,7 +1,9 @@
 package settings
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -196,6 +198,118 @@ func TestTheWriteIsAtomic(t *testing.T) {
 	}
 	if got.View.Theme != "Dracula" {
 		t.Fatalf("the file is %+v, want the theme Dracula", got.View)
+	}
+}
+
+// TestAHalfWrittenFileCannotLoseTheChefsChoices is the witness for the atomic write.
+//
+// A write that stops halfway — a full disk, a pulled cable — must leave the file
+// that was there before **whole**: not truncated, not empty, not a partial record.
+// The fault is injected into the temporary file's write: the bytes go half way and
+// the write fails.
+//
+// **The witness bites.** A `Write` that overwrites the old file in place has no
+// temporary file, so the fault is never injected, the write succeeds, and this
+// test fails on the line that says the write should have failed.
+func TestAHalfWrittenFileCannotLoseTheChefsChoices(t *testing.T) {
+	dir := planDir(t)
+	path := Path(dir)
+	whole := writeRecord(t, path, Defaults())
+
+	// The fault: half the bytes, and then a failure.
+	restore := writeTemp
+	writeTemp = func(f *os.File, data []byte) error {
+		if len(data) > 1 {
+			if _, err := f.Write(data[:len(data)/2]); err != nil {
+				return err
+			}
+		}
+		return errors.New("the disk is full")
+	}
+	defer func() { writeTemp = restore }()
+
+	rec := Defaults()
+	rec.View.Theme = "Dracula"
+	if err := Write(path, rec); err == nil {
+		t.Fatal("the write should have failed — the fault was injected into it")
+	}
+
+	// The chef's file is whole.
+	assertWhole(t, path, whole)
+	// And the half-written temporary file went with it.
+	assertOnlyTheRecord(t, dir)
+}
+
+// TestARenameThatFailsCannotLoseTheChefsChoices is the second half of the witness.
+//
+// The bytes are staged and the **last** step fails — the rename. The old file must
+// be whole here too: a failure at any point of the write is a failure of the write.
+//
+// **The witness bites.** A `Write` that replaces the old file by writing over it
+// has no rename, so the fault is never injected, the write succeeds, and this test
+// fails on the line that says the write should have failed.
+func TestARenameThatFailsCannotLoseTheChefsChoices(t *testing.T) {
+	dir := planDir(t)
+	path := Path(dir)
+	whole := writeRecord(t, path, Defaults())
+
+	// The fault: the rename says no.
+	restore := renameTemp
+	renameTemp = func(oldpath, newpath string) error {
+		return errors.New("the rename failed")
+	}
+	defer func() { renameTemp = restore }()
+
+	rec := Defaults()
+	rec.View.Theme = "Dracula"
+	if err := Write(path, rec); err == nil {
+		t.Fatal("the write should have failed — the fault was injected into it")
+	}
+
+	// The chef's file is whole.
+	assertWhole(t, path, whole)
+	// And the staged bytes went with the fault.
+	assertOnlyTheRecord(t, dir)
+}
+
+// writeRecord writes the record and returns the bytes that are on the disk.
+func writeRecord(t *testing.T, path string, rec Record) []byte {
+	t.Helper()
+	if err := Write(path, rec); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
+// assertWhole requires the file at path to be byte for byte what it was.
+func assertWhole(t *testing.T, path string, want []byte) {
+	t.Helper()
+	got, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("the file that was there before is gone: %v", err)
+	}
+	if !bytes.Equal(got, want) {
+		t.Fatalf("the file that was there before is not whole:\n%s", got)
+	}
+}
+
+// assertOnlyTheRecord requires the folder to hold the record and nothing else.
+func assertOnlyTheRecord(t *testing.T, dir string) {
+	t.Helper()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != FileName {
+		names := make([]string, 0, len(entries))
+		for _, e := range entries {
+			names = append(names, e.Name())
+		}
+		t.Fatalf("the folder holds %v, want only %s", names, FileName)
 	}
 }
 

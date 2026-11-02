@@ -99,6 +99,31 @@ func Read(path string) (Record, error) {
 	return rec, nil
 }
 
+// The seams of the atomic write.
+//
+// The write is atomic: the bytes go to a temporary file in the record's folder and
+// are renamed over the old one. These two are variables so a test can inject a
+// fault at **either** stage — a write that stops halfway, and a rename that fails —
+// and assert the property the write is for: **the file that was there before is
+// whole**.
+//
+// A write that overwrites the old file in place has neither stage, so the fault
+// cannot be injected at all: the write succeeds and the witness goes red. That is
+// what the witness is for — the rule is not the rename, the rule is that the
+// chef's file survives a write that fails.
+var (
+	// writeTemp writes the record's bytes to the temporary file.
+	writeTemp = func(f *os.File, data []byte) error {
+		_, err := f.Write(data)
+		return err
+	}
+
+	// renameTemp renames the temporary file over the old one.
+	renameTemp = func(oldpath, newpath string) error {
+		return os.Rename(oldpath, newpath)
+	}
+)
+
 // Write writes the record at path, atomically.
 //
 // The bytes go to a temporary file and are renamed over the old one, so a
@@ -122,7 +147,7 @@ func Write(path string, rec Record) error {
 	tmpName := tmp.Name()
 	defer os.Remove(tmpName)
 
-	if _, err := tmp.Write(raw); err != nil {
+	if err := writeTemp(tmp, raw); err != nil {
 		tmp.Close()
 		return fmt.Errorf("write %s: %w", tmpName, err)
 	}
@@ -133,7 +158,7 @@ func Write(path string, rec Record) error {
 	if err := tmp.Close(); err != nil {
 		return fmt.Errorf("close %s: %w", tmpName, err)
 	}
-	if err := os.Rename(tmpName, path); err != nil {
+	if err := renameTemp(tmpName, path); err != nil {
 		return fmt.Errorf("rename %s: %w", tmpName, err)
 	}
 	return nil
