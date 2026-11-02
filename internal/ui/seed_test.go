@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -169,57 +170,65 @@ func blankTheName(raw []byte) ([]byte, bool) {
 	return nameValue.ReplaceAll(raw, []byte(`${1}${2}`)), true
 }
 
-// The domain's project file, field by field.
-//
-// The template is the seeder's output, and the rewrite above changes one value in
-// the bytes the seeder wrote — so the template carries whatever fields the domain
-// writes. This list is the wire that says so **out loud**: a field the domain adds
-// is in the template, and this list is what turns red when it does.
-//
-// It is a list of names and not a copy of the schema: it changes nothing, and it
-// fails loudly the moment the domain moves. A copy of the schema in the *rewrite*
-// was F-145 — a mechanism that reshapes the file in silence.
-var projectFields = []string{"charter", "created", "name", "settings"}
-
-// TestTheTemplateCarriesTheDomainFields proves the fixture cannot drift from the
-// model.
+// TestTheTemplateIsTheDomainOutput proves the fixture is the model's own output.
 //
 // The template is the seeder's output, and the seeder's output is the domain's
-// project file. So the template's project file must carry the fields the domain
-// writes today — and a field the domain adds must turn this red.
+// project file — `core.Seed` calls `store.Init` (`internal/core/seed.go:33`), so the
+// domain writes that file itself. So the witness writes one: `core.Open(dir).Init()`
+// puts the domain's own project file on disk, and it costs no seed.
 //
-// It is the probe that found F-145: the domain's project file gained a field, the
-// fixture dropped it, and the suite said nothing. Now the fixture keeps it, and
-// this test names the field that is not in the list.
-func TestTheTemplateCarriesTheDomainFields(t *testing.T) {
+// Drop `name` and `created` from both and compare: the field set and the values,
+// nested included.
+//
+// **No list of names.** The domain's output is the truth, and a list written by hand
+// goes stale with it and agrees — the two would drift together and the witness would
+// say nothing. A domain that moves is fenced by the domain's own version wire
+// (`internal/core`'s `TestDomainShapeIsVersioned`); this witness holds the *fixture*
+// to the model.
+func TestTheTemplateIsTheDomainOutput(t *testing.T) {
+	dir := t.TempDir()
+	root := filepath.Join(dir, "demo", core.PlanDirName)
+	if err := core.Open(root).Init(); err != nil {
+		t.Fatalf("init the plan: %v", err)
+	}
+	want := projectFacts(t, filepath.Join(root, core.FileProject))
+
 	for _, template := range []string{planTemplate, stressTemplate} {
-		got := projectFieldNames(t, filepath.Join(template, core.FileProject))
-		if strings.Join(got, "\n") != strings.Join(projectFields, "\n") {
-			t.Errorf("the template's project file does not carry the domain's fields.\ngot:  %v\nwant: %v\nthe domain's project file gained or lost a field — the template is the seeder's output, and this list is the wire that says so", got, projectFields)
+		got := projectFacts(t, filepath.Join(template, core.FileProject))
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("the template's project file is not the domain's own.\ngot:  %s\nwant: %s\nthe fixture drifted from the model — the template is the seeder's output, and the seeder's output is the domain's file", jsonFacts(got), jsonFacts(want))
 		}
 	}
 }
 
-// projectFieldNames lists the fields a project file carries, sorted.
+// projectFacts reads a project file and drops what a plan cannot be compared on.
 //
-// The names come from the file's own keys, so a field the domain writes is a field
-// the list holds. Nothing here knows the plan's schema: it reads the file.
-func projectFieldNames(t *testing.T, path string) []string {
+// The `name` is the directory's and the `created` is the moment — neither is a fact
+// about the plan's shape. Everything else is: the fields, their values, and the
+// values nested inside them.
+func projectFacts(t *testing.T, path string) map[string]any {
 	t.Helper()
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read %s: %v", path, err)
 	}
-	var doc map[string]json.RawMessage
+	var doc map[string]any
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		t.Fatalf("parse %s: %v", path, err)
 	}
-	out := make([]string, 0, len(doc))
-	for name := range doc {
-		out = append(out, name)
+	delete(doc, "name")
+	delete(doc, "created")
+	return doc
+}
+
+// jsonFacts prints a project file's facts, so a failure shows the shape and not a
+// digest of it.
+func jsonFacts(doc map[string]any) string {
+	raw, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("%v", doc)
 	}
-	sort.Strings(out)
-	return out
+	return string(raw)
 }
 
 // seededPlan is the plan a test draws: a copy of the ordinary template.
