@@ -26,7 +26,7 @@
 | **T9** | the settings record | `kitchen/settings.json` — the tool's file, the console's VIEW preferences; `maitre-cli settings show` | ✅ closed · cycle 3 ok · 10 commits · 38d1d48, 2aba9f4, 089ef6b, 1ed7f3f, 2d65fa0, 17cdefe, b40eedf, 97f1de9, 2fb29f2, b170d0c | [tui-t9.md](../briefs/tui-t9.md) · [fix 1](../briefs/fix-tui-t9-1.md) · [fix 2](../briefs/fix-tui-t9-2.md) |
 | **T10** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | ✅ closed · cycle 4 ok · 18 commits · f3e85f8, 5fe4d68, 0159fa8, 867b545, 59b0d12, c03282e, ed0a13a, 2684307, 1c76e84, f59f9be, 5b03f48, 7edc649, 9003efb, 7d58dc8, 7597466, 3fb3701, 4bf7d93, a8d2bab | [tui-t10.md](../briefs/tui-t10.md) · [fix 1](../briefs/fix-tui-t10-1.md) · [fix 2](../briefs/fix-tui-t10-2.md) · [fix 3](../briefs/fix-tui-t10-3.md) |
 | **T11** | the shared seeded store | one template seeded once, a copy per test — the gate's headroom | ✅ closed · cycle 3 ok · 10 commits · 825bb82, 90774a4, f090206, 2fd2c13, 2accb50, 3c2be62, 6ccfbdc, d0ab68d, 55368d4, ecebfe4 | [tui-t11.md](../briefs/tui-t11.md) |
-| **T12** | the render path stops waiting | a frame forks no process; the crew read is one process; the console still asks | 🔄 implemented · 4 commits · d197c41, b0040e0, ade00a2, 3bfdb85 | [tui-t12.md](../briefs/tui-t12.md) |
+| **T12** | the render path stops waiting | a frame forks no process; the crew read is one process; the console still asks | ✅ closed · cycle 1 ok · 4 commits · d197c41, b0040e0, ade00a2, 3bfdb85 | [tui-t12.md](../briefs/tui-t12.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
@@ -36,8 +36,21 @@ last commit's body before redoing anything.
 **The briefs that exist** are T1 through T6, and Q9. The rest are written **just
 before** their session — a brief written today is stale by the time the slice runs.
 
-**Paused here.** T7 is **closed** — cycle 2 ok, 0 blockers. The console's second round
-is over: T1 through T7 are all closed.
+**Paused here.** The **automation's round is over**: T1 through T12 are all closed.
+T8 the skills · T9 the settings record · T10 the Sous-Chef tab · T11 the shared seeded
+store · T12 the render path stops waiting. The last slice closed with **0 blockers**.
+
+**Fifteen findings** were filed across the round, and nearly all of them were one
+shape: **a claim that nothing held.** The escape was always the same — a witness,
+and when the witness itself became a copy of the thing it watched, the witness had
+to hold **the thing** and not a description of it (F-145 → F-146).
+
+| | |
+|---|---|
+| **the gate** | `internal/ui` went from **89%** of go test's 600s limit to **6%** (T11) — the store seeds the plan once and copies it |
+| **the findings** | F-131…F-136 · F-137…F-139 · F-140…F-144 · F-145…F-146 |
+| **the notes left open** | the check's hand-written list of the tab's questions · `AGENTS.md`'s gate table is not checked against the Makefile · the read's contract against an **unpinned** runtime · the static render's permanent third state |
+| **the next work** | out of the round. The console's second round is over; the automation's is. The next slice is whatever the chef rules |
 
 | | |
 |---|---|
