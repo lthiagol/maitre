@@ -12,6 +12,23 @@ The next slice of console work lands at ~95%, and the one after it **breaks the
 gate**. This slice is not optional, and it is not a console slice — it is the
 slice that makes the next console slice safe.
 
+## What is already known — do not re-derive it
+
+A previous lane spent ninety minutes establishing the facts below and then hung
+with nothing committed. They are **established**; repeating them is waste.
+
+| | |
+|---|---|
+| **the baseline** | `internal/ui` is **163.8s** non-race and **561.3s** under `-race -shuffle=on -count=2`, against go test's **600s** per-package limit |
+| **the inventory** | **240** runtime `core.Seed` call sites in `internal/ui`, plus **3** in `internal/core` and **1** each in the other packages |
+| **the cost** | `core.Seed` costs **0.608s** and writes **15** files; a **copy** of a seeded plan costs **0.007s** |
+| **the arithmetic** | 0.6s once plus 240 copies at 0.007s is about **2.3s** — against about **133s** of seeding today |
+| **the constraints, checked** | the plan's **digest** stays valid under a byte-for-byte copy · `planFormatFacts()` does **not** move · the seeded content carries **no absolute paths** · **no** test asserts a fresh timestamp · `internal/core`'s **file-enumeration test** and its **declared-helper wire** constrain where a shared helper may live |
+
+**The shape is not in doubt. Write the code.** The first commit is the one that
+matters: the template, the copy, and the tests converted to use it. Measure
+**after** it is green, not before.
+
 ## The cost, measured
 
 | | |
