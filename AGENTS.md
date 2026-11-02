@@ -192,17 +192,26 @@ tree draws what the walk cannot reach rather than dropping it, because a tree th
 forgets a recipe tells the chef a story the plan does not. Derived, never stored:
 `core.TreeOf`.
 
-**Slice 13 — the Sous-Chef tab.** The orchestrator agent gets a home in the console. It is a
-**placeholder**: the autopilot is not built, and the tab says so plainly — a tab that
-is waiting must not look like a tab that is failing. What it shows for now is the
-automation's vital signs: the domain version the plan was last written under, this
-build's, whether they agree, and the last event in the journal. That is why the tab
-exists before the autopilot does — the chef can already see whether the automation is
-running on the same rules as the plan.
+**Slice 13 — the Sous-Chef tab.** The orchestrator agent gets a home in the console. It
+was a **placeholder**: the autopilot was not built, and the tab said so plainly — a
+tab that is waiting must not look like a tab that is failing. What it showed for then
+was the automation's vital signs: the domain version the plan was last written under,
+this build's, whether they agree, and the last event in the journal. That is why the
+tab exists before the autopilot does — the chef can already see whether the automation
+is running on the same rules as the plan.
 
-**Open gaps:** Courses — ladder rung 3 — are not built. The automation is not built:
-the Home tab's automation block holds its vital signs, and the orchestrator's tab
-comes back when the orchestrator does.
+**The tab is real now.** The Sous-Chef tab is a **ticket**: the order at the top (the
+harness, the crew, the sources, the budget), the queue under it, and a stamp at the
+foot (the round, the interactions, the vital signs). `space` **starts** the crew and
+**stops** it, and the footer says which. The crew's rows come from **herdr** — the
+agents whose cwd is the plan's root, and the job each one plays is the tab's label.
+herdr is a **runtime dependency, not a module**, so the dependency budget does not
+move. The console starts a process and writes nothing to the plan: the crew does the
+work (ADR-0003).
+
+**Open gaps:** Courses — ladder rung 3 — are not built. The orchestrator's own
+dispatching is the crew's work and not the console's: the console starts the crew and
+shows it working.
 
 **Slice 14 — the specification's table of derived views is checked.** `docs/03` § 8
 lists the views the domain computes, and it had drifted in both directions: the chef's

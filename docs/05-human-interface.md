@@ -29,7 +29,7 @@ through `maitre-cli`.
 | **Backlog** | backlog items — *Ideas* and *Small tasks*, derived from the kind | manage the backlog |
 | **Ready** | what an agent could claim now, and the open small tasks | see · promote |
 | **Board** | the same plan as a dependency tree — what waits on what | run |
-| **Sous-Chef** | the automation — its order, its queue, and the crew's stamp *(T10 — planned)* | start · stop |
+| **Sous-Chef** | the automation — its order, its queue, and the crew's stamp *(T10 — built)* | start · stop |
 | **Log** | the activity journal | see the audit trail |
 | **Settings** | theme, keybinds, preferences | — |
 
@@ -523,7 +523,7 @@ touches anything.
   ideas 4 · small tasks 2
 
  THE AUTOMATION
-  the automation is not built
+  the automation is started from the Sous-Chef tab
   plan written under 7 · this build speaks 7 · they agree
   last event created     ·     chef      00:27:27
 ```
@@ -576,13 +576,128 @@ is what it would be without the mark.
 ### The automation's vital signs
 
 The Sous-Chef tab dissolved into Home, and its content is the **automation** block.
-**The automation is not built**, and the block says so — the vital signs alone
-would read as a running automation. What the block carries besides that is the
-version the plan was last written under, the version this build speaks, and
-whether they agree — because a plan written by a different build of the tool is a
-plan the version guard will refuse to write — and the last thing that happened.
+The block says **where the move is** — the automation is started from the
+Sous-Chef tab — because the vital signs alone would read as a running automation.
+What the block carries besides that is the version the plan was last written
+under, the version this build speaks, and whether they agree — because a plan
+written by a different build of the tool is a plan the version guard will refuse to
+write — and the last thing that happened.
 
-The orchestrator comes back as a tab when the orchestrator does.
+Whether the crew is running is the Sous-Chef tab's news, not this block's. The
+orchestrator came back as a tab when the orchestrator did.
+
+---
+
+## The Sous-Chef tab
+
+**Built.** The automation's tab: the ticket that starts the crew, the queue under
+it, and the stamp at the foot.
+
+The tab is a **ticket** — an order at the top, what is queued under it, and a
+stamp at the foot saying where the work stands.
+
+```
+ THE ORDER
+  harness  ▸ opencode     pi     custom
+           command: opencode
+  crew     ▸ 3 · orchestrator, runner, reviewer
+           2 · runner, and the orchestrator reviews
+           1 · one agent, and the chef reviews
+  sources  ▸ ready (2)     recipes (6)     backlog (6)
+  budget   3 rounds · 12 interactions
+ THE QUEUE
+  BL05  Wire the review queue                     next
+ THE STAMP · the automation is not running
+  press space to start it
+```
+
+### The order
+
+| control | what it says |
+|---|---|
+| **harness** | `opencode` · `pi` · `custom` — and the **command** it will run, so `custom` is never a mystery |
+| **crew** | `3` · `2` · `1`, each with **who reviews** |
+| **sources** | `ready (n)` · `recipes (n)` · `backlog (n)` — where the work comes from |
+| **budget** | `3 rounds · 12 interactions` — the **cap** the chef sets |
+
+The count is a composition, not a number: three agents, one per role; two, and the
+orchestrator reviews the runner; one, and **the chef reviews** — a lone agent cannot
+review itself, and the close gate refuses a self-reviewed recipe.
+
+The order lives in the tool's settings record (`kitchen/settings.json`), in its
+`crew` section. The console reads it when it starts and writes it when the chef
+changes a pick. **The plan's format does not move**: the record is the tool's file,
+not a plan record, and `core.DomainVersion` stays **7**.
+
+### The queue and the stamp
+
+**Policy above, progress below.** The order says the budget as a **policy** — "3
+rounds · 12 interactions" — and the stamp says the **progress** — "round 2 of 3 · 6
+of 12". Two facts, two words, neither repeated.
+
+The stamp also carries the **vital signs**: the version of the rules the plan was
+written under, the version this build speaks, and whether they agree. The tab that
+starts the automation has to be able to report that it is not speaking the plan's
+rules.
+
+The progress is the plan's own: the **interactions** are the crew's writes — the
+journal's events the chef did not write — and the **rounds** are the recipes the
+crew has worked.
+
+### The crew's rows
+
+The crew is **runtime state**, and the runtime is the only one that has it.
+
+| fact | owner | where it comes from |
+|---|---|---|
+| **the crew exists** | herdr | `herdr agent list` — the agents whose `cwd` is **the plan's root** |
+| **each one's state** | herdr | the agent's `agent_status`: `working` · `idle` · `blocked` · `done` |
+| **each one's job** | the tab's **label** | `herdr tab list`, matched by `tab_id` — `maitre: runner · RCP03` |
+
+The label is the roster's line, and the **orchestrator keeps it current** — it
+renames the runner's tab when the runner picks up a recipe. The console writes the
+first one, when it spawns the orchestrator. A tab that is not on the roster is not
+a member of the crew, so the chef's own pane is not the crew's to manage.
+
+**herdr is a runtime dependency, not a module**: the binary is on the PATH, and the
+UI's dependency budget does not move.
+
+### The moves
+
+**One key, two meanings.** `space` **starts** the crew when it is not running, and
+**stops** it when it is. The footer says which.
+
+Starting opens a herdr tab on the plan's root — in the chef's own workspace when the
+console is inside a herdr session, and in a workspace made for the plan when it is
+not — and runs the orchestrator in it. The startup task is short, because the role is
+not in it:
+
+> You are the orchestrator of the plan at `<the plan's root>`. Run `maitre-cli skill
+> load orchestrator-role` and follow it. The recipes to execute are: `<the work>`.
+
+**The skill carries the role; the startup task carries the work.** The console
+remembers nothing: it keeps no pane id and writes no file, so a console that was
+closed and reopened still finds the running crew.
+
+### The failures
+
+| | the tab |
+|---|---|
+| **`herdr` is not on the PATH** | *"herdr is not here"* and offers **nothing** |
+| **the spawn fails** | says so, and the **move stays** |
+| **the crew is gone** | the automation is not running, and the move comes back |
+| **the orchestrator is gone but the crew is not** | says so — a crew with nobody to ask for directions is not a crew that works |
+| **the plan's root moved** | no crew at the new root — the automation is not running |
+
+A blocked agent raises a message to the **orchestrator**, asking for directions. The
+console gains **no move** for it: the stamp shows that the reviewer asked and that
+the orchestrator has it. The escalation to the chef is the plan's own path — the
+recipe goes under ***Needs you*** on the Recipes tab.
+
+### What the tab does not do
+
+The console **never authors a recipe** (ADR-0003). The tab starts a process; the
+crew does the work, and the plan's records are the crew's to write.
 
 ---
 
@@ -628,14 +743,16 @@ wrapped text is the fallback.
 
 ## Running work
 
-**Observe and steer.** v2 has no orchestration — that is v2.2+. So the console:
+**Observe and steer.** The console:
 
 - **observes** — what is running, its progress, its evidence, its open notes
 - **steers** — the chef writes a note or a request onto the recipe, and the agent picks
   it up on its next turn
 
-The console does not spawn agents. "Run and execute" means *watching and directing*, not
-orchestrating.
+The console **starts the automation** — the Sous-Chef tab spawns the orchestrator, and
+the orchestrator dispatches the crew. The console does not dispatch the crew itself,
+and it does not author a recipe: it starts a process, and the crew does the work
+(ADR-0003).
 
 ## Refusals
 

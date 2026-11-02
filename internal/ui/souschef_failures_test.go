@@ -8,6 +8,16 @@ import (
 	"charm.land/bubbletea/v2"
 )
 
+// sousModelWith is a console on the Sous-Chef tab, with a runtime of its own.
+//
+// The runtime is a seam: the console asks it, and a test answers it.
+func sousModelWith(t *testing.T, r crewRuntime) *Model {
+	t.Helper()
+	m := sousModel(t)
+	m.runtime = r
+	return m
+}
+
 // The five failures.
 //
 // Each one has what the tab says and what it offers. A tab that cannot do its
@@ -20,8 +30,7 @@ import (
 // nothing. A tab that cannot start the automation must not look like one that
 // can.
 func TestTheRuntimeThatIsNotHereSaysSoAndOffersNothing(t *testing.T) {
-	m := sousModel(t)
-	m.runtime = &fakeRuntime{here: false}
+	m := sousModelWith(t, &fakeRuntime{here: false})
 
 	// The console asks, and the answer is that the runtime is not here.
 	cmd := m.refreshCrew()

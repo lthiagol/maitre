@@ -56,8 +56,11 @@ ruling_slice() {
 }
 
 # console_slice is the number the console's doc gives the tab.
+# The console's doc names the slice and the tab's state: "planned" while the tab
+# waits, "built" once it lands. The check reads the **number** — the state word
+# is the doc's, and it changes when the tab is built.
 console_slice() {
-	sed -nE 's/^\| \*\*Sous-Chef\*\* \|.*\(T([0-9]+) — planned\).*/\1/p' "$CONSOLE"
+	sed -nE 's/^\| \*\*Sous-Chef\*\* \|.*\(T([0-9]+) — (planned|built)\).*/\1/p' "$CONSOLE"
 }
 
 # design_slice is the number the design's question table gives the tab.
