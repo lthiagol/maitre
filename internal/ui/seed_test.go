@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -155,19 +156,91 @@ func unnameTheTemplate(root string) error {
 	return os.WriteFile(path, out, 0o644)
 }
 
-// The name's value, in the project's own bytes.
-var nameValue = regexp.MustCompile(`("name"\s*:\s*")[^"]*(")`)
-
-// blankTheName empties the name's value in the project's own bytes.
+// blankTheName empties the **top-level** name's value in the project's own bytes.
 //
-// The value is found where it stands and becomes empty; every other byte is left as
-// the domain wrote it. Nothing is parsed and nothing is re-serialised — a file the
-// domain writes differently stays a file the domain wrote.
+// The name is the plan's own field: the directory's basename. A nested `name` —
+// a theme's, an owner's — is another fact, and it survives.
+//
+// The bytes are the domain's: the value is located in the domain's own JSON and
+// replaced by an empty string, and **every other byte is left as the domain wrote
+// it**. Nothing is re-serialised, so a field the domain writes is in the file.
 func blankTheName(raw []byte) ([]byte, bool) {
-	if !nameValue.Match(raw) {
+	start, end, ok := topLevelValue(raw, "name")
+	if !ok {
 		return nil, false
 	}
-	return nameValue.ReplaceAll(raw, []byte(`${1}${2}`)), true
+	out := make([]byte, 0, len(raw)-(end-start)+2)
+	out = append(out, raw[:start]...)
+	out = append(out, `""`...)
+	out = append(out, raw[end:]...)
+	return out, true
+}
+
+// topLevelValue finds a top-level field's value in a JSON document's own bytes.
+//
+// It walks the document's **top level** — so a nested field of the same name is not
+// the one it finds — and it returns the value's own bytes, quotes included.
+func topLevelValue(raw []byte, key string) (int, int, bool) {
+	dec := json.NewDecoder(bytes.NewReader(raw))
+	tok, err := dec.Token()
+	if err != nil || tok != json.Delim('{') {
+		return 0, 0, false
+	}
+	for dec.More() {
+		keyTok, err := dec.Token()
+		if err != nil {
+			return 0, 0, false
+		}
+		name, _ := keyTok.(string)
+		afterKey := int(dec.InputOffset())
+		var value json.RawMessage
+		if err := dec.Decode(&value); err != nil {
+			return 0, 0, false
+		}
+		afterValue := int(dec.InputOffset())
+		if name != key {
+			continue
+		}
+		// The value's own bytes: the first quote after the key's, and the end of
+		// the value the decoder just read.
+		start := bytes.IndexByte(raw[afterKey:afterValue], '"')
+		if start < 0 {
+			return 0, 0, false
+		}
+		return afterKey + start, afterValue, true
+	}
+	return 0, 0, false
+}
+
+// TestTheRewriteBlanksOnlyTheTopLevelName proves the rewrite's reach.
+//
+// The name is the plan's own field. A nested `name` — a theme's, an owner's — is
+// another fact, and the rewrite must not touch it: the code says every other byte
+// is left as the domain wrote it, and that has to be **true**.
+func TestTheRewriteBlanksOnlyTheTopLevelName(t *testing.T) {
+	raw := []byte(`{
+  "name": "demo",
+  "created": "2026-01-01T00:00:00Z",
+  "settings": {"theme": {"name": "dark"}}
+}`)
+	out, ok := blankTheName(raw)
+	if !ok {
+		t.Fatal("the rewrite found no name to blank")
+	}
+	want := `{
+  "name": "",
+  "created": "2026-01-01T00:00:00Z",
+  "settings": {"theme": {"name": "dark"}}
+}`
+	if string(out) != want {
+		t.Errorf("the rewrite did not blank only the top-level name.\ngot:  %s\nwant: %s", out, want)
+	}
+
+	// A plan that names nothing has no name to blank, and the rewrite says so
+	// instead of touching something else.
+	if _, ok := blankTheName([]byte(`{"created":"2026-01-01T00:00:00Z"}`)); ok {
+		t.Error("the rewrite blanked a name that is not there")
+	}
 }
 
 // TestTheTemplateIsTheDomainOutput proves the fixture is the model's own output.
