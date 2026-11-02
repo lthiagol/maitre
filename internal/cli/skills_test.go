@@ -377,6 +377,52 @@ func TestTheDescriptionRoutes(t *testing.T) {
 	}
 }
 
+// TestTheNamelessSkillIsRefusedForItsOwnReason holds the refusal.
+//
+// A skill whose frontmatter has no name is refused **for that reason** — not by the
+// directory rule catching it by accident, and not with an empty name in the middle
+// of a sentence.
+func TestTheNamelessSkillIsRefusedForItsOwnReason(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/probe-noname/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\ndescription: It has no name at all.\n---\nThe body.\n"),
+		},
+	}
+	skills, refused := skillsFrom(tree)
+	if len(skills) != 0 {
+		t.Fatalf("the skill should not be served: %v", skillNames(skills))
+	}
+	if len(refused) != 1 {
+		t.Fatalf("got %d refusals, want 1", len(refused))
+	}
+	if !strings.Contains(refused[0].Reason, "no name") {
+		t.Errorf("the refusal should say what is missing: %q", refused[0].Reason)
+	}
+	if strings.Contains(refused[0].Reason, "directory") {
+		t.Errorf("the refusal should be the nameless one, not the directory rule: %q", refused[0].Reason)
+	}
+}
+
+// The CLI says the same thing the loader does.
+func TestTheCLISaysWhyTheNamelessSkillIsNotServed(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/probe-noname/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\ndescription: It has no name at all.\n---\nThe body.\n"),
+		},
+	}
+	old := skillsFS
+	skillsFS = tree
+	t.Cleanup(func() { skillsFS = old })
+
+	res := cli(t, t.TempDir(), "skill", "list")
+	if !res.ok(t) {
+		t.Fatalf("skill list failed:\n%s", res.Stderr)
+	}
+	if !strings.Contains(res.Stderr, "no name") {
+		t.Errorf("the warning should say what is missing:\n%s", res.Stderr)
+	}
+}
+
 // frontmatterOf reads a skill's frontmatter, without the production's parser.
 //
 // A test that reuses the code it is testing proves nothing.
