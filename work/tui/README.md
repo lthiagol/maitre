@@ -27,7 +27,7 @@
 | **T10** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | ✅ closed · cycle 4 ok · 18 commits · f3e85f8, 5fe4d68, 0159fa8, 867b545, 59b0d12, c03282e, ed0a13a, 2684307, 1c76e84, f59f9be, 5b03f48, 7edc649, 9003efb, 7d58dc8, 7597466, 3fb3701, 4bf7d93, a8d2bab | [tui-t10.md](../briefs/tui-t10.md) · [fix 1](../briefs/fix-tui-t10-1.md) · [fix 2](../briefs/fix-tui-t10-2.md) · [fix 3](../briefs/fix-tui-t10-3.md) |
 | **T11** | the shared seeded store | one template seeded once, a copy per test — the gate's headroom | ✅ closed · cycle 3 ok · 10 commits · 825bb82, 90774a4, f090206, 2fd2c13, 2accb50, 3c2be62, 6ccfbdc, d0ab68d, 55368d4, ecebfe4 | [tui-t11.md](../briefs/tui-t11.md) |
 | **T12** | the render path stops waiting | a frame forks no process; the crew read is one process; the console still asks | ✅ closed · cycle 1 ok · 4 commits · d197c41, b0040e0, ade00a2, 3bfdb85 | [tui-t12.md](../briefs/tui-t12.md) |
-| **T13** | the surfaces | the plan's records move through the CLI; the crew moves through herdr; the CLI never controls the automation | 🔄 implemented · 4 commits · 75c4b96, 0e3b25b, 32fd028, 4ac2158 | [tui-t13.md](../briefs/tui-t13.md) |
+| **T13** | the surfaces | the plan's records move through the CLI; the crew moves through herdr; the CLI never controls the automation | ✅ closed · cycle 1 ok · 4 commits · 75c4b96, 0e3b25b, 32fd028, 4ac2158 | [tui-t13.md](../briefs/tui-t13.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
@@ -41,7 +41,7 @@ before** their session — a brief written today is stale by the time the slice 
 T8 the skills · T9 the settings record · T10 the Sous-Chef tab · T11 the shared seeded
 store · T12 the render path stops waiting. The last slice closed with **0 blockers**.
 
-**Fifteen findings** were filed across the round, and nearly all of them were one
+**Sixteen findings** were filed across the round, and nearly all of them were one
 shape: **a claim that nothing held.** The escape was always the same — a witness,
 and when the witness itself became a copy of the thing it watched, the witness had
 to hold **the thing** and not a description of it (F-145 → F-146).
@@ -49,9 +49,9 @@ to hold **the thing** and not a description of it (F-145 → F-146).
 | | |
 |---|---|
 | **the gate** | `internal/ui` went from **89%** of go test's 600s limit to **6%** (T11) — the store seeds the plan once and copies it |
-| **the findings** | F-131…F-136 · F-137…F-139 · F-140…F-144 · F-145…F-146 |
-| **the notes left open** | the check's hand-written list of the tab's questions · `AGENTS.md`'s gate table is not checked against the Makefile · the read's contract against an **unpinned** runtime · the static render's permanent third state |
-| **the next work** | out of the round. The console's second round is over; the automation's is. The next slice is whatever the chef rules |
+| **the findings** | F-131…F-136 · F-137…F-139 · F-140…F-144 · F-145…F-146 · F-147 (none — T13 landed clean) |
+| **the notes left open** | the check's hand-written list of the tab's questions · `AGENTS.md`'s gate table is not checked against the Makefile · the read's contract against an **unpinned** runtime · the static render's permanent third state · the wire's ban arm is a spelling, and its classification records no **kind** — the remedy is one column, and it belongs with the slice that adds verbs |
+| **the next work** | out of the round. The console's second round is over; the automation's is. **Courses** — ladder rung 3 — are the next thing the product is missing, and they land on the boundary T13 wrote down |
 
 | | |
 |---|---|
