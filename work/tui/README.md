@@ -46,7 +46,8 @@ is over: T1 through T7 are all closed.
 | **The round** | T1–T7 are closed. `plan.md` is the design this round followed; the state is this table |
 | **T8** | closed. Cycle 2 ok, 0 blockers. The menu, the embedded skill, the refusal — and the six findings of cycle 1 closed, each with a witness of its own. Receipt: `work/inbox/reviewer-tui-t8-cycle2.md` (`048c710`) |
 | **T9** | closed. Cycle 3 ok, 0 blockers. The record, the verb, and the console's VIEW preferences surviving a restart — through three cycles of findings, each one a claim nothing held. Receipt: `work/inbox/reviewer-tui-t9-cycle3.md` (`a0b78b8`) |
-| **The next work** | **T10** — the Sous-Chef tab, the last slice of the automation's work. Designed in [plan-automation.md](plan-automation.md) § 14–§ 15 |
+| **T10** | closed. Cycle 4 ok, 0 blockers — five findings, F-140 to F-144, each closed. The ticket, the crew, the moves. Receipt: `work/inbox/reviewer-tui-t10-cycle4.md` (`70d0e37`) |
+| **The next work** | **T11** — the shared seeded store. The gate's headroom: `internal/ui` is at **88%** of go test's 600s default |
 | **The rulings** | the filter covers **Recipes, Backlog and Ready** (Q14); the filter key lives in **Settings' key list**, not the footer (Q15). Both ruled 2026-10-31 |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
