@@ -561,7 +561,7 @@ func TestTheStartupTaskTellsTheOrchestratorToKeepItsLabelCurrent(t *testing.T) {
 	m := sousModel(t)
 	task := m.startupTask()
 
-	for _, want := range []string{"herdr tab rename", "maitre: orchestrator", "round <N>", "<M> interactions"} {
+	for _, want := range []string{"herdr tab rename", "herdr pane current", "maitre: orchestrator", "round <N>", "<M> interactions"} {
 		if !strings.Contains(task, want) {
 			t.Errorf("the startup task should carry %q: %q", want, task)
 		}

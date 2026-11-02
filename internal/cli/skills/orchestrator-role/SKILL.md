@@ -63,8 +63,8 @@ And rename a lane's label when the lane takes work:
 herdr tab rename <TAB_ID> "maitre: runner · <the work>"
 ```
 
-Your own tab's id is the tab your pane is in — `herdr pane list` carries it, and
-`herdr tab list` carries the lanes'.
+Your own tab's id is in `herdr pane current` — it answers the pane and the tab
+that pane is in. The lanes' tab ids are in `herdr tab list`.
 
 **The console prints no progress it cannot read.** A label that carries none
 means the crew has not reported one, and the stamp shows the order's cap and
@@ -194,6 +194,7 @@ is not written down is a finding that is lost.
 | `herdr tab create --workspace <WS> --label <L> --cwd <DIR> --no-focus` | the lane's tab, in your workspace |
 | `herdr pane split <PANE> --direction right --ratio 0.5 --cwd <DIR>` | the second pane |
 | `herdr pane run <PANE> <COMMAND>` | run a command in a pane, and send Enter |
+| `herdr pane current` | the pane's own id, and the tab that pane is in |
 | `herdr pane send-text <PANE> <TEXT>` | type text literally |
 | `herdr pane send-keys <PANE> enter` | also: `esc`, `up`, `down`, `tab`, `space` |
 | `herdr pane read <PANE> --lines 40` | what the lane's screen shows |

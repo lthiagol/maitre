@@ -610,6 +610,7 @@ func TestTheSkillSaysTheOrchestratorKeepsTheLabelsCurrent(t *testing.T) {
 		"<M> interactions",
 		"maitre: runner",
 		"herdr tab rename",
+		"herdr pane current",
 		"You write the progress",
 	} {
 		if !strings.Contains(body, want) {

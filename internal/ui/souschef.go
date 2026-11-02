@@ -285,7 +285,7 @@ func (m *Model) stopCrew() tea.Cmd {
 // `maitre-cli skill load orchestrator-role` and follows it.
 func (m *Model) startupTask() string {
 	return fmt.Sprintf(
-		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s. Keep your tab's label current — the console reads the crew's progress from it: `herdr tab rename <TAB_ID> \"maitre: orchestrator · round <N> · <M> interactions\"` (your tab's id is in `herdr pane list`).",
+		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s. Keep your tab's label current — the console reads the crew's progress from it: `herdr tab rename <TAB_ID> \"maitre: orchestrator · round <N> · <M> interactions\"` (your own tab's id is in `herdr pane current`).",
 		m.store.ProjectRoot(), m.sousWork())
 }
 
