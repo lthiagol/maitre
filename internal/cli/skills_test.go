@@ -473,6 +473,51 @@ func TestTheSkillWithNoDescriptionIsNotInTheList(t *testing.T) {
 	}
 }
 
+// TestTheSkillListTakesBothSkillsFromTheSkills holds the list's names.
+//
+// The names and the descriptions come from the skills themselves — proved with **two**
+// skills in the tree, so a list written in the CLI cannot pass by naming the one
+// skill the tree happens to hold.
+func TestTheSkillListTakesBothSkillsFromTheSkills(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/first/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: first\ndescription: The first probe.\n---\nThe body.\n"),
+		},
+		"skills/second/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: second\ndescription: The second probe.\n---\nThe body.\n"),
+		},
+	}
+	old := skillsFS
+	skillsFS = tree
+	t.Cleanup(func() { skillsFS = old })
+
+	res := cli(t, t.TempDir(), "skill", "list")
+	if !res.ok(t) {
+		t.Fatalf("skill list failed:\n%s", res.Stderr)
+	}
+	items := res.doc(t)["skills"].([]any)
+	if len(items) != 2 {
+		t.Fatalf("got %d skills, want 2: %v", len(items), items)
+	}
+	want := map[string]string{
+		"first":  "The first probe.",
+		"second": "The second probe.",
+	}
+	for _, item := range items {
+		entry := item.(map[string]any)
+		name, _ := entry["name"].(string)
+		description, _ := entry["description"].(string)
+		expected, ok := want[name]
+		if !ok {
+			t.Errorf("the list should carry the skills of the tree, and it carries %q", name)
+			continue
+		}
+		if description != expected {
+			t.Errorf("the skill %s lists %q, and the skill says %q", name, description, expected)
+		}
+	}
+}
+
 // frontmatterOf reads a skill's frontmatter, without the production's parser.
 //
 // A test that reuses the code it is testing proves nothing.
