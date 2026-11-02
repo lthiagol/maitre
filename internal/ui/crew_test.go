@@ -311,7 +311,7 @@ func TestTheCrewIsReadWhenTheTabComesOnScreen(t *testing.T) {
 	m.runtime = crewRuntimeFixture(t, m)
 	m.tab = TabLog
 
-	cmd := m.switchTabCmd(TabSousChef)
+	cmd := m.switchTab(TabSousChef)
 	if cmd == nil {
 		t.Fatal("the tab should ask for the crew")
 	}
@@ -330,5 +330,82 @@ func TestTheCrewIsReadWhenTheTabComesOnScreen(t *testing.T) {
 	m.Update(msg)
 	if len(m.crew) != 3 {
 		t.Errorf("the console holds %d members, want 3", len(m.crew))
+	}
+}
+
+// TestTheClickOnTheTabAsksTheRuntime covers the one switch.
+//
+// The **mouse's** switch is the keyboard's switch: a click on the *Sous-Chef*
+// label asks the runtime for the crew, and so the tab never says the automation
+// is not running while it is — and never offers to start a second crew.
+func TestTheClickOnTheTabAsksTheRuntime(t *testing.T) {
+	m := sousModel(t)
+	m.runtime = crewRuntimeFixture(t, m)
+	m.tab = TabLog
+	m.width = 120
+	m.height = 30
+	// The render leaves the map behind, and the map says where the labels are.
+	m.View()
+
+	box := m.hits.tabs[int(TabSousChef)]
+	updated, cmd := m.Update(tea.MouseClickMsg{
+		X: box.x0, Y: box.y0, Button: tea.MouseLeft,
+	})
+	m = updated.(*Model)
+	if cmd == nil {
+		t.Fatal("a click on the tab should ask the runtime for the crew")
+	}
+	msg, ok := cmd().(crewMsg)
+	if !ok {
+		t.Fatalf("the click answered %T, want a crew message", msg)
+	}
+	if msg.err != nil {
+		t.Fatalf("read the crew: %v", msg.err)
+	}
+	m.Update(msg)
+
+	if m.tab != TabSousChef {
+		t.Fatalf("the click left the console on %q, want Sous-Chef", m.tab.Label())
+	}
+	out := plain(m)
+	if strings.Contains(out, "the automation is not running") {
+		t.Errorf("the tab says the automation is not running while it is:\n%s", out)
+	}
+	if !strings.Contains(out, "space stop the crew") {
+		t.Errorf("the footer should offer to stop the crew:\n%s", out)
+	}
+	if strings.Contains(out, "space start the crew") {
+		t.Errorf("the footer must not offer to start a second crew:\n%s", out)
+	}
+}
+
+// TestTheFilterLineSwitchAsksTheRuntime covers the filter line's switch.
+//
+// The filter line's `tab` is the keyboard's `tab`: it goes through the same path,
+// and the same answer.
+func TestTheFilterLineSwitchAsksTheRuntime(t *testing.T) {
+	m := sousModel(t)
+	m.runtime = crewRuntimeFixture(t, m)
+	m.tab = TabLog
+	m.filterOpen = true
+
+	// `shift+tab` from the Log tab is the Sous-Chef one.
+	updated, cmd := m.Update(tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift})
+	m = updated.(*Model)
+	if cmd == nil {
+		t.Fatal("the filter line's switch should ask the runtime for the crew")
+	}
+	msg, ok := cmd().(crewMsg)
+	if !ok {
+		t.Fatalf("the switch answered %T, want a crew message", msg)
+	}
+	m.Update(msg)
+
+	if m.tab != TabSousChef {
+		t.Fatalf("the filter line left the console on %q, want Sous-Chef", m.tab.Label())
+	}
+	out := plain(m)
+	if strings.Contains(out, "space start the crew") {
+		t.Errorf("the footer must not offer to start a second crew:\n%s", out)
 	}
 }

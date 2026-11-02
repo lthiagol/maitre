@@ -149,11 +149,9 @@ func (m *Model) handleFilterKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.move(1)
 		return m, nil
 	case "tab":
-		m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
-		return m, nil
+		return m, m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
 	case "shift+tab":
-		m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
-		return m, nil
+		return m, m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 	}
 	// The text: anything printable goes in, and the list filters as it is typed.
 	if text := typedText(k); text != "" {

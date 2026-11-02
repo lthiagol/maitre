@@ -38,7 +38,7 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 		}
 	case tea.MouseClickMsg:
 		if ev.Button == tea.MouseLeft {
-			m.clickAt(ev.X, ev.Y)
+			return m, m.clickAt(ev.X, ev.Y)
 		}
 	}
 	return m, nil
@@ -52,10 +52,13 @@ func (m *Model) handleMouse(msg tea.MouseMsg) (tea.Model, tea.Cmd) {
 // What is under the pointer decides, and the map is what says — the tab bar, the
 // list, the detail pane. The order matters: the tab bar is above the list, and
 // the detail pane is beside it.
-func (m *Model) clickAt(x, y int) {
+//
+// The command it returns is the command the **key** would return: a click on a
+// tab label is the keyboard's `tab`, and the Sous-Chef tab asks the runtime for
+// the crew whichever of the two opened it.
+func (m *Model) clickAt(x, y int) tea.Cmd {
 	if tab := m.hits.tabAt(x, y); tab >= 0 {
-		m.switchTab(Tab(tab))
-		return
+		return m.switchTab(Tab(tab))
 	}
 	if item, ok := m.hits.rowAt(x, y); ok {
 		m.selectItem(item)
@@ -66,11 +69,12 @@ func (m *Model) clickAt(x, y int) {
 		if m.hits.detail.empty() {
 			m.openDetail()
 		}
-		return
+		return nil
 	}
 	if m.hits.overDetail(x, y) {
 		m.openDetail()
 	}
+	return nil
 }
 
 // selectItem puts the cursor on an item of the current tab.

@@ -864,10 +864,10 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "tab":
-		return m, m.switchTabCmd(Tab((int(m.tab) + 1) % len(TabNames)))
+		return m, m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
 
 	case "shift+tab":
-		return m, m.switchTabCmd(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
+		return m, m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 
 	case "right", "l":
 		// On the Sous-Chef tab the horizontal keys choose a pick. Everywhere
@@ -876,14 +876,14 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 			m.choosePick(1)
 			return m, nil
 		}
-		return m, m.switchTabCmd(Tab((int(m.tab) + 1) % len(TabNames)))
+		return m, m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
 
 	case "left", "h":
 		if m.tab == TabSousChef {
 			m.choosePick(-1)
 			return m, nil
 		}
-		return m, m.switchTabCmd(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
+		return m, m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 
 	case "up", "k":
 		if m.mode == ModeDetail {
@@ -991,25 +991,18 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// switchTabCmd goes to another tab, and asks for the crew when the tab is the
+// switchTab goes to another tab, and asks for the crew when the tab is the
 // Sous-Chef one.
 //
-// The crew is runtime state, and the runtime is the only one that has it: the
-// tab shows the crew, so the tab asks for it when it comes on screen.
-func (m *Model) switchTabCmd(t Tab) tea.Cmd {
-	m.switchTab(t)
-	if t == TabSousChef {
-		return m.refreshCrew()
-	}
-	return nil
-}
-
-// switchTab goes to another tab.
+// It is the **one** switch: the keyboard's `tab`, the mouse's click on a tab
+// label and the filter line's `tab` all come through here. A switch that set
+// the tab and skipped the rest would be a second answer to one question.
 //
-// It is the **one** switch: the keyboard's `tab` and the mouse's click on a tab
-// label both come through here. A click that set the tab and skipped the rest
-// would be a second answer to one question.
-func (m *Model) switchTab(t Tab) {
+// The rest is the **runtime's** answer on the Sous-Chef tab: the crew is runtime
+// state, so the tab asks for it when it comes on screen. Whichever key opened
+// the tab, the tab then knows whether the crew is running — and a tab that
+// offers "start the crew" while the crew runs can start a second one.
+func (m *Model) switchTab(t Tab) tea.Cmd {
 	m.tab = t
 	m.status = ""
 	// The filter survives the switch — but a tab it does not reach has no line to
@@ -1020,6 +1013,10 @@ func (m *Model) switchTab(t Tab) {
 	// The tab changes the recipe, and the note cursor belongs to the recipe.
 	// A footer that promises a triage the space refuses is a lie.
 	m.clampSelections()
+	if t == TabSousChef {
+		return m.refreshCrew()
+	}
+	return nil
 }
 
 // openDetail gives the detail the screen.
