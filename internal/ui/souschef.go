@@ -452,8 +452,19 @@ func (m *Model) sousStampLines() []listLine {
 	var out []listLine
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 
+	if m.crewErr != nil {
+		// The runtime is not here, or it did not answer. The tab says which,
+		// and it offers **no move**: a tab that cannot start the automation
+		// must not look like one that can.
+		add(" " + m.stySec.Render("THE STAMP") + m.styBad.Render(" · "+m.crewErr.Error()))
+		add("  " + m.styDim.Render("the automation cannot be started from here"))
+		return out
+	}
 	if len(m.crew) == 0 {
-		add(" " + m.stySec.Render("THE STAMP") + m.styFaint.Render(" · the crew has not started"))
+		// The crew is not running. The console cannot tell "never started"
+		// from "gone", and it does not guess: it says the automation is not
+		// running, and the move comes back.
+		add(" " + m.stySec.Render("THE STAMP") + m.styFaint.Render(" · the automation is not running"))
 		add("  " + m.styFaint.Render("press space to start it"))
 		return out
 	}
@@ -472,6 +483,12 @@ func (m *Model) sousStampLines() []listLine {
 			rounds, budget.Rounds, interactions, budget.Interactions)) + versions)
 
 	out = append(out, m.sousCrewLines()...)
+	if !m.crewHasOrchestrator() {
+		// A crew with no orchestrator has nobody to ask for directions: the
+		// blocked agent's path is broken, and the tab must not pretend
+		// otherwise.
+		add("  " + m.styWarn.Render("the orchestrator is gone — the crew has nobody to ask for directions"))
+	}
 	return out
 }
 

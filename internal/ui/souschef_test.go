@@ -246,19 +246,23 @@ func TestTheQueueFollowsTheSourcesPick(t *testing.T) {
 	}
 }
 
-// TestTheStampSaysWhenTheCrewHasNotStarted covers the stamp without a crew.
+// TestTheStampSaysWhenTheAutomationIsNotRunning covers the stamp without a crew.
 //
 // A tab that is waiting must not look like a tab that is failing: the stamp says
-// the crew has not started, and says what to do about it.
-func TestTheStampSaysWhenTheCrewHasNotStarted(t *testing.T) {
+// the automation is not running, and says what to do about it. The console cannot
+// tell "never started" from "gone", and it does not guess.
+func TestTheStampSaysWhenTheAutomationIsNotRunning(t *testing.T) {
 	m := sousModel(t)
 	out := plain(m)
 
 	if !strings.Contains(out, "THE STAMP") {
 		t.Fatalf("the tab has no stamp:\n%s", out)
 	}
-	if !strings.Contains(out, "the crew has not started") {
-		t.Errorf("the stamp should say the crew has not started:\n%s", out)
+	if !strings.Contains(out, "the automation is not running") {
+		t.Errorf("the stamp should say the automation is not running:\n%s", out)
+	}
+	if !strings.Contains(out, "press space to start it") {
+		t.Errorf("the stamp should say what to do about it:\n%s", out)
 	}
 }
 
