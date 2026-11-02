@@ -112,6 +112,12 @@ type Model struct {
 	// console starts, and written back when the chef changes one.
 	picks sousPicks
 
+	// selSous is the cursor over the order's four controls.
+	//
+	// It is the tab's own cursor: the Sous-Chef tab holds no selectable item, so
+	// the console's list selection never moves it.
+	selSous int
+
 	// settingsErr is why the settings record could not be read.
 	//
 	// A record at a version this build does not know is refused whole, and a
@@ -716,6 +722,7 @@ func (m *Model) clampSelections() {
 	clamp(&m.selLog, len(m.logWindow()))
 	clamp(&m.selTheme, len(palettes()))
 	clamp(&m.selNote, len(m.openNotes()))
+	clamp(&m.selSous, sousControls)
 	m.rememberBacklogRow()
 	m.rememberReadyRow()
 }
@@ -824,11 +831,29 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	case "tab", "right", "l":
+	case "tab":
 		m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
 		return m, nil
 
-	case "shift+tab", "left", "h":
+	case "shift+tab":
+		m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
+		return m, nil
+
+	case "right", "l":
+		// On the Sous-Chef tab the horizontal keys choose a pick. Everywhere
+		// else they move to the next tab.
+		if m.tab == TabSousChef {
+			m.choosePick(1)
+			return m, nil
+		}
+		m.switchTab(Tab((int(m.tab) + 1) % len(TabNames)))
+		return m, nil
+
+	case "left", "h":
+		if m.tab == TabSousChef {
+			m.choosePick(-1)
+			return m, nil
+		}
 		m.switchTab(Tab((int(m.tab) - 1 + len(TabNames)) % len(TabNames)))
 		return m, nil
 
@@ -883,6 +908,10 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		if m.tab == TabSettings {
 			m.applyTheme()
+			return m, nil
+		}
+		if m.tab == TabSousChef {
+			m.applyOrder()
 			return m, nil
 		}
 		m.openDetail()
@@ -1051,6 +1080,8 @@ func (m *Model) move(delta int) {
 		m.selLog += delta
 	case TabSettings:
 		m.selTheme += delta
+	case TabSousChef:
+		m.moveSous(delta)
 	}
 	m.clampSelections()
 	m.detailScroll = 0
@@ -1071,6 +1102,8 @@ func (m *Model) moveTo(index int) {
 		m.selLog = index
 	case TabSettings:
 		m.selTheme = index
+	case TabSousChef:
+		m.selSous = index
 	}
 	m.clampSelections()
 	m.detailScroll = 0

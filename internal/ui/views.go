@@ -521,6 +521,11 @@ func (m *Model) footer() string {
 	case m.tab == TabSettings:
 		// The Settings tab has no recipe to open: `enter` applies the theme.
 		keys = append(keys, key{"↑↓", "move"}, key{"tab", "switch"}, key{"enter", "apply theme"})
+	case m.tab == TabSousChef:
+		// The Sous-Chef tab holds no item: `↑↓` moves over the order's
+		// controls, `←→` chooses a pick, and `enter` writes the order.
+		keys = append(keys, key{"↑↓", "control"}, key{"←→", "pick"},
+			key{"tab", "switch"}, key{"enter", "apply"})
 	default:
 		keys = append(keys, key{"↑↓", "move"}, key{"tab", "switch"})
 		// The footer never promises a key that does nothing. `enter` opens the
