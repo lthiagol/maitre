@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"charm.land/lipgloss/v2"
+
 	"github.com/lthiagol/maitre/internal/core"
 	"github.com/lthiagol/maitre/internal/settings"
 )
@@ -204,6 +206,17 @@ func harnessCommand(name string) string {
 	return harnessCommands[settings.DefaultHarness]
 }
 
+// crewRow is one member of the crew, as the runtime knows it.
+//
+// The **state** is the runtime's own — working, idle, blocked, done. The **job**
+// is the tab's label, and the **on** is what that label says the member is
+// working on.
+type crewRow struct {
+	State string
+	Job   string
+	On    string
+}
+
 // sousItem is one item of the queue.
 type sousItem struct {
 	ID    string
@@ -278,7 +291,164 @@ func (m *Model) sousLines() []listLine {
 	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
 	add(" " + m.stySec.Render("THE ORDER"))
 	out = append(out, m.sousOrderLines()...)
+	out = append(out, m.sousQueueLines()...)
+	out = append(out, m.sousStampLines()...)
 	return out
+}
+
+// sousQueueLines renders the queue: what the crew will work, and what is next.
+//
+// The queue is the plan's own work, chosen by the order's source. The first item
+// is the **next** one: the crew takes the queue in order.
+func (m *Model) sousQueueLines() []listLine {
+	var out []listLine
+	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
+
+	add(" " + m.styRule.Render(strings.Repeat("─", max(10, m.listColumn()))))
+	add(" " + m.stySec.Render("THE QUEUE"))
+
+	queue := m.sousQueue(m.picks.Sources)
+	for i, item := range queue {
+		if i >= sousQueueRows {
+			break
+		}
+		row := "  " + m.styFaint.Render(padRight(item.ID, 6)) +
+			padRight(item.Title, 42)
+		if i == 0 {
+			row += m.styAcc.Render("next")
+		}
+		add(row)
+	}
+	if len(queue) > sousQueueRows {
+		add("  " + m.styFaint.Render(fmt.Sprintf("and %d more", len(queue)-sousQueueRows)))
+	}
+	add(" " + m.styRule.Render(strings.Repeat("─", max(10, m.listColumn()))))
+	return out
+}
+
+// sousQueueRows is how many items of the queue the tab draws.
+//
+// The queue can be long and the ticket is short: the rest is counted, not drawn.
+const sousQueueRows = 4
+
+// sousStampLines renders the stamp: where the work stands.
+//
+// **The stamp says the progress, and the order says the policy.** The budget is
+// the cap — "3 rounds · 12 interactions" — and the stamp is what has happened
+// against it: "round 2 of 3 · 6 of 12". Two facts, two words, neither repeated.
+//
+// The stamp also carries the **vital signs**: the version of the rules the plan
+// was written under, the version this build speaks, and whether they agree. The
+// tab that starts the automation has to be able to report that it is not speaking
+// the plan's rules.
+func (m *Model) sousStampLines() []listLine {
+	var out []listLine
+	add := func(text string) { out = append(out, listLine{text: text, itemIdx: -1}) }
+
+	if len(m.crew) == 0 {
+		add(" " + m.stySec.Render("THE STAMP") + m.styFaint.Render(" · the crew has not started"))
+		add("  " + m.styFaint.Render("press space to start it"))
+		return out
+	}
+
+	rounds, interactions := crewProgress(m.journal)
+	budget := sousBudgets[m.picks.Budget]
+
+	versions := m.styDim.Render(fmt.Sprintf("plan %d · build %d · they agree",
+		m.planVersion(), core.DomainVersion))
+	if !m.versionsAgree() {
+		versions = m.styBad.Render(fmt.Sprintf("plan %d · build %d · they disagree",
+			m.planVersion(), core.DomainVersion))
+	}
+	add(" " + m.stySec.Render("THE STAMP") +
+		m.styDim.Render(fmt.Sprintf(" · round %d of %d · %d of %d interactions · ",
+			rounds, budget.Rounds, interactions, budget.Interactions)) + versions)
+
+	out = append(out, m.sousCrewLines()...)
+	return out
+}
+
+// sousCrewLines renders the crew's rows.
+func (m *Model) sousCrewLines() []listLine {
+	var out []listLine
+	for _, row := range m.crew {
+		state := row.State
+		note := row.On
+		if state == "blocked" {
+			// **A blocked agent asks the orchestrator for directions**, and the
+			// orchestrator decides. The console gains no move for it: the stamp
+			// shows that the reviewer asked and that the orchestrator has it.
+			state = "asked"
+			note = "asked the orchestrator · the orchestrator has it"
+		}
+		out = append(out, listLine{
+			text: m.sousCrewRow(state, row.Job, note),
+			itemIdx: -1,
+		})
+	}
+	return out
+}
+
+// sousCrewRow renders one member of the crew.
+func (m *Model) sousCrewRow(state, job, note string) string {
+	return " " + m.sousStateStyle(state).Render(padRight(state, 8)) +
+		m.styDim.Render(padRight(job, 13)) + m.styDim.Render(note)
+}
+
+// sousStateStyle is the style a crew member's state wears.
+func (m *Model) sousStateStyle(state string) lipgloss.Style {
+	switch state {
+	case "working":
+		return m.styGood
+	case "asked", "blocked":
+		return m.styWarn
+	case "done":
+		return m.styDim
+	default:
+		return m.styDim
+	}
+}
+
+// crewProgress is what the crew has done on the plan.
+//
+// The **interactions** are the crew's own writes: the journal is the plan's only
+// event log, and an event the chef did not write is a write by the crew. The
+// **rounds** are the recipes the crew has worked — one round is one recipe
+// through the line.
+//
+// Both are facts about the plan, derived from the plan's own log. The record
+// holds the **cap**, and the stamp holds the **progress** — and the two are never
+// the same number twice.
+func crewProgress(j core.Journal) (rounds, interactions int) {
+	recipes := map[string]bool{}
+	for _, e := range j.Events {
+		if writtenByChef(e) {
+			continue
+		}
+		interactions++
+		if e.Recipe != "" {
+			recipes[e.Recipe] = true
+		}
+	}
+	return len(recipes), interactions
+}
+
+// writtenByChef reports whether the event came from the chef.
+//
+// The console writes under the actor "chef" and the role "chef"; everything else
+// on the plan was written by an agent — the crew.
+func writtenByChef(e core.JournalEntry) bool {
+	return e.Actor == "chef" || e.Role == "chef"
+}
+
+// planVersion is the version of the rules the plan was last written under.
+func (m *Model) planVersion() int {
+	return core.PlanDomainVersion(m.journal)
+}
+
+// versionsAgree reports whether the plan and this build speak the same rules.
+func (m *Model) versionsAgree() bool {
+	return m.planVersion() == core.DomainVersion
 }
 
 // sousOrderLines renders the order: the four controls.

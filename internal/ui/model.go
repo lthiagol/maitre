@@ -112,6 +112,12 @@ type Model struct {
 	// console starts, and written back when the chef changes one.
 	picks sousPicks
 
+	// crew is the crew, as the runtime knows it.
+	//
+	// The rows are the runtime's answer, and the runtime is the only one that
+	// has it: the plan carries no crew state.
+	crew []crewRow
+
 	// selSous is the cursor over the order's four controls.
 	//
 	// It is the tab's own cursor: the Sous-Chef tab holds no selectable item, so
