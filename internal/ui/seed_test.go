@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -127,30 +128,92 @@ func removeTemplates(dir string) error {
 // says `demo`, and a copy in a directory named `we\nird` says `we\nird`, exactly as
 // a plan seeded there would have said.
 //
-// The file is written the way the store writes it, so the only difference from the
-// seeder's output is the name itself.
+// **The rewrite is textual.** The name is a value in the file, and the file is the
+// seeder's own bytes: the value changes and nothing else does. A field the domain
+// adds is therefore in the template, because the template **is** the seeder's output.
+//
+// A copy of the plan's schema would not do that. It would drop the field it does
+// not know, and the fixture would drift from the model in silence — which is what
+// F-145 was.
 func unnameTheTemplate(root string) error {
 	path := filepath.Join(root, core.FileProject)
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	var doc struct {
-		Name     string         `json:"name"`
-		Created  string         `json:"created"`
-		Charter  map[string]any `json:"charter"`
-		Settings map[string]any `json:"settings"`
+	out, ok := blankTheName(raw)
+	if !ok {
+		return fmt.Errorf("%s: it carries no name to blank", path)
 	}
-	if err := json.Unmarshal(raw, &doc); err != nil {
-		return err
-	}
-	doc.Name = ""
-	out, err := json.MarshalIndent(doc, "", "  ")
-	if err != nil {
-		return err
-	}
-	out = append(out, '\n')
 	return os.WriteFile(path, out, 0o644)
+}
+
+// The name's value, in the project's own bytes.
+var nameValue = regexp.MustCompile(`("name"\s*:\s*")[^"]*(")`)
+
+// blankTheName empties the name's value in the project's own bytes.
+//
+// The value is found where it stands and becomes empty; every other byte is left as
+// the domain wrote it. Nothing is parsed and nothing is re-serialised — a file the
+// domain writes differently stays a file the domain wrote.
+func blankTheName(raw []byte) ([]byte, bool) {
+	if !nameValue.Match(raw) {
+		return nil, false
+	}
+	return nameValue.ReplaceAll(raw, []byte(`${1}${2}`)), true
+}
+
+// The domain's project file, field by field.
+//
+// The template is the seeder's output, and the rewrite above changes one value in
+// the bytes the seeder wrote — so the template carries whatever fields the domain
+// writes. This list is the wire that says so **out loud**: a field the domain adds
+// is in the template, and this list is what turns red when it does.
+//
+// It is a list of names and not a copy of the schema: it changes nothing, and it
+// fails loudly the moment the domain moves. A copy of the schema in the *rewrite*
+// was F-145 — a mechanism that reshapes the file in silence.
+var projectFields = []string{"charter", "created", "name", "settings"}
+
+// TestTheTemplateCarriesTheDomainFields proves the fixture cannot drift from the
+// model.
+//
+// The template is the seeder's output, and the seeder's output is the domain's
+// project file. So the template's project file must carry the fields the domain
+// writes today — and a field the domain adds must turn this red.
+//
+// It is the probe that found F-145: the domain's project file gained a field, the
+// fixture dropped it, and the suite said nothing. Now the fixture keeps it, and
+// this test names the field that is not in the list.
+func TestTheTemplateCarriesTheDomainFields(t *testing.T) {
+	for _, template := range []string{planTemplate, stressTemplate} {
+		got := projectFieldNames(t, filepath.Join(template, core.FileProject))
+		if strings.Join(got, "\n") != strings.Join(projectFields, "\n") {
+			t.Errorf("the template's project file does not carry the domain's fields.\ngot:  %v\nwant: %v\nthe domain's project file gained or lost a field — the template is the seeder's output, and this list is the wire that says so", got, projectFields)
+		}
+	}
+}
+
+// projectFieldNames lists the fields a project file carries, sorted.
+//
+// The names come from the file's own keys, so a field the domain writes is a field
+// the list holds. Nothing here knows the plan's schema: it reads the file.
+func projectFieldNames(t *testing.T, path string) []string {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	var doc map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &doc); err != nil {
+		t.Fatalf("parse %s: %v", path, err)
+	}
+	out := make([]string, 0, len(doc))
+	for name := range doc {
+		out = append(out, name)
+	}
+	sort.Strings(out)
+	return out
 }
 
 // seededPlan is the plan a test draws: a copy of the ordinary template.
