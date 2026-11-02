@@ -25,7 +25,7 @@ TOOL_DOC := docs/testing.md
 	fmt fmt-check vet staticcheck lint \
 	test test-race \
 	goldens regen-goldens goldens-check \
-	budget tidy tidy-check \
+	budget tidy tidy-check slices-check \
 	check check-race \
 	tools vuln ci install-hooks versions-check
 
@@ -119,6 +119,13 @@ budget:
 	$(call header,$@)
 	GO=$(GO) scripts/dep-budget.sh
 
+# The slice numbers are one number. The plan's own files name the Sous-Chef
+# tab's slice in thirteen places, and they must agree — the next slice's writer
+# reads those files.
+slices-check:
+	$(call header,$@)
+	scripts/check-slice-numbers.sh
+
 tidy:
 	$(call header,$@)
 	$(GO) mod tidy
@@ -144,6 +151,7 @@ check:
 	$(call header,$@)
 	$(MAKE) lint
 	$(MAKE) versions-check
+	$(MAKE) slices-check
 	$(MAKE) test
 	$(MAKE) goldens-check
 	$(MAKE) budget
@@ -153,6 +161,7 @@ check-race:
 	$(call header,$@)
 	$(MAKE) lint
 	$(MAKE) versions-check
+	$(MAKE) slices-check
 	$(MAKE) test-race
 	$(MAKE) goldens-check
 	$(MAKE) budget
