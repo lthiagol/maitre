@@ -66,7 +66,12 @@ func (m *Model) readCrew() ([]crewRow, error) {
 
 	labels := make(map[string]string, len(tabs))
 	for _, t := range tabs {
-		labels[t.TabID] = t.Label
+		// The label is **agent-written text**: the console writes the first one,
+		// and the orchestrator writes it from then on. It is sanitised **where it
+		// enters** — a newline in it would put a line of the agent's text where
+		// the crew's rows are a table, and an escape sequence would reach the
+		// terminal.
+		labels[t.TabID] = sanitize(t.Label)
 	}
 
 	root := filepath.Clean(m.store.ProjectRoot())

@@ -656,3 +656,41 @@ func TestTheStampMeasuresAProgressInsideTheCap(t *testing.T) {
 		t.Errorf("the stamp should not say the budget is spent inside it: %q", stamp)
 	}
 }
+
+// TestTheCrewLabelIsSanitisedOnTheSousChefTab covers the label's way in.
+//
+// The label is **agent-written text**: the console writes the first one, and the
+// orchestrator writes it from then on. A newline in it would put a line of the
+// agent's text where the crew's rows are a table, and an escape sequence would
+// reach the terminal. So it is sanitised where it enters — in `readCrew` — and
+// the tab that shows the crew is the tab that proves it.
+func TestTheCrewLabelIsSanitisedOnTheSousChefTab(t *testing.T) {
+	m := sousModel(t)
+	runtime := crewRuntimeFixture(t, m)
+	runtime.knownTabs[0] = herdrTab{
+		TabID: "w1:t1",
+		Label: "maitre: orchestrator · round 2 · 6 interactions\nINJECTED LINE \x1b[31m",
+	}
+	m.runtime = runtime
+
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	m.crew = rows
+	m.width = 100
+	m.height = 40
+
+	content := m.View().Content
+	checkNoControlCharacters(t, "the Sous-Chef tab", content)
+	if strings.Contains(content, "\x1b[31m") {
+		t.Errorf("the label's escape reached the render:\n%s", content)
+	}
+	// The injected text stays on the crew's row: it does not become a line of
+	// its own, where the crew's rows are a table.
+	for _, line := range strings.Split(stripANSI(content), "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "INJECTED") {
+			t.Errorf("the label's line broke the crew's table:\n%s", content)
+		}
+	}
+}
