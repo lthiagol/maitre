@@ -22,7 +22,7 @@
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ✅ closed · cycle 2 ok, 0 blockers · 13 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba, 675b4cc, def86f3, 00c234e, 8c505d7, ad453df | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) · [cycle 2](../briefs/review-tui-t7-cycle2.md) |
-| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | 🟡 implemented · 6 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86 | [tui-t8.md](../briefs/tui-t8.md) |
+| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | 🟡 implemented · fix cycle 1 · 11 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86, 706560c, dc4f4e4, 6d48c1f, 1801999, 27483df | [tui-t8.md](../briefs/tui-t8.md) |
 | **T9** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | 📌 designed · [plan-automation.md § 14](plan-automation.md) | — |
 | **T9** | the Sous-Chef tab | the tab comes back: it starts the automation, and shows the crew | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
 
