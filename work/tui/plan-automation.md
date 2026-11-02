@@ -206,22 +206,24 @@ place where the work happens. The crew's members are not lanes.
 | **Q21** | what does the startup task say? | **ruled: it loads the role.** `maitre-cli skill load orchestrator-role`, plus the work. The skill carries the role's knowledge; the startup task carries the work |
 | **Q22** | can the chef stop the automation from the tab? | **superseded by Q27.** It was *no*; the approved ticket offers a stop, and the footer names which key does what |
 | **Q23** | where do the skills live? | **ruled: embedded in the binary.** The chef's reason: *"a way to guarantee that each version has the correct version of the skill."* The skill and the tool cannot drift, because the tool **carries** the skill |
-| **Q24** | one slice or two? | **ruled: two** — **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. The tab's startup task loads the skill, so the skill must exist first |
+| **Q24** | one slice, two, or three? | **ruled: three** — **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the settings record; **T10** the Sous-Chef tab. The tab's startup task loads the skill, so the skill must exist first, and the tab writes through the record, so the record must exist before the tab |
 | **Q26** | the tab's design | **ruled: the ticket** — an order, the queue under it, and a stamp at the foot. § 14 |
 | **Q27** | can the chef stop the automation from the tab? | **ruled: yes.** `space` stops the crew, and the footer says which. It revises Q22 |
 | **Q28** | where do the console's settings live — the view's and the crew's? | **ruled: in the plan's folder, in a new file** — `kitchen/settings.json`. § 15 |
 | **Q29** | who owns that file — the domain, or the tool? | **ruled: the tool.** The settings are not a plan *record* — the glossary's records are the machine's records *about the work* — and they carry no rules the plan was written under. So the plan's format does not move: `DomainVersion` stays **7**, no stamp, no migration. § 15 |
 
-## 11 — The two slices
+## 11 — The three slices
 
 | | |
 |---|---|
 | **T8 — the skills** | `maitre-cli skill help` · `list` · `load <name>`, the skills' home, and the **`orchestrator-role`** skill. Nothing here touches the console |
-| **T9 — the Sous-Chef tab** | the tab, the move that starts the automation, the crew's rows, and the startup task that loads the role |
+| **T9 — the settings record** | `internal/settings`, `kitchen/settings.json`, `maitre-cli settings show`, and the console's VIEW preferences surviving a restart. The plan's format does not move |
+| **T10 — the Sous-Chef tab** | the tab, the move that starts and stops the automation, the crew's rows, the `crew` section of the record, and the startup task that loads the role |
 
-**The order is forced.** The tab's startup task runs `maitre-cli skill load
-orchestrator-role`, so the skill has to exist before the tab can spawn anything
-that works. T8 first.
+**The order is forced, twice over.** The tab's startup task runs `maitre-cli skill load
+orchestrator-role`, so the skill has to exist before the tab can spawn anything that
+works — **T8** first. And the tab writes its configuration through the record, so
+the record has to exist before the tab — **T9** before **T10**.
 
 ## 12 — The skills
 

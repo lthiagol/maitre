@@ -197,7 +197,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q21 | what does the startup task say? | **it loads the role** — `maitre-cli skill load orchestrator-role`, plus the work. The skill carries the role's knowledge; the startup task carries the work | 2026-10-31 |
 | Q22 | can the chef stop the automation from the tab? | **no** — one move, start. Stopping is the chef's terminal business | 2026-10-31 |
 | Q23 | where do the skills live? | **embedded in the binary** — so each version of the tool carries the right version of the skill | 2026-10-31 |
-| Q24 | one slice or two? | **two** — T8 the skills, then T9 the tab | 2026-10-31 |
+| Q24 | one slice, two, or three? | **three** — T8 the skills, T9 the settings record, T10 the Sous-Chef tab | 2026-10-31 |
 
 **What each ruling lands on**, so a brief knows what it inherits:
 
@@ -213,19 +213,19 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q10 | **the model** — after a write, the selection follows the item |
 | Q14 | **T7** — the filter covers the plan-item lists, and the other tabs say so |
 | Q11, Q12, Q13 | **closed** — answered by what the console now does |
-| Q26 | **T9** — the tab is the ticket |
-| Q27 | **T9** — the tab offers a stop, and says which key does what |
-| Q28, Q29 | **T9** — the settings are the tool's file, `kitchen/settings.json`; the plan's format does not move |
+| Q26 | **T10** — the tab is the ticket |
+| Q27 | **T10** — the tab offers a stop, and says which key does what |
+| Q28, Q29 | **T9** — the settings are the tool's file, `kitchen/settings.json`; the plan's format does not move. **T10** adds the `crew` section |
 | Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
-| Q16 | **T8** — the tab's name |
-| Q17 | **T8** — 8 tabs, Sous-Chef between Board and Log |
-| Q18 | **T8** — the tab's move is to start the automation; a blocked agent asks the orchestrator |
-| Q19 | **T9** — the state comes from herdr; the plan carries no crew state |
-| Q20 | **T9** — the journal records the plan, not the runtime |
-| Q21 | **T9** — the startup task loads the role |
-| Q22 | **T9** — one move: start |
+| Q16 | **T10** — the tab's name |
+| Q17 | **T10** — 8 tabs, Sous-Chef between Board and Log |
+| Q18 | **T10** — the tab's move is to start the automation; a blocked agent asks the orchestrator |
+| Q19 | **T10** — the state comes from herdr; the plan carries no crew state |
+| Q20 | **T10** — the journal records the plan, not the runtime |
+| Q21 | **T10** — the startup task loads the role |
+| Q22 | **T10** — one move: start. Superseded by Q27 |
 | Q23 | **T8** — the skills are embedded in the binary |
-| Q24 | **T8** and **T9** — two slices, the skills first |
+| Q24 | **T8**, **T9** and **T10** — three slices, the skills first |
 
 **A ruling lands here, and in the brief it came from** — the plan's *Questions* table
 is the source, and this table is the record.
