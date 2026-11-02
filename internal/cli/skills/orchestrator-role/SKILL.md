@@ -38,6 +38,29 @@ Both lanes are fresh for every slice, and the reviewer is briefed **only after**
 runner's commits land — a reviewer briefed in advance would model the code before it
 existed.
 
+## The surfaces
+
+Three surfaces, three owners. The boundary is the machine's, not a convention of
+the reader.
+
+| what moves | through what | with what |
+|---|---|---|
+| **the plan's records** — a recipe's lifecycle, its evidence, its review | the **CLI** | `maitre-cli` verbs — one verb per operation, through the domain, so the gates and the audit apply |
+| **the automation** — the crew, the lanes, the round, the label | the **console** | `maitre` — `space` starts and stops the crew; herdr carries the crew's state |
+| **the automation's own bookkeeping** — the briefs, the receipts, the ledger | **you**, in the repository | `work/` and `docs/` — never the plan |
+
+**The CLI never controls the automation.** No `maitre-cli` verb starts a crew,
+stops one, renames a lane's tab, or reads the crew's state — the crew is runtime
+state, and the plan's journal carries no signal separating it from the chef. The
+automation is started from the **console**, and the console writes nothing to the
+plan when it does.
+
+**A recipe's state moves through the CLI.** `maitre-cli recipe advance`,
+`maitre-cli ac verify`, `maitre-cli finding resolve` — one verb per operation, each
+one stamped with your actor, your session and your role, and each one gated. The
+plan's files are read by the tool and written by the tool: an edit by hand is a
+write no gate and no audit trail ever sees.
+
 ## The roster's labels
 
 The tabs' labels are the **roster's lines**, and they are how the console finds

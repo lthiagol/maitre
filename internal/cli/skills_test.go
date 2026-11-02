@@ -75,6 +75,44 @@ func TestTheOrchestratorRoleSkillCarriesTheRoleAndTheProtocol(t *testing.T) {
 	}
 }
 
+// TestTheSkillNamesTheSurfaces holds the boundary the machine already has.
+//
+// The shipped skill named herdr thirty-two times and the CLI not at all — so the
+// protocol's "close the slice" step never said how a recipe's state moves, and an
+// agent that guessed would hand-edit the plan's JSON: the write the domain
+// refuses.
+//
+// The skill is the orchestrator's own knowledge, so the boundary is the skill's to
+// carry: which surface moves what, and the one thing the CLI does not do.
+func TestTheSkillNamesTheSurfaces(t *testing.T) {
+	body := string(embeddedSkill(t, "orchestrator-role").Content)
+
+	for _, want := range []string{
+		// The section, and the three owners.
+		"The surfaces",
+		"the plan's records",
+		"the automation",
+		"the automation's own bookkeeping",
+		// The surfaces, named.
+		"maitre-cli",
+		"herdr",
+		"the console",
+		// The rule that holds the boundary.
+		"The CLI never controls the automation",
+		"starts a crew",
+		"renames a lane's tab",
+		"reads the crew's state",
+		// And the verbs that move a recipe's state.
+		"maitre-cli recipe advance",
+		"maitre-cli ac verify",
+		"maitre-cli finding resolve",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the skill should carry %q", want)
+		}
+	}
+}
+
 // TestTheSkillCarriesNoWork holds the line between the role and the work.
 //
 // The skill is the role; the startup task is the work. A skill that named the
