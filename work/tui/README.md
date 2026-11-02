@@ -22,7 +22,7 @@
 | **T5** | the Ready tab | `core.Adoptable`; the Path becomes Ready; D-1, D-4 | ✅ closed · 3 commits · e265382, 93153c2, 9ae7789 | [tui-t5.md](../briefs/tui-t5.md) · [review](../briefs/review-tui-t5.md) |
 | **T6** | the Board, as a visual place | the tree drawn left to right; clicking a node | ✅ closed · cycle 2 ok · 5 commits · 5713472, 92413be, cdfdc16, a5df3ce, df6d387 | [tui-t6.md](../briefs/tui-t6.md) · [fix 1](../briefs/fix-tui-t6-1.md) · [cycle 2](../briefs/review-tui-t6-cycle2.md) |
 | **T7** | the filter | `/` filters the list | ✅ closed · cycle 2 ok, 0 blockers · 13 commits · 7a76e66, 0f264ac, 0dce0c1, c542916, 5ab1660, 1983b1a, af9deb1, 65fdbba, 675b4cc, def86f3, 00c234e, 8c505d7, ad453df | [tui-t7.md](../briefs/tui-t7.md) · [fix 1](../briefs/fix-tui-t7-1.md) · [cycle 2](../briefs/review-tui-t7-cycle2.md) |
-| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | 🟡 implemented · fix cycle 1 · 11 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86, 706560c, dc4f4e4, 6d48c1f, 1801999, 27483df | [tui-t8.md](../briefs/tui-t8.md) |
+| **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | ✅ closed · cycle 2 ok · 11 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86, 706560c, dc4f4e4, 6d48c1f, 1801999, 27483df | [tui-t8.md](../briefs/tui-t8.md) |
 | **T9** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | 📌 designed · [plan-automation.md § 14](plan-automation.md) | — |
 | **T9** | the Sous-Chef tab | the tab comes back: it starts the automation, and shows the crew | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
 
@@ -43,7 +43,8 @@ is over: T1 through T7 are all closed.
 | **T7** | closed. The review filed two blockers and one low; the fix closed all three; cycle 2 said **ok**, 0 blockers (`d8a6a08`, ledger `61a910b`) |
 | **The fix** | 5 commits (`ad7be4d`). **F-128** the filter drops the *rows*, not the plan they are read from — the `●` survives. **F-129** a message that does not fit takes a row of its own, the way a refusal does. **F-130** `N` is the rows the list draws. The blind *stay-on-the-item* test filters a strict subset now |
 | **The round** | T1–T7 are closed. `plan.md` is the design this round followed; the state is this table |
-| **The next work** | out of the round. **T8** the CLI's skills menu and the `orchestrator-role` skill; **T9** the Sous-Chef tab. Both designed in [plan-automation.md](plan-automation.md); T8's brief is to be written again |
+| **T8** | closed. Cycle 2 ok, 0 blockers. The menu, the embedded skill, the refusal — and the six findings of cycle 1 closed, each with a witness of its own. Receipt: `work/inbox/reviewer-tui-t8-cycle2.md` (`048c710`) |
+| **The next work** | out of the round. **T9** the Sous-Chef tab and the settings that hold its configuration. Designed in [plan-automation.md](plan-automation.md) § 14–§ 15 |
 | **The rulings** | the filter covers **Recipes, Backlog and Ready** (Q14); the filter key lives in **Settings' key list**, not the footer (Q15). Both ruled 2026-10-31 |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
