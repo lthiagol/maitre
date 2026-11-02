@@ -234,6 +234,9 @@ func newConsole(store *core.Store, session string, opts ...Option) *Model {
 	for _, opt := range opts {
 		opt(m)
 	}
+	// The chef's view preferences are read from the tool's own file, so the
+	// choices they made last time are the ones this console starts with.
+	m.loadSettings()
 	return m
 }
 
@@ -871,6 +874,7 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 		m.sections = m.orderedSections(m.recipes)
 		m.clampSelections()
 		m.status = "order: " + OrderNames[int(m.order)]
+		m.saveSettings()
 		return m, nil
 
 	case "/":
@@ -879,6 +883,7 @@ func (m *Model) handleKey(k tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	case "c":
 		m.showServed = !m.showServed
 		m.clampSelections()
+		m.saveSettings()
 		return m, nil
 
 	case "n":
@@ -998,8 +1003,9 @@ func (m *Model) detailLineCount() int {
 
 // applyTheme makes the theme under the cursor the console's theme.
 //
-// The choice is for the session: nothing is written to the plan, so a theme is the
-// chef's own setting, not the plan's.
+// The choice is the chef's own setting: it is written to the tool's settings file,
+// so it survives the console. It is not the plan's — nothing is written to the
+// plan's records.
 func (m *Model) applyTheme() {
 	list := palettes()
 	if m.selTheme < 0 || m.selTheme >= len(list) {
@@ -1007,6 +1013,7 @@ func (m *Model) applyTheme() {
 	}
 	m.theme = newTheme(list[m.selTheme])
 	m.status = "theme: " + list[m.selTheme].name
+	m.saveSettings()
 }
 
 // move moves the cursor in the current tab.
