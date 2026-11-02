@@ -89,8 +89,8 @@ discovered by using it.
 | — | `internal/core` — model, lifecycle, gates, store, views, verifier | ✅ |
 | — | `internal/core/operations.go` — the public verbs | ✅ slice 3a |
 | — | `internal/core/seed.go` — the seeder | ✅ slice 3b |
-| — | `internal/cli` — the `maitre-cli` command surface | ✅ slice 1 |
-| — | `internal/ui` — the `maitre` console | ✅ slice 4 |
+| — | `internal/cli` — the **artifact's** surface: `maitre-cli`, the plan's records | ✅ slice 1 |
+| — | `internal/ui` — the **automation's** surface: the `maitre` console | ✅ slice 4 |
 
 **Slice 1** — `maitre-cli init`, `maitre-cli recipe create|list|show|advance`, `maitre-cli gates`.
 The gate table, the transition table and the atomic store.

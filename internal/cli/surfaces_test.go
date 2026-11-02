@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -176,6 +177,55 @@ func automationOffenders(groups map[string][]string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// TestTheDocsSayTheSame holds the boundary in the docs.
+//
+// The boundary is written in three places — the skill, the wire and the docs —
+// and a fact written in three places is a fact that drifts. So the docs are held
+// to the same words: `docs/03` says which surface is which, and `AGENTS.md`'s
+// layer table names the CLI as the artifact's surface and the console as the
+// automation's.
+func TestTheDocsSayTheSame(t *testing.T) {
+	doc := readOwnFile(t, filepath.Join("..", "..", "docs", "03-domain-model.md"))
+	architecture := sectionOf(doc, "### 0.1 The architecture")
+	if architecture == "" {
+		t.Fatal("docs/03 has no architecture section")
+	}
+	for _, want := range []string{
+		"maitre-cli",
+		"the console",
+		"herdr",
+		"The CLI never controls the automation",
+		"never by editing the plan's files",
+	} {
+		if !strings.Contains(architecture, want) {
+			t.Errorf("docs/03's architecture should say %q", want)
+		}
+	}
+
+	agents := readOwnFile(t, filepath.Join("..", "..", "AGENTS.md"))
+	for _, want := range []string{
+		"`internal/cli` — the **artifact's** surface",
+		"`internal/ui` — the **automation's** surface",
+	} {
+		if !strings.Contains(agents, want) {
+			t.Errorf("AGENTS.md's layer table should say %q", want)
+		}
+	}
+}
+
+// sectionOf returns the part of a doc between a heading and the next one.
+func sectionOf(doc, heading string) string {
+	at := strings.Index(doc, heading)
+	if at < 0 {
+		return ""
+	}
+	rest := doc[at:]
+	if end := strings.Index(rest, "\n## "); end >= 0 {
+		return rest[:end]
+	}
+	return rest
 }
 
 // readDispatchTable reads the CLI's own dispatch table.

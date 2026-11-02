@@ -22,6 +22,27 @@ Every rule traces to a v1 failure. This is the checklist the model must satisfy.
 | C11 | **Errors are uniform.** An unknown value is always an error. | v1 hard-errored on `--fields`, ignored `--include`, returned empty for `--type` |
 | C12 | **Material edits after approval are detected.** | v1: an approved recipe could be rewritten with no signal |
 
+### 0.1 The architecture — the three surfaces
+
+One plan, three surfaces. Each one owns a different thing, and the boundary is a
+rule of the machine, not a convention of the reader.
+
+| | the surface | moves |
+|---|---|---|
+| **the plan's records** — a recipe's lifecycle, its evidence, its review | **`maitre-cli`** — one verb per operation, through `core.Operations`, so the gates and the audit apply | the plan |
+| **the automation** — the crew, the lanes, the round, the label | **the console** (`maitre`) — it starts and stops the crew, and reads it from herdr | the runtime, never the plan |
+| **the automation's own bookkeeping** — the briefs, the receipts, the ledger | **the orchestrator** — the repository's `work/` and `docs/` | neither |
+
+**The CLI never controls the automation.** No verb starts a crew, stops one,
+renames a lane's tab, or reads the crew's state — the crew is runtime state, the
+plan's journal carries no signal separating it from the chef, and the console
+starts it without writing to the plan.
+
+**The plan's records move through the CLI, never by editing the plan's files.**
+Every write to `kitchen/` is an operation: it is stamped, it runs the gates, and
+the journal is the record. A hand-edited recipe JSON bypasses every gate and
+leaves no trail.
+
 ---
 
 ## 1. Vocabulary — the artifact ladder
