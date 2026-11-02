@@ -202,6 +202,9 @@ type skillMeta struct {
 //
 // The frontmatter is the block between two `---` lines, and it carries the name and
 // the description. A file without one is not a skill the CLI can serve.
+//
+// The description is as load-bearing as the name: the list is what an agent reads to
+// route, and an entry it cannot describe is an entry it cannot route on.
 func parseSkill(raw []byte) (skillMeta, error) {
 	lines := strings.Split(string(raw), "\n")
 	if len(lines) == 0 || lines[0] != "---" {
@@ -224,6 +227,9 @@ func parseSkill(raw []byte) (skillMeta, error) {
 	}
 	if meta.Name == "" {
 		return skillMeta{}, fmt.Errorf("the frontmatter has no name")
+	}
+	if meta.Description == "" {
+		return skillMeta{}, fmt.Errorf("the frontmatter has no description")
 	}
 	return meta, nil
 }

@@ -423,6 +423,56 @@ func TestTheCLISaysWhyTheNamelessSkillIsNotServed(t *testing.T) {
 	}
 }
 
+// TestTheSkillWithNoDescriptionIsRefused holds the description's absence.
+//
+// The list is what an agent reads to route, and an entry it cannot describe is an
+// entry it cannot route on — so a skill with no description is refused, with the
+// reason naming what is missing.
+func TestTheSkillWithNoDescriptionIsRefused(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/probe-nodesc/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: probe-nodesc\n---\nThe body.\n"),
+		},
+	}
+	skills, refused := skillsFrom(tree)
+	if len(skills) != 0 {
+		t.Fatalf("the skill should not be served: %v", skillNames(skills))
+	}
+	if len(refused) != 1 {
+		t.Fatalf("got %d refusals, want 1", len(refused))
+	}
+	if !strings.Contains(refused[0].Reason, "no description") {
+		t.Errorf("the refusal should say what is missing: %q", refused[0].Reason)
+	}
+}
+
+// TestTheSkillWithNoDescriptionIsNotInTheList holds it at the surface.
+//
+// The list carries the skills an agent can route on — and no others.
+func TestTheSkillWithNoDescriptionIsNotInTheList(t *testing.T) {
+	tree := fstest.MapFS{
+		"skills/probe-nodesc/SKILL.md": &fstest.MapFile{
+			Data: []byte("---\nname: probe-nodesc\n---\nThe body.\n"),
+		},
+	}
+	old := skillsFS
+	skillsFS = tree
+	t.Cleanup(func() { skillsFS = old })
+
+	res := cli(t, t.TempDir(), "skill", "list")
+	if !res.ok(t) {
+		t.Fatalf("skill list failed:\n%s", res.Stderr)
+	}
+	for _, item := range res.doc(t)["skills"].([]any) {
+		if name := item.(map[string]any)["name"]; name == "probe-nodesc" {
+			t.Errorf("the list should not carry the refused skill: %v", item)
+		}
+	}
+	if !strings.Contains(res.Stderr, "no description") {
+		t.Errorf("the warning should say what is missing:\n%s", res.Stderr)
+	}
+}
+
 // frontmatterOf reads a skill's frontmatter, without the production's parser.
 //
 // A test that reuses the code it is testing proves nothing.
