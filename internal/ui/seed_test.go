@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -102,15 +104,47 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
-	// The templates are the suite's, so the suite takes them with it.
-	if err := removeTemplates(dir); err != nil {
-		fmt.Fprintf(os.Stderr, "maitre: remove the templates: %v\n", err)
-		code = 1
-	} else if _, err := os.Stat(dir); !os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "maitre: the cleanup did not remove the template directory: %s is still there\n", dir)
-		code = 1
+	// The templates are the suite's, so the suite takes them with it. The cleanup
+	// says why it could not, and the suite's exit code is the answer.
+	code, msg := cleanupTemplates(code, dir)
+	if msg != "" {
+		fmt.Fprintf(os.Stderr, "maitre: %s\n", msg)
 	}
 	os.Exit(code)
+}
+
+// cleanupTemplates is what `TestMain` does when the suite ends.
+//
+// It removes the templates and it says **why** it could not: a directory that is
+// still there and a directory that cannot be read are two different failures, and
+// the message is the difference.
+//
+// The witness drives this function too, so it holds the removal `TestMain` actually
+// performs — and the call in `TestMain` is held by `TestMainRemovesTheTemplates`.
+func cleanupTemplates(code int, dir string) (int, string) {
+	if err := removeTemplates(dir); err != nil {
+		return 1, fmt.Sprintf("the cleanup could not remove the template directory %s: %v", dir, err)
+	}
+	if why := whyNotRemoved(dir); why != "" {
+		return 1, why
+	}
+	return code, ""
+}
+
+// whyNotRemoved says why a template directory is still there — or that it is gone.
+//
+// The two failures are different: a directory that is there is a directory the
+// cleanup did not remove, and a directory that cannot be read is a directory the
+// cleanup cannot speak about. The message says which.
+func whyNotRemoved(dir string) string {
+	_, err := os.Stat(dir)
+	switch {
+	case err == nil:
+		return fmt.Sprintf("the cleanup did not remove the template directory: %s is still there", dir)
+	case !os.IsNotExist(err):
+		return fmt.Sprintf("the cleanup could not check the template directory %s: %v", dir, err)
+	}
+	return ""
 }
 
 // removeTemplates removes the suite's template directory.
@@ -596,10 +630,16 @@ func TestTheTemplatesAreTheSuites(t *testing.T) {
 	}
 }
 
-// TestTheTemplatesAreRemoved proves the cleanup takes the directory with it.
+// TestTheTemplatesAreRemoved proves the cleanup `TestMain` performs.
 //
-// `TestMain` calls `removeTemplates` when the suite ends; this is that function's
-// witness.
+// The witness drives `cleanupTemplates` — the function `TestMain` itself calls when
+// the suite ends — on a directory it makes, and reads the report it leaves.
+//
+// It covers the answers the cleanup can give: the directory is removed and the
+// cleanup says nothing (the suite's own exit code), and a directory that is already
+// gone is what the cleanup wants. The other two answers — a directory that is still
+// there, and one that cannot be read — are `whyNotRemoved`'s business, and the
+// witness below covers them.
 func TestTheTemplatesAreRemoved(t *testing.T) {
 	scratch := filepath.Join(t.TempDir(), "templates")
 	if err := os.MkdirAll(filepath.Join(scratch, "recipes"), 0o755); err != nil {
@@ -608,12 +648,85 @@ func TestTheTemplatesAreRemoved(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(scratch, "recipes", "RCP01.json"), []byte("{}"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := removeTemplates(scratch); err != nil {
-		t.Fatalf("remove the templates: %v", err)
+
+	code, msg := cleanupTemplates(0, scratch)
+	if code != 0 || msg != "" {
+		t.Errorf("the cleanup complained about a directory it removed: code %d, %q", code, msg)
 	}
 	if _, err := os.Stat(scratch); !os.IsNotExist(err) {
 		t.Errorf("the cleanup did not remove the template directory: %s is still there", scratch)
 	}
+
+	// A directory that is not there is what the cleanup wants: it says nothing.
+	if code, msg := cleanupTemplates(0, scratch); code != 0 || msg != "" {
+		t.Errorf("the cleanup complained about a directory that is not there: code %d, %q", code, msg)
+	}
+}
+
+// TestTheCleanupSaysTheReason proves the cleanup reports the reason it has.
+//
+// A directory that is still there and a directory that cannot be read are two
+// different failures, and the message is the difference — a reader who is told
+// "is still there" about a directory the cleanup could not read is told a lie.
+func TestTheCleanupSaysTheReason(t *testing.T) {
+	dir := t.TempDir()
+
+	if why := whyNotRemoved(dir); why == "" {
+		t.Error("the cleanup says nothing about a directory that is still there")
+	} else if !strings.Contains(why, "is still there") {
+		t.Errorf("the cleanup does not say the directory is still there: %q", why)
+	}
+
+	// A path under a file cannot be stat'ed, and the error is not "not exist".
+	file := filepath.Join(dir, "a-file")
+	if err := os.WriteFile(file, []byte("{}"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	why := whyNotRemoved(filepath.Join(file, "child"))
+	if why == "" {
+		t.Error("the cleanup says nothing about a directory it cannot check")
+	} else if !strings.Contains(why, "could not check") {
+		t.Errorf("the cleanup does not say it could not check the directory: %q", why)
+	}
+}
+
+// TestMainRemovesTheTemplates proves `TestMain` calls the cleanup.
+//
+// The removal happens after the tests run, so no test can watch it happen — and a
+// `TestMain` that stopped removing the templates would leave them behind and the
+// suite would stay **green**. So the call itself is held: the source says
+// `TestMain` calls `cleanupTemplates`, and this test reads the source to say so.
+func TestMainRemovesTheTemplates(t *testing.T) {
+	if !testMainCallsCleanup(t) {
+		t.Errorf("%s: TestMain does not call cleanupTemplates — the templates would survive the suite", templateFile)
+	}
+}
+
+// testMainCallsCleanup reports whether `TestMain` calls the cleanup.
+func testMainCallsCleanup(t *testing.T) bool {
+	t.Helper()
+	file, err := parser.ParseFile(token.NewFileSet(), templateFile, nil, 0)
+	if err != nil {
+		t.Fatalf("parse %s: %v", templateFile, err)
+	}
+	found := false
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Name.Name != "TestMain" {
+			continue
+		}
+		ast.Inspect(fn, func(n ast.Node) bool {
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+			if ident, ok := call.Fun.(*ast.Ident); ok && ident.Name == "cleanupTemplates" {
+				found = true
+			}
+			return true
+		})
+	}
+	return found
 }
 
 // TestTheCopyIsNamedAfterItsDirectory proves the copy's name follows the directory.
@@ -667,18 +780,6 @@ func TestTheStressPlanIsItsOwnTemplate(t *testing.T) {
 // The template file is the only place in the package a plan is seeded.
 const templateFile = "seed_test.go"
 
-// A call to the seeder.
-//
-// The wire is about the **call**, not about one spelling of it: a qualifier, an
-// alias, a space before the parenthesis, a newline before it — none of them may
-// slip past. What the wire forbids is a test file *calling* a seeder, and it says
-// so by the name it calls it by.
-//
-// The pattern does not match its own source: the `\b` before `Seed` is preceded by
-// a word character there, so a wire that counted itself would count a call that is
-// not there.
-var seedCall = regexp.MustCompile(`\bSeed(Stress)?\s*\(`)
-
 // TestNoTestSeedsItsOwnPlan proves the package does not seed its own plans.
 //
 // The seeder costs 0.608s and writes fifteen files, and a suite that seeds per test
@@ -702,16 +803,12 @@ func TestNoTestSeedsItsOwnPlan(t *testing.T) {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), "_test.go") {
 			continue
 		}
-		raw, err := os.ReadFile(e.Name())
-		if err != nil {
-			t.Fatalf("read %s: %v", e.Name(), err)
-		}
-		found := seedCall.FindAllString(string(raw), -1)
+		found := seedCalls(t, e.Name())
 		if len(found) == 0 {
 			continue
 		}
 		if e.Name() != templateFile {
-			t.Errorf("%s calls the seeder: %q — a test takes a copy, not a seed", e.Name(), found[0])
+			t.Errorf("%s calls the seeder: %s — a test takes a copy, not a seed", e.Name(), found[0])
 			continue
 		}
 		calls += len(found)
@@ -720,6 +817,45 @@ func TestNoTestSeedsItsOwnPlan(t *testing.T) {
 		t.Errorf("the sources call the seeder %d times, but the suite seeded %d — every call is a plan the suite pays for", calls, seeds.Load())
 	}
 }
+
+// seedCalls lists the calls to a seeder in a Go file.
+//
+// The wire is about the **call**, and the file is **parsed** to find it: a mention
+// in a comment is not a call, and a comment that says `core.Seed(` must not count
+// against the suite.
+//
+// The count is of calls to a function named `Seed` or `SeedStress`, whatever the
+// qualifier and whatever the spacing: an alias and a newline are the same call, and
+// `seededPlan(` is not a call at all.
+func seedCalls(t *testing.T, path string) []string {
+	t.Helper()
+	file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+	if err != nil {
+		t.Fatalf("parse %s: %v", path, err)
+	}
+	var calls []string
+	ast.Inspect(file, func(n ast.Node) bool {
+		call, ok := n.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		switch fun := call.Fun.(type) {
+		case *ast.SelectorExpr:
+			if isSeeder(fun.Sel.Name) {
+				calls = append(calls, fun.Sel.Name+"()")
+			}
+		case *ast.Ident:
+			if isSeeder(fun.Name) {
+				calls = append(calls, fun.Name+"()")
+			}
+		}
+		return true
+	})
+	return calls
+}
+
+// isSeeder reports whether a name is one of the seeders.
+func isSeeder(name string) bool { return name == "Seed" || name == "SeedStress" }
 
 // The goldens the suite claims.
 //
