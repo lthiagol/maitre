@@ -481,7 +481,9 @@ func (m *Model) sousStampLines() []listLine {
 		versions = m.styBad.Render(fmt.Sprintf("plan %d · build %d · they disagree",
 			m.planVersion(), core.DomainVersion))
 	}
-	head := " " + m.stySec.Render("THE STAMP")
+	// The heading and the vital signs are **two facts**, and they read as two:
+	// the separator is here whether a progress was reported or not.
+	head := " " + m.stySec.Render("THE STAMP") + m.styDim.Render(" · ")
 	if progress := m.sousProgress(); progress != "" {
 		head += progress + m.styDim.Render(" · ")
 	}
@@ -550,31 +552,35 @@ func (m *Model) sousProgress() string {
 		return ""
 	}
 	budget := sousBudgets[m.picks.Budget]
-	// A progress past the cap is printed **as it was reported**, with the budget
-	// spent beside it: "round 7 of 3" says the policy is not a policy, and the
-	// stamp does not say that.
-	spent := progress.Round > budget.Rounds || progress.Interactions > budget.Interactions
+	// The budget is spent when the report has **reached** the cap: a crew that
+	// has used its third round of three has spent its budget, and the flag
+	// arrives **with** the report — not one round later.
+	spent := (progress.Round.Reported && progress.Round.Value >= budget.Rounds) ||
+		(progress.Interactions.Reported && progress.Interactions.Value >= budget.Interactions)
 
 	var parts []string
-	if progress.Round > 0 {
-		if spent {
-			parts = append(parts, fmt.Sprintf("round %d", progress.Round))
+	if progress.Round.Reported {
+		if progress.Round.Value > budget.Rounds {
+			// A progress past the cap is printed **as it was reported**:
+			// "round 7 of 3" says the policy is not a policy, and the stamp
+			// does not say that.
+			parts = append(parts, fmt.Sprintf("round %d", progress.Round.Value))
 		} else {
-			parts = append(parts, fmt.Sprintf("round %d of %d", progress.Round, budget.Rounds))
+			parts = append(parts, fmt.Sprintf("round %d of %d", progress.Round.Value, budget.Rounds))
 		}
 	}
-	if progress.Interactions > 0 {
-		if spent {
-			parts = append(parts, fmt.Sprintf("%d interactions", progress.Interactions))
+	if progress.Interactions.Reported {
+		if progress.Interactions.Value > budget.Interactions {
+			parts = append(parts, fmt.Sprintf("%d interactions", progress.Interactions.Value))
 		} else {
 			parts = append(parts, fmt.Sprintf("%d of %d interactions",
-				progress.Interactions, budget.Interactions))
+				progress.Interactions.Value, budget.Interactions))
 		}
 	}
 	if len(parts) == 0 {
 		return ""
 	}
-	out := m.styDim.Render(" · " + strings.Join(parts, " · "))
+	out := m.styDim.Render(strings.Join(parts, " · "))
 	if spent {
 		out += m.styWarn.Render(" · the budget is spent")
 	}

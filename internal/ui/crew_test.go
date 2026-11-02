@@ -508,11 +508,11 @@ func TestTheProgressComesFromTheOrchestratorsLabel(t *testing.T) {
 	if !ok {
 		t.Fatal("the orchestrator's label carries a progress, and the console did not read it")
 	}
-	if progress.Round != 2 {
-		t.Errorf("the round is %d, want 2", progress.Round)
+	if !progress.Round.Reported || progress.Round.Value != 2 {
+		t.Errorf("the round is %+v, want 2", progress.Round)
 	}
-	if progress.Interactions != 6 {
-		t.Errorf("the interactions are %d, want 6", progress.Interactions)
+	if !progress.Interactions.Reported || progress.Interactions.Value != 6 {
+		t.Errorf("the interactions are %+v, want 6", progress.Interactions)
 	}
 
 	out := plain(m)
@@ -574,7 +574,7 @@ func TestTheStartupTaskTellsTheOrchestratorToKeepItsLabelCurrent(t *testing.T) {
 // and the rest of the tail is what the member is on.
 func TestTheLabelThatIsNotAProgressIsNotOne(t *testing.T) {
 	progress, on := parseProgress("RCP03")
-	if progress.Round != 0 || progress.Interactions != 0 {
+	if progress.Round.Reported || progress.Interactions.Reported {
 		t.Errorf("the progress is %+v, want none", progress)
 	}
 	if on != "RCP03" {
@@ -583,8 +583,8 @@ func TestTheLabelThatIsNotAProgressIsNotOne(t *testing.T) {
 
 	// A round that is not a number is not a round.
 	progress, _ = parseProgress("round two")
-	if progress.Round != 0 {
-		t.Errorf("the round is %d, want none — the console does not read a number it cannot compute", progress.Round)
+	if progress.Round.Reported {
+		t.Errorf("the round is %+v, want none — the console does not read a number it cannot compute", progress.Round)
 	}
 }
 
@@ -613,8 +613,8 @@ func TestTheStampPrintsNoNumberItCannotCompute(t *testing.T) {
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
-			Round:        7,
-			Interactions: 39,
+			Round:        crewCount{Value: 7, Reported: true},
+			Interactions: crewCount{Value: 39, Reported: true},
 		},
 	}}
 
@@ -640,8 +640,8 @@ func TestTheStampMeasuresAProgressInsideTheCap(t *testing.T) {
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
-			Round:        2,
-			Interactions: 6,
+			Round:        crewCount{Value: 2, Reported: true},
+			Interactions: crewCount{Value: 6, Reported: true},
 		},
 	}}
 
@@ -692,5 +692,122 @@ func TestTheCrewLabelIsSanitisedOnTheSousChefTab(t *testing.T) {
 		if strings.HasPrefix(strings.TrimSpace(line), "INJECTED") {
 			t.Errorf("the label's line broke the crew's table:\n%s", content)
 		}
+	}
+}
+
+// TestTheStampReadsInAllThreeShapes covers the stamp's three shapes.
+//
+// A progress reported, **no** progress, and a progress **over** the cap — and
+// the heading never runs into the vital signs: they are two facts, and they
+// read as two.
+func TestTheStampReadsInAllThreeShapes(t *testing.T) {
+	m := sousModel(t)
+
+	// One: a progress reported.
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        crewCount{Value: 2, Reported: true},
+			Interactions: crewCount{Value: 6, Reported: true},
+		},
+	}}
+	stamp := stampLine(plain(m))
+	if !strings.Contains(stamp, "THE STAMP · plan 7") &&
+		!strings.Contains(stamp, "THE STAMP · round 2 of 3") {
+		t.Errorf("the heading runs into the vital signs: %q", stamp)
+	}
+	if !strings.Contains(stamp, "round 2 of 3 · 6 of 12 interactions") {
+		t.Errorf("the stamp should carry the progress: %q", stamp)
+	}
+	if !strings.Contains(stamp, "plan 7 · build 7 · they agree") {
+		t.Errorf("the stamp should carry the vital signs: %q", stamp)
+	}
+
+	// Two: no progress at all.
+	m.crew = []crewRow{{State: "working", Job: "orchestrator"}}
+	stamp = stampLine(plain(m))
+	if !strings.Contains(stamp, "THE STAMP · plan 7 · build 7 · they agree") {
+		t.Errorf("the heading runs into the vital signs: %q", stamp)
+	}
+	if strings.Contains(stamp, "round") || strings.Contains(stamp, "interactions") {
+		t.Errorf("the stamp should print no progress it cannot compute: %q", stamp)
+	}
+
+	// Three: a progress over the cap.
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        crewCount{Value: 7, Reported: true},
+			Interactions: crewCount{Value: 39, Reported: true},
+		},
+	}}
+	stamp = stampLine(plain(m))
+	if strings.Contains(stamp, "7 of 3") || strings.Contains(stamp, "39 of 12") {
+		t.Errorf("the stamp should not print a progress against a cap it has passed: %q", stamp)
+	}
+	if !strings.Contains(stamp, "the budget is spent") {
+		t.Errorf("the stamp should say the budget is spent: %q", stamp)
+	}
+}
+
+// TestTheBudgetIsSpentWhenTheReportReachesTheCap covers the flag's timing.
+//
+// The flag arrives **with** the report: a crew that has used its third round of
+// three has spent its budget, and the stamp says so then — not one round later.
+func TestTheBudgetIsSpentWhenTheReportReachesTheCap(t *testing.T) {
+	m := sousModel(t)
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        crewCount{Value: 3, Reported: true},
+			Interactions: crewCount{Value: 12, Reported: true},
+		},
+	}}
+
+	stamp := stampLine(plain(m))
+	if !strings.Contains(stamp, "round 3 of 3 · 12 of 12 interactions") {
+		t.Errorf("the stamp should carry the report: %q", stamp)
+	}
+	if !strings.Contains(stamp, "the budget is spent") {
+		t.Errorf("the flag should arrive with the report: %q", stamp)
+	}
+}
+
+// TestAZeroedReportIsAReport covers the zero.
+//
+// "round 0 · 0 interactions" is the crew **reporting** that it has not started a
+// round — not a crew that reported nothing. The stamp must not read one as the
+// other.
+func TestAZeroedReportIsAReport(t *testing.T) {
+	m := sousModel(t)
+	runtime := crewRuntimeFixture(t, m)
+	runtime.knownTabs[0] = herdrTab{
+		TabID: "w1:t1",
+		Label: "maitre: orchestrator · round 0 · 0 interactions",
+	}
+	m.runtime = runtime
+
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	m.crew = rows
+
+	if _, ok := m.reportedProgress(); !ok {
+		t.Fatal("a zeroed report is a report, and the console read none")
+	}
+	stamp := stampLine(plain(m))
+	if !strings.Contains(stamp, "round 0 of 3 · 0 of 12 interactions") {
+		t.Errorf("the stamp should carry the zeroed report: %q", stamp)
+	}
+
+	// And it is not the same as no report at all.
+	m.crew = []crewRow{{State: "working", Job: "orchestrator"}}
+	quiet := stampLine(plain(m))
+	if quiet == stamp {
+		t.Errorf("a zeroed report and no report read the same: %q", stamp)
 	}
 }

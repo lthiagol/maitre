@@ -92,7 +92,7 @@ func (m *Model) readCrew() ([]crewRow, error) {
 		// orchestrator, and what it is on for everybody.
 		progress, on := parseProgress(tail)
 		row := crewRow{State: a.Status, Job: job, On: on, TabID: a.TabID}
-		if progress.Round > 0 || progress.Interactions > 0 {
+		if progress.Round.Reported || progress.Interactions.Reported {
 			row.Progress = &progress
 		}
 		rows = append(rows, row)
@@ -112,9 +112,21 @@ func (m *Model) readCrew() ([]crewRow, error) {
 // reported one.
 type crewProgress struct {
 	// Round is the round the crew is on.
-	Round int
+	Round crewCount
 	// Interactions is how many interactions the crew has spent.
-	Interactions int
+	Interactions crewCount
+}
+
+// crewCount is one number the orchestrator reported.
+//
+// The **reported** flag is what tells a **zero** from an **absence**: "round 0"
+// is the crew saying it has not started a round, and a crew that reported
+// nothing at all is a different thing.
+type crewCount struct {
+	// Value is the number.
+	Value int
+	// Reported says the crew reported this number.
+	Reported bool
 }
 
 // parseProgress reads the progress out of a roster's tail.
@@ -130,12 +142,12 @@ func parseProgress(tail string) (progress crewProgress, on string) {
 		switch {
 		case strings.HasPrefix(part, "round "):
 			if n, ok := atoi(strings.TrimPrefix(part, "round ")); ok {
-				progress.Round = n
+				progress.Round = crewCount{Value: n, Reported: true}
 				continue
 			}
 		case strings.HasSuffix(part, " interactions"):
 			if n, ok := atoi(strings.TrimSuffix(part, " interactions")); ok {
-				progress.Interactions = n
+				progress.Interactions = crewCount{Value: n, Reported: true}
 				continue
 			}
 		}

@@ -82,10 +82,10 @@ func TestTheSkillExampleIsTheFormatTheConsoleReads(t *testing.T) {
 		}
 		orchestrator++
 		progress, _ := parseProgress(tail)
-		if progress.Round <= 0 {
+		if !progress.Round.Reported {
 			t.Errorf("the console reads no round from the skill's example %q", example)
 		}
-		if progress.Interactions <= 0 {
+		if !progress.Interactions.Reported {
 			t.Errorf("the console reads no interactions from the skill's example %q", example)
 		}
 	}
