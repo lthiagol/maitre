@@ -209,9 +209,24 @@ herdr is a **runtime dependency, not a module**, so the dependency budget does n
 move. The console starts a process and writes nothing to the plan: the crew does the
 work (ADR-0003).
 
-**Open gaps:** Courses — ladder rung 3 — are not built. The orchestrator's own
-dispatching is the crew's work and not the console's: the console starts the crew and
-shows it working.
+**Slice 15 — the automation's round.** The slices above built the tab; the round in
+`work/tui/` built the machine around it:
+
+| | |
+|---|---|
+| **the skills menu** | `maitre-cli skill help` · `list` · `load <name>`, and the roles **embedded in the binary**, so the skill and the tool cannot drift |
+| **the settings record** | `kitchen/settings.json` — the **tool's** file, in the plan's folder, so the chef's theme and order survive a restart. The plan's format does not move |
+| **the shared seeded store** | the suite builds the plan **once** and copies it — `internal/ui` went from **89%** of go test's 600s limit to **6%** |
+| **the render path** | a frame forks **no** process; the crew read is **one** `herdr api snapshot`; the goldens render with herdr off the PATH |
+| **the surfaces** | the plan's records move through the **CLI**, the crew moves through **herdr**, the CLI never controls the automation |
+
+The round's slices, its findings and their receipts are in `work/tui/` and
+`docs/audit.md`.
+
+**Open gaps:** Courses — ladder rung 3 — are not built. `decisions.json` is a plan
+record with **no verb**: the type and the file exist, and nothing writes it. The
+console has **no fence against an unpinned herdr** — it reads the runtime's
+snapshot, and the runtime is a runtime dependency, not a module.
 
 **Slice 14 — the specification's table of derived views is checked.** `docs/03` § 8
 lists the views the domain computes, and it had drifted in both directions: the chef's
@@ -260,11 +275,10 @@ to it. `core.DomainVersion` says which rules the tool speaks;
 cmd/maitre-cli/  the agent CLI
 cmd/maitre/     the human console
 internal/core/  domain model · lifecycle · gates · store · views · verifier   ← stdlib only
-internal/cli/   the maitre-cli command surface                                   ← stdlib only
+internal/cli/   the maitre-cli command surface, and the skills it embeds      ← stdlib only
 internal/settings/  the tool's settings record — the schema, the read, the atomic write   ← stdlib only
 internal/ui/    the maitre console (bubbletea v2)
 skills/         vendored third-party skills, pinned to an upstream commit
-templates/      our own skills (to come)
 scripts/        console-shot.py — capture what the console actually shows
                 stamp-plan/ — record a plan's id migration in its journal
                 dep-budget.sh — the dependency budget, and the numbers it holds
@@ -273,6 +287,7 @@ scripts/        console-shot.py — capture what the console actually shows
                 check-tool-versions.sh — the pins, against the tool and the doc
                 check-golden-claims.sh — every golden file is claimed by a test
                 check-golden-commit.sh — the goldens must be in the commit
+                check-slice-numbers.sh — the slice numbers are one number
                 hooks/ — the pre-push hook
 prototypes/     throwaway design sketches
 work/           the work in progress — briefs, transcripts, the state of the rename
