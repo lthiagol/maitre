@@ -189,6 +189,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q27 | can the chef stop the automation from the tab? | **yes** — `space` stops the crew, and the footer names which key does what. It revises Q22 | 2026-11-01 |
 | Q28 | where do the console's settings live? | **in the plan's folder, in a new file** — `kitchen/settings.json` | 2026-11-01 |
 | Q29 | who owns that file — the domain, or the tool? | **the tool.** The settings are not a plan *record* and carry no rules, so the plan's format does not move: `DomainVersion` stays **7**, no stamp | 2026-11-01 |
+| Q30 | where does the stamp's progress — the round and the interactions — come from? | **the crew's own label.** The orchestrator writes it; the console reads it. The plan's journal carries no signal separating the crew from the chef, so nothing derives the progress from it | 2026-11-02 |
 | Q15 | where the console says the filter exists | **the Settings tab's key list** — the footer names the move the *current selection* has, and `/` opens a mode, not a move. The footer's goldens do not move | 2026-10-31 |
 | Q16 | the orchestrator's tab's name | **Sous-Chef** — the tab's old name. The rows carry the glossary's job names (`orchestrator`, `runner`, `reviewer`), so the tab's name and the glossary's sous-chef stay two different things | 2026-10-31 |
 | Q17 | the orchestrator's tab: the count and the place | **8 tabs — Sous-Chef between Board and Log**. Home · Recipes · Backlog · Ready · Board · **Sous-Chef** · Log · Settings | 2026-10-31 |
@@ -217,6 +218,7 @@ evidence. A lane that waits for the tree to be clean is doing the right thing.
 | Q26 | **T10** — the tab is the ticket |
 | Q27 | **T10** — the tab offers a stop, and says which key does what |
 | Q28, Q29 | **T9** — the settings are the tool's file, `kitchen/settings.json`; the plan's format does not move. **T10** adds the `crew` section |
+| Q30 | **T10** — the progress comes from the crew's label, not the plan's journal |
 | Q15 | **T7** — nothing to change. The footer stays the selection's move; the key is in Settings |
 | Q16 | **T10** — the tab's name |
 | Q17 | **T10** — 8 tabs, Sous-Chef between Board and Log |

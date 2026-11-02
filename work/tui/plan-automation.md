@@ -210,6 +210,7 @@ place where the work happens. The crew's members are not lanes.
 | **Q26** | the tab's design | **ruled: the ticket** — an order, the queue under it, and a stamp at the foot. § 14 |
 | **Q27** | can the chef stop the automation from the tab? | **ruled: yes.** `space` stops the crew, and the footer says which. It revises Q22 |
 | **Q28** | where do the console's settings live — the view's and the crew's? | **ruled: in the plan's folder, in a new file** — `kitchen/settings.json`. § 15 |
+| **Q30** | where does the stamp's progress — the round and the interactions — come from? | **ruled: the crew's own label.** The orchestrator writes it, the console reads it. The plan's journal carries no signal separating the crew from the chef, so nothing derives the progress from it — a number read from a signal that does not exist is a number the console invented. § 14 |
 | **Q29** | who owns that file — the domain, or the tool? | **ruled: the tool.** The settings are not a plan *record* — the glossary's records are the machine's records *about the work* — and they carry no rules the plan was written under. So the plan's format does not move: `DomainVersion` stays **7**, no stamp, no migration. § 15 |
 
 ## 11 — The three slices
