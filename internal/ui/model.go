@@ -1185,6 +1185,8 @@ func (m *Model) primaryAction() (tea.Model, tea.Cmd) {
 	case TabBoard:
 		// The footer names no space here. The sign-off stays on Recipes.
 		return m, nil
+	case TabSousChef:
+		return m.sousPrimaryAction()
 	}
 	return m, nil
 }

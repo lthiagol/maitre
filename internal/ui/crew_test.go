@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"charm.land/bubbletea/v2"
 )
 
 // fakeRuntime is a runtime that answers from a fixture.
@@ -185,5 +187,148 @@ func TestTheRuntimeThatIsNotThereIsSaid(t *testing.T) {
 	}
 	if !errors.Is(err, errNoRuntime) {
 		t.Errorf("the error is %v, want the runtime's absence", err)
+	}
+}
+
+// TestSpaceStartsTheCrew covers the start.
+//
+// `space` starts the crew: the console opens a tab on the plan's root and runs
+// the orchestrator in it.
+func TestSpaceStartsTheCrew(t *testing.T) {
+	m := sousModel(t)
+	runtime := crewRuntimeFixture(t, m)
+	m.runtime = runtime
+
+	m.Update(tea.KeyPressMsg{Code: ' '})
+
+	if len(runtime.started) != 1 {
+		t.Fatalf("the runtime was asked to start %d times, want 1", len(runtime.started))
+	}
+	if !strings.Contains(runtime.started[0], "opencode") {
+		t.Errorf("the crew should run the harness the order names: %q", runtime.started[0])
+	}
+}
+
+// TestTheStartupTaskCarriesTheRoleAndTheWork covers the task.
+//
+// **The skill carries the role; the startup task carries the work.** The task
+// names the plan, tells the orchestrator to load its role, and says what it is
+// to execute.
+func TestTheStartupTaskCarriesTheRoleAndTheWork(t *testing.T) {
+	m := sousModel(t)
+	task := m.startupTask()
+
+	if !strings.Contains(task, "maitre-cli skill load orchestrator-role") {
+		t.Errorf("the task should load the role: %q", task)
+	}
+	if !strings.Contains(task, m.store.ProjectRoot()) {
+		t.Errorf("the task should name the plan's root: %q", task)
+	}
+	work := m.sousWork()
+	if work == "none — the queue is empty" {
+		t.Fatalf("the seeded plan should have work: %q", work)
+	}
+	if !strings.Contains(task, work) {
+		t.Errorf("the task should carry the work %q: %q", work, task)
+	}
+}
+
+// TestTheWorkIsUnderTheBudgetsCap covers the budget.
+//
+// The budget is the chef's cap on how much the crew may do, and the work handed
+// to the orchestrator is the queue under that cap.
+func TestTheWorkIsUnderTheBudgetsCap(t *testing.T) {
+	m := sousModel(t)
+	m.picks.Budget = 0 // the smallest budget: 2 rounds
+	m.picks.Sources = "recipes"
+
+	queue := m.sousQueue("recipes")
+	if len(queue) < 3 {
+		t.Skipf("the plan has %d recipes, so the cap is not tested", len(queue))
+	}
+	work := m.sousWork()
+	if got := len(strings.Split(work, ", ")); got != 2 {
+		t.Errorf("the work is %q — %d items, want 2", work, got)
+	}
+}
+
+// TestSpaceStopsTheCrew covers the stop.
+//
+// `space` stops the crew when it is running: the console closes the crew's own
+// tabs, and only those.
+func TestSpaceStopsTheCrew(t *testing.T) {
+	m := sousModel(t)
+	runtime := crewRuntimeFixture(t, m)
+	m.runtime = runtime
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	m.crew = rows
+
+	m.Update(tea.KeyPressMsg{Code: ' '})
+
+	if len(runtime.stopped) != 3 {
+		t.Fatalf("the runtime closed %d tabs, want 3", len(runtime.stopped))
+	}
+	for _, id := range runtime.stopped {
+		if id == "w9:t1" {
+			t.Errorf("the console closed a tab that is not the crew's: %v", runtime.stopped)
+		}
+	}
+	if len(runtime.started) != 0 {
+		t.Errorf("the console started a crew while one was running: %v", runtime.started)
+	}
+}
+
+// TestTheFooterNamesWhichTheSpaceDoes covers the footer's promise.
+//
+// One key, two meanings: the footer says which one it is about to do.
+func TestTheFooterNamesWhichTheSpaceDoes(t *testing.T) {
+	m := sousModel(t)
+	m.runtime = crewRuntimeFixture(t, m)
+
+	if out := plain(m); !strings.Contains(out, "space start the crew") {
+		t.Errorf("the footer should offer to start the crew:\n%s", out)
+	}
+
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	m.crew = rows
+	if out := plain(m); !strings.Contains(out, "space stop the crew") {
+		t.Errorf("the footer should offer to stop the crew:\n%s", out)
+	}
+}
+
+// TestTheCrewIsReadWhenTheTabComesOnScreen covers the read.
+//
+// The crew is runtime state: the console asks for it when the tab comes on
+// screen, and the answer comes back as a message.
+func TestTheCrewIsReadWhenTheTabComesOnScreen(t *testing.T) {
+	m := sousModel(t)
+	m.runtime = crewRuntimeFixture(t, m)
+	m.tab = TabLog
+
+	cmd := m.switchTabCmd(TabSousChef)
+	if cmd == nil {
+		t.Fatal("the tab should ask for the crew")
+	}
+	msg, ok := cmd().(crewMsg)
+	if !ok {
+		t.Fatalf("the command answered %T, want a crew message", msg)
+	}
+	if msg.err != nil {
+		t.Fatalf("read the crew: %v", msg.err)
+	}
+	if len(msg.rows) != 3 {
+		t.Errorf("the crew has %d members, want 3", len(msg.rows))
+	}
+
+	// And the message puts them on the tab.
+	m.Update(msg)
+	if len(m.crew) != 3 {
+		t.Errorf("the console holds %d members, want 3", len(m.crew))
 	}
 }

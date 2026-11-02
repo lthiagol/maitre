@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
 	"github.com/lthiagol/maitre/internal/core"
@@ -204,6 +205,109 @@ func harnessCommand(name string) string {
 		return cmd
 	}
 	return harnessCommands[settings.DefaultHarness]
+}
+
+// sousMoveLabel names what `space` will do on this tab.
+//
+// The move is **one key with two meanings**: `space` starts the crew when it is
+// not running, and stops it when it is. The footer says which — a key that can
+// do two things must say which one it is about to do.
+func (m *Model) sousMoveLabel() string {
+	if m.crewErr != nil {
+		// The console does not know whether the crew is running, so it offers no
+		// move: a move offered on a guess is a move that can start a second crew.
+		return ""
+	}
+	if m.crewRunning() {
+		return "stop the crew"
+	}
+	return "start the crew"
+}
+
+// sousPrimaryAction is the tab's move: start the crew, or stop it.
+//
+// Starting is the console's first action that is not a plan write: it spawns a
+// process. It writes **nothing** to the plan — the crew does the work, and the
+// plan's records are the crew's to write.
+func (m *Model) sousPrimaryAction() (tea.Model, tea.Cmd) {
+	if m.crewErr != nil {
+		m.status = m.crewErr.Error()
+		return m, nil
+	}
+	if m.crewRunning() {
+		return m, m.stopCrew()
+	}
+	return m, m.startCrew()
+}
+
+// startCrew opens the crew's tab and runs the orchestrator in it.
+//
+// The console remembers nothing: it does not keep the pane id, and it does not
+// write a file. It finds the crew again by asking the runtime, so a console that
+// was closed and reopened still shows the running automation.
+func (m *Model) startCrew() tea.Cmd {
+	err := m.runtime.start(
+		m.store.ProjectRoot(),
+		m.projectName(),
+		harnessCommand(m.picks.Harness),
+		m.startupTask(),
+	)
+	if err != nil {
+		// A failed start is not a running automation: the move stays.
+		m.status = "the crew did not start: " + err.Error()
+		return m.refreshCrew()
+	}
+	m.status = "the crew is starting: " + m.sousWork()
+	return m.refreshCrew()
+}
+
+// stopCrew closes the crew's tabs.
+//
+// **Only the crew's own tabs**: the chef's panes are not the crew's to close.
+func (m *Model) stopCrew() tea.Cmd {
+	tabs := m.crewTabIDs()
+	if len(tabs) == 0 {
+		m.status = "the crew is not running"
+		return m.refreshCrew()
+	}
+	if err := m.runtime.stop(tabs); err != nil {
+		m.status = "the crew did not stop: " + err.Error()
+		return m.refreshCrew()
+	}
+	m.status = "the crew is stopped"
+	return m.refreshCrew()
+}
+
+// startupTask is what the orchestrator is given when the crew starts.
+//
+// **The skill carries the role; the startup task carries the work.** The task is
+// short because the role is not in it: the orchestrator runs
+// `maitre-cli skill load orchestrator-role` and follows it.
+func (m *Model) startupTask() string {
+	return fmt.Sprintf(
+		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s.",
+		m.store.ProjectRoot(), m.sousWork())
+}
+
+// sousWork is the work the crew is given: the queue's items, up to the budget's
+// cap on rounds.
+//
+// The budget is the chef's cap on how much the crew may do, and the work handed
+// to the orchestrator is the queue under that cap.
+func (m *Model) sousWork() string {
+	queue := m.sousQueue(m.picks.Sources)
+	budget := sousBudgets[m.picks.Budget]
+	if len(queue) > budget.Rounds {
+		queue = queue[:budget.Rounds]
+	}
+	if len(queue) == 0 {
+		return "none — the queue is empty"
+	}
+	ids := make([]string, 0, len(queue))
+	for _, item := range queue {
+		ids = append(ids, item.ID)
+	}
+	return strings.Join(ids, ", ")
 }
 
 // crewRow is one member of the crew, as the runtime knows it.

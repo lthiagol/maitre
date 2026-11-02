@@ -614,6 +614,9 @@ func (m *Model) primaryActionLabel() string {
 		// current selection has — shape it, promote it, or nothing — and a
 		// settled item has none, so the console must not promise a key there.
 		return core.BacklogMoveOf(item).Primary.Label()
+	case TabSousChef:
+		// One key, two meanings: the footer says which one it is about to do.
+		return m.sousMoveLabel()
 	}
 	return ""
 }
