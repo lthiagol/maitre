@@ -33,10 +33,10 @@ func TestTheConsoleLandsOnHome(t *testing.T) {
 	if m.tab != TabHome {
 		t.Fatalf("the console opens on %q, want Home", m.tab.Label())
 	}
-	if len(TabNames) != 7 {
-		t.Fatalf("the console has %d tabs, want 7: %v", len(TabNames), TabNames)
+	if len(TabNames) != 8 {
+		t.Fatalf("the console has %d tabs, want 8: %v", len(TabNames), TabNames)
 	}
-	want := []string{"Home", "Recipes", "Backlog", "Ready", "Board", "Log", "Settings"}
+	want := []string{"Home", "Recipes", "Backlog", "Ready", "Board", "Sous-Chef", "Log", "Settings"}
 	for i, name := range want {
 		if TabNames[i] != name {
 			t.Errorf("tab %d is %q, want %q", i, TabNames[i], name)

@@ -21,6 +21,7 @@ const (
 	TabBacklog
 	TabReady
 	TabBoard
+	TabSousChef
 	TabLog
 	TabSettings
 )
@@ -30,7 +31,11 @@ const (
 // The Home tab is first: it is the landing place, and it holds the plan's numbers.
 // Ready sits next to the Board: Ready is what an agent could claim now, and the
 // Board is the plan's shape.
-var TabNames = []string{"Home", "Recipes", "Backlog", "Ready", "Board", "Log", "Settings"}
+//
+// **Sous-Chef sits between Board and Log** — the automation's tab: the order it
+// runs, the queue under it and the crew's stamp. It is the tab that starts the
+// crew, so it sits with the run: after the plan's shape and before the journal.
+var TabNames = []string{"Home", "Recipes", "Backlog", "Ready", "Board", "Sous-Chef", "Log", "Settings"}
 
 // Label is the tab's name.
 func (t Tab) Label() string { return TabNames[int(t)] }

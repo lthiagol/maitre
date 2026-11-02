@@ -23,7 +23,7 @@ Every line is new. v1 contributes lessons and vocabulary, not code.
 | | |
 |---|---|
 | `maitre-cli` | the agent CLI — 46 commands: 40 verbs in 8 groups, plus 6 workspace commands |
-| `maitre` | the human console — 7 tabs, fullscreen, alt screen |
+| `maitre` | the human console — 8 tabs, fullscreen, alt screen |
 
 The plan lives in `kitchen/`: `recipes/`, `courses/`, `backlog/`, plus
 `activity.json` — the only event log — and `project.json`.
@@ -31,7 +31,8 @@ The plan lives in `kitchen/`: `recipes/`, `courses/`, `backlog/`, plus
 The console's tabs: **Home** (the plan's numbers — recipes, evidence, tasting, backlog,
 automation) · **Recipes** (grouped by what needs the chef) · **Backlog** (ideas
 and small tasks) · **Ready** (what an agent could claim now) · **Board** (the plan as a dependency
-tree) · **Log** (the journal) · **Settings**.
+tree) · **Sous-Chef** (the automation — its order, its queue and the crew's stamp) ·
+**Log** (the journal) · **Settings**.
 
 ```bash
 maitre-cli demo --dir /tmp/kb && cd /tmp/kb && maitre           # see it

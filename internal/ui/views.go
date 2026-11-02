@@ -471,6 +471,8 @@ func (m *Model) tabSummary() string {
 			len(tree.Roots)+waiting, len(tree.Roots), waiting)
 	case TabLog:
 		return fmt.Sprintf("recent activity · %d events", len(m.journal.Events))
+	case TabSousChef:
+		return "the automation · the order, the queue and the crew's stamp"
 	default:
 		return "the plan"
 	}
@@ -609,6 +611,8 @@ func (m *Model) listLines() []listLine {
 		return m.logLines()
 	case TabHome:
 		return m.homeLines()
+	case TabSousChef:
+		return m.sousLines()
 	case TabSettings:
 		return m.settingsLines()
 	default:
