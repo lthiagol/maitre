@@ -343,7 +343,8 @@ go list -deps -f '{{if not .Standard}}{{.Module.Path}}{{end}}' ./internal/ui | s
 | `make goldens-check` | regenerate, then the goldens must be unchanged, claimed by a test, and in the commit |
 | `make budget` | the dependency budget |
 | `make tidy-check` | `go mod tidy` must produce no diff |
-| `make check` | the fast gate — lint, versions-check, test, goldens-check, budget, tidy-check |
+| `make slices-check` | the slice numbers are one number — the plan's own files must agree about the Sous-Chef tab's slice |
+| `make check` | the fast gate — lint, versions-check, slices-check, test, goldens-check, budget, tidy-check |
 | `make check-race` | the slow gate — the same, with `-race` |
 | `make tools` | install the pinned dev tools |
 | `make vuln` | `govulncheck ./...` |
