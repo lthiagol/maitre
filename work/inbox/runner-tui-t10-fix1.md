@@ -1,0 +1,24 @@
+Runner: T10 fix 1 done. Commits: 5 — `2684307` (AC-01), `1c76e84` (AC-02), `f59f9be` (AC-03), `5b03f48` (AC-04), `e91063e` (AC-05).
+
+**One switch.** `switchTab` now returns the command, and it is the **one** switch: the keyboard's `tab`, the mouse's click on a tab label and the filter line's `tab` / `shift+tab` all go through it (`internal/ui/mouse.go`, `internal/ui/filter.go`, `internal/ui/model.go`). A click on the *Sous-Chef* label asks the runtime for the crew: with a crew running, the stamp shows the crew and the footer offers **"space stop the crew"** — it never offers to start a second one.
+
+**The poll.** The console asks the runtime on every poll **while the Sous-Chef tab is visible**, and it asks **even when the plan has not changed** — a static plan is exactly when the crew's state is most likely to have moved. A tab that is not on screen does not spend a call. (The poll and the crew ask are one batch, so the poll's chain is re-armed in one place only.)
+
+**The progress.** The **orchestrator's label** carries it: `maitre: orchestrator · round <N> · <M> interactions`. The console reads the orchestrator row's tail: the parts it recognises — `round <N>` and `<M> interactions` — are the progress, and the rest of the tail is what the member is on. **The journal is no longer the source**: `writtenByChef` and the journal derivation are gone, so the plan's history can no longer be printed as the crew's work (the old rule read *round 7 of 3 · 39 of 12 interactions* on a plan with no crew at all). The **startup task** says: *"Keep your tab's label current — the console reads the crew's progress from it: `herdr tab rename <TAB_ID> \"maitre: orchestrator · round <N> · <M> interactions\"` (your tab's id is in `herdr pane list`)."* And **`orchestrator-role` says so too** — a new *The roster's labels* section: the label is how the console finds the crew, the orchestrator is the one that writes the progress, and it keeps its own label current.
+
+**The stamp.** With a reported progress: `round 2 of 3 · 6 of 12 interactions` — the progress measured against the chef's cap. With **no** report: **no progress at all** — the stamp carries only the vital signs (`plan 7 · build 7 · they agree`); a label with no progress is not an error, it means the crew has not reported one. A progress **past** the cap is printed as it was reported (`round 7 · 39 interactions`) with **the budget is spent** beside it: *round 7 of 3* says the policy is not a policy, and the stamp does not say that.
+
+**The docs.** Both stale sentences are gone: the false equivalence (*the interactions are the crew's writes — the journal's events the chef did not write*) and *The Sous-Chef tab dissolved into Home*.
+
+**DomainVersion:** 7. The tab count stays **8**; `internal/core` does not change; the budget is **28 of 30**; herdr is still a runtime dependency, not a module.
+
+**The gate:** `make check` — **pass** (internal/ui 192.7s). `make check-race` — **pass** (internal/ui **516.1s**).
+
+Notes for the reviewer:
+
+1. **The label's format is mine to choose** — the brief says so, and it must be readable without guessing. The console recognises exactly two shapes (`round <N>`, `<M> interactions`); anything else in the tail is what the member is on, and a part it does not recognise carries **no** progress. A round that is not a number is not a round.
+2. **A witness outside the brief's letter.** The skill's new section is witnessed by `internal/cli/skills_test.go` — a **test**, not the CLI's surface. The brief allowed `SKILL.md` to change, and a claim with no witness is the house's bug; say so if you want that witness somewhere else.
+3. **The history was rewritten once.** My first AC-02 commit failed `make lint` (a staticcheck nit in the test file), so I rewrote it — the ids above are the rewritten ones, and `work/tui/README.md`'s T10 row names them (11 ids: the slice's seven and this cycle's four). The rewrite changed nothing else: `git diff` against the pre-rewrite tree is the lint fix and the row's ids.
+4. **The gate's headroom is now thin.** `internal/ui` is **516.1s** of go test's 600s default under `-race -shuffle=on -count=2` — **86%** — and this cycle's tests added ~35s of it. The remedy you measured — **sharing one seeded store** (a copy costs 0.007s against the seeder's 0.608s) — is a repo-wide change and outside this cycle's scope, so I did not touch it. **One more slice of this size breaks the gate.**
+5. **The stamp's wording is mine**: *the budget is spent*. The rule is yours — *no number it cannot compute* — and the numbers themselves are the orchestrator's report, printed as reported.
+6. **The over-budget case is new behaviour**: nothing in the slice or the design said what the stamp should say when the crew reports more than the cap. I print the progress as reported and say the budget is spent; rule it if you read it differently.
