@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -10,6 +11,12 @@ import (
 
 // The documents that state the rule, and the sentence they share with the binary.
 var textCommandDocs = []string{
+	"../../AGENTS.md",
+	"../../docs/04-operations.md",
+}
+
+// The documents that state the rule about the verbs, and the exception they share.
+var operationDocs = []string{
 	"../../AGENTS.md",
 	"../../docs/04-operations.md",
 }
@@ -138,6 +145,68 @@ func sameCommands(got, want []string) bool {
 	return true
 }
 
+// TestEveryVerbOutsideTheSkillGroupMapsToAnOperation holds the exception.
+//
+// The `skill` group reads the tool's own embedded files: it is a read-only surface,
+// not an operation, and the documents say so. Every other verb is an adapter over
+// the plan's operations, so it reaches the plan.
+//
+// The exception is asked of the **code**, not of the documents: the groups whose
+// verbs never open the plan are the ones the documents must name.
+func TestEveryVerbOutsideTheSkillGroupMapsToAnOperation(t *testing.T) {
+	planless := planlessGroups(t)
+	if len(planless) == 0 {
+		t.Fatal("every group opens the plan — the check found nothing to hold")
+	}
+
+	for _, path := range operationDocs {
+		text := flatten(readOwnFile(t, path))
+		named := exceptionGroups(text)
+		if !sameCommands(named, keys(planless)) {
+			t.Errorf("%s names %v as the exception; the groups that reach no plan are %v",
+				path, named, keys(planless))
+		}
+		for _, group := range named {
+			if !strings.Contains(text, operationExceptionPhrase(group)) {
+				t.Errorf("%s does not say what the %s group is: %q",
+					path, group, operationExceptionPhrase(group))
+			}
+		}
+	}
+}
+
+// operationExceptionPhrase is the sentence the documents share when they state the
+// exception.
+func operationExceptionPhrase(group string) string {
+	return fmt.Sprintf(
+		"except the `%s` group, which is a read-only surface over the tool's own embedded files and is not an operation",
+		group)
+}
+
+// exceptionGroups are the groups a document names as the exception.
+func exceptionGroups(flat string) []string {
+	var out []string
+	for _, m := range regexp.MustCompile("except the `([\\w-]+)` group").FindAllStringSubmatch(flat, -1) {
+		out = append(out, m[1])
+	}
+	return out
+}
+
+// flatten normalises the whitespace, so a sentence that wraps in the source is still
+// one sentence.
+func flatten(text string) string {
+	return strings.Join(strings.Fields(text), " ")
+}
+
+// keys are the names of a set.
+func keys(set map[string]bool) []string {
+	out := make([]string, 0, len(set))
+	for k := range set {
+		out = append(out, k)
+	}
+	return out
+}
+
 // cliSurface is the command surface: the workspace commands, the verbs of every
 // group, and the help.
 //
@@ -163,15 +232,79 @@ func cliSurface(t *testing.T) []string {
 	return out
 }
 
+// cliVerb is one verb of a group.
+type cliVerb struct {
+	// Verb is what the user types.
+	Verb string
+	// Func is the Runner method that serves it.
+	Func string
+}
+
 // cliGroups are the verbs of every group, by group.
-func cliGroups(t *testing.T) map[string][]string {
+func cliGroups(t *testing.T) map[string][]cliVerb {
 	t.Helper()
 	source := readOwnFile(t, "cli.go")
-	out := map[string][]string{}
+	out := map[string][]cliVerb{}
 	for _, m := range regexp.MustCompile(`(?s)r\.dispatch\(args\[1:\], "(\w+)", map\[string\]func\(\[\]string\) int\{(.*?)\n\t\t\}\)`).FindAllStringSubmatch(source, -1) {
-		for _, v := range regexp.MustCompile(`"([\w-]+)":`).FindAllStringSubmatch(m[2], -1) {
-			out[m[1]] = append(out[m[1]], v[1])
+		for _, v := range regexp.MustCompile(`"([\w-]+)":\s+r\.(cmd\w+)`).FindAllStringSubmatch(m[2], -1) {
+			out[m[1]] = append(out[m[1]], cliVerb{Verb: v[1], Func: v[2]})
 		}
+	}
+	return out
+}
+
+// planlessGroups are the groups whose verbs never open the plan.
+//
+// A verb that maps to an operation reaches the plan — the operations live there —
+// so this asks the code, not the documents.
+func planlessGroups(t *testing.T) map[string]bool {
+	t.Helper()
+	out := map[string]bool{}
+	for group, verbs := range cliGroups(t) {
+		for _, v := range verbs {
+			if !reachesThePlan(t, v.Func, map[string]bool{}) {
+				out[group] = true
+				break
+			}
+		}
+	}
+	return out
+}
+
+// reachesThePlan reports whether a method opens the plan.
+//
+// The calls are followed, because a verb may reach the plan through a helper.
+func reachesThePlan(t *testing.T, method string, seen map[string]bool) bool {
+	t.Helper()
+	if seen[method] {
+		return false
+	}
+	seen[method] = true
+	body, ok := runnerMethods(t)[method]
+	if !ok {
+		return false
+	}
+	if strings.Contains(body, "openStore") {
+		return true
+	}
+	for _, m := range regexp.MustCompile(`r\.(\w+)\(`).FindAllStringSubmatch(body, -1) {
+		if reachesThePlan(t, m[1], seen) {
+			return true
+		}
+	}
+	return false
+}
+
+// runnerMethods are the Runner's methods, by name.
+func runnerMethods(t *testing.T) map[string]string {
+	t.Helper()
+	out := map[string]string{}
+	for _, chunk := range strings.Split(packageSources(t), "\nfunc ") {
+		head := regexp.MustCompile(`^\(\w+ \*?(\w+)\) (\w+)\(`).FindStringSubmatch(chunk)
+		if head == nil {
+			continue
+		}
+		out[head[2]] = chunk
 	}
 	return out
 }

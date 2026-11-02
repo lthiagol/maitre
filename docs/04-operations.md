@@ -156,7 +156,8 @@ by reading the journal, and that requires every write to carry its session.
 
 ## The CLI surface
 
-`maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases.
+`maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases —
+except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation.
 **45 commands**: 39 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
 commands, 265 subcommands.)
 

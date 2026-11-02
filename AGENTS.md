@@ -128,7 +128,8 @@ the current selection. A resize re-lays out. The detail pane appears beside the 
   findings, an empty recipe, and text that is not ASCII. `maitre-cli demo --chaos` writes it.
 
 **Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 45 commands
-(39 verbs in 7 groups, plus 6 workspace commands), one verb per operation, no aliases. Every write is stamped with an actor, a
+(39 verbs in 7 groups, plus 6 workspace commands), one verb per operation, no aliases —
+except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation. Every write is stamped with an actor, a
 session and a role — the session comes from the caller (`MAITRE_CLI_SESSION`), because CPD's
 L5 law is about sessions. Every command prints one JSON document; a gate refusal is exit 2. Three commands print
 text instead: `help`, `skill help` and `skill load <name>`. The command surface is in
