@@ -391,7 +391,7 @@ the plan was not written under — and the settings carry **no rules**. So:
 | **the shape** | two parts — the version, and the sections. **T9** carries the `view` section, the one with a consumer today: the console's Settings tab. **T10** adds the `crew` section — the ticket's harness, count, sources and budget — and moves the schema's own version to **2** |
 | **never runtime state** | the settings hold what the chef **chose**. The crew's *state* is what **herdr** knows (§ 5). A pane id is never written |
 | **it travels with the plan** | the folder is the plan's folder, so the settings travel with it — the team works the plan the same way. A checkout that wants its own keeps it out of git |
-| **forward compatible** | unknown keys are ignored, so an older build reads a newer file |
+| **forward compatible, precisely** | the **version fence wins**: a file at a version this build does not know is **refused by name**, before its keys are read. Unknown keys are ignored only **within** the version this build knows. T10 moves the schema to version 2, so a T9 build refuses a T10 file |
 | **atomic** | written to a temporary file and renamed, so a half-written file cannot lose the chef's choices |
 | **the poll already watches it** | `core.DiskFingerprint` hashes every `.json` in the plan's folder, so a settings write is seen by the console's reload scan |
 
@@ -400,5 +400,5 @@ the plan was not written under — and the settings carry **no rules**. So:
 | | |
 |---|---|
 | **a package** | `internal/settings` — stdlib-only, 0 external modules. It owns the schema, the read, the atomic write and the version check |
-| **a CLI verb** | `maitre-cli settings show` · `settings set` — the chef's own surface for the same file |
+| **a CLI verb** | `maitre-cli settings show` — **read-only**. The console is the only writer, because the console owns the vocabulary. There is no `settings set`: a second writer is a second place that could write a value the console does not know |
 | **the console** | the Settings tab's VIEW section reads and writes the record, so the chef's choices survive a restart |

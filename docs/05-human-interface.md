@@ -338,9 +338,14 @@ the comma inside a position must not be one.
 
 **The theme is the chef's to pick.** The Settings tab lists the palettes under a
 **THEME** heading; the cursor moves over them and `enter` applies the one under it. The
-active theme is marked, so the chef can see which one is in force. The choice is for the
-session: nothing is written to the plan, so a theme is a setting of the console, not of
-the work.
+active theme is marked, so the chef can see which one is in force.
+
+**The choice is persisted**, with the order and show-served, in `kitchen/settings.json`
+— the **tool's** file, in the plan's folder. It is not a plan *record*: the plan's
+format does not move, `core.DomainVersion` stays **7**, and the plan's readers ignore
+the file. The console is the only writer, so a theme or an order the console does not
+know is refused by name and the console says so — it never writes a value it would
+refuse to read.
 
 | Theme | Ground |
 |---|---|
