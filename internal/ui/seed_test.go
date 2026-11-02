@@ -19,8 +19,9 @@ import (
 // write path, and it costs about six tenths of a second. Two hundred and nineteen of
 // them is two minutes of a suite that has six.
 //
-// So the suite builds the plan **once**, and every test takes a **copy**. The copy is byte for byte: the goldens
-// pin the seeded plan's content, so nothing inside a copy is touched.
+// So the suite builds its plans **once** — two templates — and every test takes a
+// **copy**. The copy is byte for byte: the goldens pin the seeded plan's content, so
+// nothing inside a copy is touched.
 //
 // The templates live in a directory the suite owns, and `TestMain` removes it when the
 // suite ends. A template in somebody's tmp would outlive the run that made it.
@@ -59,8 +60,8 @@ func TestMain(m *testing.M) {
 	}
 	templateDir = dir
 
-	// The templates are seeded under a directory named `demo`, so the plan's own
-	// name is `demo` — and every copy of it says the same name.
+	// The templates are seeded under a directory named `demo`, so a plan seeded
+	// there would name itself `demo` — the name the goldens hold.
 	planTemplate = filepath.Join(dir, "demo", core.PlanDirName)
 	if err := core.Seed(core.Open(planTemplate)); err != nil {
 		fmt.Fprintf(os.Stderr, "maitre: seed the plan: %v\n", err)
@@ -478,6 +479,38 @@ func TestTheStressPlanIsItsOwnTemplate(t *testing.T) {
 	}
 	if !found {
 		t.Error("the stress plan holds no STRESS recipe")
+	}
+}
+
+// The template file is the only place in the package a plan is seeded.
+const templateFile = "seed_test.go"
+
+// TestNoTestSeedsItsOwnPlan proves the package does not seed its own plans.
+//
+// The seeder costs 0.608s and writes fifteen files, and a suite that seeds per test
+// pays it per test — that was two minutes of the run. The template is seeded once,
+// in `TestMain`, and every test takes a copy.
+//
+// The wire is the package's own sources: a test file that calls the seeder is a file
+// that pays for a plan again, and the cost comes back without anything going red.
+func TestNoTestSeedsItsOwnPlan(t *testing.T) {
+	entries, err := os.ReadDir(".")
+	if err != nil {
+		t.Fatalf("read the package: %v", err)
+	}
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), "_test.go") || e.Name() == templateFile {
+			continue
+		}
+		raw, err := os.ReadFile(e.Name())
+		if err != nil {
+			t.Fatalf("read %s: %v", e.Name(), err)
+		}
+		for _, call := range []string{"core.Seed(", "core.SeedStress("} {
+			if strings.Contains(string(raw), call) {
+				t.Errorf("%s seeds its own plan: %s — a test takes a copy, not a seed", e.Name(), call)
+			}
+		}
 	}
 }
 
