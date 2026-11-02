@@ -315,6 +315,12 @@ func (m *Model) checkDisk() (tea.Model, tea.Cmd) {
 	if fp != m.disk {
 		return m, m.reload()
 	}
+	// The plan has not moved. The **crew** may have: the crew is runtime state,
+	// and a plan that stands still is exactly when the crew's state is most
+	// likely to have moved. So while the tab is visible the console asks.
+	if m.tab == TabSousChef {
+		return m, tea.Batch(m.refreshCrew(), m.poll())
+	}
 	return m, m.poll()
 }
 
@@ -366,7 +372,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// The crew is runtime state, and the tab shows it: the plan's reload
 		// is also the moment the crew is asked for again.
 		if m.tab == TabSousChef {
-			return m, tea.Batch(m.poll(), m.refreshCrew())
+			return m, tea.Batch(m.refreshCrew(), m.poll())
 		}
 		return m, m.poll()
 

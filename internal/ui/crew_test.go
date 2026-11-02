@@ -409,3 +409,77 @@ func TestTheFilterLineSwitchAsksTheRuntime(t *testing.T) {
 		t.Errorf("the footer must not offer to start a second crew:\n%s", out)
 	}
 }
+
+// TestThePollAsksTheRuntimeWhileTheTabIsVisible covers the poll.
+//
+// The crew is runtime state: a plan that does not move is exactly when the
+// crew's state is most likely to have moved. So while the tab is visible the
+// console asks — **even when the plan has not changed**.
+func TestThePollAsksTheRuntimeWhileTheTabIsVisible(t *testing.T) {
+	m := sousModel(t)
+	m.runtime = crewRuntimeFixture(t, m)
+	// The plan reads as unchanged.
+	fp, err := m.store.DiskFingerprint()
+	if err != nil {
+		t.Fatalf("fingerprint: %v", err)
+	}
+	m.disk = fp
+
+	_, cmd := m.Update(pollMsg{})
+	crew, ok := crewFrom(cmd)
+	if !ok {
+		t.Fatal("the poll should ask the runtime for the crew")
+	}
+	if crew.err != nil {
+		t.Fatalf("read the crew: %v", crew.err)
+	}
+	if len(crew.rows) != 3 {
+		t.Errorf("the crew has %d members, want 3", len(crew.rows))
+	}
+}
+
+// TestThePollDoesNotAskForATabThatIsNotOnScreen covers the rest.
+//
+// The console asks about the tab the chef is looking at. A tab that is not on
+// screen does not spend a call on the runtime.
+func TestThePollDoesNotAskForATabThatIsNotOnScreen(t *testing.T) {
+	m := sousModel(t)
+	m.runtime = crewRuntimeFixture(t, m)
+	m.tab = TabLog
+	fp, err := m.store.DiskFingerprint()
+	if err != nil {
+		t.Fatalf("fingerprint: %v", err)
+	}
+	m.disk = fp
+
+	_, cmd := m.Update(pollMsg{})
+	if _, ok := crewFrom(cmd); ok {
+		t.Error("the poll should not ask the runtime for a tab that is not on screen")
+	}
+}
+
+// crewFrom runs the command a message answered and returns the crew message it
+// carries, if there is one.
+//
+// The console asks the runtime and re-arms the poll in one batch, so the crew
+// message may be inside a batch or be the answer on its own.
+func crewFrom(cmd tea.Cmd) (crewMsg, bool) {
+	if cmd == nil {
+		return crewMsg{}, false
+	}
+	msg := cmd()
+	batch, ok := msg.(tea.BatchMsg)
+	if !ok {
+		crew, ok := msg.(crewMsg)
+		return crew, ok
+	}
+	for _, c := range batch {
+		if c == nil {
+			continue
+		}
+		if crew, ok := c().(crewMsg); ok {
+			return crew, true
+		}
+	}
+	return crewMsg{}, false
+}
