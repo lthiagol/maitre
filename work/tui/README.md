@@ -25,7 +25,7 @@
 | **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | ✅ closed · cycle 2 ok · 11 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86, 706560c, dc4f4e4, 6d48c1f, 1801999, 27483df | [tui-t8.md](../briefs/tui-t8.md) |
 | **T9** | the settings record | `kitchen/settings.json` — the tool's file, the console's VIEW preferences; `maitre-cli settings show` | ✅ closed · cycle 3 ok · 10 commits · 38d1d48, 2aba9f4, 089ef6b, 1ed7f3f, 2d65fa0, 17cdefe, b40eedf, 97f1de9, 2fb29f2, b170d0c | [tui-t9.md](../briefs/tui-t9.md) · [fix 1](../briefs/fix-tui-t9-1.md) · [fix 2](../briefs/fix-tui-t9-2.md) |
 | **T10** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | ✅ closed · cycle 4 ok · 18 commits · f3e85f8, 5fe4d68, 0159fa8, 867b545, 59b0d12, c03282e, ed0a13a, 2684307, 1c76e84, f59f9be, 5b03f48, 7edc649, 9003efb, 7d58dc8, 7597466, 3fb3701, 4bf7d93, a8d2bab | [tui-t10.md](../briefs/tui-t10.md) · [fix 1](../briefs/fix-tui-t10-1.md) · [fix 2](../briefs/fix-tui-t10-2.md) · [fix 3](../briefs/fix-tui-t10-3.md) |
-| **T11** | the shared seeded store | one template seeded once, a copy per test — the gate's headroom | ✅ implemented · 4 commits · 825bb82, 90774a4, f090206, 2fd2c13 | [tui-t11.md](../briefs/tui-t11.md) |
+| **T11** | the shared seeded store | one template seeded once, a copy per test — the gate's headroom | ✅ implemented · fix 1 · 7 commits · 825bb82, 90774a4, f090206, 2fd2c13, 2accb50, 3c2be62, 6ccfbdc | [tui-t11.md](../briefs/tui-t11.md) · [fix 1](../briefs/fix-tui-t11-1.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
@@ -47,7 +47,7 @@ is over: T1 through T7 are all closed.
 | **T8** | closed. Cycle 2 ok, 0 blockers. The menu, the embedded skill, the refusal — and the six findings of cycle 1 closed, each with a witness of its own. Receipt: `work/inbox/reviewer-tui-t8-cycle2.md` (`048c710`) |
 | **T9** | closed. Cycle 3 ok, 0 blockers. The record, the verb, and the console's VIEW preferences surviving a restart — through three cycles of findings, each one a claim nothing held. Receipt: `work/inbox/reviewer-tui-t9-cycle3.md` (`a0b78b8`) |
 | **T10** | closed. Cycle 4 ok, 0 blockers — five findings, F-140 to F-144, each closed. The ticket, the crew, the moves. Receipt: `work/inbox/reviewer-tui-t10-cycle4.md` (`70d0e37`) |
-| **The next work** | **T11** is implemented — the gate's headroom is back: `internal/ui` is at **6%** of go test's 600s default, where it was at **88%**. The next slice is not briefed yet |
+| **The next work** | **T12** — the render path stops waiting ([brief](../briefs/tui-t12.md)). T11's headroom is back: `internal/ui` is at **6%** of go test's 600s default, where it was at **88%** |
 | **The rulings** | the filter covers **Recipes, Backlog and Ready** (Q14); the filter key lives in **Settings' key list**, not the footer (Q15). Both ruled 2026-10-31 |
 
 Two notes from T6's first review, neither a finding: the note-cursor test's space-triage half does not run on the Board, and the wide board takes the full width so a fork has a column. `docs/07`'s order-tab row says **Ready**. The view and `maitre-cli path` stay `path`.
