@@ -306,34 +306,35 @@ func TestTheStampSaysWhenTheVersionsDisagree(t *testing.T) {
 	}
 }
 
-// TestTheStampCountsTheCrewsProgress covers the progress.
+// TestTheJournalsEventsAreNotTheCrewsProgress holds the source.
 //
-// **Policy above, progress below.** The order says the cap — "3 rounds · 12
-// interactions" — and the stamp says what has happened against it. The two are
-// different facts and neither is repeated.
-func TestTheStampCountsTheCrewsProgress(t *testing.T) {
+// The journal carries **no signal** that separates the crew from the chef: a
+// default `maitre-cli` write carries the actor `agent` and no role, and so does
+// a write by the orchestrator, the runner or the reviewer. So the plan's history
+// is not the crew's progress — and the stamp prints no number from it.
+func TestTheJournalsEventsAreNotTheCrewsProgress(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{State: "working", Job: "orchestrator", On: "routing RCP04"}}
-	m.journal = core.Journal{Schema: core.JournalSchema, Events: []core.JournalEntry{
-		{Seq: 1, Kind: core.KindEvidence, Actor: "runner", Role: "runner", Recipe: "RCP02"},
-		{Seq: 2, Kind: core.KindEvidence, Actor: "runner", Role: "runner", Recipe: "RCP02"},
-		{Seq: 3, Kind: core.KindEvidence, Actor: "reviewer", Role: "reviewer", Recipe: "RCP03"},
-		{Seq: 4, Kind: core.KindLifecycle, Actor: "chef", Role: "chef", Recipe: "RCP03"},
-	}}
-
-	rounds, interactions := crewProgress(m.journal)
-	if rounds != 2 {
-		t.Errorf("the rounds are %d, want 2 — two recipes the crew worked", rounds)
-	}
-	if interactions != 3 {
-		t.Errorf("the interactions are %d, want 3 — the chef's own write is not one", interactions)
+	m.crew = []crewRow{{State: "working", Job: "orchestrator", On: ""}}
+	m.journal = core.Journal{Schema: core.JournalSchema}
+	for i := 0; i < 39; i++ {
+		m.journal.Events = append(m.journal.Events, core.JournalEntry{
+			Seq:           i + 1,
+			Kind:          core.KindEvidence,
+			Actor:         "agent",
+			Recipe:        "RCP02",
+			DomainVersion: core.DomainVersion,
+		})
 	}
 
-	out := plain(m)
-	if !strings.Contains(out, "round 2 of 3") {
-		t.Errorf("the stamp should say the round against the cap:\n%s", out)
+	stamp := stampLine(plain(m))
+	if strings.Contains(stamp, "round") {
+		t.Errorf("the stamp should not print a round the plan's history does not carry: %q", stamp)
 	}
-	if !strings.Contains(out, "3 of 12 interactions") {
-		t.Errorf("the stamp should say the interactions against the cap:\n%s", out)
+	if strings.Contains(stamp, "interactions") {
+		t.Errorf("the stamp should not print interactions the plan's history does not carry: %q", stamp)
+	}
+	// The vital signs are still there: they are the plan's own.
+	if !strings.Contains(stamp, "plan 7") {
+		t.Errorf("the stamp should carry the vital signs: %q", stamp)
 	}
 }

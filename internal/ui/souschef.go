@@ -285,7 +285,7 @@ func (m *Model) stopCrew() tea.Cmd {
 // `maitre-cli skill load orchestrator-role` and follows it.
 func (m *Model) startupTask() string {
 	return fmt.Sprintf(
-		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s.",
+		"You are the orchestrator of the plan at %s. Run `maitre-cli skill load orchestrator-role` and follow it. The recipes to execute are: %s. Keep your tab's label current — the console reads the crew's progress from it: `herdr tab rename <TAB_ID> \"maitre: orchestrator · round <N> · <M> interactions\"` (your tab's id is in `herdr pane list`).",
 		m.store.ProjectRoot(), m.sousWork())
 }
 
@@ -322,6 +322,12 @@ type crewRow struct {
 	// TabID is the tab the member is on. The console keeps it so it can close
 	// the crew's own tabs — and only those — when the chef stops the crew.
 	TabID string
+	// Progress is what the orchestrator reported: the round the crew is on and
+	// the interactions it has spent.
+	//
+	// It is **absent** when the label carries none — and an absent progress is
+	// not an error: it means the crew has not reported one.
+	Progress *crewProgress
 }
 
 // sousItem is one item of the queue.
@@ -469,18 +475,17 @@ func (m *Model) sousStampLines() []listLine {
 		return out
 	}
 
-	rounds, interactions := crewProgress(m.journal)
-	budget := sousBudgets[m.picks.Budget]
-
 	versions := m.styDim.Render(fmt.Sprintf("plan %d · build %d · they agree",
 		m.planVersion(), core.DomainVersion))
 	if !m.versionsAgree() {
 		versions = m.styBad.Render(fmt.Sprintf("plan %d · build %d · they disagree",
 			m.planVersion(), core.DomainVersion))
 	}
-	add(" " + m.stySec.Render("THE STAMP") +
-		m.styDim.Render(fmt.Sprintf(" · round %d of %d · %d of %d interactions · ",
-			rounds, budget.Rounds, interactions, budget.Interactions)) + versions)
+	head := " " + m.stySec.Render("THE STAMP")
+	if progress := m.sousProgress(); progress != "" {
+		head += progress + m.styDim.Render(" · ")
+	}
+	add(head + versions)
 
 	out = append(out, m.sousCrewLines()...)
 	if !m.crewHasOrchestrator() {
@@ -533,36 +538,29 @@ func (m *Model) sousStateStyle(state string) lipgloss.Style {
 	}
 }
 
-// crewProgress is what the crew has done on the plan.
+// sousProgress is the progress the stamp carries.
 //
-// The **interactions** are the crew's own writes: the journal is the plan's only
-// event log, and an event the chef did not write is a write by the crew. The
-// **rounds** are the recipes the crew has worked — one round is one recipe
-// through the line.
-//
-// Both are facts about the plan, derived from the plan's own log. The record
-// holds the **cap**, and the stamp holds the **progress** — and the two are never
-// the same number twice.
-func crewProgress(j core.Journal) (rounds, interactions int) {
-	recipes := map[string]bool{}
-	for _, e := range j.Events {
-		if writtenByChef(e) {
-			continue
-		}
-		interactions++
-		if e.Recipe != "" {
-			recipes[e.Recipe] = true
-		}
+// The progress is the **orchestrator's** to say and the console's to read: it
+// comes from the orchestrator's label, and it is printed against the cap the
+// chef set. A number the console cannot compute is not printed — a label that
+// carries no progress means the crew has not reported one.
+func (m *Model) sousProgress() string {
+	progress, ok := m.reportedProgress()
+	if !ok {
+		return ""
 	}
-	return len(recipes), interactions
-}
-
-// writtenByChef reports whether the event came from the chef.
-//
-// The console writes under the actor "chef" and the role "chef"; everything else
-// on the plan was written by an agent — the crew.
-func writtenByChef(e core.JournalEntry) bool {
-	return e.Actor == "chef" || e.Role == "chef"
+	budget := sousBudgets[m.picks.Budget]
+	var parts []string
+	if progress.Round > 0 {
+		parts = append(parts, fmt.Sprintf("round %d of %d", progress.Round, budget.Rounds))
+	}
+	if progress.Interactions > 0 {
+		parts = append(parts, fmt.Sprintf("%d of %d interactions", progress.Interactions, budget.Interactions))
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return m.styDim.Render(" · " + strings.Join(parts, " · "))
 }
 
 // sousOrderLines renders the order: the four controls.

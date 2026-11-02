@@ -592,3 +592,28 @@ func skillNames(skills []skill) []string {
 	}
 	return out
 }
+
+// TestTheSkillSaysTheOrchestratorKeepsTheLabelsCurrent holds the role's own
+// knowledge.
+//
+// The label is how the console finds the crew and reads its progress, and the
+// orchestrator is the one that writes it: it dispatches the crew, so it is the
+// one that knows the round and the interaction count. The skill is the role's
+// knowledge, so the skill says so.
+func TestTheSkillSaysTheOrchestratorKeepsTheLabelsCurrent(t *testing.T) {
+	body := string(embeddedSkill(t, "orchestrator-role").Content)
+
+	for _, want := range []string{
+		"The roster's labels",
+		"maitre: orchestrator",
+		"round <N>",
+		"<M> interactions",
+		"maitre: runner",
+		"herdr tab rename",
+		"You write the progress",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the skill should carry %q", want)
+		}
+	}
+}

@@ -38,6 +38,38 @@ Both lanes are fresh for every slice, and the reviewer is briefed **only after**
 runner's commits land — a reviewer briefed in advance would model the code before it
 existed.
 
+## The roster's labels
+
+The tabs' labels are the **roster's lines**, and they are how the console finds
+the crew and reads its progress. An agent whose tab is not labelled `maitre: …`
+is not on the roster, and the console shows no such agent.
+
+| whose | the label |
+|---|---|
+| **the orchestrator** | `maitre: orchestrator · round <N> · <M> interactions` |
+| **the runner** | `maitre: runner · <the work>` |
+| **the reviewer** | `maitre: reviewer · <the work>` |
+
+**You write the progress.** You are the one dispatching the crew, so you are the
+one that knows the round and the interaction count. Keep your own label current:
+
+```bash
+herdr tab rename <TAB_ID> "maitre: orchestrator · round 2 · 6 interactions"
+```
+
+And rename a lane's label when the lane takes work:
+
+```bash
+herdr tab rename <TAB_ID> "maitre: runner · <the work>"
+```
+
+Your own tab's id is the tab your pane is in — `herdr pane list` carries it, and
+`herdr tab list` carries the lanes'.
+
+**The console prints no progress it cannot read.** A label that carries none
+means the crew has not reported one, and the stamp shows the order's cap and
+nothing else.
+
 ## What you must know
 
 | rule | why |

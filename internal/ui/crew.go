@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"charm.land/bubbletea/v2"
@@ -78,14 +79,76 @@ func (m *Model) readCrew() ([]crewRow, error) {
 		if filepath.Clean(cwd) != root {
 			continue
 		}
-		job, on, ok := parseRoster(labels[a.TabID])
+		job, tail, ok := parseRoster(labels[a.TabID])
 		if !ok {
 			continue
 		}
-		rows = append(rows, crewRow{State: a.Status, Job: job, On: on, TabID: a.TabID})
+		// The tail carries the member's report: the progress for the
+		// orchestrator, and what it is on for everybody.
+		progress, on := parseProgress(tail)
+		row := crewRow{State: a.Status, Job: job, On: on, TabID: a.TabID}
+		if progress.Round > 0 || progress.Interactions > 0 {
+			row.Progress = &progress
+		}
+		rows = append(rows, row)
 	}
 	sortCrew(rows)
 	return rows, nil
+}
+
+// crewProgress is what the crew's orchestrator reported about its own work.
+//
+// The **orchestrator** owns the progress: it is the one dispatching the crew, so
+// it is the one that knows the round and the interaction count. It writes them
+// into its own tab's label — the roster's line — and the console reads them from
+// there.
+//
+// A progress that is not there is **not an error**: it means the crew has not
+// reported one.
+type crewProgress struct {
+	// Round is the round the crew is on.
+	Round int
+	// Interactions is how many interactions the crew has spent.
+	Interactions int
+}
+
+// parseProgress reads the progress out of a roster's tail.
+//
+// The tail is the orchestrator's report: `round 2 · 6 interactions`. The format
+// is exact — a round and a count, each with its word — so the console never
+// guesses: a part it does not recognise carries no progress, and the rest of
+// the tail is what the member is on.
+func parseProgress(tail string) (progress crewProgress, on string) {
+	var rest []string
+	for _, part := range strings.Split(tail, "·") {
+		part = strings.TrimSpace(part)
+		switch {
+		case strings.HasPrefix(part, "round "):
+			if n, ok := atoi(strings.TrimPrefix(part, "round ")); ok {
+				progress.Round = n
+				continue
+			}
+		case strings.HasSuffix(part, " interactions"):
+			if n, ok := atoi(strings.TrimSuffix(part, " interactions")); ok {
+				progress.Interactions = n
+				continue
+			}
+		}
+		rest = append(rest, part)
+	}
+	return progress, strings.Join(rest, " · ")
+}
+
+// atoi is the number in the string, and whether it was one.
+//
+// A count that is not a number is not a count: the console does not read "two"
+// as two, and it does not read a number it cannot compute.
+func atoi(s string) (int, bool) {
+	n, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil || n < 0 {
+		return 0, false
+	}
+	return n, true
 }
 
 // parseRoster reads a roster line.
@@ -133,6 +196,23 @@ func sortCrew(rows []crewRow) {
 		}
 		return rows[i].Job < rows[j].Job
 	})
+}
+
+// reportedProgress is the progress the crew's orchestrator reported.
+//
+// It is the **orchestrator's** to say: it is the one dispatching the crew, so it
+// is the one that knows the round and the interaction count. It writes them into
+// its own tab's label, and the console reads them from there.
+//
+// A progress that is not there is **not an error**: it means the crew has not
+// reported one, and the stamp prints no progress at all.
+func (m *Model) reportedProgress() (crewProgress, bool) {
+	for _, row := range m.crew {
+		if row.Job == "orchestrator" && row.Progress != nil {
+			return *row.Progress, true
+		}
+	}
+	return crewProgress{}, false
 }
 
 // crewRunning reports whether the crew is running.

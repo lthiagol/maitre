@@ -483,3 +483,121 @@ func crewFrom(cmd tea.Cmd) (crewMsg, bool) {
 	}
 	return crewMsg{}, false
 }
+
+// TestTheProgressComesFromTheOrchestratorsLabel covers the carrier.
+//
+// The **orchestrator** owns the progress: it is the one dispatching the crew, so
+// it is the one that knows the round and the interaction count. It writes them
+// into its own tab's label, and the console reads them from there.
+func TestTheProgressComesFromTheOrchestratorsLabel(t *testing.T) {
+	m := sousModel(t)
+	runtime := crewRuntimeFixture(t, m)
+	runtime.knownTabs[0] = herdrTab{
+		TabID: "w1:t1",
+		Label: "maitre: orchestrator · round 2 · 6 interactions",
+	}
+	m.runtime = runtime
+
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	m.crew = rows
+
+	progress, ok := m.reportedProgress()
+	if !ok {
+		t.Fatal("the orchestrator's label carries a progress, and the console did not read it")
+	}
+	if progress.Round != 2 {
+		t.Errorf("the round is %d, want 2", progress.Round)
+	}
+	if progress.Interactions != 6 {
+		t.Errorf("the interactions are %d, want 6", progress.Interactions)
+	}
+
+	out := plain(m)
+	if !strings.Contains(out, "round 2 of 3") {
+		t.Errorf("the stamp should carry the round against the cap:\n%s", out)
+	}
+	if !strings.Contains(out, "6 of 12 interactions") {
+		t.Errorf("the stamp should carry the interactions against the cap:\n%s", out)
+	}
+}
+
+// TestALabelWithNoProgressShowsNone covers the absence.
+//
+// A label that carries no progress is **not an error**: the crew has not
+// reported one, and the stamp prints no progress at all.
+func TestALabelWithNoProgressShowsNone(t *testing.T) {
+	m := sousModel(t)
+	runtime := crewRuntimeFixture(t, m)
+	// The orchestrator has reported nothing.
+	runtime.knownTabs[0] = herdrTab{TabID: "w1:t1", Label: "maitre: orchestrator"}
+	m.runtime = runtime
+
+	rows, err := m.readCrew()
+	if err != nil {
+		t.Fatalf("read the crew: %v", err)
+	}
+	m.crew = rows
+
+	if _, ok := m.reportedProgress(); ok {
+		t.Error("a label with no progress should carry no progress")
+	}
+	stamp := stampLine(plain(m))
+	if strings.Contains(stamp, "round") || strings.Contains(stamp, "interactions") {
+		t.Errorf("the stamp should print no progress it cannot compute: %q", stamp)
+	}
+	if !strings.Contains(stamp, "plan 7") {
+		t.Errorf("the stamp should still carry the vital signs: %q", stamp)
+	}
+}
+
+// TestTheStartupTaskTellsTheOrchestratorToKeepItsLabelCurrent covers the writer.
+//
+// The skill carries the role; the startup task carries the work — and it says how
+// the orchestrator reports the progress the console reads.
+func TestTheStartupTaskTellsTheOrchestratorToKeepItsLabelCurrent(t *testing.T) {
+	m := sousModel(t)
+	task := m.startupTask()
+
+	for _, want := range []string{"herdr tab rename", "maitre: orchestrator", "round <N>", "<M> interactions"} {
+		if !strings.Contains(task, want) {
+			t.Errorf("the startup task should carry %q: %q", want, task)
+		}
+	}
+}
+
+// TestTheLabelThatIsNotAProgressIsNotOne covers the parser.
+//
+// The console never guesses: a part it does not recognise carries no progress,
+// and the rest of the tail is what the member is on.
+func TestTheLabelThatIsNotAProgressIsNotOne(t *testing.T) {
+	progress, on := parseProgress("RCP03")
+	if progress.Round != 0 || progress.Interactions != 0 {
+		t.Errorf("the progress is %+v, want none", progress)
+	}
+	if on != "RCP03" {
+		t.Errorf("the member is on %q, want RCP03", on)
+	}
+
+	// A round that is not a number is not a round.
+	progress, _ = parseProgress("round two")
+	if progress.Round != 0 {
+		t.Errorf("the round is %d, want none — the console does not read a number it cannot compute", progress.Round)
+	}
+}
+
+// stampLine is the stamp's line in the console's plain text.
+//
+// The stamp is one line, and the order above it carries the **policy** — the
+// budget's cap, which is a different fact. A test that looked at the whole
+// screen would read the policy as the progress.
+func stampLine(out string) string {
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, "THE STAMP") {
+			return line
+		}
+	}
+	return ""
+}
