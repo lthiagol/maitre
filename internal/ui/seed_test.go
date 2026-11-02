@@ -40,6 +40,11 @@ var (
 	// happens once: the tests run twice under `-count=2`, and the count does not
 	// move.
 	seeds int
+
+	// copies counts the copies the suite made. It moves with the runs — a copy per
+	// test, every time the suite runs — and it is the other half of the witness:
+	// the copies grow, the seed does not.
+	copies int
 )
 
 // TestMain seeds the templates once and removes them when the suite ends.
@@ -90,6 +95,9 @@ func TestMain(m *testing.M) {
 	// The templates are the suite's, so the suite takes them with it.
 	if err := removeTemplates(dir); err != nil {
 		fmt.Fprintf(os.Stderr, "maitre: remove the templates: %v\n", err)
+		code = 1
+	} else if _, err := os.Stat(dir); !os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "maitre: the template directory survived: %s\n", dir)
 		code = 1
 	}
 	os.Exit(code)
@@ -173,6 +181,7 @@ func copyTemplate(t *testing.T, template, parent, name string) *core.Store {
 	if err := copyTree(template, root); err != nil {
 		t.Fatalf("copy the template: %v", err)
 	}
+	copies++
 	return core.Open(root)
 }
 
@@ -338,6 +347,51 @@ func TestTheCopyIsTheTemplate(t *testing.T) {
 func TestTheTemplateIsSeededOnce(t *testing.T) {
 	if seeds != 2 {
 		t.Errorf("the suite seeded %d times, want 2 — one per template", seeds)
+	}
+}
+
+// TestTheCopiesGrowAndTheSeedDoesNot proves the template is shared and the plans are
+// not.
+//
+// The suite runs twice in one process under `-count=2`, and the tests run in any
+// order under `-shuffle=on`. The copies move with the runs — one per draw, every
+// time — and the seed does not move at all.
+//
+// The witness draws its own copies, so it does not depend on where it lands in the
+// order: a suite that seeded per test would count four under `-count=2`, and two
+// here.
+func TestTheCopiesGrowAndTheSeedDoesNot(t *testing.T) {
+	before := copies
+	_ = seededPlan(t)
+	_ = seededPlan(t)
+	if copies != before+2 {
+		t.Errorf("two draws made %d copies, want 2 — a copy per draw", copies-before)
+	}
+	if seeds != 2 {
+		t.Errorf("the suite seeded %d times, want 2 — one per template, whatever the run count", seeds)
+	}
+}
+
+// TestTheCopiesDoNotSeeEachOther proves a copy is the test's own.
+//
+// The tests run in any order under `-shuffle=on`, and twice over under `-count=2`.
+// A write in one copy must not reach another copy, and must not reach the template
+// — the template is shared by every test in the run, so a write that reached it
+// would show up in the next test to draw a plan.
+func TestTheCopiesDoNotSeeEachOther(t *testing.T) {
+	first := seededPlan(t)
+	second := seededPlan(t)
+
+	ops := core.NewOperations(first, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
+	if _, err := ops.RecordDeviation("RCP01", "G1", "read the queue twice"); err != nil {
+		t.Fatalf("record the deviation: %v", err)
+	}
+
+	if err := sameTree(second.Root, planTemplate); err != nil {
+		t.Errorf("a copy saw another copy's write: %v", err)
+	}
+	if err := sameTree(first.Root, planTemplate); err == nil {
+		t.Error("the write did not land in the copy it was made in")
 	}
 }
 
