@@ -113,6 +113,38 @@ func TestTheSkillNamesTheSurfaces(t *testing.T) {
 	}
 }
 
+// TestTheSkillMovesTheRecipeThroughTheCLI holds where a recipe's state moves.
+//
+// The protocol ends "close the slice → the ledger", and the skill's only stated
+// machinery was herdr — so how a recipe's lifecycle moved was never said, and an
+// agent that guessed would hand-edit the plan's JSON: the write the domain
+// refuses, bypassing every gate and the audit trail.
+//
+// The skill carries the answer in the step that closes the slice, and in the
+// table of what the orchestrator must not do.
+func TestTheSkillMovesTheRecipeThroughTheCLI(t *testing.T) {
+	body := string(embeddedSkill(t, "orchestrator-role").Content)
+
+	for _, want := range []string{
+		// Where it says it.
+		"Close the slice",
+		// The rule.
+		"A recipe's state moves through `maitre-cli`",
+		"Never by editing the plan's files",
+		// And the verbs that move it.
+		"recipe advance",
+		"ac verify",
+		"finding resolve",
+		// The table of what the orchestrator must not do.
+		"hand-edit the plan's files",
+		"start the automation from the CLI",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the skill should carry %q", want)
+		}
+	}
+}
+
 // TestTheSkillCarriesNoWork holds the line between the role and the work.
 //
 // The skill is the role; the startup task is the work. A skill that named the

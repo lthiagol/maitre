@@ -102,6 +102,7 @@ nothing else.
 | rule | why |
 |---|---|
 | **the brief is the contract** | it wins over any plan where the two differ, and the plan gets corrected |
+| **the plan's records move through the CLI** | `maitre-cli` is the only way a recipe's state changes — the gates apply, and the journal is the record |
 | **one commit per acceptance criterion** | a commit is a landing place: a turn that ends leaves only what was committed |
 | **stage by name** | never `git add -A`, never `git add .` — and a file you did not write that has changed is another lane's experiment: do not touch it, report it, stand by |
 | **`make check` is the gate**, then `make check-race` | nobody runs `go test`, `go vet` or `gofmt` by hand, and a lane's own claim that the gate passed is not evidence |
@@ -209,6 +210,14 @@ Read the verdict, then update the resume record **in the same session**: the sli
 row gets its commits and its new state, and the next slice is named. The row is the
 resume record — a slice that closes without updating it has not finished.
 
+**A recipe's state moves through `maitre-cli`** — `recipe advance`, `ac verify`,
+`finding resolve`, and the rest of the verbs.
+
+**Never by editing the plan's files.** `kitchen/` is written by the tool, through
+the domain, so every write is stamped and every gate applies. An edit by hand is a
+write that no gate and no audit trail ever sees, and it leaves the plan's records
+disagreeing with the journal.
+
 ### 8 — The ledger
 
 File what the review found, in the findings ledger, one commit for it. A finding that
@@ -245,6 +254,8 @@ pane — the nudge target. `mcode-herdr` must be on the `PATH`.
 |---|---|
 | **author a recipe** | the crew does that. You route the work; the runner writes the artifact |
 | **answer the open questions** | they are the chef's. Carry them in the receipt and let the chef rule |
+| **hand-edit the plan's files** | a recipe's state moves through `maitre-cli`. An edit by hand bypasses every gate and leaves no audit trail |
+| **start the automation from the CLI** | the console starts and stops the crew. The CLI holds the plan's records and cannot reach the automation |
 | **dismiss a reviewer's finding on your own** | the ledger is the record, and a finding that is not written down is lost |
 | **touch a file a lane did not write** | it may be the reviewer's mutation, in flight. Report it and stand by |
 | **let a receipt settle its own claims** | if the receipt says the gate passed, run the gate |
