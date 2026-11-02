@@ -378,3 +378,87 @@ func TestTheTemplatesAreRemoved(t *testing.T) {
 		t.Errorf("the template directory survived the cleanup: %v", err)
 	}
 }
+
+// TestTheCopyIsNamedAfterItsDirectory proves the copy's name follows the directory.
+//
+// The name comes from the project's directory, so the copy lands in a directory named
+// `demo` and the plan says `demo` — the name every golden holds. A copy in a
+// directory with another name says that name, the way a plan seeded there would.
+func TestTheCopyIsNamedAfterItsDirectory(t *testing.T) {
+	store := seededPlan(t)
+	if got, want := store.ProjectName(), "demo"; got != want {
+		t.Errorf("the plan's name is %q, want %q", got, want)
+	}
+	if got := filepath.Base(filepath.Dir(store.Root)); got != "demo" {
+		t.Errorf("the copy landed in %q, want a directory named %q", got, "demo")
+	}
+
+	other := copyTemplate(t, planTemplate, t.TempDir(), "the-other-one")
+	if got, want := other.ProjectName(), "the-other-one"; got != want {
+		t.Errorf("the plan's name is %q, want the directory's name %q", got, want)
+	}
+}
+
+// TestTheStressPlanIsItsOwnTemplate proves the pathological plan is a second plan.
+//
+// `core.SeedStress` adds the recipes that break a layout — a title with a newline, a
+// title longer than the column, text that is not ASCII. A stress test that drew the
+// ordinary plan would be testing a plan with nothing wrong with it.
+func TestTheStressPlanIsItsOwnTemplate(t *testing.T) {
+	ordinary := seededPlan(t)
+	stress := stressPlan(t)
+
+	if err := sameTree(ordinary.Root, stress.Root); err == nil {
+		t.Error("the stress plan is the ordinary plan")
+	}
+
+	recipes, err := stress.ListRecipes()
+	if err != nil {
+		t.Fatalf("list the stress recipes: %v", err)
+	}
+	var found bool
+	for _, r := range recipes {
+		if strings.HasPrefix(r.Title, "STRESS:") {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("the stress plan holds no STRESS recipe")
+	}
+}
+
+// The goldens the suite claims.
+//
+// The store moved nothing, so the goldens moved nothing: the same five files, each
+// one a screen the console still draws. The list is the witness that this slice
+// neither added a golden nor dropped one.
+var goldenFiles = []string{
+	"console-board-narrow.golden",
+	"console-filter.golden",
+	"console-home.golden",
+	"console-recipes.golden",
+	"console-stress.golden",
+}
+
+// TestTheGoldensAreTheOnesTheSuiteClaims proves the goldens are the same five.
+//
+// The content is the golden tests' own business — they read the file and compare.
+// This test holds the set: a golden added or dropped by a slice that changed nothing
+// would be a layout nothing pins.
+func TestTheGoldensAreTheOnesTheSuiteClaims(t *testing.T) {
+	entries, err := os.ReadDir("testdata")
+	if err != nil {
+		t.Fatalf("read the goldens: %v", err)
+	}
+	var got []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		got = append(got, e.Name())
+	}
+	sort.Strings(got)
+	if strings.Join(got, "\n") != strings.Join(goldenFiles, "\n") {
+		t.Errorf("the goldens are not the ones the suite claims.\ngot:  %v\nwant: %v", got, goldenFiles)
+	}
+}
