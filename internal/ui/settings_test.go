@@ -2,7 +2,6 @@ package ui
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -13,14 +12,12 @@ import (
 )
 
 // settingsStore seeds a plan to hold the tool's settings record.
+//
+// The plan is a **copy** of the suite's template — the seeder runs once for the whole
+// suite.
 func settingsStore(t *testing.T) *core.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
-	return store
+	return seededPlan(t)
 }
 
 // writeRecord writes the tool's settings record over a plan.

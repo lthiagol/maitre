@@ -213,11 +213,7 @@ func TestAFileComingAndGoingDoesNotBreakThePoll(t *testing.T) {
 // `--render` and `--keys` are not interactive programs. A poll loop in one of them
 // would keep it alive, and the script would never end.
 func TestTheSnapshotPathDoesNotPoll(t *testing.T) {
-	root := filepath.Join(t.TempDir(), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
+	store := seededPlan(t)
 	m, err := Snapshot(store, 100)
 	if err != nil {
 		t.Fatal(err)

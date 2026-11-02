@@ -15,14 +15,12 @@ import (
 
 // identityStore seeds a plan under a directory with a fixed name, so the project's
 // name in the render is deterministic.
+//
+// The plan is a **copy** of the suite's template — the seeder runs once for the whole
+// suite. The copy lands in a directory named `demo`, so the name is `demo`.
 func identityStore(t *testing.T) *core.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
-	return store
+	return seededPlan(t)
 }
 
 // TestWindowTitleCarriesTheProject proves the terminal's tab says which project it
@@ -289,11 +287,8 @@ func TestTheSettingsTabShowsThePlanRoot(t *testing.T) {
 // columns, and the root row is one line with the footer still last.
 func TestALongRootStaysOnOneRow(t *testing.T) {
 	const width = 80
-	root := filepath.Join(t.TempDir(), strings.Repeat("p", 100), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatal(err)
-	}
+	// The copy lands in a directory whose name is `p` repeated 100 times.
+	store := copyTemplate(t, planTemplate, t.TempDir(), strings.Repeat("p", 100))
 	m := loadInto(t, New(store))
 	m.tab = TabSettings
 	m.width, m.height = width, 40
@@ -333,11 +328,7 @@ func TestALongRootStaysOnOneRow(t *testing.T) {
 // directory whose name carries a newline would take two.
 func TestTheRootRowIsOneRow(t *testing.T) {
 	// A plan whose directory name carries a newline.
-	root := filepath.Join(t.TempDir(), "we\nird", core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
+	store := copyTemplate(t, planTemplate, t.TempDir(), "we\nird")
 	m := loadInto(t, New(store))
 	m.tab = TabSettings
 

@@ -10,14 +10,12 @@ import (
 )
 
 // stressStore seeds the pathological plan.
+//
+// The plan is a **copy** of the suite's second template — the seeder runs once for
+// the whole suite.
 func stressStore(t *testing.T) *core.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
-	store := core.Open(root)
-	if err := core.SeedStress(store); err != nil {
-		t.Fatalf("seed stress: %v", err)
-	}
-	return store
+	return stressPlan(t)
 }
 
 // TestNothingRenderedCarriesControlCharacters is the invariant that matters.

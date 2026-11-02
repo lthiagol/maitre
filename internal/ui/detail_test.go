@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -15,11 +14,7 @@ import (
 // The detail pane renders "deviated: …" under a step, and no operation ever wrote
 // it: a rendered field with no writer is a promise the code does not keep.
 func TestTheConsoleShowsADeviation(t *testing.T) {
-	root := filepath.Join(t.TempDir(), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatal(err)
-	}
+	store := seededPlan(t)
 	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 	if _, err := ops.RecordDeviation("RCP01", "G1", "read the queue twice"); err != nil {
 		t.Fatal(err)

@@ -45,14 +45,13 @@ var clockPattern = regexp.MustCompile(`\d\d:\d\d:\d\d`)
 
 // goldenStore seeds a plan under a directory with a fixed name, so the project name in
 // the render is deterministic.
+//
+// The plan is a **copy** of the suite's template — the seeder runs once for the whole
+// suite. The copy lands in a directory named `demo`, so the name is `demo` and the
+// golden holds.
 func goldenStore(t *testing.T) *core.Store {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), "demo", core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
-	return store
+	return seededPlan(t)
 }
 
 // TestConsoleMatchesTheGolden pins the Recipes tab's layout.
@@ -101,10 +100,9 @@ func TestConsoleMatchesTheGolden(t *testing.T) {
 func TestHomeMatchesTheGolden(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
-	store := core.Open(filepath.Join(home, "demo", core.PlanDirName))
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
+	// The copy lands in the home directory, under a directory named `demo` — so the
+	// console's short form of the path (`~/demo/kitchen`) is what the golden holds.
+	store := copyTemplate(t, planTemplate, home, "demo")
 
 	m, err := Snapshot(store, 80)
 	if err != nil {

@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -84,11 +83,7 @@ func TestTheDetailShowsOneWordForTheState(t *testing.T) {
 // state word holds the lane's place, so the block needs its own line — with the
 // reason, which is the fact the chef acts on.
 func TestABlockedRecipeStillSaysItIsOnHold(t *testing.T) {
-	root := filepath.Join(t.TempDir(), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatal(err)
-	}
+	store := seededPlan(t)
 	ops := core.NewOperations(store, core.AuditContext{Actor: "runner", Session: "s-1", Role: "runner"})
 	if _, err := ops.BlockRecipe("RCP05", "waiting on the client"); err != nil {
 		t.Fatal(err)

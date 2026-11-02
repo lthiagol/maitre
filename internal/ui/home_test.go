@@ -340,11 +340,7 @@ func TestALongPlanNameStaysOnOneRow(t *testing.T) {
 	const width = 80
 	name := strings.Repeat("n", 100)
 
-	root := filepath.Join(t.TempDir(), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatal(err)
-	}
+	store := seededPlan(t)
 	m := loadInto(t, New(store, WithProject(name)))
 	m.width, m.height = width, 24
 

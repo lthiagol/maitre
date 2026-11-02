@@ -12,14 +12,12 @@ import (
 )
 
 // newModel builds a console over a seeded plan.
+//
+// The plan is a **copy** of the suite's template: the seeder runs once for the whole
+// suite, and every test takes a copy. See `seed_test.go`.
 func newModel(t *testing.T) *Model {
 	t.Helper()
-	root := filepath.Join(t.TempDir(), core.PlanDirName)
-	store := core.Open(root)
-	if err := core.Seed(store); err != nil {
-		t.Fatalf("seed: %v", err)
-	}
-	return loadModel(t, store)
+	return loadModel(t, seededPlan(t))
 }
 
 // recipesModel builds a console over a seeded plan, on the Recipes tab.
