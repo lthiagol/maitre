@@ -601,3 +601,58 @@ func stampLine(out string) string {
 	}
 	return ""
 }
+
+// TestTheStampPrintsNoNumberItCannotCompute covers the stamp's rule.
+//
+// A progress past the cap is printed **as it was reported**, with the budget
+// spent beside it. "round 7 of 3" says the policy is not a policy, and the
+// stamp does not say that.
+func TestTheStampPrintsNoNumberItCannotCompute(t *testing.T) {
+	m := sousModel(t)
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        7,
+			Interactions: 39,
+		},
+	}}
+
+	stamp := stampLine(plain(m))
+	if strings.Contains(stamp, "7 of 3") || strings.Contains(stamp, "39 of 12") {
+		t.Errorf("the stamp should not print a progress against a cap it has passed: %q", stamp)
+	}
+	if !strings.Contains(stamp, "round 7") {
+		t.Errorf("the stamp should carry the round as it was reported: %q", stamp)
+	}
+	if !strings.Contains(stamp, "the budget is spent") {
+		t.Errorf("the stamp should say the budget is spent: %q", stamp)
+	}
+}
+
+// TestTheStampMeasuresAProgressInsideTheCap covers the other side.
+//
+// Inside the budget the progress is measured against the cap — the policy above,
+// the progress below.
+func TestTheStampMeasuresAProgressInsideTheCap(t *testing.T) {
+	m := sousModel(t)
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        2,
+			Interactions: 6,
+		},
+	}}
+
+	stamp := stampLine(plain(m))
+	if !strings.Contains(stamp, "round 2 of 3") {
+		t.Errorf("the stamp should measure the round against the cap: %q", stamp)
+	}
+	if !strings.Contains(stamp, "6 of 12 interactions") {
+		t.Errorf("the stamp should measure the interactions against the cap: %q", stamp)
+	}
+	if strings.Contains(stamp, "the budget is spent") {
+		t.Errorf("the stamp should not say the budget is spent inside it: %q", stamp)
+	}
+}

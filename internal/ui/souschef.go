@@ -550,17 +550,35 @@ func (m *Model) sousProgress() string {
 		return ""
 	}
 	budget := sousBudgets[m.picks.Budget]
+	// A progress past the cap is printed **as it was reported**, with the budget
+	// spent beside it: "round 7 of 3" says the policy is not a policy, and the
+	// stamp does not say that.
+	spent := progress.Round > budget.Rounds || progress.Interactions > budget.Interactions
+
 	var parts []string
 	if progress.Round > 0 {
-		parts = append(parts, fmt.Sprintf("round %d of %d", progress.Round, budget.Rounds))
+		if spent {
+			parts = append(parts, fmt.Sprintf("round %d", progress.Round))
+		} else {
+			parts = append(parts, fmt.Sprintf("round %d of %d", progress.Round, budget.Rounds))
+		}
 	}
 	if progress.Interactions > 0 {
-		parts = append(parts, fmt.Sprintf("%d of %d interactions", progress.Interactions, budget.Interactions))
+		if spent {
+			parts = append(parts, fmt.Sprintf("%d interactions", progress.Interactions))
+		} else {
+			parts = append(parts, fmt.Sprintf("%d of %d interactions",
+				progress.Interactions, budget.Interactions))
+		}
 	}
 	if len(parts) == 0 {
 		return ""
 	}
-	return m.styDim.Render(" · " + strings.Join(parts, " · "))
+	out := m.styDim.Render(" · " + strings.Join(parts, " · "))
+	if spent {
+		out += m.styWarn.Render(" · the budget is spent")
+	}
+	return out
 }
 
 // sousOrderLines renders the order: the four controls.

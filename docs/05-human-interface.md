@@ -575,16 +575,16 @@ is what it would be without the mark.
 
 ### The automation's vital signs
 
-The Sous-Chef tab dissolved into Home, and its content is the **automation** block.
-The block says **where the move is** — the automation is started from the
-Sous-Chef tab — because the vital signs alone would read as a running automation.
+The **automation** block on Home carries the vital signs. The block says **where
+the move is** — the automation is started from the Sous-Chef tab — because the
+vital signs alone would read as a running automation.
 What the block carries besides that is the version the plan was last written
 under, the version this build speaks, and whether they agree — because a plan
 written by a different build of the tool is a plan the version guard will refuse to
 write — and the last thing that happened.
 
-Whether the crew is running is the Sous-Chef tab's news, not this block's. The
-orchestrator came back as a tab when the orchestrator did.
+Whether the crew is running is the Sous-Chef tab's news, not this block's — and
+that tab is where the automation is watched, started and stopped.
 
 ---
 
@@ -640,9 +640,17 @@ written under, the version this build speaks, and whether they agree. The tab th
 starts the automation has to be able to report that it is not speaking the plan's
 rules.
 
-The progress is the plan's own: the **interactions** are the crew's writes — the
-journal's events the chef did not write — and the **rounds** are the recipes the
-crew has worked.
+**The progress is the orchestrator's to say.** It dispatches the crew, so it is
+the one that knows the round and the interaction count: it writes them into its
+own tab's label — `maitre: orchestrator · round 2 · 6 interactions` — and the
+console reads them from there. The journal is **not** the source: a write carries
+no signal that separates the crew from the chef, so the plan's history is not the
+crew's work.
+
+**The stamp prints no number it cannot compute.** A label that carries no
+progress means the crew has not reported one, and the stamp prints none. A
+progress past the cap is printed as it was reported — *round 7* — with the budget
+spent beside it, because *round 7 of 3* says the policy is not a policy.
 
 ### The crew's rows
 
