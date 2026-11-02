@@ -160,3 +160,76 @@ func TestAnUnknownVersionIsRefused(t *testing.T) {
 		t.Errorf("the console says %q, want it to name the version it refused", m.status)
 	}
 }
+
+// TestAnUnknownThemeIsRefusedByName covers the refusal of a theme.
+//
+// The console does not fall back silently: it says which theme it refused, and it
+// uses its own default.
+func TestAnUnknownThemeIsRefusedByName(t *testing.T) {
+	store := settingsStore(t)
+	writeRecord(t, store, settings.View{Theme: "Neon", Order: "triage", ShowServed: true})
+
+	m := loadModel(t, store)
+	if m.theme.name != "Kitchen" {
+		t.Errorf("the theme is %q, want the default Kitchen", m.theme.name)
+	}
+	if !strings.Contains(m.status, "Neon") {
+		t.Errorf("the console says %q, want it to name the theme it refused", m.status)
+	}
+	if !strings.Contains(m.status, "not one this build has") {
+		t.Errorf("the console says %q, want it to say why", m.status)
+	}
+	// And the chef sees it: the refusal is on the screen, not in the console's
+	// own head.
+	if out := plain(m); !strings.Contains(out, "Neon") {
+		t.Errorf("the console does not show the refusal:\n%s", out)
+	}
+}
+
+// TestAnUnknownOrderIsRefusedByName covers the refusal of an order.
+//
+// And the theme is still read: one unknown value does not cost the chef the rest.
+func TestAnUnknownOrderIsRefusedByName(t *testing.T) {
+	store := settingsStore(t)
+	writeRecord(t, store, settings.View{Theme: "Dracula", Order: "sideways", ShowServed: true})
+
+	m := loadModel(t, store)
+	if m.order != OrderTriage {
+		t.Errorf("the order is %v, want the default triage", m.order)
+	}
+	if m.theme.name != "Dracula" {
+		t.Errorf("the theme is %q, want Dracula", m.theme.name)
+	}
+	if !strings.Contains(m.status, "sideways") {
+		t.Errorf("the console says %q, want it to name the order it refused", m.status)
+	}
+	if !strings.Contains(m.status, "not one this build has") {
+		t.Errorf("the console says %q, want it to say why", m.status)
+	}
+}
+
+// TestTheConsoleNeverWritesAValueItDoesNotKnow covers the write.
+//
+// The console refuses before it writes, the way the domain's writer refuses before
+// it writes — so a value it does not know never reaches the file.
+func TestTheConsoleNeverWritesAValueItDoesNotKnow(t *testing.T) {
+	store := settingsStore(t)
+	m := loadModel(t, store)
+
+	m.theme = newTheme(palette{name: "Neon"})
+	m.saveSettings()
+
+	if _, err := os.Stat(settings.Path(store.Root)); err == nil {
+		t.Fatal("the record should not have been written at all")
+	}
+	rec, err := settings.Read(settings.Path(store.Root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.View.Theme == "Neon" {
+		t.Fatal("a theme the console does not know should not be written")
+	}
+	if !strings.Contains(m.status, "Neon") {
+		t.Errorf("the console says %q, want it to name the value it refused", m.status)
+	}
+}
