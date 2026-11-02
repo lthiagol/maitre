@@ -27,15 +27,41 @@ func (m *Model) settingsPath() string {
 // A plan with no settings file has the defaults, so a console nobody told otherwise
 // looks exactly as it did. A value this build does not know is refused, by name, and
 // the console **says so** — it does not fall back silently.
+//
+// A file at a version this build does not know is refused whole: the record is not
+// read, and it is **not written either** — a write would replace the chef's file
+// with the defaults, and a file this build cannot read is a file this build does
+// not touch.
 func (m *Model) loadSettings() {
 	rec, err := settings.Read(m.settingsPath())
 	if err != nil {
-		m.status = "the settings could not be read: " + err.Error()
+		m.settingsErr = err
+		m.refusal = "the settings could not be read: " + err.Error()
+		m.status = ""
 		return
 	}
-	if said := m.applyView(rec.View); len(said) > 0 {
+	m.settingsErr = nil
+	var said []string
+	if s := m.applyView(rec.View); len(s) > 0 {
+		said = append(said, s...)
+	}
+	if s := m.applyCrew(rec.Crew); len(s) > 0 {
+		said = append(said, s...)
+	}
+	if len(said) > 0 {
 		m.status = strings.Join(said, "; ")
 	}
+}
+
+// applyCrew applies the record's crew section to the order.
+//
+// Each value is applied on its own: a harness the console does not know does not
+// stop the crew's size from being read. The values it does not know keep the
+// console's own default, and the console says which value it refused.
+func (m *Model) applyCrew(crew settings.Crew) []string {
+	picks, said := sousPicksFrom(crew)
+	m.picks = picks
+	return said
 }
 
 // applyView applies the record's view to the console.
@@ -68,7 +94,19 @@ func (m *Model) applyView(view settings.View) []string {
 // does not know is refused **before** the write — the way the domain's writer
 // refuses before it writes — so the file never holds a value the console cannot
 // render.
+//
+// **The crew's section is written with it.** The record is one file: a write that
+// kept the view and dropped the crew would take the automation's order with it.
+//
+// A record this build could not read is **not written**: the file is at a version
+// this build does not know, and a write would replace it with the defaults. The
+// console says so instead.
 func (m *Model) saveSettings() {
+	if m.settingsErr != nil {
+		m.refusal = "the settings were not written: " + m.settingsErr.Error()
+		m.status = ""
+		return
+	}
 	view := settings.View{
 		Theme:      m.theme.name,
 		Order:      OrderNames[int(m.order)],
@@ -78,7 +116,8 @@ func (m *Model) saveSettings() {
 		m.status = strings.Join(said, "; ")
 		return
 	}
-	if err := settings.Write(m.settingsPath(), settings.Record{View: view}); err != nil {
+	rec := settings.Record{View: view, Crew: m.picks.crewRecord()}
+	if err := settings.Write(m.settingsPath(), rec); err != nil {
 		m.status = "the settings could not be written: " + err.Error()
 	}
 }

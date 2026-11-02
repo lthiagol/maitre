@@ -174,8 +174,127 @@ func TestAnUnknownVersionIsRefused(t *testing.T) {
 	if m.theme.name != "Kitchen" {
 		t.Errorf("the theme is %q, want the default Kitchen", m.theme.name)
 	}
-	if !strings.Contains(m.status, "99") {
-		t.Errorf("the console says %q, want it to name the version it refused", m.status)
+	if !strings.Contains(m.said(), "99") {
+		t.Errorf("the console says %q, want it to name the version it refused", m.said())
+	}
+}
+
+// TestARefusedRecordIsNotWritten covers the fence from the other side.
+//
+// A record this build cannot read is **not written**: a write would replace the
+// chef's file with the defaults, and a file at a version this build does not know
+// is a file this build does not touch. The console says so instead.
+func TestARefusedRecordIsNotWritten(t *testing.T) {
+	store := settingsStore(t)
+	path := settings.Path(store.Root)
+	whole := `{"version": 1, "view": {"theme": "Dracula", "order": "lane", "showServed": false}}`
+	if err := os.WriteFile(path, []byte(whole), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	m := loadModel(t, store)
+	// The chef changes something the console writes.
+	m.tab = TabSettings
+	m.selTheme = themeIndex("Dracula")
+	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(raw) != whole {
+		t.Errorf("the refused record was written:\n%s", raw)
+	}
+	if !strings.Contains(m.said(), "version 1") {
+		t.Errorf("the console says %q, want it to name the version it refused", m.said())
+	}
+}
+
+// TestTheConsoleReadsTheCrewSection covers the read of the automation's order.
+//
+// The record's crew section is the tab's order: the harness, the crew's size, the
+// sources and the budget. The console reads them when it starts.
+func TestTheConsoleReadsTheCrewSection(t *testing.T) {
+	store := settingsStore(t)
+	rec := settings.Record{
+		View: settings.View{Theme: "Kitchen", Order: "triage", ShowServed: true},
+		Crew: settings.Crew{Harness: "pi", Count: 2, Sources: "recipes", Rounds: 5, Interactions: 24},
+	}
+	if err := settings.Write(settings.Path(store.Root), rec); err != nil {
+		t.Fatalf("write the settings: %v", err)
+	}
+
+	m := loadModel(t, store)
+	if m.picks.Harness != "pi" {
+		t.Errorf("the harness is %q, want pi", m.picks.Harness)
+	}
+	if m.picks.Count != 2 {
+		t.Errorf("the crew's size is %d, want 2", m.picks.Count)
+	}
+	if m.picks.Sources != "recipes" {
+		t.Errorf("the sources are %q, want recipes", m.picks.Sources)
+	}
+	if b := sousBudgets[m.picks.Budget]; b.Rounds != 5 || b.Interactions != 24 {
+		t.Errorf("the budget is %+v, want 5 rounds and 24 interactions", b)
+	}
+}
+
+// TestAnUnknownCrewValueIsRefusedByName covers the refusal of the order's values.
+//
+// The console does not fall back silently: it names the value it refused, and it
+// keeps its own default for that one control only.
+func TestAnUnknownCrewValueIsRefusedByName(t *testing.T) {
+	store := settingsStore(t)
+	rec := settings.Record{
+		View: settings.View{Theme: "Kitchen", Order: "triage", ShowServed: true},
+		Crew: settings.Crew{Harness: "codex", Count: 7, Sources: "moon", Rounds: 1, Interactions: 1},
+	}
+	if err := settings.Write(settings.Path(store.Root), rec); err != nil {
+		t.Fatalf("write the settings: %v", err)
+	}
+
+	m := loadModel(t, store)
+	for _, want := range []string{"codex", "7", "moon"} {
+		if !strings.Contains(m.status, want) {
+			t.Errorf("the console says %q, want it to name %q", m.status, want)
+		}
+	}
+	if m.picks.Harness != settings.DefaultHarness {
+		t.Errorf("the harness is %q, want the default %q", m.picks.Harness, settings.DefaultHarness)
+	}
+	if m.picks.Count != settings.DefaultCrew {
+		t.Errorf("the crew's size is %d, want the default %d", m.picks.Count, settings.DefaultCrew)
+	}
+}
+
+// TestTheWriteKeepsTheCrewSection covers the write.
+//
+// The record is one file: a write that kept the view and dropped the crew would
+// take the automation's order with it.
+func TestTheWriteKeepsTheCrewSection(t *testing.T) {
+	store := settingsStore(t)
+	rec := settings.Record{
+		View: settings.View{Theme: "Kitchen", Order: "triage", ShowServed: true},
+		Crew: settings.Crew{Harness: "pi", Count: 2, Sources: "recipes", Rounds: 5, Interactions: 24},
+	}
+	if err := settings.Write(settings.Path(store.Root), rec); err != nil {
+		t.Fatalf("write the settings: %v", err)
+	}
+
+	m := loadModel(t, store)
+	m.tab = TabSettings
+	m.selTheme = themeIndex("Dracula")
+	m.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
+
+	got, err := settings.Read(settings.Path(store.Root))
+	if err != nil {
+		t.Fatalf("read the settings: %v", err)
+	}
+	if got.Crew != rec.Crew {
+		t.Errorf("the crew section is %+v, want %+v", got.Crew, rec.Crew)
+	}
+	if got.View.Theme != "Dracula" {
+		t.Errorf("the theme is %q, want Dracula", got.View.Theme)
 	}
 }
 

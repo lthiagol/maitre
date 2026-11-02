@@ -69,6 +69,40 @@ func TestTheFileHasItsOwnVersion(t *testing.T) {
 			t.Errorf("the view section has no %q: %s", key, raw)
 		}
 	}
+	crew, ok := doc["crew"].(map[string]any)
+	if !ok {
+		t.Fatalf("the file has no crew section: %s", raw)
+	}
+	for _, key := range []string{"harness", "count", "sources", "rounds", "interactions"} {
+		if _, ok := crew[key]; !ok {
+			t.Errorf("the crew section has no %q: %s", key, raw)
+		}
+	}
+}
+
+// TestTheSchemaMovedToVersionTwo covers the fence between the two builds.
+//
+// Version 1 carried the view section alone. Version 2 adds the crew section — the
+// automation's order — and a build that speaks version 2 refuses a version 1 file
+// **by name**, before its keys are read. The file is not read halfway and not
+// guessed at.
+func TestTheSchemaMovedToVersionTwo(t *testing.T) {
+	path := Path(planDir(t))
+	raw := `{"version": 1, "view": {"theme": "Kitchen", "order": "triage", "showServed": true}}`
+	if err := os.WriteFile(path, []byte(raw), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Read(path)
+	if err == nil {
+		t.Fatal("a file at version 1 should be refused by a build that speaks version 2")
+	}
+	if !strings.Contains(err.Error(), "version 1") {
+		t.Fatalf("the refusal should name the version it refused: %v", err)
+	}
+	if !strings.Contains(err.Error(), "not one this build has") {
+		t.Fatalf("the refusal should say why: %v", err)
+	}
 }
 
 // TestTheWriterStampsItsOwnVersion covers the version on the way out.
@@ -139,8 +173,8 @@ func TestAMissingVersionIsRefused(t *testing.T) {
 func TestUnknownKeysAreIgnored(t *testing.T) {
 	path := Path(planDir(t))
 	raw := `{
-	  "version": 1,
-	  "crew": {"harness": "codex", "count": 3},
+	  "version": 2,
+	  "crew": {"harness": "opencode", "count": 3, "sources": "ready", "rounds": 3, "interactions": 12, "density": "compact"},
 	  "view": {"theme": "Dracula", "order": "lane", "showServed": false, "density": "compact"}
 	}`
 	if err := os.WriteFile(path, []byte(raw), 0o644); err != nil {
@@ -333,7 +367,10 @@ func assertOnlyTheRecord(t *testing.T, dir string) {
 func TestTheRoundTrip(t *testing.T) {
 	path := Path(planDir(t))
 
-	rec := Record{View: View{Theme: "Alucard", Order: "plain", ShowServed: false}}
+	rec := Record{
+		View: View{Theme: "Alucard", Order: "plain", ShowServed: false},
+		Crew: Crew{Harness: "pi", Count: 2, Sources: "recipes", Rounds: 5, Interactions: 24},
+	}
 	if err := Write(path, rec); err != nil {
 		t.Fatalf("write: %v", err)
 	}
@@ -344,5 +381,8 @@ func TestTheRoundTrip(t *testing.T) {
 	}
 	if got.View != rec.View {
 		t.Fatalf("the record is %+v, want %+v", got.View, rec.View)
+	}
+	if got.Crew != rec.Crew {
+		t.Fatalf("the crew section is %+v, want %+v", got.Crew, rec.Crew)
 	}
 }

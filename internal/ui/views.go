@@ -314,6 +314,18 @@ func (m *Model) summaryRight() string {
 	return m.status
 }
 
+// said is what the console has said.
+//
+// The refusal outranks the status on the screen, so this is the message the chef
+// reads. A test reads it here too, so the test and the screen can never disagree
+// about what was said.
+func (m *Model) said() string {
+	if m.refusal != "" {
+		return m.refusal
+	}
+	return m.status
+}
+
 // messageStyle is the style a message wears where it lands.
 //
 // A refusal is a warning; a status is the console talking. The message wears the

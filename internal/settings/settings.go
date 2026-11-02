@@ -21,7 +21,14 @@ const (
 	// The file's own version, the way the plan's records carry one and the way the
 	// skill does. A file written by a newer build is refused, by name — the tool
 	// does not guess what it cannot read.
-	Version = 1
+	//
+	// **Version 2** is the file with the `crew` section: the automation's order —
+	// the harness, the crew's size, the sources and the budget. Version 1 carried
+	// the `view` section alone, and a build that speaks version 1 refuses a
+	// version 2 file by name. That is the fence: the version is checked **before**
+	// the keys are read, so a file this build cannot read whole is never read
+	// halfway.
+	Version = 2
 
 	// FileName is the settings file, in the plan's directory.
 	FileName = "settings.json"
@@ -31,6 +38,21 @@ const (
 
 	// DefaultOrder is the order the recipe list uses by default.
 	DefaultOrder = "triage"
+
+	// DefaultHarness is the harness the crew runs by default.
+	DefaultHarness = "opencode"
+
+	// DefaultCrew is how many agents the crew has by default.
+	DefaultCrew = 3
+
+	// DefaultSources is where the crew's work comes from by default.
+	DefaultSources = "ready"
+
+	// DefaultRounds is the budget's cap on rounds.
+	DefaultRounds = 3
+
+	// DefaultInteractions is the budget's cap on interactions.
+	DefaultInteractions = 12
 )
 
 // View is what the chef sees: the theme, the order of the list, and whether the
@@ -44,10 +66,25 @@ type View struct {
 	ShowServed bool   `json:"showServed"`
 }
 
+// Crew is the automation's order: the harness the crew runs, how many agents it
+// has, where the work comes from, and the budget it may spend.
+//
+// The crew's **state** is not here: that is what herdr knows, and it changes while
+// the console is closed. The record holds what the chef **chose** — the order —
+// and the order is durable.
+type Crew struct {
+	Harness      string `json:"harness"`
+	Count        int    `json:"count"`
+	Sources      string `json:"sources"`
+	Rounds       int    `json:"rounds"`
+	Interactions int    `json:"interactions"`
+}
+
 // Record is the whole file.
 type Record struct {
 	Version int  `json:"version"`
 	View    View `json:"view"`
+	Crew    Crew `json:"crew"`
 }
 
 // Defaults is the record a plan with no settings file has.
@@ -61,6 +98,13 @@ func Defaults() Record {
 			Theme:      DefaultTheme,
 			Order:      DefaultOrder,
 			ShowServed: true,
+		},
+		Crew: Crew{
+			Harness:      DefaultHarness,
+			Count:        DefaultCrew,
+			Sources:      DefaultSources,
+			Rounds:       DefaultRounds,
+			Interactions: DefaultInteractions,
 		},
 	}
 }

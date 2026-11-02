@@ -107,6 +107,17 @@ type Model struct {
 	mode       Mode
 	showServed bool
 
+	// picks is the automation's order: the harness, the crew's size, the sources
+	// and the budget. They are read from the tool's settings record when the
+	// console starts, and written back when the chef changes one.
+	picks sousPicks
+
+	// settingsErr is why the settings record could not be read.
+	//
+	// A record at a version this build does not know is refused whole, and a
+	// refused record is not written either — the console says so instead.
+	settingsErr error
+
 	// filter is the text the list is filtered by, and filterOpen says whether the
 	// line is open for typing.
 	//
@@ -235,6 +246,9 @@ func newConsole(store *core.Store, session string, opts ...Option) *Model {
 		// as it did before the theme was the chef's to choose.
 		theme:        newTheme(kitchen()),
 		pollInterval: PollInterval,
+		// The order a console nobody told otherwise has. The record may say
+		// otherwise — the read below replaces it.
+		picks: defaultSousPicks(),
 	}
 	for _, opt := range opts {
 		opt(m)
