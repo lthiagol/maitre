@@ -6,3 +6,7 @@ bin/
 .env
 .env.local
 dist/
+
+# The console's own file in the plan's folder: a contributor's theme and
+# order are not the repo's business.
+kitchen/settings.json

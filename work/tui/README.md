@@ -25,7 +25,6 @@
 | **T8** | the skills | `maitre-cli skill help` · `list` · `load <name>`; the `orchestrator-role` skill, embedded in the binary | ✅ closed · cycle 2 ok · 11 commits · 8ab3b80, ac3f6d5, 2e9f3a6, 5e2146c, 3333df7, 504cb86, 706560c, dc4f4e4, 6d48c1f, 1801999, 27483df | [tui-t8.md](../briefs/tui-t8.md) |
 | **T9** | the settings record | `kitchen/settings.json` — the tool's file, the console's VIEW preferences; `maitre-cli settings show` | 🔄 implemented · 5 commits · 38d1d48, 2aba9f4, 089ef6b, 1ed7f3f, 2d65fa0 | [tui-t9.md](../briefs/tui-t9.md) |
 | **T10** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | 📌 designed · [plan-automation.md § 14](plan-automation.md) | — |
-| **T9** | the Sous-Chef tab | the tab comes back: it starts the automation, and shows the crew | ⏳ planned · design in [plan-automation.md](plan-automation.md) | — |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
