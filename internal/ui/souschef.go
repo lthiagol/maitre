@@ -566,11 +566,20 @@ func (m *Model) sousProgress() string {
 		return ""
 	}
 	budget := sousBudgets[m.picks.Budget]
-	// The budget is spent when the report has **reached** the cap: a crew that
-	// has used its third round of three has spent its budget, and the flag
-	// arrives **with** the report — not one round later.
-	spent := (progress.Round.Reported && progress.Round.Value >= budget.Rounds) ||
-		(progress.Interactions.Reported && progress.Interactions.Value >= budget.Interactions)
+	// An allowance is spent when the report has **reached** its cap: a crew
+	// that has used its third round of three has spent its rounds, and the
+	// flag arrives **with** the report — not one round later.
+	//
+	// The flag names the allowance. The budget is **two** allowances — the
+	// rounds and the interactions — and a reader must not have to guess which
+	// of them ran out.
+	var spent []string
+	if progress.Round.Reported && progress.Round.Value >= budget.Rounds {
+		spent = append(spent, "the rounds")
+	}
+	if progress.Interactions.Reported && progress.Interactions.Value >= budget.Interactions {
+		spent = append(spent, "the interactions")
+	}
 
 	var parts []string
 	if progress.Round.Reported {
@@ -595,8 +604,11 @@ func (m *Model) sousProgress() string {
 		return ""
 	}
 	out := m.styDim.Render(strings.Join(parts, " · "))
-	if spent {
-		out += m.styWarn.Render(" · the budget is spent")
+	switch len(spent) {
+	case 1:
+		out += m.styWarn.Render(" · " + spent[0] + " are spent")
+	case 2:
+		out += m.styWarn.Render(" · " + spent[0] + " and " + spent[1] + " are spent")
 	}
 	return out
 }

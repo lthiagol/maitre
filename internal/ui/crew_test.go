@@ -625,8 +625,8 @@ func TestTheStampPrintsNoNumberItCannotCompute(t *testing.T) {
 	if !strings.Contains(stamp, "round 7") {
 		t.Errorf("the stamp should carry the round as it was reported: %q", stamp)
 	}
-	if !strings.Contains(stamp, "the budget is spent") {
-		t.Errorf("the stamp should say the budget is spent: %q", stamp)
+	if !strings.Contains(stamp, "the rounds and the interactions are spent") {
+		t.Errorf("the stamp should say both allowances are spent: %q", stamp)
 	}
 }
 
@@ -747,8 +747,8 @@ func TestTheStampReadsInAllThreeShapes(t *testing.T) {
 	if strings.Contains(stamp, "7 of 3") || strings.Contains(stamp, "39 of 12") {
 		t.Errorf("the stamp should not print a progress against a cap it has passed: %q", stamp)
 	}
-	if !strings.Contains(stamp, "the budget is spent") {
-		t.Errorf("the stamp should say the budget is spent: %q", stamp)
+	if !strings.Contains(stamp, "the rounds and the interactions are spent") {
+		t.Errorf("the stamp should say both allowances are spent: %q", stamp)
 	}
 }
 
@@ -771,8 +771,50 @@ func TestTheBudgetIsSpentWhenTheReportReachesTheCap(t *testing.T) {
 	if !strings.Contains(stamp, "round 3 of 3 · 12 of 12 interactions") {
 		t.Errorf("the stamp should carry the report: %q", stamp)
 	}
-	if !strings.Contains(stamp, "the budget is spent") {
-		t.Errorf("the flag should arrive with the report: %q", stamp)
+	if !strings.Contains(stamp, "the rounds and the interactions are spent") {
+		t.Errorf("the flag should arrive with the report, and name both allowances: %q", stamp)
+	}
+}
+
+// TestTheFlagNamesTheAllowanceThatRanOut covers the flag's words.
+//
+// The budget is **two** allowances — the rounds and the interactions — and a
+// reader must not have to guess which of them ran out.
+func TestTheFlagNamesTheAllowanceThatRanOut(t *testing.T) {
+	m := sousModel(t)
+
+	// The rounds are spent, and the interactions are not.
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        crewCount{Value: 3, Reported: true},
+			Interactions: crewCount{Value: 6, Reported: true},
+		},
+	}}
+	stamp := stampLine(plain(m))
+	if !strings.Contains(stamp, "the rounds are spent") {
+		t.Errorf("the flag should name the rounds: %q", stamp)
+	}
+	if strings.Contains(stamp, "the interactions are spent") {
+		t.Errorf("the flag should not name the interactions: %q", stamp)
+	}
+
+	// The interactions are spent, and the rounds are not.
+	m.crew = []crewRow{{
+		State: "working",
+		Job:   "orchestrator",
+		Progress: &crewProgress{
+			Round:        crewCount{Value: 2, Reported: true},
+			Interactions: crewCount{Value: 12, Reported: true},
+		},
+	}}
+	stamp = stampLine(plain(m))
+	if !strings.Contains(stamp, "the interactions are spent") {
+		t.Errorf("the flag should name the interactions: %q", stamp)
+	}
+	if strings.Contains(stamp, "the rounds are spent") {
+		t.Errorf("the flag should not name the rounds: %q", stamp)
 	}
 }
 
