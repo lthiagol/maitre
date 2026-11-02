@@ -22,7 +22,7 @@ Every line is new. v1 contributes lessons and vocabulary, not code.
 
 | | |
 |---|---|
-| `maitre-cli` | the agent CLI — 45 commands: 39 verbs in 7 groups, plus 6 workspace commands |
+| `maitre-cli` | the agent CLI — 46 commands: 40 verbs in 8 groups, plus 6 workspace commands |
 | `maitre` | the human console — 7 tabs, fullscreen, alt screen |
 
 The plan lives in `kitchen/`: `recipes/`, `courses/`, `backlog/`, plus
@@ -127,9 +127,10 @@ the current selection. A resize re-lays out. The detail pane appears beside the 
   with a newline, a title longer than the column, thirty criteria, fifty steps, twelve
   findings, an empty recipe, and text that is not ASCII. `maitre-cli demo --chaos` writes it.
 
-**Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 45 commands
-(39 verbs in 7 groups, plus 6 workspace commands), one verb per operation, no aliases —
-except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation. Every write is stamped with an actor, a
+**Slice 6b — the CLI.** `maitre-cli` is now a thin adapter over the operations: 46 commands
+(40 verbs in 8 groups, plus 6 workspace commands), one verb per operation, no aliases —
+except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation, and except the
+`settings` group, which is a read-only surface over the tool's own settings file and is not an operation. Every write is stamped with an actor, a
 session and a role — the session comes from the caller (`MAITRE_CLI_SESSION`), because CPD's
 L5 law is about sessions. Every command prints one JSON document; a gate refusal is exit 2. Three commands print
 text instead: `help`, `skill help` and `skill load <name>`. The command surface is in

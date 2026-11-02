@@ -157,8 +157,9 @@ by reading the journal, and that requires every write to carry its session.
 ## The CLI surface
 
 `maitre-cli` is a thin adapter over these operations — one verb per operation, no aliases —
-except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation.
-**45 commands**: 39 verbs in 7 groups, plus 6 workspace commands. (v1: 47 top-level
+except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation, and except the
+`settings` group, which is a read-only surface over the tool's own settings file and is not an operation.
+**46 commands**: 40 verbs in 8 groups, plus 6 workspace commands. (v1: 47 top-level
 commands, 265 subcommands.)
 
 | Group | Verbs |
@@ -169,8 +170,14 @@ commands, 265 subcommands.)
 | `maitre-cli step` | add · start · done · skip · fail · deviate |
 | `maitre-cli finding` | add · resolve · dismiss · reopen |
 | `maitre-cli backlog` | list · create · update · dismiss · promote |
+| `maitre-cli settings` | show |
 | `maitre-cli skill` | help · list · load |
 | workspace | `init` · `demo` · `plan` · `path` · `log` (`--since <seq>`) · `gates` |
+
+The `settings` group reads `kitchen/settings.json` — the **tool's** file, not a plan
+record: the theme, the order of the list and show-served, the chef's own choices. The
+**console** writes it — it owns the vocabulary, and it refuses a name it does not know
+— so the CLI reads and never writes.
 
 The backlog is **one noun**. It was two file types for one list, and two file types for
 one list is two nouns for one thing. `backlog create` takes `--kind

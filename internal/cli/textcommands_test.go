@@ -145,15 +145,16 @@ func sameCommands(got, want []string) bool {
 	return true
 }
 
-// TestEveryVerbOutsideTheSkillGroupMapsToAnOperation holds the exception.
+// TestEveryVerbOutsideTheReadOnlyGroupsMapsToAnOperation holds the exception.
 //
-// The `skill` group reads the tool's own embedded files: it is a read-only surface,
-// not an operation, and the documents say so. Every other verb is an adapter over
-// the plan's operations, so it reaches the plan.
+// The `skill` group reads the tool's own embedded files, and the `settings` group
+// reads the tool's own settings file: both are read-only surfaces, not operations,
+// and the documents say so. Every other verb is an adapter over the plan's
+// operations, so it reaches the plan.
 //
 // The exception is asked of the **code**, not of the documents: the groups whose
 // verbs never open the plan are the ones the documents must name.
-func TestEveryVerbOutsideTheSkillGroupMapsToAnOperation(t *testing.T) {
+func TestEveryVerbOutsideTheReadOnlyGroupsMapsToAnOperation(t *testing.T) {
 	planless := planlessGroups(t)
 	if len(planless) == 0 {
 		t.Fatal("every group opens the plan — the check found nothing to hold")
@@ -177,10 +178,23 @@ func TestEveryVerbOutsideTheSkillGroupMapsToAnOperation(t *testing.T) {
 
 // operationExceptionPhrase is the sentence the documents share when they state the
 // exception.
+//
+// The two read-only surfaces are not the same surface: the `skill` group reads the
+// tool's own embedded files, and the `settings` group reads the tool's own settings
+// file. So each has its own sentence, and the documents must carry both.
 func operationExceptionPhrase(group string) string {
+	if phrase, ok := operationExceptionPhrases[group]; ok {
+		return phrase
+	}
 	return fmt.Sprintf(
 		"except the `%s` group, which is a read-only surface over the tool's own embedded files and is not an operation",
 		group)
+}
+
+// operationExceptionPhrases are the sentences the documents share, by group.
+var operationExceptionPhrases = map[string]string{
+	"skill":    "except the `skill` group, which is a read-only surface over the tool's own embedded files and is not an operation",
+	"settings": "except the `settings` group, which is a read-only surface over the tool's own settings file and is not an operation",
 }
 
 // exceptionGroups are the groups a document names as the exception.

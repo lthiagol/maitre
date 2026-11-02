@@ -146,6 +146,10 @@ func (r *Runner) Run() int {
 			"dismiss": r.cmdFindingDismiss,
 			"reopen":  r.cmdFindingReopen,
 		})
+	case "settings":
+		return r.dispatch(args[1:], "settings", map[string]func([]string) int{
+			"show": r.cmdSettingsShow,
+		})
 	case "backlog":
 		return r.dispatch(args[1:], "backlog", map[string]func([]string) int{
 			"list":    r.cmdBacklogList,
@@ -213,6 +217,7 @@ Usage:
   maitre-cli step <verb>         guidance steps
   maitre-cli finding <verb>      review findings
   maitre-cli backlog <verb>      the backlog: ideas and small tasks
+  maitre-cli settings <verb>    the tool's settings record
   maitre-cli skill <verb>        the skills that ship inside the binary
 
 Identity (who is acting, and in which session):
@@ -465,6 +470,22 @@ func (r *Runner) openStore(fs *flagSet) (*core.Store, *core.Operations, error) {
 	return store, core.NewOperations(store, core.AuditContext{
 		Actor: id.Actor, Session: id.Session, Role: id.Role,
 	}), nil
+}
+
+// planRoot finds the plan's directory.
+//
+// It is the openStore's first half, without the store: a verb that reads a file
+// beside the plan's records does not open the plan.
+func planRoot() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	root, err := core.FindRoot(cwd)
+	if err != nil {
+		return "", fmt.Errorf("%w — run `maitre-cli init` first", err)
+	}
+	return root, nil
 }
 
 // absDir resolves a path to an absolute directory.
