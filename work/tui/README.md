@@ -27,7 +27,7 @@
 | **T10** | the Sous-Chef tab | the ticket: the order, the queue, and the stamp; `space` starts and stops the crew | ✅ closed · cycle 4 ok · 18 commits · f3e85f8, 5fe4d68, 0159fa8, 867b545, 59b0d12, c03282e, ed0a13a, 2684307, 1c76e84, f59f9be, 5b03f48, 7edc649, 9003efb, 7d58dc8, 7597466, 3fb3701, 4bf7d93, a8d2bab | [tui-t10.md](../briefs/tui-t10.md) · [fix 1](../briefs/fix-tui-t10-1.md) · [fix 2](../briefs/fix-tui-t10-2.md) · [fix 3](../briefs/fix-tui-t10-3.md) |
 | **T11** | the shared seeded store | one template seeded once, a copy per test — the gate's headroom | ✅ closed · cycle 3 ok · 10 commits · 825bb82, 90774a4, f090206, 2fd2c13, 2accb50, 3c2be62, 6ccfbdc, d0ab68d, 55368d4, ecebfe4 | [tui-t11.md](../briefs/tui-t11.md) |
 | **T12** | the render path stops waiting | a frame forks no process; the crew read is one process; the console still asks | ✅ closed · cycle 1 ok · 4 commits · d197c41, b0040e0, ade00a2, 3bfdb85 | [tui-t12.md](../briefs/tui-t12.md) |
-| **T13** | the surfaces | the plan's records move through the CLI; the crew moves through herdr; the CLI never controls the automation | 📌 briefed | [tui-t13.md](../briefs/tui-t13.md) |
+| **T13** | the surfaces | the plan's records move through the CLI; the crew moves through herdr; the CLI never controls the automation | 🔄 implemented · 4 commits · 75c4b96, 0e3b25b, 32fd028, 4ac2158 | [tui-t13.md](../briefs/tui-t13.md) |
 
 **The states**, in the order they come: `planned` → `briefed` → `in progress` →
 `implemented` → `reviewed` → `closed`. A session that was interrupted and left a
