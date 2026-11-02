@@ -486,7 +486,12 @@ func (m *Model) tabSummary() string {
 	case TabSousChef:
 		queue := len(m.sousQueue(m.picks.Sources))
 		state := "not running"
-		if m.crewRunning() {
+		switch {
+		case !m.crewAsked:
+			// The console has not asked the runtime, so it does not know. The
+			// summary says that, and it does not guess.
+			state = "not asked"
+		case m.crewRunning():
 			state = "running"
 		}
 		return fmt.Sprintf("the automation · %s · %d %s queued",

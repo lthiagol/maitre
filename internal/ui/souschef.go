@@ -218,6 +218,11 @@ func (m *Model) sousMoveLabel() string {
 		// move: a move offered on a guess is a move that can start a second crew.
 		return ""
 	}
+	if !m.crewAsked {
+		// The console has not asked the runtime yet, so it knows nothing: the
+		// same rule as the error above, on the way to the answer.
+		return ""
+	}
 	if m.crewRunning() {
 		return "stop the crew"
 	}
@@ -233,6 +238,13 @@ func (m *Model) sousPrimaryAction() (tea.Model, tea.Cmd) {
 	if m.crewErr != nil {
 		m.status = m.crewErr.Error()
 		return m, nil
+	}
+	if !m.crewAsked {
+		// The console has not asked the runtime, so it does not know whether the
+		// crew is running. It asks — in a command, so the frame does not wait —
+		// and the move comes back with the answer.
+		m.status = "the console asks the runtime for the crew"
+		return m, m.refreshCrew()
 	}
 	if m.crewRunning() {
 		return m, m.stopCrew()
@@ -478,6 +490,16 @@ func (m *Model) sousStampLines() []listLine {
 		// must not look like one that can.
 		add(" " + m.stySec.Render("THE STAMP") + m.styBad.Render(" · "+m.crewErr.Error()))
 		add("  " + m.styDim.Render("the automation cannot be started from here"))
+		return out
+	}
+	if !m.crewAsked {
+		// The console has not asked the runtime. The runtime is asked by a
+		// command — the poll, and the switch that brings the tab on screen —
+		// and a frame forks no process. So the tab says it does not know: a
+		// console that guessed "not running" would offer to start a crew that
+		// is already running.
+		add(" " + m.stySec.Render("THE STAMP") + m.styFaint.Render(" · the crew has not been asked"))
+		add("  " + m.styFaint.Render("the console asks the runtime for the crew when it runs"))
 		return out
 	}
 	if len(m.crew) == 0 {

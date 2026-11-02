@@ -251,8 +251,15 @@ func TestTheQueueFollowsTheSourcesPick(t *testing.T) {
 // A tab that is waiting must not look like a tab that is failing: the stamp says
 // the automation is not running, and says what to do about it. The console cannot
 // tell "never started" from "gone", and it does not guess.
+//
+// The console asked, and the runtime answered that the crew is gone: that is the
+// answer the stamp prints. A console that has **not** asked says so instead —
+// see `TestTheTabRendersWithHerdrOffThePath`.
 func TestTheStampSaysWhenTheAutomationIsNotRunning(t *testing.T) {
 	m := sousModel(t)
+	m.runtime = &fakeRuntime{here: true}
+	askTheRuntime(t, m)
+
 	out := plain(m)
 
 	if !strings.Contains(out, "THE STAMP") {
@@ -273,7 +280,7 @@ func TestTheStampSaysWhenTheAutomationIsNotRunning(t *testing.T) {
 // not speaking the plan's rules.
 func TestTheStampShowsTheVitalSigns(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{State: "working", Job: "orchestrator", On: "routing RCP04"}}
+	m.withCrew([]crewRow{{State: "working", Job: "orchestrator", On: "routing RCP04"}})
 
 	out := plain(m)
 	if !strings.Contains(out, fmt.Sprintf("plan %d", core.DomainVersion)) {
@@ -296,7 +303,7 @@ func TestTheStampShowsTheVitalSigns(t *testing.T) {
 // chef sees it.
 func TestTheStampSaysWhenTheVersionsDisagree(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{State: "working", Job: "orchestrator", On: "routing RCP04"}}
+	m.withCrew([]crewRow{{State: "working", Job: "orchestrator", On: "routing RCP04"}})
 	// The plan was last written under another version.
 	m.journal.Events[len(m.journal.Events)-1].DomainVersion = core.DomainVersion - 1
 
@@ -314,7 +321,7 @@ func TestTheStampSaysWhenTheVersionsDisagree(t *testing.T) {
 // is not the crew's progress — and the stamp prints no number from it.
 func TestTheJournalsEventsAreNotTheCrewsProgress(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{State: "working", Job: "orchestrator", On: ""}}
+	m.withCrew([]crewRow{{State: "working", Job: "orchestrator", On: ""}})
 	m.journal = core.Journal{Schema: core.JournalSchema}
 	for i := 0; i < 39; i++ {
 		m.journal.Events = append(m.journal.Events, core.JournalEntry{

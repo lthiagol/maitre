@@ -53,11 +53,14 @@ func TestTheRuntimeThatIsNotHereSaysSoAndOffersNothing(t *testing.T) {
 //
 // **The spawn fails**: the tab says so, and the move stays. A failed start is
 // not a running automation.
+//
+// The console asks before it moves — a move offered on a guess is a move that
+// can start a second crew — and the runtime says there is no crew.
 func TestAFailedStartSaysSoAndTheMoveStays(t *testing.T) {
 	m := sousModel(t)
-	runtime := crewRuntimeFixture(t, m)
-	runtime.startErr = errors.New("the tab could not be opened")
+	runtime := &fakeRuntime{here: true, startErr: errors.New("the tab could not be opened")}
 	m.runtime = runtime
+	askTheRuntime(t, m)
 
 	m.Update(tea.KeyPressMsg{Code: ' '})
 

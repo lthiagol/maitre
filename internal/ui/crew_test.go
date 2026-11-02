@@ -75,6 +75,34 @@ func crewRuntimeFixture(t *testing.T, m *Model) *fakeRuntime {
 	}
 }
 
+// withCrew gives the console the crew, as the runtime's answer.
+//
+// The tests that fake the crew fake an **answer**: the console knows the crew,
+// and the tab prints it. A console that has **not** asked says so on the tab
+// instead — see `TestTheTabRendersWithHerdrOffThePath`.
+func (m *Model) withCrew(rows []crewRow) *Model {
+	m.crew = rows
+	m.crewAsked = true
+	return m
+}
+
+// askTheRuntime asks the runtime for the crew, the way the tab does.
+//
+// The ask is a **command**: the console asks, and the answer arrives as a
+// message. A test that wants the console to know the crew asks it.
+func askTheRuntime(t *testing.T, m *Model) {
+	t.Helper()
+	cmd := m.refreshCrew()
+	if cmd == nil {
+		t.Fatal("the console did not ask the runtime")
+	}
+	msg, ok := cmd().(crewMsg)
+	if !ok {
+		t.Fatalf("the ask answered %T, want a crew message", msg)
+	}
+	m.Update(msg)
+}
+
 // TestTheCrewIsFoundByTheAgentsCwd covers the anchor.
 //
 // The console finds the crew by the **agents' cwd**: a workspace's own listing
@@ -110,7 +138,7 @@ func TestTheCrewRowShowsTheJobAndTheState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 	out := plain(m)
 
 	for _, want := range []string{"orchestrator", "runner", "reviewer", "working", "idle", "RCP03"} {
@@ -162,7 +190,7 @@ func TestTheBlockedAgentAsksTheOrchestrator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 	out := plain(m)
 
 	if !strings.Contains(out, "asked the orchestrator") {
@@ -194,10 +222,15 @@ func TestTheRuntimeThatIsNotThereIsSaid(t *testing.T) {
 //
 // `space` starts the crew: the console opens a tab on the plan's root and runs
 // the orchestrator in it.
+//
+// The console asks before it moves: a move offered on a guess is a move that
+// can start a second crew. So the runtime is asked first, and it says there is
+// no crew.
 func TestSpaceStartsTheCrew(t *testing.T) {
 	m := sousModel(t)
-	runtime := crewRuntimeFixture(t, m)
+	runtime := &fakeRuntime{here: true}
 	m.runtime = runtime
+	askTheRuntime(t, m)
 
 	m.Update(tea.KeyPressMsg{Code: ' '})
 
@@ -264,7 +297,7 @@ func TestSpaceStopsTheCrew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 
 	m.Update(tea.KeyPressMsg{Code: ' '})
 
@@ -284,19 +317,26 @@ func TestSpaceStopsTheCrew(t *testing.T) {
 // TestTheFooterNamesWhichTheSpaceDoes covers the footer's promise.
 //
 // One key, two meanings: the footer says which one it is about to do.
+//
+// The console asks the runtime before it offers a move: the runtime says there
+// is no crew, so the footer offers to start one — and then the crew is there,
+// and the footer offers to stop it.
 func TestTheFooterNamesWhichTheSpaceDoes(t *testing.T) {
 	m := sousModel(t)
-	m.runtime = crewRuntimeFixture(t, m)
+	m.runtime = &fakeRuntime{here: true}
+	askTheRuntime(t, m)
 
 	if out := plain(m); !strings.Contains(out, "space start the crew") {
 		t.Errorf("the footer should offer to start the crew:\n%s", out)
 	}
 
+	runtime := crewRuntimeFixture(t, m)
+	m.runtime = runtime
 	rows, err := m.readCrew()
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 	if out := plain(m); !strings.Contains(out, "space stop the crew") {
 		t.Errorf("the footer should offer to stop the crew:\n%s", out)
 	}
@@ -502,7 +542,7 @@ func TestTheProgressComesFromTheOrchestratorsLabel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 
 	progress, ok := m.reportedProgress()
 	if !ok {
@@ -539,7 +579,7 @@ func TestALabelWithNoProgressShowsNone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 
 	if _, ok := m.reportedProgress(); ok {
 		t.Error("a label with no progress should carry no progress")
@@ -609,14 +649,14 @@ func stampLine(out string) string {
 // stamp does not say that.
 func TestTheStampPrintsNoNumberItCannotCompute(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 7, Reported: true},
 			Interactions: crewCount{Value: 39, Reported: true},
 		},
-	}}
+	}})
 
 	stamp := stampLine(plain(m))
 	if strings.Contains(stamp, "7 of 3") || strings.Contains(stamp, "39 of 12") {
@@ -636,14 +676,14 @@ func TestTheStampPrintsNoNumberItCannotCompute(t *testing.T) {
 // the progress below.
 func TestTheStampMeasuresAProgressInsideTheCap(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 2, Reported: true},
 			Interactions: crewCount{Value: 6, Reported: true},
 		},
-	}}
+	}})
 
 	stamp := stampLine(plain(m))
 	if !strings.Contains(stamp, "round 2 of 3") {
@@ -677,7 +717,7 @@ func TestTheCrewLabelIsSanitisedOnTheSousChefTab(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 	m.width = 100
 	m.height = 40
 
@@ -704,14 +744,14 @@ func TestTheStampReadsInAllThreeShapes(t *testing.T) {
 	m := sousModel(t)
 
 	// One: a progress reported.
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 2, Reported: true},
 			Interactions: crewCount{Value: 6, Reported: true},
 		},
-	}}
+	}})
 	stamp := stampLine(plain(m))
 	if !strings.Contains(stamp, "THE STAMP · plan 7") &&
 		!strings.Contains(stamp, "THE STAMP · round 2 of 3") {
@@ -725,7 +765,7 @@ func TestTheStampReadsInAllThreeShapes(t *testing.T) {
 	}
 
 	// Two: no progress at all.
-	m.crew = []crewRow{{State: "working", Job: "orchestrator"}}
+	m.withCrew([]crewRow{{State: "working", Job: "orchestrator"}})
 	stamp = stampLine(plain(m))
 	if !strings.Contains(stamp, "THE STAMP · plan 7 · build 7 · they agree") {
 		t.Errorf("the heading runs into the vital signs: %q", stamp)
@@ -735,14 +775,14 @@ func TestTheStampReadsInAllThreeShapes(t *testing.T) {
 	}
 
 	// Three: a progress over the cap.
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 7, Reported: true},
 			Interactions: crewCount{Value: 39, Reported: true},
 		},
-	}}
+	}})
 	stamp = stampLine(plain(m))
 	if strings.Contains(stamp, "7 of 3") || strings.Contains(stamp, "39 of 12") {
 		t.Errorf("the stamp should not print a progress against a cap it has passed: %q", stamp)
@@ -758,14 +798,14 @@ func TestTheStampReadsInAllThreeShapes(t *testing.T) {
 // three has spent its budget, and the stamp says so then — not one round later.
 func TestTheBudgetIsSpentWhenTheReportReachesTheCap(t *testing.T) {
 	m := sousModel(t)
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 3, Reported: true},
 			Interactions: crewCount{Value: 12, Reported: true},
 		},
-	}}
+	}})
 
 	stamp := stampLine(plain(m))
 	if !strings.Contains(stamp, "round 3 of 3 · 12 of 12 interactions") {
@@ -784,14 +824,14 @@ func TestTheFlagNamesTheAllowanceThatRanOut(t *testing.T) {
 	m := sousModel(t)
 
 	// The rounds are spent, and the interactions are not.
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 3, Reported: true},
 			Interactions: crewCount{Value: 6, Reported: true},
 		},
-	}}
+	}})
 	stamp := stampLine(plain(m))
 	if !strings.Contains(stamp, "the rounds are spent") {
 		t.Errorf("the flag should name the rounds: %q", stamp)
@@ -801,14 +841,14 @@ func TestTheFlagNamesTheAllowanceThatRanOut(t *testing.T) {
 	}
 
 	// The interactions are spent, and the rounds are not.
-	m.crew = []crewRow{{
+	m.withCrew([]crewRow{{
 		State: "working",
 		Job:   "orchestrator",
 		Progress: &crewProgress{
 			Round:        crewCount{Value: 2, Reported: true},
 			Interactions: crewCount{Value: 12, Reported: true},
 		},
-	}}
+	}})
 	stamp = stampLine(plain(m))
 	if !strings.Contains(stamp, "the interactions are spent") {
 		t.Errorf("the flag should name the interactions: %q", stamp)
@@ -836,7 +876,7 @@ func TestAZeroedReportIsAReport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the crew: %v", err)
 	}
-	m.crew = rows
+	m.withCrew(rows)
 
 	if _, ok := m.reportedProgress(); !ok {
 		t.Fatal("a zeroed report is a report, and the console read none")
@@ -847,7 +887,7 @@ func TestAZeroedReportIsAReport(t *testing.T) {
 	}
 
 	// And it is not the same as no report at all.
-	m.crew = []crewRow{{State: "working", Job: "orchestrator"}}
+	m.withCrew([]crewRow{{State: "working", Job: "orchestrator"}})
 	quiet := stampLine(plain(m))
 	if quiet == stamp {
 		t.Errorf("a zeroed report and no report read the same: %q", stamp)

@@ -36,13 +36,9 @@ func snapshot(store *core.Store, width int, m *Model) (*Model, error) {
 	m.width = width
 	m.height = 40
 	m.ready = true
-	// The crew is runtime state: the snapshot asks for it, so the tab shows
-	// what is running and not what it would show if nothing were.
-	if rows, err := m.readCrew(); err == nil {
-		m.crew = rows
-	} else {
-		m.crewErr = err
-	}
+	// The crew is runtime state, and the runtime is asked by a **command** — the
+	// poll, and the switch that brings the tab on screen. A frame forks no
+	// process, so the snapshot does not read the crew: it draws what it knows.
 	return m, nil
 }
 

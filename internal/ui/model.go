@@ -125,6 +125,13 @@ type Model struct {
 	// look like one that can.
 	crewErr error
 
+	// crewAsked says the console has an answer from the runtime.
+	//
+	// The answer arrives as a message, so there is a moment when the console
+	// knows nothing about the crew. It says so on the tab rather than guess
+	// that the automation is not running.
+	crewAsked bool
+
 	// runtime is where the crew lives.
 	//
 	// **herdr is a runtime dependency, not a module**: the binary is on the
@@ -382,6 +389,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case crewMsg:
 		m.crew = msg.rows
 		m.crewErr = msg.err
+		// The answer arrived: the tab knows what the runtime knows, and it says
+		// so. Before this the console knew nothing about the crew.
+		m.crewAsked = true
 		return m, nil
 
 	case tea.KeyPressMsg:
